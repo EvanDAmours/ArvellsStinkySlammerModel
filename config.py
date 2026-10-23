@@ -6,7 +6,8 @@ HISTORY_SEASONS = [2023, 2024, 2025]   # used for priors, stat crews and the bac
 ODDS_SPORT = "americanfootball_nfl"
 ODDS_MARKETS = ["player_tackles_assists", "player_solo_tackles"]
 ODDS_REGIONS = "us"
-MIN_CREDITS_LEFT = 25              # stop pulling if the monthly credit balance drops below this
+ODDS_KEY_ENV = ["ODDS_API_KEY", "PARLAY_API_KEY"]   # GitHub secrets holding Odds API keys; credits are pooled
+MIN_CREDITS_LEFT = 25              # a key with fewer credits left this month is skipped; pulling stops when every key is below it
 
 # --- model ---
 SHRINK_GAMES = 1                   # weight (in games) of the prior when averaging; the backtest reports the best value

@@ -89,9 +89,11 @@ def cmd_daily():
 
 
 def cmd_odds(hours=None, auto=False):
-    key = os.environ.get("ODDS_API_KEY") or ("fake" if os.environ.get("TACKLE_FAKE_ODDS") else None)
-    if not key:
-        sys.exit("ODDS_API_KEY is not set. Add it as a GitHub Actions secret (see README).")
+    keys = {name: os.environ[name] for name in C.ODDS_KEY_ENV if os.environ.get(name)}
+    if not keys and os.environ.get("TACKLE_FAKE_ODDS"):
+        keys = {"ODDS_API_KEY": "fake"}
+    if not keys:
+        sys.exit(f"None of {C.ODDS_KEY_ENV} is set. Add at least one as a GitHub Actions secret (see README).")
     if not (CACHE / "projections.csv").exists():
         cmd_daily()
     P = pd.read_csv(CACHE / "projections.csv")
@@ -103,7 +105,9 @@ def cmd_odds(hours=None, auto=False):
         # The events feed also lists next week's games, so cap the full slate at four days
         # (Friday evening to Tuesday, or Sunday morning to Thursday morning) to keep credits in budget.
         hours = 96 if (now.weekday() == 4 or (now.weekday() == 6 and now.hour < 14)) else 4
-    rows, remaining = O.pull(key, hours_ahead=hours)
+    rows, credits = O.pull(keys, hours_ahead=hours)
+    numeric = [c for c in credits.values() if isinstance(c, (int, float))]
+    remaining = int(sum(numeric)) if numeric else next(iter(credits.values()), None)
     O.save_snapshot(rows, C.SEASON, week)
     lines = O.latest_lines(C.SEASON, week)
     bets = M.price_lines(lines, P)
@@ -111,7 +115,7 @@ def cmd_odds(hours=None, auto=False):
     n_new = G.log_picks(bets, C.SEASON, week, stamp)
     meta_path = SITE / "meta.json"
     meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
-    meta.update(odds_credits_remaining=remaining, lines_pulled=stamp, lines_count=int(len(lines)))
+    meta.update(odds_credits_remaining=remaining, odds_credits_by_key=credits, lines_pulled=stamp, lines_count=int(len(lines)))
     _json(meta_path, meta)
     _json(SITE / "bets.json", records(bets))
     print(f"odds: {len(rows)} prices pulled, {len(lines)} current lines, {n_new} new picks logged, credits left {remaining}")
@@ -125,6 +129,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled):
     if old.exists():
         prev = json.loads(old.read_text())
         meta.setdefault("odds_credits_remaining", prev.get("odds_credits_remaining"))
+        meta.setdefault("odds_credits_by_key", prev.get("odds_credits_by_key"))
     _json(SITE / "meta.json", meta)
     cols = ["player", "team", "opp_team", "group", "status", "n_prev", "season_avg", "last", "base", "proj", "proj_solo",
             "fair_line", "fair_line_solo", "crew_comb", "crew_solo", "spread_dog", "role_signal", "venue", "gameday", "gametime", "phi"]
