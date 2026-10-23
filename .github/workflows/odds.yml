@@ -1,0 +1,40 @@
+name: Pull tackle lines
+# Times are UTC and set for US daylight time. After daylight time ends (first Sunday of November),
+# add one hour to each so the Sunday pulls still land after inactives are announced. See README.
+on:
+  schedule:
+    - cron: "45 22 * * 4"      # Thu 6:45 pm ET: Thursday night game
+    - cron: "0 22 * * 5"       # Fri 6:00 pm ET: full weekend slate as lines post
+    - cron: "0 13 * * 0"       # Sun 9:00 am ET: full slate
+    - cron: "50 15 * * 0"      # Sun 11:50 am ET: 1 pm games, after inactives
+    - cron: "45 19 * * 0"      # Sun 3:45 pm ET: late games, after inactives
+    - cron: "35 23 * * 0"      # Sun 7:35 pm ET: Sunday night game
+    - cron: "35 23 * * 1"      # Mon 7:35 pm ET: Monday night game
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency:
+  group: pipeline
+  cancel-in-progress: false
+jobs:
+  odds:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python run.py odds --auto
+      - name: Save results
+        run: |
+          git config user.name "tackle-bot"
+          git config user.email "tackle-bot@users.noreply.github.com"
+          git add data docs/data
+          git diff --cached --quiet || git commit -m "Lines $(date -u +%Y-%m-%dT%H:%M)"
+          git pull --rebase
+          git push

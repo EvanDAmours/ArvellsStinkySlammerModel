@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tackle board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #eef1f4; --panel: #ffffff; --ink: #13202e; --muted: #5b6b7b; --line: #d3dae1;
+  --flag: #f2b705; --over: #2f7d4f; --under: #b23a48; --warn-bg: #fff4d6;
+  --sans: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cond: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0e1621; --panel: #152130; --ink: #e6edf3; --muted: #93a4b5; --line: #26364a;
+          --over: #5cc48a; --under: #f07b8a; --warn-bg: #3a2f10; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 var(--sans);
+       padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+.wrap { max-width: 980px; margin: 0 auto; padding: 20px 16px 48px; }
+header h1 { font: 700 2.25rem/1.05 var(--cond); margin: 0; letter-spacing: 0.01em; }
+.meta { color: var(--muted); font-size: 0.9rem; margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.warn { background: var(--warn-bg); border-left: 4px solid var(--flag); padding: 10px 12px; margin: 14px 0 0; border-radius: 4px; }
+nav { display: flex; gap: 4px; margin: 20px 0 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+nav button { font: 600 1.05rem var(--cond); background: none; border: 0; border-bottom: 3px solid transparent; color: var(--muted);
+             padding: 8px 12px; cursor: pointer; white-space: nowrap; }
+nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-bottom: 12px; font-size: 0.95rem; }
+.controls label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+select, input[type="search"] { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); }
+.note { color: var(--muted); font-size: 0.92rem; max-width: 70ch; margin: 0 0 12px; }
+.empty { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 20px; color: var(--muted); }
+.play { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; background: var(--panel); border: 1px solid var(--line);
+        border-left: 6px solid var(--line); border-radius: 6px; padding: 12px 14px; margin-bottom: 8px; }
+.play.pick { border-left-color: var(--flag); }
+.play .who { font-weight: 600; }
+.play .who small { font-weight: 400; color: var(--muted); margin-left: 6px; }
+.play .bet { font: 600 1.15rem var(--cond); }
+.play .bet .over { color: var(--over); } .play .bet .under { color: var(--under); }
+.play .ev { grid-row: 1 / span 3; grid-column: 2; text-align: right; align-self: center; }
+.play .ev b { display: block; font: 700 1.9rem/1 var(--cond); font-variant-numeric: tabular-nums; }
+.play .ev span { font-size: 0.8rem; color: var(--muted); }
+.play .why { grid-column: 1 / -1; color: var(--muted); font-size: 0.9rem; }
+.play .price { color: var(--muted); font-size: 0.95rem; }
+.play .nums { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; display: flex; flex-wrap: wrap; gap: 0 14px; }
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 18px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+th { font: 600 0.95rem var(--cond); color: var(--muted); position: sticky; top: 0; background: var(--panel); }
+th button { all: unset; cursor: pointer; }
+td.n, th.n { text-align: right; }
+tr:last-child td { border-bottom: 0; }
+h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
+.stat-line { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 4px 0 16px; }
+.stat-line div { font-size: 0.9rem; color: var(--muted); }
+.stat-line b { display: block; font: 700 1.7rem/1.1 var(--cond); color: var(--ink); font-variant-numeric: tabular-nums; }
+@media (max-width: 560px) { header h1 { font-size: 1.8rem; } .play .ev b { font-size: 1.5rem; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="title">Tackle board</h1>
+    <div class="meta" id="meta"></div>
+    <div id="warnings"></div>
+  </header>
+  <nav role="tablist" aria-label="Sections">
+    <button role="tab" data-tab="plays" aria-selected="true">Plays</button>
+    <button role="tab" data-tab="proj" aria-selected="false">Projections</button>
+    <button role="tab" data-tab="record" aria-selected="false">Track record</button>
+    <button role="tab" data-tab="check" aria-selected="false">Model check</button>
+  </nav>
+
+  <section id="plays">
+    <div class="controls">
+      <label><input type="checkbox" id="picks-only" checked> Picks only</label>
+      <label>Market <select id="market"><option value="">All</option><option value="player_tackles_assists">Tackles + assists</option><option value="player_solo_tackles">Solo tackles</option></select></label>
+      <label><input type="checkbox" id="best-only" checked> Best price per line</label>
+    </div>
+    <div id="plays-list"></div>
+  </section>
+
+  <section id="proj" hidden>
+    <p class="note">Projected tackles for every defender playing this week. The fair line is the half-point line the model puts closest to a coin flip. Stat crew is the home scorekeepers’ effect on combined tackles.</p>
+    <div class="controls"><input type="search" id="q" placeholder="Search player or team" aria-label="Search player or team"></div>
+    <div class="scroll"><table id="proj-table"></table></div>
+  </section>
+
+  <section id="record" hidden>
+    <div id="record-body"></div>
+  </section>
+
+  <section id="check" hidden>
+    <div id="check-body"></div>
+  </section>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) k === "class" ? (e.className = v) : e.setAttribute(k, v);
+  for (const kid of kids) e.append(kid instanceof Node ? kid : document.createTextNode(kid ?? ""));
+  return e;
+};
+const pct = (x, d = 0) => (x == null ? "" : (x * 100).toFixed(d) + "%");
+const signedPct = (x) => (x == null ? "" : (x >= 0 ? "+" : "") + (x * 100).toFixed(0) + "%");
+const num = (x, d = 1) => (x == null || Number.isNaN(x) ? "" : Number(x).toFixed(d));
+const odds = (a) => (a == null ? "" : (a > 0 ? "+" : "") + Math.round(a));
+const MARKET = { player_tackles_assists: "Tackles + assists", player_solo_tackles: "Solo tackles" };
+const when = (iso) => { if (!iso) return ""; const d = new Date(iso.length === 16 && iso.includes("T") && !iso.includes("-") ? iso.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2}).*/, "$1-$2-$3T$4:$5Z") : iso); return isNaN(d) ? iso : d.toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }); };
+
+async function load(name) {
+  try { const r = await fetch(`data/${name}.json`, { cache: "no-store" }); return r.ok ? await r.json() : null; } catch { return null; }
+}
+
+function table(headers, rows) {
+  const t = el("table");
+  t.append(el("thead", {}, el("tr", {}, ...headers.map(([label, cls]) => el("th", { class: cls || "" }, label)))));
+  const tb = el("tbody");
+  rows.forEach((r) => tb.append(el("tr", {}, ...r.map((c, i) => el("td", { class: headers[i][1] || "" }, c)))));
+  t.append(tb);
+  return t;
+}
+
+let DATA = {};
+
+function renderMeta() {
+  const m = DATA.meta;
+  if (!m) { $("#meta").append("Waiting for the first run. Start it from the Actions tab (see README)."); return; }
+  $("#title").textContent = `Week ${m.week} tackle board`;
+  $("#meta").append(el("span", {}, `Model updated ${when(m.generated_at)}`),
+                    el("span", {}, m.lines_pulled ? `Lines pulled ${when(m.lines_pulled)}` : "No lines pulled yet this week"),
+                    el("span", {}, m.odds_credits_remaining != null ? `${m.odds_credits_remaining} odds credits left this month` : ""));
+  if (m.formula_check_ok === false)
+    $("#warnings").append(el("div", { class: "warn" }, "Tackle totals didn’t match the official numbers this run. Picks may be off until the data source is fixed; check the Actions log."));
+}
+
+function renderPlays() {
+  const box = $("#plays-list"); box.replaceChildren();
+  const all = DATA.bets || [];
+  if (!all.length) { box.append(el("div", { class: "empty" }, "No tackle lines yet this week. Books usually post them Thursday to Saturday; the odds job pulls them automatically and this list fills in.")); return; }
+  const picksOnly = $("#picks-only").checked, market = $("#market").value, best = $("#best-only").checked;
+  const rows = all.filter((b) => (!picksOnly || b.pick === "Over" || b.pick === "Under") && (!market || b.market === market) && (!best || b.best_price !== false));
+  if (!rows.length) { box.append(el("div", { class: "empty" }, picksOnly ? "No line clears the bar right now. Untick Picks only to see every priced line." : "Nothing matches these filters.")); return; }
+  for (const b of rows) {
+    const isPick = b.pick === "Over" || b.pick === "Under";
+    const side = b.side || b.pick;
+    const price = side === "Under" ? b.under_odds : b.over_odds;
+    const card = el("div", { class: "play" + (isPick ? " pick" : "") },
+      el("div", { class: "who" }, b.player, el("small", {}, [b.team, b.opp ? `vs ${b.opp}` : ""].filter(Boolean).join(" "))),
+      el("div", { class: "ev" }, el("b", {}, b.ev == null ? "" : signedPct(b.ev)), el("span", {}, "expected return")),
+      el("div", { class: "bet" }, el("span", { class: side === "Under" ? "under" : "over" }, `${side || ""} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market).toLowerCase()}`),
+      el("div", { class: "price" }, `${odds(price)} at ${b.book}`),
+      el("div", { class: "nums" }, ...(b.proj == null ? [] : [el("span", {}, `Projection ${num(b.proj)}`), el("span", {}, `Model over ${pct(b.model_over)}`), el("span", {}, `Market over ${pct(b.market_over)}`)])),
+      el("div", { class: "why" }, b.why || ""));
+    box.append(card);
+  }
+}
+
+let projSort = { key: "proj", dir: -1 };
+function renderProj() {
+  const t = $("#proj-table"); t.replaceChildren();
+  const q = $("#q").value.trim().toLowerCase();
+  const cols = [["Player", "player"], ["Team", "team"], ["Opp", "opp_team"], ["Pos", "group"], ["Status", "status"], ["Games", "n_prev", "n"],
+                ["Season avg", "season_avg", "n"], ["Last game", "last", "n"], ["Projection", "proj", "n"], ["Solo proj", "proj_solo", "n"],
+                ["Fair line", "fair_line", "n"], ["Stat crew", "crew_comb", "n"], ["Role up", "role_signal"]];
+  let rows = (DATA.proj || []).filter((p) => !q || `${p.player} ${p.team} ${p.opp_team}`.toLowerCase().includes(q));
+  rows.sort((a, b) => { const x = a[projSort.key] ?? -99, y = b[projSort.key] ?? -99; return (typeof x === "number" ? x - y : String(x).localeCompare(String(y))) * projSort.dir; });
+  const head = el("tr");
+  cols.forEach(([label, key, cls]) => { const btn = el("button", {}, label + (projSort.key === key ? (projSort.dir < 0 ? " ↓" : " ↑") : "")); btn.onclick = () => { projSort = { key, dir: projSort.key === key ? -projSort.dir : (typeof rows[0]?.[key] === "number" ? -1 : 1) }; renderProj(); }; head.append(el("th", { class: cls || "" }, btn)); });
+  t.append(el("thead", {}, head));
+  const tb = el("tbody");
+  for (const p of rows) tb.append(el("tr", {}, ...[p.player, p.team, p.opp_team, p.group, p.status || "", p.n_prev, num(p.season_avg), p.last == null ? "" : num(p.last, 0), num(p.proj), num(p.proj_solo), num(p.fair_line),
+    p.crew_comb == null || Math.abs(p.crew_comb - 1) < 0.005 ? "" : signedPct(p.crew_comb - 1), p.role_signal ? "Yes" : ""].map((c, i) => el("td", { class: cols[i][2] || "" }, String(c ?? "")))));
+  t.append(tb);
+}
+
+function renderRecord() {
+  const box = $("#record-body"); box.replaceChildren();
+  const r = DATA.results;
+  if (!r || !r.picks || !r.picks.length) { box.append(el("div", { class: "empty" }, "No picks logged yet. Every pick the board makes is saved with the price at the time and graded against the official box score the next morning.")); return; }
+  const s = r.summary || {};
+  box.append(el("div", { class: "stat-line" },
+    el("div", {}, el("b", {}, `${s.wins ?? 0}-${s.losses ?? 0}${s.pushes ? "-" + s.pushes : ""}`), "Record"),
+    el("div", {}, el("b", {}, s.units == null ? "" : (s.units >= 0 ? "+" : "") + s.units.toFixed(1)), "Units (1 per bet)"),
+    el("div", {}, el("b", {}, s.roi == null ? "" : signedPct(s.roi)), "Return per bet"),
+    el("div", {}, el("b", {}, s.beat_close_share == null ? "" : pct(s.beat_close_share)), "Beat the closing line"),
+    el("div", {}, el("b", {}, String(s.pending ?? 0)), "Pending")));
+  box.append(el("p", { class: "note" }, "Beating the closing line is the earliest reliable sign of a real edge: over a few hundred bets it predicts profit better than the win-loss record does."));
+  const rows = [...r.picks].reverse().map((p) => [`Wk ${p.week}`, p.player, `${p.side} ${num(p.line)}`, MARKET[p.market] || p.market, odds(p.odds), p.book, p.actual == null ? "" : num(p.actual, 0), p.result, p.units == null ? "" : num(p.units, 2), p.clv_line == null ? "" : (p.clv_line >= 0 ? "+" : "") + num(p.clv_line)]);
+  box.append(el("div", { class: "scroll" }, table([["Week"], ["Player"], ["Bet"], ["Market"], ["Price", "n"], ["Book"], ["Actual", "n"], ["Result"], ["Units", "n"], ["Line vs close", "n"]], rows)));
+}
+
+function renderCheck() {
+  const box = $("#check-body"); box.replaceChildren();
+  const b = DATA.backtest;
+  if (!b || b.error || !b.predictors) { box.append(el("div", { class: "empty" }, b?.error || "The backtest runs with the daily job.")); return; }
+  box.append(el("p", { class: "note" }, `Every game since ${Math.min(...b.seasons)} predicted using only what was known before it: ${b.games.toLocaleString()} defender-games. The model only keeps a piece while it beats the version without it.`));
+  box.append(el("h2", {}, "Which predictor is most accurate"));
+  box.append(el("div", { class: "scroll" }, table([["Predictor"], ["Games", "n"], ["Average miss", "n"], ["Actual minus predicted", "n"], ["Beat last game", "n"]],
+    b.predictors.map((r) => [r.predictor, r.n.toLocaleString(), num(r.mae, 3), (r.bias >= 0 ? "+" : "") + num(r.bias, 2), r.beats_last_game?.toLocaleString?.() ?? ""]))));
+  if (b.dispersion?.length) {
+    box.append(el("h2", {}, "How spread out tackle counts are"));
+    box.append(el("p", { class: "note" }, "Variance divided by mean. Below 1 means games cluster closer to a player’s average than a Poisson count, so long-shot overs are less likely than standard pricing assumes."));
+    box.append(el("div", { class: "scroll" }, table([["Position"], ["Games", "n"], ["Raw", "n"], ["Corrected", "n"], ["Used", "n"]], b.dispersion.map((d) => [d.group, d.n.toLocaleString(), num(d.raw, 2), num(d.corrected, 2), num(d.used, 2)]))));
+  }
+  if (b.calibration?.length) {
+    box.append(el("h2", {}, "Are the probabilities honest?"));
+    box.append(el("p", { class: "note" }, "When the model says an over has a given chance, how often it actually went over, across lines near each projection."));
+    box.append(el("div", { class: "scroll" }, table([["Model chance"], ["Cases", "n"], ["Predicted", "n"], ["Actual", "n"]], b.calibration.map((c) => [c.bucket, c.n.toLocaleString(), pct(c.predicted, 1), pct(c.observed, 1)]))));
+  }
+  if (b.regression?.length) {
+    box.append(el("h2", {}, "What follows an outlier game"));
+    box.append(el("div", { class: "scroll" }, table([["Situation"], ["Games", "n"], ["Next game vs season avg", "n"], ["Next game vs that game", "n"]], b.regression.map((r) => [r.situation, r.n.toLocaleString(), num(r.vs_avg), num(r.vs_last)]))));
+  }
+  if (b.role) {
+    box.append(el("h2", {}, "Backups when a regular sits"));
+    box.append(el("p", { class: "note" }, `${b.role.n.toLocaleString()} games where a teammate at the same position who played 75%+ of snaps was inactive. These backups finished ${signedPct(b.role.actual_vs_avg_pct)} versus their own season average.`));
+  }
+}
+
+function show(id) {
+  for (const s of ["plays", "proj", "record", "check"]) { $("#" + s).hidden = s !== id; }
+  document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === id)));
+  history.replaceState(null, "", "#" + id);
+}
+
+(async () => {
+  [DATA.meta, DATA.bets, DATA.proj, DATA.results, DATA.backtest] = await Promise.all(["meta", "bets", "projections", "results", "backtest"].map(load));
+  renderMeta(); renderPlays(); renderProj(); renderRecord(); renderCheck();
+  ["#picks-only", "#market", "#best-only"].forEach((s) => $(s).addEventListener("change", renderPlays));
+  $("#q").addEventListener("input", renderProj);
+  document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => show(b.dataset.tab)));
+  const h = location.hash.slice(1); if (["plays", "proj", "record", "check"].includes(h)) show(h);
+})();
+</script>
+</body>
+</html>
