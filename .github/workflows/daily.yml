@@ -4,7 +4,7 @@ on:
     - cron: "30 11 * * *"      # every day 11:30 UTC (7:30 am Eastern during daylight time)
   workflow_dispatch: {}        # lets you run it by hand from the Actions tab
 permissions:
-  contents: write
+  contents: write            # lets the job commit the refreshed data and site files back to the repo
 concurrency:
   group: pipeline
   cancel-in-progress: false

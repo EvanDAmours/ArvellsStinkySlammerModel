@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
+      # Must be an Actions secret (Settings -> Secrets and variables -> Actions).
+      # Codespaces secrets are a separate store and are not visible to workflows.
       ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
     steps:
       - uses: actions/checkout@v4

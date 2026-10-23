@@ -28,6 +28,7 @@ Everything runs on GitHub's servers on a schedule. You don't run anything by han
 3. **Upload the files.** The easiest way is GitHub Desktop: clone the empty repo, copy every file from this folder into it (including the hidden `.github` folder), then commit and push.
    If you upload in the browser instead, hidden folders are often skipped. Check that `.github/workflows/` exists afterwards; if not, use *Add file → Create new file*, type `.github/workflows/daily.yml` as the name, and paste the file's contents. Repeat for `odds.yml` and `test.yml`.
 4. **Add the key as a secret.** *Settings → Secrets and variables → Actions → New repository secret*. Name: `ODDS_API_KEY`. Value: your key. It is never visible on the website or in the code.
+   It has to be an *Actions* secret: a *Codespaces* secret with the same name is a separate store that the scheduled jobs cannot read.
 5. **Let the jobs save their results.** *Settings → Actions → General → Workflow permissions →* choose *Read and write permissions*.
 6. **Run it once.** *Actions* tab → *Daily model update* → *Run workflow*. It takes a few minutes. Open the run and look for the line starting `daily:`. Then run *Pull tackle lines* once the same way (it only finds lines when books have posted them, usually Thursday to Saturday).
 7. **Turn on the website.**
