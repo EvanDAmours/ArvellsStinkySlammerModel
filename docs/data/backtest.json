@@ -1,0 +1,285 @@
+{
+ "seasons": [
+  2023,
+  2024,
+  2025,
+  2026
+ ],
+ "games": 28333,
+ "best_shrink_games": 1,
+ "predictors": [
+  {
+   "n": 28333,
+   "mae": 1.6785,
+   "rmse": 2.2243,
+   "bias": -0.0183,
+   "predictor": "Full model without stat crew",
+   "beats_last_game": 16360
+  },
+  {
+   "n": 28333,
+   "mae": 1.6786,
+   "rmse": 2.228,
+   "bias": -0.0067,
+   "predictor": "Season average shrunk 1 game toward last season",
+   "beats_last_game": 16303
+  },
+  {
+   "n": 28333,
+   "mae": 1.6789,
+   "rmse": 2.2272,
+   "bias": -0.0075,
+   "predictor": "Full model without role bump",
+   "beats_last_game": 16377
+  },
+  {
+   "n": 28333,
+   "mae": 1.6792,
+   "rmse": 2.2249,
+   "bias": -0.0188,
+   "predictor": "Full model",
+   "beats_last_game": 16362
+  },
+  {
+   "n": 28333,
+   "mae": 1.6796,
+   "rmse": 2.2263,
+   "bias": -0.0185,
+   "predictor": "Full model without spread tilt",
+   "beats_last_game": 16367
+  },
+  {
+   "n": 28333,
+   "mae": 1.6916,
+   "rmse": 2.281,
+   "bias": 0.0789,
+   "predictor": "Season average",
+   "beats_last_game": 15455
+  },
+  {
+   "n": 28333,
+   "mae": 1.6957,
+   "rmse": 2.2283,
+   "bias": -0.0599,
+   "predictor": "Season average shrunk 2 games toward last season",
+   "beats_last_game": 16016
+  },
+  {
+   "n": 28333,
+   "mae": 1.6967,
+   "rmse": 2.2822,
+   "bias": 0.0648,
+   "predictor": "80% season average, 20% last game",
+   "beats_last_game": 16032
+  },
+  {
+   "n": 28333,
+   "mae": 1.7384,
+   "rmse": 2.2615,
+   "bias": -0.1251,
+   "predictor": "Season average shrunk 4 games toward last season",
+   "beats_last_game": 15724
+  },
+  {
+   "n": 28333,
+   "mae": 1.8339,
+   "rmse": 2.4842,
+   "bias": 0.0259,
+   "predictor": "Average of last two games",
+   "beats_last_game": 13206
+  },
+  {
+   "n": 28333,
+   "mae": 2.0617,
+   "rmse": 2.8201,
+   "bias": 0.0086,
+   "predictor": "Last game",
+   "beats_last_game": 0
+  }
+ ],
+ "by_season": [
+  {
+   "n": 8522,
+   "mae": 1.729,
+   "rmse": 2.3249,
+   "bias": 0.0426,
+   "season": 2023,
+   "predictor": "Season average"
+  },
+  {
+   "n": 8522,
+   "mae": 1.7335,
+   "rmse": 2.2708,
+   "bias": -0.0993,
+   "season": 2023,
+   "predictor": "Full model"
+  },
+  {
+   "n": 8522,
+   "mae": 2.0988,
+   "rmse": 2.8744,
+   "bias": 0.0045,
+   "season": 2023,
+   "predictor": "Last game"
+  },
+  {
+   "n": 8691,
+   "mae": 1.6729,
+   "rmse": 2.2736,
+   "bias": 0.1175,
+   "season": 2024,
+   "predictor": "Season average"
+  },
+  {
+   "n": 8691,
+   "mae": 1.6568,
+   "rmse": 2.2207,
+   "bias": 0.0429,
+   "season": 2024,
+   "predictor": "Full model"
+  },
+  {
+   "n": 8691,
+   "mae": 2.0434,
+   "rmse": 2.8107,
+   "bias": 0.0217,
+   "season": 2024,
+   "predictor": "Last game"
+  },
+  {
+   "n": 8962,
+   "mae": 1.6656,
+   "rmse": 2.2374,
+   "bias": 0.0742,
+   "season": 2025,
+   "predictor": "Season average"
+  },
+  {
+   "n": 8962,
+   "mae": 1.653,
+   "rmse": 2.1912,
+   "bias": -0.0086,
+   "season": 2025,
+   "predictor": "Full model"
+  },
+  {
+   "n": 8962,
+   "mae": 2.0462,
+   "rmse": 2.7838,
+   "bias": 0.0031,
+   "season": 2025,
+   "predictor": "Last game"
+  },
+  {
+   "n": 2158,
+   "mae": 1.7273,
+   "rmse": 2.3152,
+   "bias": 0.0856,
+   "season": 2026,
+   "predictor": "Season average"
+  },
+  {
+   "n": 2158,
+   "mae": 1.6639,
+   "rmse": 2.1971,
+   "bias": 0.0076,
+   "season": 2026,
+   "predictor": "Full model"
+  },
+  {
+   "n": 2158,
+   "mae": 2.0538,
+   "rmse": 2.7915,
+   "bias": -0.0046,
+   "season": 2026,
+   "predictor": "Last game"
+  }
+ ],
+ "dispersion": [
+  {
+   "group": "CB",
+   "n": 5222,
+   "raw": 1.5612,
+   "corrected": 1.3978,
+   "used": 1.3978
+  },
+  {
+   "group": "DL",
+   "n": 9367,
+   "raw": 1.2977,
+   "corrected": 1.1422,
+   "used": 1.1422
+  },
+  {
+   "group": "LB",
+   "n": 8313,
+   "raw": 1.6317,
+   "corrected": 1.4702,
+   "used": 1.4702
+  },
+  {
+   "group": "S",
+   "n": 5378,
+   "raw": 1.6866,
+   "corrected": 1.5242,
+   "used": 1.5242
+  }
+ ],
+ "calibration": [
+  {
+   "bucket": "(-0.001, 0.2]",
+   "n": 3671,
+   "predicted": 0.1325,
+   "observed": 0.1607
+  },
+  {
+   "bucket": "(0.2, 0.35]",
+   "n": 4224,
+   "predicted": 0.2718,
+   "observed": 0.2715
+  },
+  {
+   "bucket": "(0.35, 0.45]",
+   "n": 2224,
+   "predicted": 0.3982,
+   "observed": 0.4011
+  },
+  {
+   "bucket": "(0.45, 0.55]",
+   "n": 1988,
+   "predicted": 0.4992,
+   "observed": 0.4844
+  },
+  {
+   "bucket": "(0.55, 0.65]",
+   "n": 1748,
+   "predicted": 0.5995,
+   "observed": 0.5767
+  },
+  {
+   "bucket": "(0.65, 0.8]",
+   "n": 903,
+   "predicted": 0.6945,
+   "observed": 0.6645
+  }
+ ],
+ "regression": [
+  {
+   "situation": "After a game 4+ above his average",
+   "n": 912,
+   "vs_avg": 0.3294,
+   "vs_last": -4.9068
+  },
+  {
+   "situation": "After a game 3+ below his average",
+   "n": 1172,
+   "vs_avg": -0.8276,
+   "vs_last": 2.9991
+  }
+ ],
+ "role": {
+  "n": 1186,
+  "actual_vs_avg": 1.0203,
+  "actual_vs_avg_pct": 0.4177
+ }
+}
