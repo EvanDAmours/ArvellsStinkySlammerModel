@@ -99,8 +99,10 @@ def cmd_odds(hours=None, auto=False):
     week = int(state["week"])
     if auto:
         now = dt.datetime.now(dt.timezone.utc)
-        # full slate Friday and early Sunday; otherwise only games starting in the next few hours
-        hours = None if (now.weekday() == 4 or (now.weekday() == 6 and now.hour < 14)) else 4
+        # full slate Friday and early Sunday; otherwise only games starting in the next few hours.
+        # The events feed also lists next week's games, so cap the full slate at four days
+        # (Friday evening to Tuesday, or Sunday morning to Thursday morning) to keep credits in budget.
+        hours = 96 if (now.weekday() == 4 or (now.weekday() == 6 and now.hour < 14)) else 4
     rows, remaining = O.pull(key, hours_ahead=hours)
     O.save_snapshot(rows, C.SEASON, week)
     lines = O.latest_lines(C.SEASON, week)
