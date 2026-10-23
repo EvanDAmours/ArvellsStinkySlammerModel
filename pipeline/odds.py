@@ -1,9 +1,11 @@
 """Pull tackle prop lines from The Odds API and store timestamped snapshots.
 
-Cost: (markets x regions) credits per game. Two tackle markets x one region = 2 credits per game,
-so a full Sunday slate is ~28 credits. Several keys can be given; every key hits the same API and
-returns the same lines, so they are used as one pool of credits: each game is fetched once, with
-whichever key has the most credits left, and a key that drops below MIN_CREDITS_LEFT is retired.
+Cost: (markets x regions) credits per game, where every 10 named bookmakers count as one region.
+Two tackle markets x up to 10 books = 2 credits per game, so a full Sunday slate is ~28 credits.
+Empty responses are free. Several keys can be given; every key hits the same API and returns the
+same lines, so they are used in order as one pool of credits: each game is fetched once with the
+first key still above MIN_CREDITS_LEFT, and the next key takes over when it drops below.
+Only the bookmakers in config.ODDS_BOOKMAKERS are requested (and anything else is dropped).
 Set TACKLE_FAKE_ODDS=1 to generate synthetic lines (used by the tests).
 """
 import datetime as dt
@@ -32,11 +34,17 @@ def _credits(api_key):
 
 
 def _pick_key(credits):
-    """Name of the key with the most credits left that is still above the floor, or None."""
-    usable = {n: c for n, c in credits.items() if c is None or c >= C.MIN_CREDITS_LEFT}
-    if not usable:
-        return None
-    return max(usable, key=lambda n: -1 if usable[n] is None else usable[n])
+    """First key, in config order, that is still above the credit floor (or of unknown balance); None if all are low."""
+    for name, c in credits.items():
+        if c is None or c >= C.MIN_CREDITS_LEFT:
+            return name
+    return None
+
+
+def _book_params():
+    if C.ODDS_BOOKMAKERS:
+        return {"bookmakers": ",".join(C.ODDS_BOOKMAKERS)}
+    return {"regions": C.ODDS_REGIONS}
 
 
 def pull(api_keys, hours_ahead=None):
@@ -69,7 +77,7 @@ def pull(api_keys, hours_ahead=None):
             print(f"Stopping: every key is below {C.MIN_CREDITS_LEFT} credits for this month.")
             break
         r = requests.get(f"{BASE}/sports/{C.ODDS_SPORT}/events/{e['id']}/odds", timeout=30, params={
-            "apiKey": api_keys[name], "regions": C.ODDS_REGIONS, "markets": ",".join(C.ODDS_MARKETS), "oddsFormat": "american"})
+            "apiKey": api_keys[name], "markets": ",".join(C.ODDS_MARKETS), "oddsFormat": "american", **_book_params()})
         label = f"{e['away_team']} @ {e['home_team']} {e['commence_time']}"
         if r.status_code in (404, 422):
             print(f"  {label}: HTTP {r.status_code} {r.text[:200].strip()}")
@@ -78,6 +86,8 @@ def pull(api_keys, hours_ahead=None):
         if r.headers.get("x-requests-remaining") is not None:
             credits[name] = float(r.headers["x-requests-remaining"])
         books = r.json().get("bookmakers", [])
+        if C.ODDS_BOOKMAKERS:
+            books = [bk for bk in books if bk.get("key") in C.ODDS_BOOKMAKERS]
         n_books = sum(1 for bk in books if bk.get("markets"))
         print(f"  {label}: {n_books} books with tackle lines, cost {r.headers.get('x-requests-last', '?')} via {name}, left {credits[name]:g}")
         for bk in books:
@@ -90,7 +100,7 @@ def pull(api_keys, hours_ahead=None):
                     if player is None or point is None:
                         continue
                     rows.append(dict(event_id=e["id"], commence_time=e["commence_time"], home_team=e["home_team"],
-                                     away_team=e["away_team"], book=bk.get("title", bk.get("key")), market=m["key"],
+                                     away_team=e["away_team"], book=bk.get("title", bk.get("key")), book_key=bk.get("key"), market=m["key"],
                                      player=player, line=float(point), over_odds=s.get("over"), under_odds=s.get("under"),
                                      book_update=m.get("last_update")))
     return rows, credits

@@ -62,9 +62,9 @@ That's roughly 90 credits a week, inside the free 500 per month. The site shows 
 and pulling stops automatically below 25. More pulls, or historical lines, need a paid plan.
 
 You can add more keys: each secret named in `ODDS_KEY_ENV` in `config.py` (by default `ODDS_API_KEY` and
-`PARLAY_API_KEY`) is treated as one pool of credits. Every key returns the same lines, so each game is
-fetched once with whichever key has the most credits left, and a key that runs low is set aside until
-its month resets. The site shows the pooled balance.
+`PARLAY_API_KEY`) is treated as one pool of credits, used in that order. Every key returns the same lines, so
+each game is fetched once with the first key that still has credits, and the next key takes over when it runs
+low. The site shows the pooled balance.
 
 ## Keeping it private
 
