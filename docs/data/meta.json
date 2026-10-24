@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-10-23T15:21+00:00",
+ "generated_at": "2026-10-24T11:54+00:00",
  "season": 2026,
  "week": 7,
- "lines_pulled": "20261023T221658Z",
+ "lines_pulled": null,
  "stats_source": "2023: nflreadpy; 2024: nflreadpy; 2025: nflreadpy; 2026: nflreadpy",
  "tackle_formula": "solo+with_ast+ast",
  "formula_check_ok": true,
@@ -24,13 +24,12 @@
   }
  ],
  "snaps_rows": 84886,
- "injury_rows": 2124,
+ "injury_rows": 2138,
  "bars": {
   "pick": 0.08,
   "signal": 0.05
  },
  "odds_credits_remaining": 500,
- "lines_count": 0,
  "odds_credits_by_key": {
   "ODDS_API_KEY": 500.0,
   "PARLAY_API_KEY": 0.0
