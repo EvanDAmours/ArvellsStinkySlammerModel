@@ -5,6 +5,9 @@ on:
   schedule:
     - cron: "45 22 * * 4"      # Thu 6:45 pm ET: Thursday night game
     - cron: "0 22 * * 5"       # Fri 6:00 pm ET: full weekend slate as lines post
+    - cron: "0 15 * * 6"       # Sat 9:00 am Mountain: full slate
+    - cron: "0 20 * * 6"       # Sat 2:00 pm Mountain: full slate
+    - cron: "0 4 * * 0"        # Sat 10:00 pm Mountain (04:00 UTC Sunday): full slate
     - cron: "0 13 * * 0"       # Sun 9:00 am ET: full slate
     - cron: "50 15 * * 0"      # Sun 11:50 am ET: 1 pm games, after inactives
     - cron: "45 19 * * 0"      # Sun 3:45 pm ET: late games, after inactives

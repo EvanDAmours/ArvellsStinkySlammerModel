@@ -44,6 +44,7 @@ All times are set for US daylight time (Eastern = UTC−4).
 | Daily model update | Every day 7:30 am | New stats, backtest, projections, grading |
 | Pull tackle lines | Thu 6:45 pm | Thursday night game |
 | | Fri 6:00 pm | Full weekend slate |
+| | Sat 11:00 am, 4:00 pm, midnight (9 am, 2 pm, 10 pm Mountain) | Full slate |
 | | Sun 9:00 am | Full slate |
 | | Sun 11:50 am | 1 pm games, after inactives |
 | | Sun 3:45 pm | Late games, after inactives |
@@ -58,7 +59,8 @@ GitHub can start scheduled jobs a few minutes late at busy times.
 
 Each pull costs 2 credits per game (two tackle markets, one region). The Friday and early-Sunday pulls
 cover the whole slate (about 28 credits); later pulls only cover games starting within four hours.
-That's roughly 90 credits a week, inside the free 500 per month. The site shows the balance after each pull,
+With the three Saturday pulls that's roughly 175 credits a week, about 700 a month, so it needs a second key
+(see below) or fewer Saturday pulls to stay inside one free 500-credit key. The site shows the balance after each pull,
 and pulling stops automatically below 25. More pulls, or historical lines, need a paid plan.
 
 You can add more keys: each secret named in `ODDS_KEY_ENV` in `config.py` (by default `ODDS_API_KEY` and
