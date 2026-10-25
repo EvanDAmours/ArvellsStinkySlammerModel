@@ -1,0 +1,44 @@
+event_id,commence_time,home_team,away_team,book,book_key,market,player,line,over_odds,under_odds,book_update,pulled_at
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Ernest Jones,4.5,-160,123.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Nick Bolton,4.5,-140,108.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Drue Tranquill,4.5,128,-166.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Devon Witherspoon,3.5,-143,110.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Chamarri Conner,3.5,-136,105.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Julian Love,3.5,104,-135.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Josh Jobe,2.5,-159,122.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Nohl Williams,2.5,111,-144.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Byron Murphy II,1.5,-124,-105.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Ernest Jones,8.5,-120,-108.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Nick Bolton,8.5,-117,-110.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Drue Tranquill,6.5,-150,116.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Chamarri Conner,6.5,119,-154.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Devon Witherspoon,5.5,-112,-116.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Julian Love,5.5,114,-148.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Josh Jobe,3.5,-145,112.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Nohl Williams,3.5,-108,-120.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Byron Murphy II,3.5,133,-173.0,2026-10-25T23:53:56Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Josh Jobe,3.5,-148,,2026-10-25T23:52:01Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Ernest Jones,8.5,-143,,2026-10-25T23:52:01Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Julian Love,4.5,-132,,2026-10-25T23:52:01Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Chamarri Conner,5.5,-139,,2026-10-25T23:52:01Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Devon Witherspoon,5.5,-124,,2026-10-25T23:52:01Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Byron Murphy II,3.5,114,,2026-10-25T23:52:01Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Drue Tranquill,6.5,-155,,2026-10-25T23:52:01Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Nick Bolton,8.5,-124,,2026-10-25T23:52:01Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Nohl Williams,3.5,-110,,2026-10-25T23:52:01Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_solo_tackles,Nick Bolton,4.5,-140,110.0,2026-10-25T23:53:11Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_solo_tackles,Ernest Jones,4.5,-160,125.0,2026-10-25T23:53:11Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_solo_tackles,Drue Tranquill,4.5,130,-170.0,2026-10-25T23:53:11Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_solo_tackles,Chamarri Conner,3.5,-135,105.0,2026-10-25T23:53:11Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_solo_tackles,Julian Love,3.5,105,-135.0,2026-10-25T23:53:11Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_solo_tackles,Nohl Williams,2.5,110,-140.0,2026-10-25T23:53:11Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_solo_tackles,Devon Witherspoon,3.5,-150,115.0,2026-10-25T23:53:11Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_solo_tackles,Josh Jobe,2.5,-160,125.0,2026-10-25T23:53:11Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_tackles_assists,Nick Bolton,8.5,-120,-110.0,2026-10-25T23:53:11Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_tackles_assists,Drue Tranquill,6.5,-150,115.0,2026-10-25T23:53:11Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_tackles_assists,Ernest Jones,8.5,-125,-105.0,2026-10-25T23:53:11Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_tackles_assists,Chamarri Conner,6.5,120,-155.0,2026-10-25T23:53:11Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_tackles_assists,Julian Love,5.5,115,-150.0,2026-10-25T23:53:11Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_tackles_assists,Josh Jobe,3.5,-140,110.0,2026-10-25T23:53:11Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_tackles_assists,Nohl Williams,3.5,-105,-125.0,2026-10-25T23:53:11Z,20261025T235404Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:22:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_tackles_assists,Devon Witherspoon,5.5,-110,-120.0,2026-10-25T23:53:11Z,20261025T235404Z
