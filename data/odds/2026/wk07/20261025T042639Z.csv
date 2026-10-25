@@ -1,0 +1,424 @@
+event_id,commence_time,home_team,away_team,book,book_key,market,player,line,over_odds,under_odds,book_update,pulled_at
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_solo_tackles,Payton Wilson,4.5,111,-144.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_solo_tackles,Jaquan Brisker,3.5,-154,119.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_solo_tackles,Jalen Ramsey,3.5,-151,117.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_solo_tackles,Kaden Elliss,3.5,-146,113.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_solo_tackles,Pete Werner,3.5,-119,-109.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_solo_tackles,Patrick Queen,3.5,-106,-122.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_solo_tackles,Julian Blackmon,2.5,-162,125.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_solo_tackles,Justin Reid,2.5,-162,125.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_solo_tackles,Jonas Sanker,2.5,-150,116.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_solo_tackles,Jamel Dean,2.5,-116,-111.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_solo_tackles,Kool-Aid McKinstry,2.5,103,-133.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_solo_tackles,Carl Granderson,1.5,112,-146.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_solo_tackles,Cameron Heyward,1.5,114,-148.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_tackles_assists,Payton Wilson,7.5,-140,108.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_tackles_assists,Pete Werner,6.5,-144,111.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_tackles_assists,Patrick Queen,6.5,-117,-111.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_tackles_assists,Jaquan Brisker,6.5,-112,-116.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_tackles_assists,Kaden Elliss,6.5,-110,-117.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_tackles_assists,Jalen Ramsey,6.5,115,-149.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_tackles_assists,Justin Reid,5.5,114,-148.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_tackles_assists,Julian Blackmon,5.5,123,-160.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_tackles_assists,Jonas Sanker,4.5,-154,119.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_tackles_assists,Jamel Dean,3.5,-133,103.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_tackles_assists,Kool-Aid McKinstry,3.5,-120,-108.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_tackles_assists,Cameron Heyward,3.5,100,-130.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,DraftKings,draftkings,player_tackles_assists,Carl Granderson,3.5,136,-178.0,2026-10-25T04:26:10Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_solo_tackles,Payton Wilson,4.5,110,-140.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_solo_tackles,Julian Blackmon,2.5,-160,125.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_solo_tackles,Justin Reid,2.5,-170,130.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_solo_tackles,Asante Samuel Jr.,2.5,-105,-125.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_solo_tackles,Jalen Ramsey,3.5,-155,120.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_solo_tackles,Jaquan Brisker,3.5,-155,120.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_solo_tackles,Kaden Elliss,3.5,-150,115.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_solo_tackles,Pete Werner,3.5,-125,-105.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_solo_tackles,Kool-Aid McKinstry,2.5,105,-135.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_solo_tackles,Patrick Queen,3.5,-105,-125.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_solo_tackles,Jonas Sanker,2.5,-155,120.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_solo_tackles,Cameron Heyward,1.5,115,-150.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_tackles_assists,Justin Reid,5.5,115,-150.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_tackles_assists,Kaden Elliss,6.5,-110,-120.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_tackles_assists,Payton Wilson,7.5,-140,110.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_tackles_assists,Patrick Queen,6.5,-120,-110.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_tackles_assists,Jaquan Brisker,6.5,-110,-120.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_tackles_assists,Julian Blackmon,5.5,120,-155.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_tackles_assists,Pete Werner,7.5,125,-160.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_tackles_assists,Asante Samuel Jr.,3.5,-135,105.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_tackles_assists,Jalen Ramsey,6.5,115,-150.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_tackles_assists,Jonas Sanker,4.5,-155,120.0,2026-10-25T04:25:32Z,20261025T042639Z
+2e710ea5a306b614f0f966e3d78732f8,2026-10-25T13:30:00Z,New Orleans Saints,Pittsburgh Steelers,theScore Bet,espnbet,player_tackles_assists,Kool-Aid McKinstry,4.5,180,-250.0,2026-10-25T04:25:32Z,20261025T042639Z
+b1be064fb52a198a62109c279e7ab24c,2026-10-25T17:00:00Z,Atlanta Falcons,San Francisco 49ers,DraftKings,draftkings,player_solo_tackles,Fred Warner,4.5,-149,115.0,2026-10-25T04:26:36Z,20261025T042639Z
+b1be064fb52a198a62109c279e7ab24c,2026-10-25T17:00:00Z,Atlanta Falcons,San Francisco 49ers,DraftKings,draftkings,player_solo_tackles,Xavier Watts,3.5,-160,123.0,2026-10-25T04:26:36Z,20261025T042639Z
+b1be064fb52a198a62109c279e7ab24c,2026-10-25T17:00:00Z,Atlanta Falcons,San Francisco 49ers,DraftKings,draftkings,player_solo_tackles,Ji'Ayir Brown,3.5,-110,-118.0,2026-10-25T04:26:36Z,20261025T042639Z
+b1be064fb52a198a62109c279e7ab24c,2026-10-25T17:00:00Z,Atlanta Falcons,San Francisco 49ers,DraftKings,draftkings,player_solo_tackles,Malik Mustapha,3.5,108,-141.0,2026-10-25T04:26:36Z,20261025T042639Z
+b1be064fb52a198a62109c279e7ab24c,2026-10-25T17:00:00Z,Atlanta Falcons,San Francisco 49ers,DraftKings,draftkings,player_solo_tackles,Jessie Bates III,3.5,122,-158.0,2026-10-25T04:26:36Z,20261025T042639Z
+b1be064fb52a198a62109c279e7ab24c,2026-10-25T17:00:00Z,Atlanta Falcons,San Francisco 49ers,DraftKings,draftkings,player_solo_tackles,Deommodore Lenoir,2.5,-150,115.0,2026-10-25T04:26:36Z,20261025T042639Z
+b1be064fb52a198a62109c279e7ab24c,2026-10-25T17:00:00Z,Atlanta Falcons,San Francisco 49ers,DraftKings,draftkings,player_tackles_assists,Fred Warner,9.5,105,-136.0,2026-10-25T04:26:36Z,20261025T042639Z
+b1be064fb52a198a62109c279e7ab24c,2026-10-25T17:00:00Z,Atlanta Falcons,San Francisco 49ers,DraftKings,draftkings,player_tackles_assists,Xavier Watts,6.5,-119,-109.0,2026-10-25T04:26:36Z,20261025T042639Z
+b1be064fb52a198a62109c279e7ab24c,2026-10-25T17:00:00Z,Atlanta Falcons,San Francisco 49ers,DraftKings,draftkings,player_tackles_assists,Jessie Bates III,5.5,-108,-120.0,2026-10-25T04:26:36Z,20261025T042639Z
+b1be064fb52a198a62109c279e7ab24c,2026-10-25T17:00:00Z,Atlanta Falcons,San Francisco 49ers,DraftKings,draftkings,player_tackles_assists,Ji'Ayir Brown,5.5,107,-138.0,2026-10-25T04:26:36Z,20261025T042639Z
+b1be064fb52a198a62109c279e7ab24c,2026-10-25T17:00:00Z,Atlanta Falcons,San Francisco 49ers,DraftKings,draftkings,player_tackles_assists,Malik Mustapha,5.5,119,-154.0,2026-10-25T04:26:36Z,20261025T042639Z
+b1be064fb52a198a62109c279e7ab24c,2026-10-25T17:00:00Z,Atlanta Falcons,San Francisco 49ers,DraftKings,draftkings,player_tackles_assists,Deommodore Lenoir,4.5,119,-154.0,2026-10-25T04:26:36Z,20261025T042639Z
+b1be064fb52a198a62109c279e7ab24c,2026-10-25T17:00:00Z,Atlanta Falcons,San Francisco 49ers,Bally Bet,ballybet,player_tackles_assists,Fred Warner,9.5,-105,,2026-10-25T04:26:05Z,20261025T042639Z
+b1be064fb52a198a62109c279e7ab24c,2026-10-25T17:00:00Z,Atlanta Falcons,San Francisco 49ers,Bally Bet,ballybet,player_tackles_assists,Jessie Bates III,5.5,-105,,2026-10-25T04:26:05Z,20261025T042639Z
+b1be064fb52a198a62109c279e7ab24c,2026-10-25T17:00:00Z,Atlanta Falcons,San Francisco 49ers,Bally Bet,ballybet,player_tackles_assists,Xavier Watts,6.5,-120,,2026-10-25T04:26:05Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_solo_tackles,Kyle Hamilton,4.5,-105,-123.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_solo_tackles,Demetrius Knight Jr.,3.5,-119,-109.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_solo_tackles,Barrett Carter,3.5,-103,-126.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_solo_tackles,Roquan Smith,3.5,105,-137.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_solo_tackles,Jordan Battle,3.5,114,-148.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_solo_tackles,Malaki Starks,3.5,136,-177.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_solo_tackles,Trenton Simpson,2.5,-179,138.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_solo_tackles,Dax Hill,2.5,-164,126.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_solo_tackles,Bryan Cook,2.5,-134,103.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_solo_tackles,Marlon Humphrey,2.5,-121,-107.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_solo_tackles,Nate Wiggins,2.5,119,-155.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_solo_tackles,Kyle Dugger,1.5,-144,111.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_solo_tackles,Jonathan Allen,1.5,-127,-102.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_solo_tackles,Justin Madubuike,1.5,-116,-112.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_tackles_assists,Roquan Smith,8.5,100,-129.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_tackles_assists,Demetrius Knight Jr.,7.5,-129,-101.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_tackles_assists,Barrett Carter,7.5,-105,-124.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_tackles_assists,Kyle Hamilton,6.5,-132,102.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_tackles_assists,Trenton Simpson,5.5,-144,111.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_tackles_assists,Jordan Battle,5.5,-109,-118.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_tackles_assists,Malaki Starks,5.5,112,-145.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_tackles_assists,Bryan Cook,4.5,-116,-112.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_tackles_assists,Dax Hill,4.5,105,-136.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_tackles_assists,Marlon Humphrey,4.5,114,-148.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_tackles_assists,Jonathan Allen,3.5,-110,-118.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_tackles_assists,Kyle Dugger,3.5,108,-139.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_tackles_assists,Nate Wiggins,3.5,119,-155.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,DraftKings,draftkings,player_tackles_assists,Justin Madubuike,2.5,-148,114.0,2026-10-25T04:25:49Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,Bally Bet,ballybet,player_tackles_assists,Roquan Smith,8.5,-110,,2026-10-25T04:25:43Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,Bally Bet,ballybet,player_tackles_assists,Malaki Starks,5.5,106,,2026-10-25T04:25:43Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,Bally Bet,ballybet,player_tackles_assists,Kyle Hamilton,6.5,-143,,2026-10-25T04:25:43Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,Bally Bet,ballybet,player_tackles_assists,Trenton Simpson,5.5,-159,,2026-10-25T04:25:43Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,Bally Bet,ballybet,player_tackles_assists,Demetrius Knight Jr.,7.5,-137,,2026-10-25T04:25:43Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,Bally Bet,ballybet,player_tackles_assists,Jordan Battle,5.5,-120,,2026-10-25T04:25:43Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,Bally Bet,ballybet,player_tackles_assists,Barrett Carter,7.5,-105,,2026-10-25T04:25:43Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_solo_tackles,Kyle Hamilton,4.5,-105,-125.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_solo_tackles,Barrett Carter,3.5,-105,-125.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_solo_tackles,Dax Hill,2.5,-160,125.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_solo_tackles,Demetrius Knight Jr.,3.5,-120,-110.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_solo_tackles,Nate Wiggins,2.5,120,-155.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_solo_tackles,Jordan Battle,3.5,115,-150.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_solo_tackles,Bryan Cook,2.5,-135,105.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_solo_tackles,Malaki Starks,3.5,135,-180.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_solo_tackles,Roquan Smith,3.5,105,-135.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_solo_tackles,Trenton Simpson,2.5,-180,135.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_solo_tackles,Marlon Humphrey,2.5,-125,-105.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_solo_tackles,Jonathan Allen,1.5,-130,100.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_tackles_assists,Barrett Carter,7.5,-105,-125.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_tackles_assists,Demetrius Knight Jr.,7.5,-130,100.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_tackles_assists,Kyle Hamilton,6.5,-130,100.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_tackles_assists,Roquan Smith,8.5,100,-130.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_tackles_assists,Jordan Battle,5.5,-110,-120.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_tackles_assists,Malaki Starks,5.5,115,-150.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_tackles_assists,Bryan Cook,4.5,-120,-110.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_tackles_assists,Trenton Simpson,5.5,-140,110.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_tackles_assists,Dax Hill,4.5,105,-135.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_tackles_assists,Nate Wiggins,3.5,120,-155.0,2026-10-25T04:26:19Z,20261025T042639Z
+550ec5290f935d311995affbcb0b5c79,2026-10-25T17:00:00Z,Baltimore Ravens,Cincinnati Bengals,theScore Bet,espnbet,player_tackles_assists,Marlon Humphrey,4.5,115,-150.0,2026-10-25T04:26:19Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_solo_tackles,Josiah Trotter,4.5,-121,-107.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_solo_tackles,Devin Lloyd,4.5,108,-140.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_solo_tackles,Bobby Okereke,4.5,112,-145.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_solo_tackles,Nick Scott,3.5,-121,-107.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_solo_tackles,Tykee Smith,3.5,-106,-122.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_solo_tackles,Zyon McCollum,3.5,120,-156.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_solo_tackles,Will Lee III,3.5,132,-171.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_solo_tackles,Tre'von Moehrig,3.5,138,-179.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_solo_tackles,Zakee Wheatley,2.5,-177,136.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_solo_tackles,Alex Anzalone,2.5,-134,104.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_solo_tackles,Ifeatu Melifonwu,2.5,104,-134.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_tackles_assists,Josiah Trotter,8.5,-122,-106.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_tackles_assists,Devin Lloyd,7.5,-124,-104.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_tackles_assists,Bobby Okereke,7.5,-123,-105.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_tackles_assists,Tykee Smith,5.5,-153,118.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_tackles_assists,Nick Scott,5.5,-113,-114.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_tackles_assists,Alex Anzalone,5.5,-111,-117.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_tackles_assists,Tre'von Moehrig,5.5,118,-153.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_tackles_assists,Zakee Wheatley,4.5,-120,-108.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_tackles_assists,Will Lee III,4.5,-115,-113.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_tackles_assists,Zyon McCollum,4.5,105,-136.0,2026-10-25T04:26:13Z,20261025T042639Z
+2823e986597c449ab94126cd5ed3fae9,2026-10-25T17:00:00Z,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,player_tackles_assists,Ifeatu Melifonwu,4.5,110,-142.0,2026-10-25T04:26:13Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,DraftKings,draftkings,player_solo_tackles,Carson Schwesinger,4.5,-118,-110.0,2026-10-25T04:25:39Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,DraftKings,draftkings,player_solo_tackles,Amani Hooker,4.5,114,-148.0,2026-10-25T04:25:39Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,DraftKings,draftkings,player_solo_tackles,Anthony Hill Jr.,4.5,115,-150.0,2026-10-25T04:25:39Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,DraftKings,draftkings,player_solo_tackles,Jeffery Simmons,2.5,102,-133.0,2026-10-25T04:25:39Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,DraftKings,draftkings,player_solo_tackles,Ronnie Hickman,2.5,111,-144.0,2026-10-25T04:25:39Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,DraftKings,draftkings,player_solo_tackles,Cody Barton,1.5,-197,150.0,2026-10-25T04:25:39Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,DraftKings,draftkings,player_solo_tackles,Mason Graham,1.5,-120,-108.0,2026-10-25T04:25:39Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,DraftKings,draftkings,player_tackles_assists,Carson Schwesinger,9.5,-115,-112.0,2026-10-25T04:25:39Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,DraftKings,draftkings,player_tackles_assists,Anthony Hill Jr.,7.5,-149,115.0,2026-10-25T04:25:39Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,DraftKings,draftkings,player_tackles_assists,Amani Hooker,6.5,-103,-125.0,2026-10-25T04:25:39Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,DraftKings,draftkings,player_tackles_assists,Jeffery Simmons,4.5,-133,103.0,2026-10-25T04:25:39Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,DraftKings,draftkings,player_tackles_assists,Ronnie Hickman,4.5,-122,-106.0,2026-10-25T04:25:39Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,DraftKings,draftkings,player_tackles_assists,Cody Barton,4.5,123,-160.0,2026-10-25T04:25:39Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,DraftKings,draftkings,player_tackles_assists,Mason Graham,3.5,126,-164.0,2026-10-25T04:25:39Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,theScore Bet,espnbet,player_solo_tackles,Carson Schwesinger,4.5,-120,-110.0,2026-10-25T04:25:54Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,theScore Bet,espnbet,player_solo_tackles,Anthony Hill Jr.,4.5,115,-150.0,2026-10-25T04:25:54Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,theScore Bet,espnbet,player_solo_tackles,Cody Barton,2.5,150,-200.0,2026-10-25T04:25:54Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,theScore Bet,espnbet,player_solo_tackles,Ronnie Hickman,2.5,110,-140.0,2026-10-25T04:25:54Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,theScore Bet,espnbet,player_solo_tackles,Amani Hooker,4.5,115,-150.0,2026-10-25T04:25:54Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,theScore Bet,espnbet,player_solo_tackles,Jeffery Simmons,2.5,100,-130.0,2026-10-25T04:25:54Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,theScore Bet,espnbet,player_tackles_assists,Carson Schwesinger,9.5,-115,-115.0,2026-10-25T04:25:54Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,theScore Bet,espnbet,player_tackles_assists,Cody Barton,4.5,125,-160.0,2026-10-25T04:25:54Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,theScore Bet,espnbet,player_tackles_assists,Anthony Hill Jr.,7.5,-150,115.0,2026-10-25T04:25:54Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,theScore Bet,espnbet,player_tackles_assists,Amani Hooker,6.5,-105,-125.0,2026-10-25T04:25:54Z,20261025T042639Z
+5dce18baccec5d3ad5fb3a3ce52f7619,2026-10-25T17:00:00Z,Tennessee Titans,Cleveland Browns,theScore Bet,espnbet,player_tackles_assists,Ronnie Hickman,4.5,-125,-105.0,2026-10-25T04:25:54Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_solo_tackles,Arvell Reese,4.5,105,-136.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_solo_tackles,Azeez Al-Shaair,4.5,112,-145.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_solo_tackles,Kamari Lassiter,3.5,-122,-106.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_solo_tackles,Tyler Nubin,3.5,111,-144.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_solo_tackles,Andru Phillips,2.5,-153,118.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_solo_tackles,Paulson Adebo,2.5,-141,109.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_solo_tackles,Henry To'oTo'o,2.5,-107,-121.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_solo_tackles,Deonte Banks,2.5,115,-150.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_solo_tackles,Will Anderson Jr.,2.5,134,-175.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_solo_tackles,Abdul Carter,1.5,-129,100.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_solo_tackles,Tommy Togiai,1.5,-117,-111.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_solo_tackles,DJ Reader,1.5,108,-140.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_tackles_assists,Azeez Al-Shaair,9.5,107,-139.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_tackles_assists,Arvell Reese,8.5,103,-134.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_tackles_assists,Henry To'oTo'o,5.5,-113,-114.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_tackles_assists,Tyler Nubin,5.5,-108,-119.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_tackles_assists,Kamari Lassiter,5.5,-103,-126.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_tackles_assists,Tommy Togiai,4.5,-150,116.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_tackles_assists,Andru Phillips,4.5,104,-135.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_tackles_assists,Deonte Banks,4.5,124,-161.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_tackles_assists,Paulson Adebo,3.5,-168,129.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_tackles_assists,Will Anderson Jr.,3.5,-143,111.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_tackles_assists,DJ Reader,3.5,118,-153.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,DraftKings,draftkings,player_tackles_assists,Abdul Carter,2.5,-168,129.0,2026-10-25T04:25:50Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,Bally Bet,ballybet,player_tackles_assists,Henry To'oTo'o,5.5,-105,,2026-10-25T04:26:05Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,Bally Bet,ballybet,player_tackles_assists,Kamari Lassiter,5.5,-137,,2026-10-25T04:26:05Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,Bally Bet,ballybet,player_tackles_assists,Azeez Al-Shaair,9.5,106,,2026-10-25T04:26:05Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,Bally Bet,ballybet,player_tackles_assists,Andru Phillips,4.5,106,,2026-10-25T04:26:05Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,Bally Bet,ballybet,player_tackles_assists,Arvell Reese,8.5,-130,,2026-10-25T04:26:05Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,Bally Bet,ballybet,player_tackles_assists,Tyler Nubin,5.5,-130,,2026-10-25T04:26:05Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,theScore Bet,espnbet,player_solo_tackles,Arvell Reese,4.5,105,-135.0,2026-10-25T04:25:54Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,theScore Bet,espnbet,player_solo_tackles,Azeez Al-Shaair,4.5,110,-140.0,2026-10-25T04:25:54Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,theScore Bet,espnbet,player_solo_tackles,Tyler Nubin,3.5,110,-140.0,2026-10-25T04:25:54Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,theScore Bet,espnbet,player_solo_tackles,Deonte Banks,2.5,115,-150.0,2026-10-25T04:25:54Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,theScore Bet,espnbet,player_solo_tackles,Kamari Lassiter,3.5,-125,-105.0,2026-10-25T04:25:54Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,theScore Bet,espnbet,player_solo_tackles,Andru Phillips,2.5,-155,120.0,2026-10-25T04:25:54Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,theScore Bet,espnbet,player_solo_tackles,DJ Reader,1.5,110,-140.0,2026-10-25T04:25:54Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,theScore Bet,espnbet,player_solo_tackles,Tommy Togiai,1.5,-120,-110.0,2026-10-25T04:25:54Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,theScore Bet,espnbet,player_solo_tackles,Will Anderson Jr.,2.5,135,-180.0,2026-10-25T04:25:54Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,theScore Bet,espnbet,player_tackles_assists,Arvell Reese,8.5,115,-150.0,2026-10-25T04:25:54Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,theScore Bet,espnbet,player_tackles_assists,Azeez Al-Shaair,9.5,105,-135.0,2026-10-25T04:25:54Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,theScore Bet,espnbet,player_tackles_assists,Tyler Nubin,5.5,-110,-120.0,2026-10-25T04:25:54Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,theScore Bet,espnbet,player_tackles_assists,Andru Phillips,4.5,105,-135.0,2026-10-25T04:25:54Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,theScore Bet,espnbet,player_tackles_assists,Kamari Lassiter,5.5,-105,-125.0,2026-10-25T04:25:54Z,20261025T042639Z
+2bba7fde6f97d0e54403d53676e4ab63,2026-10-25T17:00:00Z,Houston Texans,New York Giants,theScore Bet,espnbet,player_tackles_assists,Deonte Banks,4.5,125,-160.0,2026-10-25T04:25:54Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_solo_tackles,Blake Cashman,5.5,114,-148.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_solo_tackles,Akeem Davis-Gaither,4.5,-157,121.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_solo_tackles,Josh Metellus,4.5,-103,-126.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_solo_tackles,Charvarius Ward,2.5,-156,120.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_solo_tackles,Byron Murphy Jr.,2.5,-143,110.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_solo_tackles,Eric Wilson,2.5,110,-143.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_solo_tackles,Isaiah Rodgers,2.5,118,-153.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_solo_tackles,DeForest Buckner,2.5,134,-175.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_solo_tackles,Andrew Van Ginkel,2.5,152,-199.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_solo_tackles,Dallas Turner,2.5,152,-198.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_tackles_assists,Blake Cashman,9.5,-107,-122.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_tackles_assists,Akeem Davis-Gaither,8.5,-104,-125.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_tackles_assists,Josh Metellus,6.5,-101,-128.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_tackles_assists,Eric Wilson,4.5,-144,111.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_tackles_assists,DeForest Buckner,3.5,-161,124.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_tackles_assists,Byron Murphy Jr.,3.5,-139,107.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_tackles_assists,Charvarius Ward,3.5,-139,107.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_tackles_assists,Andrew Van Ginkel,3.5,-113,-115.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_tackles_assists,Isaiah Rodgers,3.5,116,-150.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,DraftKings,draftkings,player_tackles_assists,Dallas Turner,2.5,-134,103.0,2026-10-25T04:26:32Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,Bally Bet,ballybet,player_tackles_assists,Josh Metellus,6.5,110,,2026-10-25T04:26:05Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,Bally Bet,ballybet,player_tackles_assists,Akeem Davis-Gaither,7.5,-150,,2026-10-25T04:26:05Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,Bally Bet,ballybet,player_tackles_assists,A.J. Haulcy,5.5,110,,2026-10-25T04:26:05Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,Bally Bet,ballybet,player_tackles_assists,Blake Cashman,9.5,-105,,2026-10-25T04:26:05Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_solo_tackles,Akeem Davis-Gaither,4.5,-155,120.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_solo_tackles,Josh Metellus,4.5,105,-135.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_solo_tackles,Blake Cashman,4.5,-180,135.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_solo_tackles,Cam Bynum,3.5,130,-170.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_solo_tackles,A.J. Haulcy,3.5,-105,-125.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_solo_tackles,Eric Wilson,2.5,110,-140.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_solo_tackles,Andrew Van Ginkel,2.5,150,-200.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_solo_tackles,Dallas Turner,2.5,150,-200.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_solo_tackles,Isaiah Rodgers,2.5,120,-155.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_solo_tackles,Byron Murphy Jr.,2.5,-140,110.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_tackles_assists,Akeem Davis-Gaither,8.5,-105,-125.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_tackles_assists,Cam Bynum,4.5,105,-135.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_tackles_assists,Blake Cashman,9.5,-105,-125.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_tackles_assists,A.J. Haulcy,5.5,115,-150.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_tackles_assists,Eric Wilson,4.5,-140,110.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_tackles_assists,Josh Metellus,6.5,100,-130.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_tackles_assists,Andrew Van Ginkel,3.5,-115,-115.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_tackles_assists,Byron Murphy Jr.,3.5,-135,105.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_tackles_assists,Dallas Turner,3.5,180,-250.0,2026-10-25T04:26:35Z,20261025T042639Z
+f3992ad4496724baf7dcd1ef58245d6b,2026-10-25T17:00:00Z,Minnesota Vikings,Indianapolis Colts,theScore Bet,espnbet,player_tackles_assists,Isaiah Rodgers,3.5,115,-150.0,2026-10-25T04:26:35Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_solo_tackles,Jacob Rodriguez,5.5,107,-138.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_solo_tackles,Jordyn Brooks,4.5,-124,-104.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_solo_tackles,Jamien Sherwood,4.5,105,-137.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_solo_tackles,Demario Davis,4.5,114,-147.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_solo_tackles,Dante Trader Jr.,3.5,-111,-117.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_solo_tackles,Minkah Fitzpatrick,3.5,121,-158.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_solo_tackles,David Bailey,2.5,-133,102.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_solo_tackles,Jason Marshall Jr.,2.5,102,-132.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_solo_tackles,Brandon Stephens,2.5,117,-152.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_solo_tackles,Azareye'h Thomas,2.5,133,-173.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_solo_tackles,Josh Uche,1.5,-162,125.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_tackles_assists,Jacob Rodriguez,9.5,-101,-128.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_tackles_assists,Jordyn Brooks,8.5,-117,-110.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_tackles_assists,Jamien Sherwood,7.5,-128,-101.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_tackles_assists,Demario Davis,7.5,-116,-112.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_tackles_assists,Dante Trader Jr.,5.5,-142,110.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_tackles_assists,Minkah Fitzpatrick,5.5,123,-160.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_tackles_assists,David Bailey,4.5,-110,-117.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_tackles_assists,Jason Marshall Jr.,3.5,-132,102.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_tackles_assists,Azareye'h Thomas,3.5,105,-137.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_tackles_assists,Josh Uche,3.5,122,-158.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,DraftKings,draftkings,player_tackles_assists,Brandon Stephens,3.5,123,-159.0,2026-10-25T04:26:33Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,theScore Bet,espnbet,player_solo_tackles,Jacob Rodriguez,5.5,110,-140.0,2026-10-25T04:26:37Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,theScore Bet,espnbet,player_solo_tackles,Jordyn Brooks,4.5,-125,-105.0,2026-10-25T04:26:37Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,theScore Bet,espnbet,player_solo_tackles,Jamien Sherwood,4.5,105,-135.0,2026-10-25T04:26:37Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,theScore Bet,espnbet,player_solo_tackles,Demario Davis,4.5,115,-150.0,2026-10-25T04:26:37Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,theScore Bet,espnbet,player_solo_tackles,Minkah Fitzpatrick,3.5,120,-155.0,2026-10-25T04:26:37Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,theScore Bet,espnbet,player_solo_tackles,Dante Trader Jr.,3.5,-110,-120.0,2026-10-25T04:26:37Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,theScore Bet,espnbet,player_solo_tackles,Jason Marshall Jr.,2.5,100,-130.0,2026-10-25T04:26:37Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,theScore Bet,espnbet,player_solo_tackles,David Bailey,2.5,-130,100.0,2026-10-25T04:26:37Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,theScore Bet,espnbet,player_tackles_assists,Jordyn Brooks,8.5,-120,-110.0,2026-10-25T04:26:37Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,theScore Bet,espnbet,player_tackles_assists,Jacob Rodriguez,9.5,100,-130.0,2026-10-25T04:26:37Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,theScore Bet,espnbet,player_tackles_assists,Jamien Sherwood,7.5,-130,100.0,2026-10-25T04:26:37Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,theScore Bet,espnbet,player_tackles_assists,Demario Davis,7.5,-120,-110.0,2026-10-25T04:26:37Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,theScore Bet,espnbet,player_tackles_assists,Jason Marshall Jr.,3.5,-135,105.0,2026-10-25T04:26:37Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,theScore Bet,espnbet,player_tackles_assists,Minkah Fitzpatrick,5.5,125,-160.0,2026-10-25T04:26:37Z,20261025T042639Z
+be5dd120ca08b43d647b6caa8953500a,2026-10-25T17:00:00Z,New York Jets,Miami Dolphins,theScore Bet,espnbet,player_tackles_assists,Dante Trader Jr.,5.5,-140,110.0,2026-10-25T04:26:37Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,DraftKings,draftkings,player_solo_tackles,Alex Singleton,4.5,-124,-104.0,2026-10-25T04:26:37Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,DraftKings,draftkings,player_solo_tackles,Mack Wilson Sr.,4.5,116,-151.0,2026-10-25T04:26:37Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,DraftKings,draftkings,player_solo_tackles,Budda Baker,4.5,129,-168.0,2026-10-25T04:26:37Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,DraftKings,draftkings,player_solo_tackles,Jack Gibbens,3.5,-113,-115.0,2026-10-25T04:26:37Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,DraftKings,draftkings,player_solo_tackles,Brandon Jones,3.5,100,-129.0,2026-10-25T04:26:37Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,DraftKings,draftkings,player_solo_tackles,Justin Strnad,2.5,122,-159.0,2026-10-25T04:26:37Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,DraftKings,draftkings,player_solo_tackles,Zach Allen,1.5,126,-164.0,2026-10-25T04:26:37Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,DraftKings,draftkings,player_tackles_assists,Alex Singleton,9.5,-106,-122.0,2026-10-25T04:26:37Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,DraftKings,draftkings,player_tackles_assists,Mack Wilson Sr.,8.5,-124,-104.0,2026-10-25T04:26:37Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,DraftKings,draftkings,player_tackles_assists,Jack Gibbens,7.5,-104,-125.0,2026-10-25T04:26:37Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,DraftKings,draftkings,player_tackles_assists,Budda Baker,7.5,104,-135.0,2026-10-25T04:26:37Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,DraftKings,draftkings,player_tackles_assists,Brandon Jones,5.5,-122,-106.0,2026-10-25T04:26:37Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,DraftKings,draftkings,player_tackles_assists,Justin Strnad,4.5,-146,112.0,2026-10-25T04:26:37Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,DraftKings,draftkings,player_tackles_assists,Zach Allen,2.5,-168,129.0,2026-10-25T04:26:37Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,theScore Bet,espnbet,player_solo_tackles,Alex Singleton,4.5,-125,-105.0,2026-10-25T04:25:49Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,theScore Bet,espnbet,player_solo_tackles,Budda Baker,4.5,130,-170.0,2026-10-25T04:25:49Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,theScore Bet,espnbet,player_solo_tackles,Mack Wilson Sr.,4.5,115,-150.0,2026-10-25T04:25:49Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,theScore Bet,espnbet,player_solo_tackles,Jack Gibbens,3.5,-115,-115.0,2026-10-25T04:25:49Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,theScore Bet,espnbet,player_solo_tackles,Brandon Jones,3.5,100,-130.0,2026-10-25T04:25:49Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,theScore Bet,espnbet,player_solo_tackles,Justin Strnad,2.5,125,-160.0,2026-10-25T04:25:49Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,theScore Bet,espnbet,player_tackles_assists,Alex Singleton,9.5,-105,-125.0,2026-10-25T04:25:49Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,theScore Bet,espnbet,player_tackles_assists,Budda Baker,7.5,105,-135.0,2026-10-25T04:25:49Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,theScore Bet,espnbet,player_tackles_assists,Jack Gibbens,7.5,-105,-125.0,2026-10-25T04:25:49Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,theScore Bet,espnbet,player_tackles_assists,Mack Wilson Sr.,8.5,-125,-105.0,2026-10-25T04:25:49Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,theScore Bet,espnbet,player_tackles_assists,Brandon Jones,5.5,-125,-105.0,2026-10-25T04:25:49Z,20261025T042639Z
+436119bb3ccdaa6ed7808aa3ebd82b76,2026-10-25T20:05:00Z,Arizona Cardinals,Denver Broncos,theScore Bet,espnbet,player_tackles_assists,Justin Strnad,4.5,-150,115.0,2026-10-25T04:25:49Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_solo_tackles,Evan Williams,4.5,100,-129.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_solo_tackles,Brian Branch,4.5,116,-151.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_solo_tackles,D.J. Reed,3.5,-146,113.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_solo_tackles,Jack Campbell,3.5,-146,112.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_solo_tackles,Keisean Nixon,3.5,-105,-123.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_solo_tackles,Xavier McKinney,3.5,134,-174.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_solo_tackles,Javon Bullard,3.5,137,-179.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_solo_tackles,Derrick Barnes,2.5,110,-142.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_solo_tackles,Lukas Van Ness,1.5,-191,146.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_solo_tackles,Aidan Hutchinson,1.5,-124,-104.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_tackles_assists,Jack Campbell,7.5,-149,115.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_tackles_assists,Evan Williams,7.5,104,-135.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_tackles_assists,Brian Branch,6.5,108,-140.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_tackles_assists,Javon Bullard,5.5,-132,102.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_tackles_assists,Keisean Nixon,5.5,104,-135.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_tackles_assists,Xavier McKinney,5.5,119,-154.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_tackles_assists,D.J. Reed,4.5,-133,103.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_tackles_assists,Derrick Barnes,3.5,-160,123.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_tackles_assists,Lukas Van Ness,3.5,-119,-108.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,DraftKings,draftkings,player_tackles_assists,Aidan Hutchinson,2.5,-166,127.0,2026-10-25T04:25:46Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,Bally Bet,ballybet,player_tackles_assists,Keisean Nixon,5.5,-130,,2026-10-25T04:25:43Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,Bally Bet,ballybet,player_tackles_assists,Jack Campbell,7.5,-143,,2026-10-25T04:25:43Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,Bally Bet,ballybet,player_tackles_assists,Evan Williams,7.5,110,,2026-10-25T04:25:43Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,Bally Bet,ballybet,player_tackles_assists,Brian Branch,6.5,106,,2026-10-25T04:25:43Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,Bally Bet,ballybet,player_tackles_assists,Javon Bullard,5.5,-129,,2026-10-25T04:25:43Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,theScore Bet,espnbet,player_solo_tackles,Jack Campbell,3.5,-140,110.0,2026-10-25T04:26:28Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,theScore Bet,espnbet,player_solo_tackles,Derrick Barnes,2.5,110,-140.0,2026-10-25T04:26:28Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,theScore Bet,espnbet,player_solo_tackles,D.J. Reed,3.5,-130,100.0,2026-10-25T04:26:28Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,theScore Bet,espnbet,player_solo_tackles,Keisean Nixon,3.5,-105,-125.0,2026-10-25T04:26:28Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,theScore Bet,espnbet,player_solo_tackles,Xavier McKinney,3.5,135,-180.0,2026-10-25T04:26:28Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,theScore Bet,espnbet,player_solo_tackles,Aidan Hutchinson,1.5,-125,-105.0,2026-10-25T04:26:28Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,theScore Bet,espnbet,player_solo_tackles,Lukas Van Ness,1.5,-190,140.0,2026-10-25T04:26:28Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,theScore Bet,espnbet,player_tackles_assists,Jack Campbell,7.5,-150,115.0,2026-10-25T04:26:28Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,theScore Bet,espnbet,player_tackles_assists,Keisean Nixon,5.5,105,-135.0,2026-10-25T04:26:28Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,theScore Bet,espnbet,player_tackles_assists,Xavier McKinney,5.5,120,-155.0,2026-10-25T04:26:28Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,theScore Bet,espnbet,player_tackles_assists,Derrick Barnes,3.5,-170,130.0,2026-10-25T04:26:28Z,20261025T042639Z
+e8e5715eefb6a9ce64765e9ddf49c0cc,2026-10-25T20:25:00Z,Detroit Lions,Green Bay Packers,theScore Bet,espnbet,player_tackles_assists,D.J. Reed,4.5,-130,100.0,2026-10-25T04:26:28Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_solo_tackles,Nakobe Dean,4.5,-139,107.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_solo_tackles,Jeremy Chinn,4.5,121,-157.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_solo_tackles,Quentin Lake,3.5,-144,111.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_solo_tackles,Quay Walker,3.5,-141,109.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_solo_tackles,Kamren Curl,3.5,101,-131.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_solo_tackles,Treydan Stukes,3.5,131,-170.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_solo_tackles,Kamren Kinchens,3.5,135,-175.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_solo_tackles,Taron Johnson,2.5,-140,108.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_solo_tackles,Eric Stokes,2.5,-108,-120.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_solo_tackles,Jaylen Watson,2.5,134,-175.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_solo_tackles,Byron Young,1.5,-192,147.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_tackles_assists,Nakobe Dean,9.5,104,-135.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_tackles_assists,Quay Walker,7.5,-134,104.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_tackles_assists,Jeremy Chinn,6.5,-115,-112.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_tackles_assists,Quentin Lake,6.5,108,-140.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_tackles_assists,Kamren Curl,5.5,-149,115.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_tackles_assists,Treydan Stukes,5.5,-132,102.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_tackles_assists,Kamren Kinchens,5.5,-123,-105.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_tackles_assists,Taron Johnson,4.5,-148,114.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_tackles_assists,Byron Young,4.5,-123,-105.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_tackles_assists,Eric Stokes,3.5,-148,114.0,2026-10-25T04:25:44Z,20261025T042639Z
+f7679cf18454e4d88a8f2b990c3f08ac,2026-10-25T20:25:00Z,Las Vegas Raiders,Los Angeles Rams,DraftKings,draftkings,player_tackles_assists,Jaylen Watson,3.5,-127,-102.0,2026-10-25T04:25:44Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Ernest Jones,5.5,119,-154.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Nick Bolton,4.5,-140,108.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Drue Tranquill,3.5,-168,129.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Devon Witherspoon,3.5,-152,117.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Chamarri Conner,3.5,-136,105.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Josh Jobe,2.5,-167,128.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Julian Love,2.5,-147,113.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Nohl Williams,2.5,111,-144.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_solo_tackles,Byron Murphy II,1.5,-134,103.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Ernest Jones,8.5,-136,105.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Nick Bolton,8.5,-117,-110.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Drue Tranquill,6.5,-145,112.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Chamarri Conner,5.5,-133,103.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Devon Witherspoon,5.5,-117,-111.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Julian Love,4.5,-107,-121.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Josh Jobe,3.5,-142,109.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Nohl Williams,3.5,-108,-120.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,DraftKings,draftkings,player_tackles_assists,Byron Murphy II,3.5,123,-159.0,2026-10-25T04:25:32Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Josh Jobe,3.5,-148,,2026-10-25T04:26:38Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Ernest Jones,8.5,-143,,2026-10-25T04:26:38Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Julian Love,4.5,-112,,2026-10-25T04:26:38Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Chamarri Conner,5.5,-139,,2026-10-25T04:26:38Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Devon Witherspoon,5.5,-124,,2026-10-25T04:26:38Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Byron Murphy II,3.5,114,,2026-10-25T04:26:38Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Drue Tranquill,6.5,-155,,2026-10-25T04:26:38Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Nick Bolton,8.5,-124,,2026-10-25T04:26:38Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,Bally Bet,ballybet,player_tackles_assists,Nohl Williams,3.5,-110,,2026-10-25T04:26:38Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_solo_tackles,Nick Bolton,4.5,-140,110.0,2026-10-25T04:25:31Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_solo_tackles,Ernest Jones,5.5,120,-155.0,2026-10-25T04:25:31Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_solo_tackles,Chamarri Conner,3.5,-135,105.0,2026-10-25T04:25:31Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_solo_tackles,Julian Love,2.5,-150,115.0,2026-10-25T04:25:31Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_solo_tackles,Nohl Williams,2.5,110,-140.0,2026-10-25T04:25:31Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_solo_tackles,Devon Witherspoon,3.5,-155,120.0,2026-10-25T04:25:31Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_solo_tackles,Drue Tranquill,3.5,-170,130.0,2026-10-25T04:25:31Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_solo_tackles,Josh Jobe,2.5,-170,130.0,2026-10-25T04:25:31Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_tackles_assists,Nick Bolton,8.5,-120,-110.0,2026-10-25T04:25:31Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_tackles_assists,Drue Tranquill,6.5,-140,110.0,2026-10-25T04:25:31Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_tackles_assists,Ernest Jones,8.5,-135,105.0,2026-10-25T04:25:31Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_tackles_assists,Chamarri Conner,5.5,-130,100.0,2026-10-25T04:25:31Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_tackles_assists,Julian Love,4.5,-105,-125.0,2026-10-25T04:25:31Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_tackles_assists,Josh Jobe,3.5,-140,110.0,2026-10-25T04:25:31Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_tackles_assists,Nohl Williams,3.5,-105,-125.0,2026-10-25T04:25:31Z,20261025T042639Z
+176d474ed8b2bbf1eb4d7e9c56b4bf22,2026-10-26T00:20:00Z,Seattle Seahawks,Kansas City Chiefs,theScore Bet,espnbet,player_tackles_assists,Devon Witherspoon,5.5,-120,-110.0,2026-10-25T04:25:31Z,20261025T042639Z
