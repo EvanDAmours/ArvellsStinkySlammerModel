@@ -84,13 +84,15 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
       <label><input type="checkbox" id="picks-only" checked> Picks only</label>
       <label>Market <select id="market"><option value="">All</option><option value="player_tackles_assists">Tackles + assists</option><option value="player_solo_tackles">Solo tackles</option></select></label>
       <label><input type="checkbox" id="best-only" checked> Best price per line</label>
+      <label>Slate <select id="slate"><option value="">All games</option><option value="early">Early (11 am)</option><option value="late">Afternoon (2 pm)</option><option value="prime">Prime time</option></select></label>
     </div>
     <div id="plays-list"></div>
   </section>
 
   <section id="proj" hidden>
     <p class="note">Projected tackles for every defender playing this week. The fair line is the half-point line the model puts closest to a coin flip. Stat crew is the home scorekeepers’ effect on combined tackles.</p>
-    <div class="controls"><input type="search" id="q" placeholder="Search player or team" aria-label="Search player or team"></div>
+    <div class="controls"><input type="search" id="q" placeholder="Search player or team" aria-label="Search player or team">
+      <label>Slate <select id="proj-slate"><option value="">All games</option><option value="early">Early (11 am)</option><option value="late">Afternoon (2 pm)</option><option value="prime">Prime time</option></select></label></div>
     <div class="scroll"><table id="proj-table"></table></div>
   </section>
 
@@ -116,6 +118,15 @@ const signedPct = (x) => (x == null ? "" : (x >= 0 ? "+" : "") + (x * 100).toFix
 const num = (x, d = 1) => (x == null || Number.isNaN(x) ? "" : Number(x).toFixed(d));
 const odds = (a) => (a == null ? "" : (a > 0 ? "+" : "") + Math.round(a));
 const MARKET = { player_tackles_assists: "Tackles + assists", player_solo_tackles: "Solo tackles" };
+// Slates in Edmonton time: early = kickoffs before noon (11 am, plus London games), afternoon = noon to 5 pm, prime time = 5 pm onward (incl. Thu/Mon night).
+const TZ = "America/Edmonton";
+const localHour = (d) => Number(new Intl.DateTimeFormat("en-CA", { timeZone: TZ, hour: "numeric", hour12: false }).format(d));
+const slateOf = (d) => { if (!d || isNaN(d)) return ""; const h = localHour(d); return h < 12 ? "early" : h < 17 ? "late" : "prime"; };
+const kickoffLocal = (d) => (!d || isNaN(d)) ? "" : d.toLocaleString("en-CA", { timeZone: TZ, weekday: "short", hour: "numeric", minute: "2-digit" });
+const betKick = (b) => (b.commence_time ? new Date(b.commence_time) : null);
+// projections carry the nflverse gameday + Eastern gametime (two hours ahead of Edmonton; UTC-4 in daylight time, UTC-5 from November to mid-March)
+const etOffset = (gameday) => { const m = Number(gameday.slice(5, 7)); return m >= 11 || m <= 3 ? "-05:00" : "-04:00"; };
+const projKick = (p) => (p.gameday && p.gametime ? new Date(`${p.gameday}T${p.gametime}:00${etOffset(p.gameday)}`) : null);
 const when = (iso) => { if (!iso) return ""; const d = new Date(iso.length === 16 && iso.includes("T") && !iso.includes("-") ? iso.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2}).*/, "$1-$2-$3T$4:$5Z") : iso); return isNaN(d) ? iso : d.toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }); };
 
 async function load(name) {
@@ -148,15 +159,15 @@ function renderPlays() {
   const box = $("#plays-list"); box.replaceChildren();
   const all = DATA.bets || [];
   if (!all.length) { box.append(el("div", { class: "empty" }, "No tackle lines yet this week. Books usually post them Thursday to Saturday; the odds job pulls them automatically and this list fills in.")); return; }
-  const picksOnly = $("#picks-only").checked, market = $("#market").value, best = $("#best-only").checked;
-  const rows = all.filter((b) => (!picksOnly || b.pick === "Over" || b.pick === "Under") && (!market || b.market === market) && (!best || b.best_price !== false));
+  const picksOnly = $("#picks-only").checked, market = $("#market").value, best = $("#best-only").checked, slate = $("#slate").value;
+  const rows = all.filter((b) => (!picksOnly || b.pick === "Over" || b.pick === "Under") && (!market || b.market === market) && (!best || b.best_price !== false) && (!slate || slateOf(betKick(b)) === slate));
   if (!rows.length) { box.append(el("div", { class: "empty" }, picksOnly ? "No line clears the bar right now. Untick Picks only to see every priced line." : "Nothing matches these filters.")); return; }
   for (const b of rows) {
     const isPick = b.pick === "Over" || b.pick === "Under";
     const side = b.side || b.pick;
     const price = side === "Under" ? b.under_odds : b.over_odds;
     const card = el("div", { class: "play" + (isPick ? " pick" : "") },
-      el("div", { class: "who" }, b.player, el("small", {}, [b.team, b.opp ? `vs ${b.opp}` : ""].filter(Boolean).join(" "))),
+      el("div", { class: "who" }, b.player, el("small", {}, [b.team, b.opp ? `vs ${b.opp}` : "", kickoffLocal(betKick(b)) ? `· ${kickoffLocal(betKick(b))}` : ""].filter(Boolean).join(" "))),
       el("div", { class: "ev" }, el("b", {}, b.ev == null ? "" : signedPct(b.ev)), el("span", {}, "expected return")),
       el("div", { class: "bet" }, el("span", { class: side === "Under" ? "under" : "over" }, `${side || ""} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market).toLowerCase()}`),
       el("div", { class: "price" }, `${odds(price)} at ${b.book}`),
@@ -173,7 +184,8 @@ function renderProj() {
   const cols = [["Player", "player"], ["Team", "team"], ["Opp", "opp_team"], ["Pos", "group"], ["Status", "status"], ["Games", "n_prev", "n"],
                 ["Season avg", "season_avg", "n"], ["Last game", "last", "n"], ["Projection", "proj", "n"], ["Solo proj", "proj_solo", "n"],
                 ["Fair line", "fair_line", "n"], ["Stat crew", "crew_comb", "n"], ["Role up", "role_signal"]];
-  let rows = (DATA.proj || []).filter((p) => !q || `${p.player} ${p.team} ${p.opp_team}`.toLowerCase().includes(q));
+  const slate = $("#proj-slate").value;
+  let rows = (DATA.proj || []).filter((p) => (!q || `${p.player} ${p.team} ${p.opp_team}`.toLowerCase().includes(q)) && (!slate || slateOf(projKick(p)) === slate));
   rows.sort((a, b) => { const x = a[projSort.key] ?? -99, y = b[projSort.key] ?? -99; return (typeof x === "number" ? x - y : String(x).localeCompare(String(y))) * projSort.dir; });
   const head = el("tr");
   cols.forEach(([label, key, cls]) => { const btn = el("button", {}, label + (projSort.key === key ? (projSort.dir < 0 ? " ↓" : " ↑") : "")); btn.onclick = () => { projSort = { key, dir: projSort.key === key ? -projSort.dir : (typeof rows[0]?.[key] === "number" ? -1 : 1) }; renderProj(); }; head.append(el("th", { class: cls || "" }, btn)); });
@@ -237,8 +249,9 @@ function show(id) {
 (async () => {
   [DATA.meta, DATA.bets, DATA.proj, DATA.results, DATA.backtest] = await Promise.all(["meta", "bets", "projections", "results", "backtest"].map(load));
   renderMeta(); renderPlays(); renderProj(); renderRecord(); renderCheck();
-  ["#picks-only", "#market", "#best-only"].forEach((s) => $(s).addEventListener("change", renderPlays));
+  ["#picks-only", "#market", "#best-only", "#slate"].forEach((s) => $(s).addEventListener("change", renderPlays));
   $("#q").addEventListener("input", renderProj);
+  $("#proj-slate").addEventListener("change", renderProj);
   document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => show(b.dataset.tab)));
   const h = location.hash.slice(1); if (["plays", "proj", "record", "check"].includes(h)) show(h);
 })();
