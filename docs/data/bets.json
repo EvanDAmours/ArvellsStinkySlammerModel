@@ -36,8 +36,8 @@
   "lock": 48.5746,
   "grade": "C",
   "best_price": true,
-  "five": true,
-  "parlay": true
+  "five": false,
+  "parlay": false
  },
  {
   "player": "Caleb Downs",
@@ -76,8 +76,8 @@
   "lock": 42.9763,
   "grade": "C",
   "best_price": true,
-  "five": true,
-  "parlay": true
+  "five": false,
+  "parlay": false
  },
  {
   "player": "Caleb Downs",
