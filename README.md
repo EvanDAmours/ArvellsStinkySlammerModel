@@ -49,6 +49,7 @@ All times are set for US daylight time (Eastern = UTC−4).
 | | Sun 11:50 am | 1 pm games, after inactives |
 | | Sun 3:45 pm | Late games, after inactives |
 | | Sun 7:35 pm, Mon 7:35 pm | Night games |
+| | Mon 4:00 pm (2 pm Mountain) | Monday night game as lines post |
 
 **When daylight time ends** (first Sunday in November), add one hour to every `cron` line in
 `.github/workflows/odds.yml` and `daily.yml` (for example `50 15 * * 0` becomes `50 16 * * 0`),

@@ -12,7 +12,8 @@ on:
     - cron: "50 15 * * 0"      # Sun 11:50 am ET: 1 pm games, after inactives
     - cron: "45 19 * * 0"      # Sun 3:45 pm ET: late games, after inactives
     - cron: "35 23 * * 0"      # Sun 7:35 pm ET: Sunday night game
-    - cron: "35 23 * * 1"      # Mon 7:35 pm ET: Monday night game
+    - cron: "0 20 * * 1"       # Mon 2:00 pm Mountain: Monday night game, as lines post
+    - cron: "35 23 * * 1"      # Mon 7:35 pm ET: Monday night game, after inactives
   workflow_dispatch:
     inputs:
       hours:

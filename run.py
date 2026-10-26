@@ -118,7 +118,8 @@ def cmd_odds(hours=None, auto=False):
         # full slate Friday, all Saturday and early Sunday; otherwise only games starting in the next few hours.
         # The events feed also lists next week's games, so cap the full slate at four days
         # (Friday evening to Tuesday, or Sunday morning to Thursday morning) to keep credits in budget.
-        hours = 96 if (now.weekday() in (4, 5) or (now.weekday() == 6 and now.hour < 14)) else 4
+        # Monday pulls always reach the night game, whatever the hour
+        hours = 96 if (now.weekday() in (4, 5) or (now.weekday() == 6 and now.hour < 14)) else 12 if now.weekday() == 0 else 4
     rows, credits = O.pull(keys, hours_ahead=hours)
     numeric = [c for c in credits.values() if isinstance(c, (int, float))]
     remaining = int(sum(numeric)) if numeric else next(iter(credits.values()), None)
