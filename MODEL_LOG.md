@@ -114,6 +114,9 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
   (one per player, among games not yet kicked off; a pick whose game has started keeps its place) are flagged
   `five` in `data/picks.csv`, shown in a pinned block at the top of Plays, and reported as their own record on the
   Track record tab. Target: 70%+ hit rate over the season. First measured week: week 8.
+- **Running tally of the weekly five**: `data/weekly_five.md` is rewritten by the daily job with the record to date,
+  a line per week with the running record, and every pick with its result. The site shows the same tally in the
+  five box on Plays ("season to date 24-1") and as a per-week table on Track record.
 
 ### 2026-10-26 (after the week 7 post-mortem)
 - **Pricing mean blends toward the market line**: `LINE_WEIGHT = 0.6`. Evidence: the regression above.

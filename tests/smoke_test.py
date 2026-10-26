@@ -95,6 +95,7 @@ for i, r in enumerate(week6.itertuples()):
                      book="DraftKings", odds=-110, event_id=f"X{i}", commence_time="2026-10-18T17:00:00Z", pulled_at="20261018T120000Z"))
     snap.append(dict(event_id=f"X{i}", commence_time="2026-10-18T17:00:00Z", book="DraftKings", market="player_tackles_assists",
                      player=r.player, line=r.comb + 0.5, over_odds=-110, under_odds=-110, pulled_at="20261018T165500Z"))
+rows[0].update(five=True, lock=80.0, grade="A"); rows[1].update(five=True, lock=75.0, grade="A"); rows[2].update(five=False)
 pd.DataFrame(rows).to_csv("data/picks.csv", index=False)
 (Path("data/odds/2026/wk06")).mkdir(parents=True, exist_ok=True)
 pd.DataFrame(snap).to_csv("data/odds/2026/wk06/20261018T165500Z.csv", index=False)
@@ -102,6 +103,11 @@ graded, summary = G.grade(pw)
 check(list(graded.result) == ["Win", "Loss", "Win"], f"picks graded correctly ({list(graded.result)})")
 check(abs(summary["units"] - (2 * (100 / 110) - 1)) < 1e-6, f"units computed ({summary['units']:.3f})")
 check(list(graded.clv_line) == [1.0, -1.0, 1.0], f"closing line value computed ({list(graded.clv_line)})")
+f5 = summary["five"]
+check(f5["wins"] == 1 and f5["losses"] == 1 and len(f5["weeks"]) == 1 and f5["weeks"][0]["running_wins"] == 1, f"weekly five tally ({f5['wins']}-{f5['losses']}, {len(f5['weeks'])} week)")
+G.write_five_log(graded, summary, tmp / "data/weekly_five.md")
+log = (tmp / "data/weekly_five.md").read_text()
+check("Record: 1-1" in log and "| 2026 wk 6 | 2 | 1-1 |" in log and "| 1-1 |" in log, "weekly five log written with record, week line and running record")
 
 print("\nALL CHECKS PASSED" if not fails else f"\n{len(fails)} CHECK(S) FAILED")
 sys.exit(1 if fails else 0)

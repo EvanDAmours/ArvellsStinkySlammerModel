@@ -106,6 +106,7 @@ def cmd_daily():
         P.to_csv(CACHE / "projections.csv", index=False)
     json.dump(dict(phi=phi, k=k, week=week), open(CACHE / "model_state.json", "w"))
     graded, summary = G.grade(pw)
+    G.write_five_log(graded, summary, Path("data/weekly_five.md"))
     lines = O.upcoming_only(O.latest_lines(C.SEASON, week))
     bets = M.price_lines(lines, P) if len(lines) else pd.DataFrame()
     bets = mark_five(bets, C.SEASON, week)

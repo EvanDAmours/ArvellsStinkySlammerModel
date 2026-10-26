@@ -171,7 +171,9 @@ function renderPlays() {
   const rows = all.filter((b) => (!picksOnly || b.pick === "Over" || b.pick === "Under") && (!market || b.market === market) && (!best || b.best_price !== false) && (!slate || slateOf(betKick(b)) === slate));
   const five = all.filter((b) => b.five);
   if (five.length && !slate && !market) {
-    const fb = el("div", { class: "five-box" }, el("h3", {}, `This week's five`), el("p", { class: "note" }, "The five highest-confidence picks of the week, one per player, named before kickoff and tracked on their own in the Track record tab."));
+    const f = DATA.results?.summary?.five;
+    const tally = f && f.bets ? ` · season to date ${f.wins}-${f.losses}${f.pushes ? "-" + f.pushes : ""}${f.hit == null ? "" : ` (${pct(f.hit)})`}` : "";
+    const fb = el("div", { class: "five-box" }, el("h3", {}, `This week's five${tally}`), el("p", { class: "note" }, "The five highest-confidence picks of the week, one per player, named before kickoff and tracked on their own in the Track record tab."));
     five.sort((a, b) => (b.lock ?? 0) - (a.lock ?? 0)).forEach((b) => fb.append(card(b)));
     box.append(fb);
   }
@@ -228,11 +230,23 @@ function renderRecord() {
     el("div", {}, el("b", {}, s.beat_close_share == null ? "" : pct(s.beat_close_share)), "Beat the closing line"),
     el("div", {}, el("b", {}, String(s.pending ?? 0)), "Pending")));
   box.append(el("p", { class: "note" }, "Beating the closing line is the earliest reliable sign of a real edge: over a few hundred bets it predicts profit better than the win-loss record does."));
-  if (s.five && s.five.bets) {
+  if (s.five && (s.five.bets || (s.five.weeks && s.five.weeks.length))) {
+    box.append(el("h3", {}, "The weekly five"));
     box.append(el("div", { class: "stat-line" },
-      el("div", {}, el("b", {}, `${s.five.wins}-${s.five.losses}${s.five.pushes ? "-" + s.five.pushes : ""}`), "Weekly five record"),
-      el("div", {}, el("b", {}, s.five.hit == null ? "" : pct(s.five.hit)), "Weekly five hit rate (target 70%)"),
-      el("div", {}, el("b", {}, (s.five.units >= 0 ? "+" : "") + s.five.units.toFixed(1)), "Weekly five units")));
+      el("div", {}, el("b", {}, `${s.five.wins}-${s.five.losses}${s.five.pushes ? "-" + s.five.pushes : ""}`), "Record"),
+      el("div", {}, el("b", {}, s.five.hit == null ? "" : pct(s.five.hit)), "Hit rate (target 70%)"),
+      el("div", {}, el("b", {}, (s.five.units >= 0 ? "+" : "") + s.five.units.toFixed(1)), "Units"),
+      el("div", {}, el("b", {}, String(s.five.pending ?? 0)), "Pending")));
+    if (s.five.weeks && s.five.weeks.length) {
+      box.append(el("div", { class: "scroll" }, table([["Week"], ["Picks", "n"], ["Record"], ["Units", "n"], ["Running record"]],
+        [...s.five.weeks].reverse().map((w) => [`Wk ${w.week}`, w.picks, `${w.wins}-${w.losses}${w.pushes ? "-" + w.pushes : ""}${w.pending ? ` (${w.pending} pending)` : ""}`, num(w.units, 2), `${w.running_wins}-${w.running_losses}`]))));
+    }
+    const fp = r.picks.filter((p) => p.five);
+    if (fp.length) {
+      box.append(el("div", { class: "scroll" }, table([["Week"], ["Pick"], ["Price", "n"], ["Book"], ["Grade"], ["Lock", "n"], ["Actual", "n"], ["Result"]],
+        [...fp].reverse().map((p) => [`Wk ${p.week}`, `${p.player} ${p.side} ${num(p.line)} ${(MARKET[p.market] || p.market).toLowerCase()}`, odds(p.odds), p.book, p.grade || "", p.lock == null ? "" : Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result]))));
+    }
+    box.append(el("p", { class: "note" }, "The same tally is kept in data/weekly_five.md in the repository, rewritten every morning."));
   }
   if (s.by_grade && s.by_grade.length) {
     box.append(el("h3", {}, "By confidence grade"));
