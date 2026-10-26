@@ -123,6 +123,13 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
   a line per week with the running record, and every pick with its result. The site shows the same tally in the
   five box on Plays ("season to date 24-1") and as a per-week table on Track record.
 
+### 2026-10-26, afternoon MDT (name, grading legend)
+- Site titled "Arvell's Stinky Slammer Model" with the week as a subtitle.
+- A legend above the picks shows each grade's lock-score cutoff, a suggested stake (A 1 unit, B 0.5, C 0.25 or
+  pass; `GRADE_UNITS` in config), what the grade means, and how the score is built. It reads the cutoffs and
+  weights from `meta.json`, which the daily job writes from config, so it cannot drift from the formula.
+- Locks box renamed from "This week's five" to "Locks" with the slate day(s) named.
+
 ### 2026-10-26, afternoon MDT (parlay edge shown)
 - Parlay boxes show the book's implied chance (1 / combined decimal odds, so including the vig) beside the model's
   chance, the edge in percentage points and the expected return; each leg shows model vs book (no-vig market

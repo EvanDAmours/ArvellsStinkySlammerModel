@@ -58,6 +58,7 @@ LOCK_WEIGHTS = dict(ev=0.25, market=0.40, consistency=0.20, sample=0.15)
 LOCK_EV_FULL = 0.15                # an expected return this high scores full marks on the EV component
 LOCK_FADE_BONUS = 5
 GRADE_BARS = dict(A=72, B=55)      # lock score at or above these is an A or a B; the rest are C
+GRADE_UNITS = dict(A=1.0, B=0.5, C=0.25)   # suggested stake per grade, in units (shown in the site legend)
 
 # --- locks per slate day (Edmonton time) and the recommended parlay ---
 LOCKS_PER_SLATE = dict(single=3, multi=5)   # one game kicking off that day -> 3 locks; more games -> 5

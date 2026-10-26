@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Tackle board</title>
+<title>Arvell's Stinky Slammer Model</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
@@ -55,6 +55,10 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 .records .rec b { font: 700 1.5rem/1.1 var(--cond); font-variant-numeric: tabular-nums; }
 .records .rec .label { color: var(--muted); font-size: 0.9rem; margin-left: 6px; }
 .records .sub { flex-basis: 100%; color: var(--muted); font-size: 0.88rem; margin: -4px 0 0; }
+.legend { border: 1px solid var(--line, #cfd4dc); border-radius: 10px; padding: 8px 12px; margin: 0 0 14px; font-size: 0.92rem; }
+.legend summary { cursor: pointer; font: 700 1rem/1.4 var(--cond); }
+.legend table { margin: 8px 0; } .legend td, .legend th { padding: 4px 10px 4px 0; }
+.legend p { margin: 6px 0; color: var(--muted); }
 .five-box { border: 2px solid #1f8a4c; border-radius: 10px; padding: 10px 12px 2px; margin: 0 0 16px; }
 .five-box h3 { margin: 0 0 6px; font: 700 1.1rem/1.2 var(--cond); }
 .five-box .note { margin: 0 0 8px; }
@@ -197,7 +201,8 @@ let DATA = {};
 function renderMeta() {
   const m = DATA.meta;
   if (!m) { $("#meta").append("Waiting for the first run. Start it from the Actions tab (see README)."); return; }
-  $("#title").textContent = `Week ${m.week} tackle board`;
+  $("#title").textContent = "Arvell's Stinky Slammer Model";
+  $("#meta").append(el("span", {}, `Week ${m.week} board`));
   if (m.international_games && m.international_games.length) $("#meta").append(el("span", { class: "intl" }, `International: ${m.international_games.join("; ")}`));
   $("#meta").append(el("span", {}, `Model updated ${when(m.generated_at)}`),
                     el("span", {}, m.lines_pulled ? `Lines pulled ${when(m.lines_pulled)}` : "No lines pulled yet this week"),
@@ -213,11 +218,13 @@ function renderPlays() {
   if (!all.length) { box.append(el("div", { class: "empty" }, "No tackle lines yet this week. Books usually post them Thursday to Saturday; the odds job pulls them automatically and this list fills in.")); return; }
   const picksOnly = $("#picks-only").checked, market = $("#market").value, best = $("#best-only").checked, slate = $("#slate").value;
   const rows = all.filter((b) => (!picksOnly || b.pick === "Over" || b.pick === "Under") && (!market || b.market === market) && (!best || b.best_price !== false) && (!slate || slateOf(betKick(b)) === slate));
+  if (!slate && !market) box.append(legend());
   const five = all.filter((b) => b.five);
   if (five.length && !slate && !market) {
-    const f = DATA.results?.summary?.five;
+    const f = DATA.results?.summary?.five, g = DATA.meta?.grading?.locks || { single: 3, multi: 5 };
     const tally = f && f.bets ? ` · season to date ${f.wins}-${f.losses}${f.pushes ? "-" + f.pushes : ""}${f.hit == null ? "" : ` (${pct(f.hit)})`}` : "";
-    const fb = el("div", { class: "five-box" }, el("h3", {}, `This week's five${tally}`), el("p", { class: "note" }, "The five highest-confidence picks of the week, one per player, named before kickoff and tracked on their own in the Track record tab."));
+    const days = [...new Set(five.map((b) => slateName(slateDate(b))))].join(", ");
+    const fb = el("div", { class: "five-box" }, el("h3", {}, `Locks${days ? ` · ${days}` : ""}${tally}`), el("p", { class: "note" }, `The highest-confidence picks of each slate day, one per player: ${g.single} on a one-game day, ${g.multi} on a multi-game day. Named before kickoff, re-chosen at every pull until the game starts, and tracked on their own in the Track record tab.`));
     five.sort((a, b) => (b.lock ?? 0) - (a.lock ?? 0)).forEach((b) => fb.append(card(b)));
     box.append(fb);
   }
@@ -226,6 +233,21 @@ function renderPlays() {
   for (const b of rows) box.append(card(b));
 }
 
+const slateDate = (b) => { const d = betKick(b); return !d || isNaN(d) ? "" : new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d); };
+function legend() {
+  const g = DATA.meta?.grading || {};
+  const bars = g.bars || { A: 72, B: 55 }, u = g.units || { A: 1, B: 0.5, C: 0.25 }, w = g.weights || { ev: 0.25, market: 0.4, consistency: 0.2, sample: 0.15 };
+  const row = (grade, cut, stake, what) => el("tr", {}, el("td", {}, el("span", { class: `grade ${grade}` }, grade)), el("td", {}, cut), el("td", {}, stake), el("td", {}, what));
+  return el("details", { class: "legend", open: "" },
+    el("summary", {}, "How picks are graded and how much to bet"),
+    el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Grade"), el("th", {}, "Lock score"), el("th", {}, "Suggested stake"), el("th", {}, "Read it as"))),
+      el("tbody", {},
+        row("A", `${bars.A} and up`, `${u.A} unit`, "Strong price, market leans the same way, he has cleared this line most weeks. The locks come from here."),
+        row("B", `${bars.B} to ${bars.A - 1}`, `${u.B} unit`, "Good price or good agreement, not both. Playable, smaller."),
+        row("C", `below ${bars.B}`, `${u.C} unit or pass`, "Clears the bar on price alone. Play only if you like the matchup."))),
+    el("p", {}, `The lock score is out of 100: ${pct(w.ev)} expected return (full marks at ${signedPct(g.ev_full ?? 0.15)}), ${pct(w.market)} market agreement (whether the book's own price leans our way), ${pct(w.consistency)} how often he cleared this line in his games this season, ${pct(w.sample)} games of data this season, plus ${g.fade_bonus ?? 5} points when the pick fades an outlier last game. Expected return comes from a projection that is ${pct(1 - (g.line_weight ?? 0.6))} model and ${pct(g.line_weight ?? 0.6)} the posted line.`),
+    el("p", {}, "Stakes are a guide, not a promise: the grades are being tested on the Track record tab, and if A does not beat B and C over time the formula changes."));
+}
 const slateName = (iso) => { const d = new Date(iso + "T12:00:00"); return isNaN(d) ? iso : d.toLocaleDateString("en-CA", { weekday: "long" }); };
 const decimalOf = (a) => (a == null ? null : a > 0 ? 1 + a / 100 : 1 + 100 / Math.abs(a));
 const pts = (x) => (x == null ? "" : (x >= 0 ? "+" : "") + (x * 100).toFixed(0) + " pts");
