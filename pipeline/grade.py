@@ -115,9 +115,9 @@ def choose_parlay(bets, slate):
     lo, hi = C.PARLAY_LEGS
     legs = b[b.p_side >= C.PARLAY_MIN_PROB].head(hi)
     if len(legs) < lo:
-        legs = b.head(lo)
+        legs = b[b.p_side >= C.PARLAY_FALLBACK_PROB].head(lo)
     if len(legs) < lo:
-        return None
+        return None   # not enough confident legs on this slate yet: no parlay rather than a bad one
     dec, prob = float(legs.dec.prod()), float(legs.p_side.prod())
     edge = dec - 1
     kelly = (prob * edge - (1 - prob)) / edge if edge > 0 else 0.0

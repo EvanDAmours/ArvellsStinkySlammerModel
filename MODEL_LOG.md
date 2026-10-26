@@ -147,6 +147,8 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
   blended probabilities), and a stake from a quarter-Kelly rule bounded to 0.1-1.0 units. Re-chosen at every pull
   until the day's first kickoff, then frozen as placed. Saved to `data/parlays.csv`, graded leg by leg (a push drops
   the leg), record on both tabs and in `data/weekly_five.md`. Replayed for week 7 alongside the locks.
+- A parlay is only recommended when at least two legs have a blended chance of 55%+ (60%+ preferred). On a thin
+  board (two players posted for Monday night at midday) no parlay is shown rather than a coin-flip pair.
 - Correlation caveat: legs from the same game are allowed and treated as independent in the chance shown, which
   overstates the chance a little when legs are correlated (two Unders on the same defence). Revisit if parlays
   underperform their stated chance over 20+ parlays.
