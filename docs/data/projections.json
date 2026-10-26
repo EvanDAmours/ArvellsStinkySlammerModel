@@ -20,7 +20,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Von Miller",
@@ -43,7 +43,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Cameron Jordan",
@@ -66,7 +66,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "Cameron Heyward",
@@ -89,7 +89,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.2922
+  "phi": 1.2908
  },
  {
   "player": "Harrison Smith",
@@ -112,7 +112,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Demario Davis",
@@ -124,18 +124,18 @@
   "season_avg": 7.1667,
   "last": 7,
   "base": 7.3523,
-  "proj": 7.194,
-  "proj_solo": 4.0981,
+  "proj": 7.2308,
+  "proj_solo": 4.119,
   "fair_line": 6.5,
   "fair_line_solo": 3.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "John Jenkins",
@@ -158,7 +158,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "DaQuan Jones",
@@ -181,7 +181,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Shelby Harris",
@@ -199,12 +199,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Kyle Van Noy",
@@ -227,7 +227,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jadeveon Clowney",
@@ -245,12 +245,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Aaron Donald",
@@ -262,18 +262,18 @@
   "season_avg": 2.25,
   "last": 3,
   "base": 2.2947,
-  "proj": 2.2798,
-  "proj_solo": 0.9985,
+  "proj": 2.274,
+  "proj_solo": 0.9959,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "DeMarcus Lawrence",
@@ -296,7 +296,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Danielle Hunter",
@@ -314,12 +314,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Za'Darius Smith",
@@ -342,7 +342,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Grady Jarrett",
@@ -365,7 +365,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Alex Singleton",
@@ -388,7 +388,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Leonard Williams",
@@ -411,7 +411,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Rakeem Nunez-Roches",
@@ -434,7 +434,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Dante Fowler Jr.",
@@ -457,7 +457,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Mario Edwards",
@@ -475,12 +475,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "DeForest Buckner",
@@ -503,7 +503,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jarran Reed",
@@ -526,7 +526,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Miles Killebrew",
@@ -549,7 +549,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Matthew Judon",
@@ -572,7 +572,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "DJ Reader",
@@ -590,12 +590,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jonathan Jones",
@@ -618,7 +618,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Sheldon Rankins",
@@ -636,12 +636,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Chris Jones",
@@ -664,7 +664,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jalen Mills",
@@ -687,7 +687,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "A'Shawn Robinson",
@@ -710,7 +710,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jihad Ward",
@@ -728,12 +728,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jalen Ramsey",
@@ -756,7 +756,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.5478
+  "phi": 1.548
  },
  {
   "player": "Andrew Billings",
@@ -779,7 +779,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jonathan Bullard",
@@ -802,7 +802,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Javon Hargrave",
@@ -825,7 +825,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Kenny Clark",
@@ -848,7 +848,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Maliek Collins",
@@ -871,7 +871,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Kevin Byard",
@@ -894,7 +894,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Marlon Humphrey",
@@ -917,7 +917,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Chuck Clark",
@@ -940,7 +940,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "D.J. Jones",
@@ -963,7 +963,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Eric Wilson",
@@ -977,7 +977,7 @@
   "base": 5.5207,
   "proj": 5.3159,
   "proj_solo": 2.3438,
-  "fair_line": 4.5,
+  "fair_line": 5.5,
   "fair_line_solo": 2.5,
   "crew_comb": 0.9952,
   "crew_solo": 1.0089,
@@ -986,7 +986,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Adam Butler",
@@ -998,18 +998,18 @@
   "season_avg": 2.1667,
   "last": 1,
   "base": 2.3364,
-  "proj": 2.3919,
-  "proj_solo": 0.623,
+  "proj": 2.3978,
+  "proj_solo": 0.6245,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Kenny Moore II",
@@ -1032,7 +1032,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jonathan Allen",
@@ -1055,7 +1055,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Chidobe Awuzie",
@@ -1078,7 +1078,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Xavier Woods",
@@ -1101,7 +1101,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Davon Godchaux",
@@ -1124,7 +1124,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.2922
+  "phi": 1.2908
  },
  {
   "player": "Solomon Thomas",
@@ -1147,7 +1147,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Derek Barnett",
@@ -1170,7 +1170,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Malik Hooker",
@@ -1193,7 +1193,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "T.J. Watt",
@@ -1216,7 +1216,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "Budda Baker",
@@ -1239,7 +1239,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Alex Anzalone",
@@ -1262,7 +1262,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Trey Hendrickson",
@@ -1285,7 +1285,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Rayshawn Jenkins",
@@ -1308,7 +1308,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6742
+  "phi": 1.6681
  },
  {
   "player": "Samson Ebukam",
@@ -1331,7 +1331,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Grover Stewart",
@@ -1354,7 +1354,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Al-Quadin Muhammad",
@@ -1377,7 +1377,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "George Odum",
@@ -1395,12 +1395,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jacob Martin",
@@ -1423,7 +1423,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Poona Ford",
@@ -1435,18 +1435,18 @@
   "season_avg": 2.5,
   "last": 3,
   "base": 2.5307,
-  "proj": 2.5143,
-  "proj_solo": 0.9181,
+  "proj": 2.5079,
+  "proj_solo": 0.9158,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Elijah Campbell",
@@ -1464,12 +1464,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Foley Fatukasi",
@@ -1481,18 +1481,18 @@
   "season_avg": 2.0,
   "last": 1,
   "base": 2.003,
-  "proj": 2.0505,
-  "proj_solo": 0.5606,
+  "proj": 2.0556,
+  "proj_solo": 0.562,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Tremon Smith",
@@ -1510,12 +1510,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Zach Sieler",
@@ -1527,18 +1527,18 @@
   "season_avg": 2.4,
   "last": 2,
   "base": 2.4595,
-  "proj": 2.5173,
-  "proj_solo": 1.3244,
+  "proj": 2.505,
+  "proj_solo": 1.318,
   "fair_line": 2.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Kentavius Street",
@@ -1561,7 +1561,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Marcus Davenport",
@@ -1584,7 +1584,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Uchenna Nwosu",
@@ -1607,7 +1607,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "M.J. Stewart",
@@ -1625,12 +1625,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Isaiah Oliver",
@@ -1653,7 +1653,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Justin Reid",
@@ -1676,7 +1676,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6742
+  "phi": 1.6681
  },
  {
   "player": "Taron Johnson",
@@ -1688,18 +1688,18 @@
   "season_avg": 4.3333,
   "last": 4,
   "base": 4.359,
-  "proj": 4.4625,
-  "proj_solo": 3.0047,
+  "proj": 4.4734,
+  "proj_solo": 3.0121,
   "fair_line": 4.5,
   "fair_line_solo": 2.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Josh Sweat",
@@ -1722,7 +1722,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "D.J. Reed",
@@ -1745,7 +1745,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Siran Neal",
@@ -1768,7 +1768,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Zaire Franklin",
@@ -1791,7 +1791,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jalen Davis",
@@ -1814,7 +1814,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jonathan Owens",
@@ -1837,7 +1837,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Charvarius Ward",
@@ -1860,7 +1860,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Mike Ford",
@@ -1883,7 +1883,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Tremaine Edmunds",
@@ -1901,12 +1901,12 @@
   "fair_line_solo": 5.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jessie Bates",
@@ -1929,7 +1929,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Robert Spillane",
@@ -1952,7 +1952,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Oren Burks",
@@ -1975,7 +1975,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Nathan Shepherd",
@@ -1998,7 +1998,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.2922
+  "phi": 1.2908
  },
  {
   "player": "Vita Vea",
@@ -2021,7 +2021,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Carlton Davis III",
@@ -2044,7 +2044,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Harrison Phillips",
@@ -2056,18 +2056,18 @@
   "season_avg": 2.3333,
   "last": 1,
   "base": 2.4993,
-  "proj": 2.4455,
-  "proj_solo": 0.8487,
+  "proj": 2.458,
+  "proj_solo": 0.8531,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Minkah Fitzpatrick",
@@ -2079,18 +2079,18 @@
   "season_avg": 8.6667,
   "last": 5,
   "base": 7.9245,
-  "proj": 7.7539,
-  "proj_solo": 4.1343,
+  "proj": 7.7935,
+  "proj_solo": 4.1555,
   "fair_line": 7.5,
   "fair_line_solo": 3.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "B.J. Hill",
@@ -2113,7 +2113,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Josh Woods",
@@ -2136,7 +2136,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "John Franklin-Myers",
@@ -2159,7 +2159,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Ogbo Okoronkwo",
@@ -2182,7 +2182,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Sebastian Joseph-Day",
@@ -2205,7 +2205,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.2922
+  "phi": 1.2908
  },
  {
   "player": "Fred Warner",
@@ -2228,7 +2228,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Arden Key",
@@ -2251,7 +2251,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Mike Hughes",
@@ -2274,7 +2274,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Denzel Ward",
@@ -2297,7 +2297,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Roquan Smith",
@@ -2320,7 +2320,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Rashan Gary",
@@ -2343,7 +2343,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Maxx Crosby",
@@ -2355,18 +2355,18 @@
   "season_avg": 2.3333,
   "last": 5,
   "base": 2.6957,
-  "proj": 2.7597,
-  "proj_solo": 1.0481,
+  "proj": 2.7665,
+  "proj_solo": 1.0507,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Julian Love",
@@ -2389,7 +2389,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Dre Greenlaw",
@@ -2412,7 +2412,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Marcus Epps",
@@ -2435,7 +2435,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Kevin Givens",
@@ -2458,7 +2458,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Keisean Nixon",
@@ -2481,7 +2481,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Mack Wilson",
@@ -2504,7 +2504,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Azeez Al-Shaair",
@@ -2522,12 +2522,12 @@
   "fair_line_solo": 3.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Byron Murphy",
@@ -2550,7 +2550,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Zach Allen",
@@ -2573,7 +2573,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Anthony Nelson",
@@ -2596,7 +2596,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Drue Tranquill",
@@ -2619,7 +2619,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Andrew Van Ginkel",
@@ -2642,7 +2642,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Blake Cashman",
@@ -2665,7 +2665,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Mike Jackson",
@@ -2688,7 +2688,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Cole Holcomb",
@@ -2711,7 +2711,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "Kaden Elliss",
@@ -2734,7 +2734,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "Tyrel Dodson",
@@ -2757,7 +2757,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Cam Lewis",
@@ -2780,7 +2780,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Joe Giles-Harris",
@@ -2803,7 +2803,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Andrew Wingard",
@@ -2826,7 +2826,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "T.J. Edwards",
@@ -2849,7 +2849,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Carl Granderson",
@@ -2872,7 +2872,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.2922
+  "phi": 1.2908
  },
  {
   "player": "Luke Gifford",
@@ -2895,7 +2895,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Devin Bush",
@@ -2918,7 +2918,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Troy Reeder",
@@ -2930,18 +2930,18 @@
   "season_avg": 2.0,
   "last": 1,
   "base": 1.9215,
-  "proj": 1.8801,
-  "proj_solo": 0.8061,
+  "proj": 1.8898,
+  "proj_solo": 0.8102,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Amani Hooker",
@@ -2964,7 +2964,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "L.J. Collier",
@@ -2987,7 +2987,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Rock Ya-Sin",
@@ -3010,7 +3010,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jeffery Simmons",
@@ -3033,7 +3033,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Montez Sweat",
@@ -3056,7 +3056,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Taylor Rapp",
@@ -3079,7 +3079,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Nick Scott",
@@ -3102,7 +3102,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Cody Barton",
@@ -3125,7 +3125,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jerry Tillery",
@@ -3148,7 +3148,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Dre'Mont Jones",
@@ -3171,7 +3171,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Quincy Williams",
@@ -3194,7 +3194,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Dexter Lawrence",
@@ -3217,7 +3217,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Bobby Okereke",
@@ -3240,7 +3240,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jamel Dean",
@@ -3263,7 +3263,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.5478
+  "phi": 1.548
  },
  {
   "player": "Jalen Thompson",
@@ -3286,7 +3286,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Devin White",
@@ -3309,7 +3309,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Brian Burns",
@@ -3327,12 +3327,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Quinnen Williams",
@@ -3355,7 +3355,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Malcolm Roach",
@@ -3378,7 +3378,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "James Pierre",
@@ -3401,7 +3401,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Chris Williams",
@@ -3424,7 +3424,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Tershawn Wharton",
@@ -3447,7 +3447,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Cole Christiansen",
@@ -3470,7 +3470,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Christian Rozeboom",
@@ -3493,7 +3493,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Broderick Washington",
@@ -3516,7 +3516,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Khalil Dorsey",
@@ -3539,7 +3539,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Nnamdi Madubuike",
@@ -3562,7 +3562,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Kristian Welch",
@@ -3585,7 +3585,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Joshua Uche",
@@ -3597,18 +3597,18 @@
   "season_avg": 4.2,
   "last": 3,
   "base": 3.8389,
-  "proj": 3.9291,
-  "proj_solo": 1.7972,
+  "proj": 3.9099,
+  "proj_solo": 1.7884,
   "fair_line": 3.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "A.J. Epenesa",
@@ -3631,7 +3631,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Anfernee Jennings",
@@ -3654,7 +3654,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "LaCale London",
@@ -3677,7 +3677,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Derrick Brown",
@@ -3700,7 +3700,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Brandon Jones",
@@ -3723,7 +3723,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Isaiah Rodgers",
@@ -3746,7 +3746,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jonathan Greenard",
@@ -3769,7 +3769,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Kyle Dugger",
@@ -3792,7 +3792,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Larrell Murchison",
@@ -3804,18 +3804,18 @@
   "season_avg": 1.0,
   "last": 1,
   "base": 0.9443,
-  "proj": 0.9381,
-  "proj_solo": 0.3657,
+  "proj": 0.9357,
+  "proj_solo": 0.3648,
   "fair_line": 0.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Bryce Hall",
@@ -3833,12 +3833,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Julian Blackmon",
@@ -3861,7 +3861,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6742
+  "phi": 1.6681
  },
  {
   "player": "Jordan Elliott",
@@ -3884,7 +3884,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Malik Harrison",
@@ -3902,12 +3902,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "C.J. Henderson",
@@ -3930,7 +3930,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Grant Delpit",
@@ -3953,7 +3953,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jaylon Johnson",
@@ -3976,7 +3976,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jeremy Chinn",
@@ -3988,18 +3988,18 @@
   "season_avg": 6.5,
   "last": 10,
   "base": 6.6694,
-  "proj": 6.8278,
-  "proj_solo": 5.0777,
+  "proj": 6.8446,
+  "proj_solo": 5.0902,
   "fair_line": 6.5,
   "fair_line_solo": 4.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Akeem Davis-Gaither",
@@ -4022,7 +4022,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jaylinn Hawkins",
@@ -4045,7 +4045,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Trevis Gipson",
@@ -4068,7 +4068,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Daniel Thomas",
@@ -4091,7 +4091,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Kindle Vildor",
@@ -4114,7 +4114,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Chase Young",
@@ -4137,7 +4137,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.2922
+  "phi": 1.2908
  },
  {
   "player": "Patrick Queen",
@@ -4160,7 +4160,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "Ashtyn Davis",
@@ -4183,7 +4183,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Alex Highsmith",
@@ -4206,7 +4206,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "D.J. Wonnum",
@@ -4229,7 +4229,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "James Lynch",
@@ -4252,7 +4252,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Khalid Kareem",
@@ -4275,7 +4275,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Josh Metellus",
@@ -4298,7 +4298,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Kam Curl",
@@ -4310,18 +4310,18 @@
   "season_avg": 5.0,
   "last": 8,
   "base": 5.2945,
-  "proj": 5.26,
-  "proj_solo": 2.9704,
+  "proj": 5.2467,
+  "proj_solo": 2.9628,
   "fair_line": 4.5,
   "fair_line_solo": 2.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Isaiah Simmons",
@@ -4344,7 +4344,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Trevon Diggs",
@@ -4367,7 +4367,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Willie Gay Jr.",
@@ -4379,18 +4379,18 @@
   "season_avg": 3.2,
   "last": 8,
   "base": 3.0196,
-  "proj": 3.0906,
-  "proj_solo": 1.0566,
+  "proj": 3.0755,
+  "proj_solo": 1.0514,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Neville Gallimore",
@@ -4413,7 +4413,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "L'Jarius Sneed",
@@ -4436,7 +4436,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Alohi Gilman",
@@ -4459,7 +4459,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Xavier McKinney",
@@ -4482,7 +4482,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jordyn Brooks",
@@ -4494,18 +4494,18 @@
   "season_avg": 8.6,
   "last": 8,
   "base": 8.9588,
-  "proj": 9.1695,
-  "proj_solo": 3.7934,
+  "proj": 9.1246,
+  "proj_solo": 3.7748,
   "fair_line": 8.5,
   "fair_line_solo": 3.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Antoine Winfield Jr.",
@@ -4528,7 +4528,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Kristian Fulton",
@@ -4551,7 +4551,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Zack Baun",
@@ -4574,7 +4574,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Terrell Burgess",
@@ -4597,7 +4597,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Justin Strnad",
@@ -4620,7 +4620,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Kenneth Murray, Jr.",
@@ -4638,12 +4638,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Kwity Paye",
@@ -4655,18 +4655,18 @@
   "season_avg": 2.5,
   "last": 3,
   "base": 2.4773,
-  "proj": 2.5361,
-  "proj_solo": 0.7092,
+  "proj": 2.5424,
+  "proj_solo": 0.7109,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Dayo Odeyingbo",
@@ -4689,7 +4689,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jamien Sherwood",
@@ -4701,18 +4701,18 @@
   "season_avg": 7.6667,
   "last": 11,
   "base": 7.8614,
-  "proj": 7.6921,
-  "proj_solo": 3.5868,
+  "proj": 7.7315,
+  "proj_solo": 3.6052,
   "fair_line": 7.5,
   "fair_line_solo": 3.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Michael Carter II",
@@ -4735,7 +4735,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jason Pinnock",
@@ -4753,12 +4753,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Brandin Echols",
@@ -4781,7 +4781,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.5478
+  "phi": 1.548
  },
  {
   "player": "Deommodore Lenoir",
@@ -4804,7 +4804,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Talanoa Hufanga",
@@ -4827,7 +4827,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Roy Lopez",
@@ -4850,7 +4850,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Ar'Darius Washington",
@@ -4868,12 +4868,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Nick McCloud",
@@ -4896,7 +4896,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Asante Samuel Jr.",
@@ -4919,7 +4919,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.5478
+  "phi": 1.548
  },
  {
   "player": "Nick Bolton",
@@ -4942,7 +4942,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Alim McNeill",
@@ -4965,7 +4965,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Camryn Bynum",
@@ -4988,7 +4988,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Tedarrell Slaton",
@@ -5011,7 +5011,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "K.J. Britt",
@@ -5034,7 +5034,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Nick Niemann",
@@ -5057,7 +5057,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Isaiah McDuffie",
@@ -5080,7 +5080,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Grant Stuard",
@@ -5092,18 +5092,18 @@
   "season_avg": 0.6667,
   "last": 0,
   "base": 0.8389,
-  "proj": 0.8334,
-  "proj_solo": 0.418,
+  "proj": 0.8313,
+  "proj_solo": 0.4169,
   "fair_line": 0.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Zayne Anderson",
@@ -5115,18 +5115,18 @@
   "season_avg": 3.3333,
   "last": 3,
   "base": 2.8073,
-  "proj": 2.8733,
-  "proj_solo": 2.0679,
+  "proj": 2.8592,
+  "proj_solo": 2.0578,
   "fair_line": 2.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Malik Herring",
@@ -5138,18 +5138,18 @@
   "season_avg": 1.6,
   "last": 1,
   "base": 1.747,
-  "proj": 1.7881,
-  "proj_solo": 0.7325,
+  "proj": 1.7794,
+  "proj_solo": 0.7289,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Devon Key",
@@ -5172,7 +5172,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Naquan Jones",
@@ -5195,7 +5195,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Sam Kamara",
@@ -5218,7 +5218,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Amen Ogbongbemiga",
@@ -5241,7 +5241,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jack Heflin",
@@ -5253,18 +5253,18 @@
   "season_avg": 0.5,
   "last": 1,
   "base": 1.1661,
-  "proj": 1.141,
-  "proj_solo": 0.582,
+  "proj": 1.1469,
+  "proj_solo": 0.585,
   "fair_line": 0.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Christian Elliss",
@@ -5287,7 +5287,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Garret Wallow",
@@ -5310,7 +5310,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Chris Rumph II",
@@ -5333,7 +5333,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "Buddy Johnson",
@@ -5356,7 +5356,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Pat Surtain II",
@@ -5379,7 +5379,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Tommy Togiai",
@@ -5397,12 +5397,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Eric Stokes",
@@ -5414,18 +5414,18 @@
   "season_avg": 3.1667,
   "last": 3,
   "base": 3.1939,
-  "proj": 3.2697,
-  "proj_solo": 2.2095,
+  "proj": 3.2778,
+  "proj_solo": 2.215,
   "fair_line": 2.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Joseph Ossai",
@@ -5437,18 +5437,18 @@
   "season_avg": 3.0,
   "last": 0,
   "base": 3.002,
-  "proj": 2.9374,
-  "proj_solo": 1.5007,
+  "proj": 2.9524,
+  "proj_solo": 1.5084,
   "fair_line": 2.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Bobby Brown III",
@@ -5471,7 +5471,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Robert Rochell",
@@ -5494,7 +5494,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Khyiris Tonga",
@@ -5517,7 +5517,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Milton Williams",
@@ -5540,7 +5540,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Patrick Johnson",
@@ -5552,18 +5552,18 @@
   "season_avg": 0.75,
   "last": 0,
   "base": 0.8309,
-  "proj": 0.8506,
-  "proj_solo": 0.42,
+  "proj": 0.8527,
+  "proj_solo": 0.4211,
   "fair_line": 0.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Pete Werner",
@@ -5586,7 +5586,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "Zaven Collins",
@@ -5609,7 +5609,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jaelan Phillips",
@@ -5632,7 +5632,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Andre Cisco",
@@ -5644,18 +5644,18 @@
   "season_avg": 3.6667,
   "last": 3,
   "base": 3.8912,
-  "proj": 3.8075,
-  "proj_solo": 2.8756,
+  "proj": 3.8269,
+  "proj_solo": 2.8903,
   "fair_line": 3.5,
   "fair_line_solo": 2.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Osa Odighizuwa",
@@ -5678,7 +5678,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jaycee Horn",
@@ -5701,7 +5701,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Levi Onwuzurike",
@@ -5724,7 +5724,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Tre'von Moehrig",
@@ -5747,7 +5747,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Derrick Barnes",
@@ -5770,7 +5770,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Tyson Campbell",
@@ -5793,7 +5793,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Christian Barmore",
@@ -5816,7 +5816,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Chauncey Golston",
@@ -5834,12 +5834,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Brandon Stephens",
@@ -5851,18 +5851,18 @@
   "season_avg": 2.6667,
   "last": 2,
   "base": 2.9325,
-  "proj": 2.8693,
-  "proj_solo": 2.3695,
+  "proj": 2.884,
+  "proj_solo": 2.3816,
   "fair_line": 2.5,
   "fair_line_solo": 2.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Malcolm Koonce",
@@ -5874,18 +5874,18 @@
   "season_avg": 1.6667,
   "last": 1,
   "base": 1.6928,
-  "proj": 1.733,
-  "proj_solo": 0.885,
+  "proj": 1.7372,
+  "proj_solo": 0.8871,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Divine Deablo",
@@ -5908,7 +5908,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Ifeatu Melifonwu",
@@ -5931,7 +5931,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Ernest Jones",
@@ -5954,7 +5954,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Baron Browning",
@@ -5977,7 +5977,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Greg Newsome II",
@@ -5995,12 +5995,12 @@
   "fair_line_solo": 2.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jevon Holland",
@@ -6018,12 +6018,12 @@
   "fair_line_solo": 2.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Patrick Jones II",
@@ -6046,7 +6046,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Elijah Garcia",
@@ -6069,7 +6069,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jordan Davis",
@@ -6092,7 +6092,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Quay Walker",
@@ -6104,18 +6104,18 @@
   "season_avg": 6.6667,
   "last": 6,
   "base": 7.042,
-  "proj": 7.2092,
-  "proj_solo": 3.0654,
+  "proj": 7.2269,
+  "proj_solo": 3.0729,
   "fair_line": 6.5,
   "fair_line_solo": 2.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Devonte Wyatt",
@@ -6138,7 +6138,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Riq Woolen",
@@ -6161,7 +6161,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Dominique Robinson",
@@ -6179,12 +6179,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Kingsley Enagbare",
@@ -6196,18 +6196,18 @@
   "season_avg": 3.2,
   "last": 6,
   "base": 3.0725,
-  "proj": 3.0063,
-  "proj_solo": 1.7662,
+  "proj": 3.0217,
+  "proj_solo": 1.7753,
   "fair_line": 2.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jonathan Ford",
@@ -6230,7 +6230,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Elijah Hicks",
@@ -6253,7 +6253,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jack Sanborn",
@@ -6276,7 +6276,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Josh Blackwell",
@@ -6299,7 +6299,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Reed Blankenship",
@@ -6317,12 +6317,12 @@
   "fair_line_solo": 3.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Josh Jobe",
@@ -6345,7 +6345,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Tony Adams",
@@ -6368,7 +6368,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Sauce Gardner",
@@ -6391,7 +6391,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Trent McDuffie",
@@ -6403,18 +6403,18 @@
   "season_avg": 3.2,
   "last": 3,
   "base": 3.4851,
-  "proj": 3.4624,
-  "proj_solo": 2.6413,
+  "proj": 3.4536,
+  "proj_solo": 2.6346,
   "fair_line": 3.5,
   "fair_line_solo": 2.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "George Karlaftis",
@@ -6437,7 +6437,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Bryan Cook",
@@ -6460,7 +6460,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jaylen Watson",
@@ -6472,18 +6472,18 @@
   "season_avg": 3.4,
   "last": 6,
   "base": 3.5472,
-  "proj": 3.524,
-  "proj_solo": 2.3146,
+  "proj": 3.5151,
+  "proj_solo": 2.3087,
   "fair_line": 3.5,
   "fair_line_solo": 2.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Brenden Schooler",
@@ -6506,7 +6506,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jack Cochrane",
@@ -6529,7 +6529,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Aidan Hutchinson",
@@ -6552,7 +6552,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Derek Stingley Jr.",
@@ -6570,12 +6570,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Devin Lloyd",
@@ -6598,7 +6598,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jalen Pitre",
@@ -6616,12 +6616,12 @@
   "fair_line_solo": 2.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Nik Bonitto",
@@ -6644,7 +6644,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Martin Emerson",
@@ -6667,7 +6667,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.5478
+  "phi": 1.548
  },
  {
   "player": "Marcus Jones",
@@ -6690,7 +6690,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Micah McFadden",
@@ -6708,12 +6708,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Thomas Booker",
@@ -6725,18 +6725,18 @@
   "season_avg": 1.8333,
   "last": 2,
   "base": 1.9401,
-  "proj": 1.9861,
-  "proj_solo": 1.1864,
+  "proj": 1.991,
+  "proj_solo": 1.1893,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Zyon McCollum",
@@ -6759,7 +6759,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Otito Ogbonnia",
@@ -6782,7 +6782,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "D'Marco Jackson",
@@ -6805,7 +6805,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "DaRon Bland",
@@ -6828,7 +6828,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "John Ridgeway",
@@ -6851,7 +6851,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.2922
+  "phi": 1.2908
  },
  {
   "player": "Malcolm Rodriguez",
@@ -6874,7 +6874,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jordan Jackson",
@@ -6897,7 +6897,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Theo Jackson",
@@ -6920,7 +6920,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "James Houston",
@@ -6943,7 +6943,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Chance Campbell",
@@ -6966,7 +6966,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Rodney Thomas",
@@ -6989,7 +6989,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Arron Mosby",
@@ -7012,7 +7012,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Ja'Quan McMillian",
@@ -7035,7 +7035,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jake Hansen",
@@ -7053,12 +7053,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Mike Brown",
@@ -7081,7 +7081,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Isaiah Pola-Mao",
@@ -7093,18 +7093,18 @@
   "season_avg": 3.0,
   "last": 3,
   "base": 3.4247,
-  "proj": 3.506,
-  "proj_solo": 2.0441,
+  "proj": 3.5146,
+  "proj_solo": 2.0491,
   "fair_line": 3.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Segun Olubi",
@@ -7116,18 +7116,18 @@
   "season_avg": 1.4,
   "last": 0,
   "base": 1.3518,
-  "proj": 1.3839,
-  "proj_solo": 0.6419,
+  "proj": 1.3873,
+  "proj_solo": 0.6435,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Markquese Bell",
@@ -7150,7 +7150,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Juanyeh Thomas",
@@ -7173,7 +7173,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Timmy Horne",
@@ -7196,7 +7196,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Nate Landman",
@@ -7208,18 +7208,18 @@
   "season_avg": 8.5,
   "last": 10,
   "base": 8.3823,
-  "proj": 8.3276,
-  "proj_solo": 4.2944,
-  "fair_line": 8.5,
+  "proj": 8.3065,
+  "proj_solo": 4.2835,
+  "fair_line": 7.5,
   "fair_line_solo": 3.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jack Gibbens",
@@ -7242,7 +7242,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Kayvon Thibodeaux",
@@ -7260,12 +7260,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Nakobe Dean",
@@ -7277,18 +7277,18 @@
   "season_avg": 9.5,
   "last": 12,
   "base": 9.0553,
-  "proj": 9.2702,
-  "proj_solo": 5.094,
+  "proj": 9.2931,
+  "proj_solo": 5.1065,
   "fair_line": 8.5,
   "fair_line_solo": 4.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Ja'Marcus Ingram",
@@ -7306,12 +7306,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jermaine Johnson II",
@@ -7334,7 +7334,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Sam Williams",
@@ -7357,7 +7357,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jeremiah Pharms Jr.",
@@ -7380,7 +7380,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Daxton Hill",
@@ -7403,7 +7403,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Cam Taylor-Britt",
@@ -7426,7 +7426,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Travis Jones",
@@ -7449,7 +7449,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Cordale Flott",
@@ -7472,7 +7472,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Dondrea Tillman",
@@ -7495,7 +7495,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Cameron Thomas",
@@ -7518,7 +7518,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Christian Harris",
@@ -7541,7 +7541,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Quentin Lake",
@@ -7553,18 +7553,18 @@
   "season_avg": 7.0,
   "last": 7,
   "base": 6.8603,
-  "proj": 6.8156,
-  "proj_solo": 4.3939,
+  "proj": 6.7983,
+  "proj_solo": 4.3828,
   "fair_line": 6.5,
   "fair_line_solo": 4.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Daniel Hardy",
@@ -7587,7 +7587,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Russ Yeast",
@@ -7610,7 +7610,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Kyle Hamilton",
@@ -7633,7 +7633,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jack Jones",
@@ -7656,7 +7656,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Joshua Williams",
@@ -7679,7 +7679,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Akayleb Evans",
@@ -7702,7 +7702,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Eyioma Uwazurike",
@@ -7725,7 +7725,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Kyler Gordon",
@@ -7748,7 +7748,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Arnold Ebiketie",
@@ -7771,7 +7771,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Alontae Taylor",
@@ -7794,7 +7794,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Dane Belton",
@@ -7806,18 +7806,18 @@
   "season_avg": 7.6667,
   "last": 9,
   "base": 7.5532,
-  "proj": 7.3905,
-  "proj_solo": 3.7011,
+  "proj": 7.4283,
+  "proj_solo": 3.72,
   "fair_line": 7.5,
   "fair_line_solo": 3.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Roger McCreary",
@@ -7840,7 +7840,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Logan Hall",
@@ -7858,12 +7858,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Boye Mafe",
@@ -7886,7 +7886,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jaquan Brisker",
@@ -7909,7 +7909,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6742
+  "phi": 1.6681
  },
  {
   "player": "Tanner Ingle",
@@ -7921,18 +7921,18 @@
   "season_avg": 0.5,
   "last": 1,
   "base": 1.833,
-  "proj": 1.821,
-  "proj_solo": 0.9791,
+  "proj": 1.8164,
+  "proj_solo": 0.9766,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jalen Carter",
@@ -7955,7 +7955,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Colby Wooden",
@@ -7978,7 +7978,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.2922
+  "phi": 1.2908
  },
  {
   "player": "Noah Sewell",
@@ -8001,7 +8001,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Karl Brooks",
@@ -8024,7 +8024,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Zaire Barnes",
@@ -8042,12 +8042,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Carrington Valentine",
@@ -8070,7 +8070,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Moro Ojomo",
@@ -8093,7 +8093,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Brenton Cox Jr.",
@@ -8116,7 +8116,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Trenton Simpson",
@@ -8139,7 +8139,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Tavius Robinson",
@@ -8162,7 +8162,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Truman Jones",
@@ -8185,7 +8185,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Reese Taylor",
@@ -8197,18 +8197,18 @@
   "season_avg": 1.0,
   "last": 1,
   "base": 2.1632,
-  "proj": 2.214,
-  "proj_solo": 1.3258,
+  "proj": 2.2032,
+  "proj_solo": 1.3193,
   "fair_line": 1.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Tyree Wilson",
@@ -8231,7 +8231,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.2922
+  "phi": 1.2908
  },
  {
   "player": "Myles Murphy",
@@ -8254,7 +8254,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "DJ Turner II",
@@ -8277,7 +8277,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Riley Moss",
@@ -8300,7 +8300,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Ji'Ayir Brown",
@@ -8323,7 +8323,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jordan Battle",
@@ -8346,7 +8346,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Mekhi Blackmon",
@@ -8369,7 +8369,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Clark Phillips III",
@@ -8392,7 +8392,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Isaiah McGuire",
@@ -8415,7 +8415,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Nick Herbig",
@@ -8438,7 +8438,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "Jay Ward",
@@ -8461,7 +8461,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Yasir Abdullah",
@@ -8484,7 +8484,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jammie Robinson",
@@ -8507,7 +8507,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jordan Howden",
@@ -8530,7 +8530,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6742
+  "phi": 1.6681
  },
  {
   "player": "Mike Morris",
@@ -8553,7 +8553,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Darrell Luter Jr.",
@@ -8565,18 +8565,18 @@
   "season_avg": 2.0,
   "last": 2,
   "base": 2.5393,
-  "proj": 2.5996,
-  "proj_solo": 1.4626,
+  "proj": 2.606,
+  "proj_solo": 1.4662,
   "fair_line": 2.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Henry To'oTo'o",
@@ -8594,12 +8594,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "JL Skinner",
@@ -8622,7 +8622,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Erick Hallett",
@@ -8645,7 +8645,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Dante Stills",
@@ -8668,7 +8668,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Ameer Speed",
@@ -8691,7 +8691,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Dee Winters",
@@ -8714,7 +8714,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "DeMarcco Hellams",
@@ -8737,7 +8737,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "D.J. Ivey",
@@ -8760,7 +8760,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jalen Graham",
@@ -8783,7 +8783,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Cory Durden",
@@ -8806,7 +8806,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Trevor Nowaske",
@@ -8829,7 +8829,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Brandon Pili",
@@ -8852,7 +8852,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Ronnie Hickman Jr.",
@@ -8875,7 +8875,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Patrick O'Connell",
@@ -8898,7 +8898,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Ty Okada",
@@ -8921,7 +8921,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jalen Redmond",
@@ -8944,7 +8944,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Eku Leota",
@@ -8967,7 +8967,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Art Green",
@@ -8990,7 +8990,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Thomas Incoom",
@@ -9013,7 +9013,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Ivan Pace Jr.",
@@ -9036,7 +9036,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Christian Izien",
@@ -9059,7 +9059,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "AJ Finley",
@@ -9082,7 +9082,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Shaka Heyward",
@@ -9094,18 +9094,18 @@
   "season_avg": 1.0,
   "last": 1,
   "base": 1.3867,
-  "proj": 1.4193,
-  "proj_solo": 0.6546,
+  "proj": 1.4123,
+  "proj_solo": 0.6514,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Drake Thomas",
@@ -9128,7 +9128,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Tyler Lacy",
@@ -9151,7 +9151,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Byron Young",
@@ -9174,7 +9174,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Zach Harrison",
@@ -9197,7 +9197,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Chamarri Conner",
@@ -9220,7 +9220,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Kei'Trel Clark",
@@ -9243,7 +9243,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Nic Jones",
@@ -9261,12 +9261,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Deonte Banks",
@@ -9284,12 +9284,12 @@
   "fair_line_solo": 2.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Sydney Brown",
@@ -9312,7 +9312,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Felix Anudike-Uzomah",
@@ -9335,7 +9335,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Garrett Williams",
@@ -9358,7 +9358,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Nolan Smith",
@@ -9381,7 +9381,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jack Campbell",
@@ -9404,7 +9404,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Adetomiwa Adebawore",
@@ -9427,7 +9427,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Derick Hall",
@@ -9450,7 +9450,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "SirVocea Dennis",
@@ -9473,7 +9473,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jose Ramirez",
@@ -9496,7 +9496,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Desjuan Johnson",
@@ -9508,18 +9508,18 @@
   "season_avg": 1.6,
   "last": 1,
   "base": 1.6584,
-  "proj": 1.6476,
-  "proj_solo": 0.4183,
+  "proj": 1.6434,
+  "proj_solo": 0.4172,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Calijah Kancey",
@@ -9542,7 +9542,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Yaya Diaby",
@@ -9565,7 +9565,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Gervon Dexter Sr.",
@@ -9588,7 +9588,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Tyrique Stevenson",
@@ -9611,7 +9611,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Will Anderson Jr.",
@@ -9629,12 +9629,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Keeanu Benton",
@@ -9657,7 +9657,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.2922
+  "phi": 1.2908
  },
  {
   "player": "Lukas Van Ness",
@@ -9680,7 +9680,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Byron Young",
@@ -9692,18 +9692,18 @@
   "season_avg": 4.1667,
   "last": 6,
   "base": 4.2538,
-  "proj": 4.2261,
-  "proj_solo": 1.7665,
+  "proj": 4.2153,
+  "proj_solo": 1.762,
   "fair_line": 3.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Kobie Turner",
@@ -9715,18 +9715,18 @@
   "season_avg": 3.6667,
   "last": 2,
   "base": 3.5371,
-  "proj": 3.5141,
-  "proj_solo": 1.2124,
+  "proj": 3.5051,
+  "proj_solo": 1.2093,
   "fair_line": 3.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Kelee Ringo",
@@ -9749,7 +9749,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Will McDonald IV",
@@ -9761,18 +9761,18 @@
   "season_avg": 2.0,
   "last": 1,
   "base": 1.9966,
-  "proj": 1.9537,
-  "proj_solo": 0.9373,
+  "proj": 1.9636,
+  "proj_solo": 0.9421,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Christian Gonzalez",
@@ -9795,7 +9795,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Keion White",
@@ -9818,7 +9818,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Emmanuel Forbes",
@@ -9830,18 +9830,18 @@
   "season_avg": 1.25,
   "last": 2,
   "base": 1.5225,
-  "proj": 1.5125,
-  "proj_solo": 0.8793,
+  "proj": 1.5087,
+  "proj_solo": 0.877,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Julius Brents",
@@ -9853,18 +9853,18 @@
   "season_avg": 4.2,
   "last": 6,
   "base": 3.9653,
-  "proj": 4.0585,
-  "proj_solo": 2.0674,
+  "proj": 4.0387,
+  "proj_solo": 2.0572,
   "fair_line": 3.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Joey Porter Jr.",
@@ -9887,7 +9887,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Devon Witherspoon",
@@ -9910,7 +9910,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Basil Okoye",
@@ -9928,12 +9928,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Austin Ajiake",
@@ -9956,7 +9956,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Nate Wiggins",
@@ -9979,7 +9979,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Kalen King",
@@ -10002,7 +10002,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jimmy Ciarlo",
@@ -10025,7 +10025,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Braiden McGregor",
@@ -10037,18 +10037,18 @@
   "season_avg": 2.3333,
   "last": 1,
   "base": 2.1067,
-  "proj": 2.0614,
-  "proj_solo": 0.7667,
+  "proj": 2.0719,
+  "proj_solo": 0.7706,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Leonard Taylor III",
@@ -10071,7 +10071,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Byron Murphy II",
@@ -10094,7 +10094,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Swayze Bozeman",
@@ -10117,7 +10117,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Christian Roland-Wallace",
@@ -10140,7 +10140,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Laiatu Latu",
@@ -10163,7 +10163,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Kamari Lassiter",
@@ -10181,12 +10181,12 @@
   "fair_line_solo": 3.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Renardo Green",
@@ -10209,7 +10209,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Trevin Wallace",
@@ -10221,18 +10221,18 @@
   "season_avg": 1.0,
   "last": 1,
   "base": 2.3597,
-  "proj": 2.3089,
-  "proj_solo": 0.9582,
+  "proj": 2.3207,
+  "proj_solo": 0.9631,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Decamerion Richardson",
@@ -10255,7 +10255,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.5478
+  "phi": 1.548
  },
  {
   "player": "Malik Mustapha",
@@ -10278,7 +10278,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Kris Abrams-Draine",
@@ -10301,7 +10301,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jarvis Brownlee Jr.",
@@ -10313,18 +10313,18 @@
   "season_avg": 2.3333,
   "last": 1,
   "base": 2.9555,
-  "proj": 2.8919,
-  "proj_solo": 1.9436,
+  "proj": 2.9067,
+  "proj_solo": 1.9535,
   "fair_line": 2.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Tommy Eichenberg",
@@ -10336,18 +10336,18 @@
   "season_avg": 2.2,
   "last": 2,
   "base": 2.268,
-  "proj": 2.3218,
-  "proj_solo": 0.8498,
+  "proj": 2.3275,
+  "proj_solo": 0.8519,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jaylon Carlies",
@@ -10370,7 +10370,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Chau Smith-Wade",
@@ -10393,7 +10393,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jaylin Simpson",
@@ -10405,18 +10405,18 @@
   "season_avg": 2.0,
   "last": 3,
   "base": 2.497,
-  "proj": 2.5557,
-  "proj_solo": 1.4391,
+  "proj": 2.5432,
+  "proj_solo": 1.4321,
   "fair_line": 2.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Caelen Carson",
@@ -10439,7 +10439,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jaylan Ford",
@@ -10462,7 +10462,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "Jamal Hill",
@@ -10480,12 +10480,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Khristian Boyd",
@@ -10508,7 +10508,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.2922
+  "phi": 1.2908
  },
  {
   "player": "Jaden Crumedy",
@@ -10526,12 +10526,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Myles Harden",
@@ -10554,7 +10554,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Levi Drake Rodriguez",
@@ -10577,7 +10577,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jonah Laulu",
@@ -10589,18 +10589,18 @@
   "season_avg": 1.0,
   "last": 2,
   "base": 1.3329,
-  "proj": 1.3646,
-  "proj_solo": 0.4676,
+  "proj": 1.3679,
+  "proj_solo": 0.4688,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "James Williams",
@@ -10623,7 +10623,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jowon Briggs",
@@ -10635,18 +10635,18 @@
   "season_avg": 3.6667,
   "last": 6,
   "base": 3.4558,
-  "proj": 3.3814,
-  "proj_solo": 1.1974,
+  "proj": 3.3987,
+  "proj_solo": 1.2036,
   "fair_line": 3.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Carl Jones",
@@ -10669,7 +10669,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jamree Kromah",
@@ -10692,7 +10692,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Reddy Steward",
@@ -10715,7 +10715,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Winston Reid",
@@ -10738,7 +10738,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Julius Wood",
@@ -10750,18 +10750,18 @@
   "season_avg": 0.5,
   "last": 0,
   "base": 1.8268,
-  "proj": 1.8698,
-  "proj_solo": 1.0298,
+  "proj": 1.8606,
+  "proj_solo": 1.0247,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Isaiah Stalbird",
@@ -10784,7 +10784,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "PJ Jules",
@@ -10807,7 +10807,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Maema Njongmeta",
@@ -10830,7 +10830,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Bo Richter",
@@ -10853,7 +10853,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jayden Price",
@@ -10876,7 +10876,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.5478
+  "phi": 1.548
  },
  {
   "player": "Braden Fiske",
@@ -10888,18 +10888,18 @@
   "season_avg": 1.5,
   "last": 2,
   "base": 1.5353,
-  "proj": 1.5253,
-  "proj_solo": 0.7534,
+  "proj": 1.5214,
+  "proj_solo": 0.7515,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jalyx Hunt",
@@ -10922,7 +10922,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Payton Wilson",
@@ -10945,7 +10945,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "Tyler Davis",
@@ -10957,18 +10957,18 @@
   "season_avg": 2.5,
   "last": 3,
   "base": 2.5034,
-  "proj": 2.4871,
-  "proj_solo": 0.9058,
+  "proj": 2.4808,
+  "proj_solo": 0.9035,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Cedric Johnson",
@@ -10991,7 +10991,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Charles Woods",
@@ -11014,7 +11014,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Josh Wallace",
@@ -11026,18 +11026,18 @@
   "season_avg": 3.8,
   "last": 8,
   "base": 3.4938,
-  "proj": 3.471,
-  "proj_solo": 2.4803,
+  "proj": 3.4622,
+  "proj_solo": 2.474,
   "fair_line": 3.5,
   "fair_line_solo": 2.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Omar Speights",
@@ -11049,18 +11049,18 @@
   "season_avg": 4.3333,
   "last": 4,
   "base": 4.4633,
-  "proj": 4.4342,
-  "proj_solo": 2.3059,
+  "proj": 4.4229,
+  "proj_solo": 2.3,
   "fair_line": 4.5,
-  "fair_line_solo": 2.5,
+  "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jaylen McCollough",
@@ -11072,18 +11072,18 @@
   "season_avg": 3.25,
   "last": 4,
   "base": 3.1907,
-  "proj": 3.1699,
-  "proj_solo": 1.4686,
+  "proj": 3.1619,
+  "proj_solo": 1.4649,
   "fair_line": 2.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Qwan'tez Stiggers",
@@ -11095,18 +11095,18 @@
   "season_avg": 0.8,
   "last": 1,
   "base": 1.0742,
-  "proj": 1.051,
-  "proj_solo": 0.7874,
+  "proj": 1.0564,
+  "proj_solo": 0.7914,
   "fair_line": 0.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Nehemiah Pritchett",
@@ -11129,7 +11129,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Max Melton",
@@ -11152,7 +11152,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jonah Elliss",
@@ -11175,7 +11175,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Ty'Ron Hopper",
@@ -11198,7 +11198,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Evan Williams",
@@ -11221,7 +11221,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Tyrice Knight",
@@ -11244,7 +11244,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Kitan Oladapo",
@@ -11267,7 +11267,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Andru Phillips",
@@ -11285,12 +11285,12 @@
   "fair_line_solo": 3.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jaden Hicks",
@@ -11313,7 +11313,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jeremiah Trotter Jr.",
@@ -11336,7 +11336,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Darius Muasau",
@@ -11359,7 +11359,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Kamal Hadden",
@@ -11382,7 +11382,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Kamren Kinchens",
@@ -11394,18 +11394,18 @@
   "season_avg": 6.5,
   "last": 5,
   "base": 6.1843,
-  "proj": 6.144,
-  "proj_solo": 3.3377,
+  "proj": 6.1284,
+  "proj_solo": 3.3292,
   "fair_line": 5.5,
   "fair_line_solo": 3.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Bralen Trice",
@@ -11428,7 +11428,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Calen Bullock",
@@ -11446,12 +11446,12 @@
   "fair_line_solo": 2.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Austin Booker",
@@ -11474,7 +11474,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Cooper DeJean",
@@ -11497,7 +11497,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Tykee Smith",
@@ -11520,7 +11520,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Edgerrin Cooper",
@@ -11543,7 +11543,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jared Verse",
@@ -11566,7 +11566,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Darius Robinson",
@@ -11589,7 +11589,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Cedric Gray",
@@ -11612,7 +11612,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Brandon Dorlus",
@@ -11635,7 +11635,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Kool-Aid McKinstry",
@@ -11658,7 +11658,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.5478
+  "phi": 1.548
  },
  {
   "player": "Tyler Nubin",
@@ -11676,12 +11676,12 @@
   "fair_line_solo": 3.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Ennis Rakestraw Jr.",
@@ -11704,7 +11704,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Dadrion Taylor-Demerson",
@@ -11727,7 +11727,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Javon Bullard",
@@ -11750,7 +11750,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "T'Vondre Sweat",
@@ -11762,18 +11762,18 @@
   "season_avg": 2.5,
   "last": 3,
   "base": 2.5485,
-  "proj": 2.4937,
-  "proj_solo": 0.8232,
+  "proj": 2.5064,
+  "proj_solo": 0.8275,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Quinyon Mitchell",
@@ -11796,7 +11796,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Maason Smith",
@@ -11819,7 +11819,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Mike Hall Jr.",
@@ -11842,7 +11842,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Kris Jenkins",
@@ -11865,7 +11865,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Chop Robinson",
@@ -11877,18 +11877,18 @@
   "season_avg": 2.0,
   "last": 3,
   "base": 1.8806,
-  "proj": 1.9248,
-  "proj_solo": 0.8563,
+  "proj": 1.9154,
+  "proj_solo": 0.8521,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Dallas Turner",
@@ -11911,7 +11911,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Shavon Revel Jr.",
@@ -11934,7 +11934,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Barryn Sorrell",
@@ -11957,7 +11957,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Shemar James",
@@ -11980,7 +11980,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Smael Mondon Jr.",
@@ -12003,7 +12003,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Micah Robinson",
@@ -12026,7 +12026,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Nazir Stackhouse",
@@ -12049,7 +12049,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Justin Barron",
@@ -12072,7 +12072,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Alijah Clark",
@@ -12095,7 +12095,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jared Ivey",
@@ -12118,7 +12118,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Connor O'Toole",
@@ -12141,7 +12141,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jackson Woodard",
@@ -12153,18 +12153,18 @@
   "season_avg": 3.0,
   "last": 5,
   "base": 3.7301,
-  "proj": 3.8178,
-  "proj_solo": 1.3972,
+  "proj": 3.7992,
+  "proj_solo": 1.3904,
   "fair_line": 3.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Teddye Buchanan",
@@ -12187,7 +12187,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Mac McWilliams",
@@ -12210,7 +12210,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jeffrey Bassa",
@@ -12233,7 +12233,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Kevin Knowles",
@@ -12256,7 +12256,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jay Higgins",
@@ -12279,7 +12279,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Keondre Jackson",
@@ -12302,7 +12302,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Kenneth Grant",
@@ -12314,18 +12314,18 @@
   "season_avg": 1.0,
   "last": 1,
   "base": 1.4626,
-  "proj": 1.497,
-  "proj_solo": 0.5975,
+  "proj": 1.4897,
+  "proj_solo": 0.5946,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Azareye'h Thomas",
@@ -12337,18 +12337,18 @@
   "season_avg": 4.3333,
   "last": 6,
   "base": 4.1128,
-  "proj": 4.0243,
-  "proj_solo": 2.5594,
+  "proj": 4.0449,
+  "proj_solo": 2.5725,
   "fair_line": 3.5,
   "fair_line_solo": 2.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Princely Umanmielen",
@@ -12371,7 +12371,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jordan Burch",
@@ -12394,7 +12394,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Justin Walley",
@@ -12417,7 +12417,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Kevin Winston Jr.",
@@ -12440,7 +12440,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jacob Parrish",
@@ -12463,7 +12463,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Xavier Watts",
@@ -12486,7 +12486,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Upton Stout",
@@ -12509,7 +12509,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Sai'vion Jones",
@@ -12532,7 +12532,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Danny Stutsman",
@@ -12555,7 +12555,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "Billy Bowman Jr.",
@@ -12578,7 +12578,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Barrett Carter",
@@ -12601,7 +12601,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "David Walker",
@@ -12624,7 +12624,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Lathan Ransom",
@@ -12647,7 +12647,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jack Sawyer",
@@ -12670,7 +12670,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "Malachi Moore",
@@ -12682,18 +12682,18 @@
   "season_avg": 1.1667,
   "last": 2,
   "base": 1.8542,
-  "proj": 1.8143,
-  "proj_solo": 1.2,
+  "proj": 1.8236,
+  "proj_solo": 1.2061,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Quincy Riley",
@@ -12716,7 +12716,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.5478
+  "phi": 1.548
  },
  {
   "player": "Que Robinson",
@@ -12739,7 +12739,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Tonka Hemingway",
@@ -12751,18 +12751,18 @@
   "season_avg": 2.8,
   "last": 1,
   "base": 2.5143,
-  "proj": 2.5739,
-  "proj_solo": 0.7484,
+  "proj": 2.5803,
+  "proj_solo": 0.7503,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Joshua Farmer",
@@ -12785,7 +12785,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Tyrion Ingram-Dawkins",
@@ -12808,7 +12808,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jordan Phillips",
@@ -12820,18 +12820,18 @@
   "season_avg": 2.4,
   "last": 4,
   "base": 2.3259,
-  "proj": 2.3806,
-  "proj_solo": 0.783,
+  "proj": 2.369,
+  "proj_solo": 0.7791,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jason Marshall Jr.",
@@ -12843,18 +12843,18 @@
   "season_avg": 3.6,
   "last": 4,
   "base": 3.4062,
-  "proj": 3.4863,
-  "proj_solo": 2.1336,
+  "proj": 3.4692,
+  "proj_solo": 2.1232,
   "fair_line": 3.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Dante Trader Jr.",
@@ -12866,18 +12866,18 @@
   "season_avg": 5.2,
   "last": 7,
   "base": 4.9003,
-  "proj": 5.0155,
-  "proj_solo": 2.2036,
+  "proj": 4.991,
+  "proj_solo": 2.1928,
   "fair_line": 4.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Elijah Roberts",
@@ -12900,7 +12900,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Marques Sigle",
@@ -12923,7 +12923,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Yahya Black",
@@ -12946,7 +12946,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.2922
+  "phi": 1.2908
  },
  {
   "player": "Denzel Burke",
@@ -12969,7 +12969,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "JJ Pegues",
@@ -12981,18 +12981,18 @@
   "season_avg": 1.0,
   "last": 1,
   "base": 1.0695,
-  "proj": 1.0949,
-  "proj_solo": 0.6011,
+  "proj": 1.0976,
+  "proj_solo": 0.6026,
   "fair_line": 0.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Marcus Harris",
@@ -13015,7 +13015,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jaylen Reed",
@@ -13038,7 +13038,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Tim Smith",
@@ -13061,7 +13061,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Cody Lindenberg",
@@ -13073,18 +13073,18 @@
   "season_avg": 2.0,
   "last": 2,
   "base": 1.8302,
-  "proj": 1.8736,
-  "proj_solo": 1.0525,
+  "proj": 1.8783,
+  "proj_solo": 1.0551,
   "fair_line": 1.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Kitan Crawford",
@@ -13107,7 +13107,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Carson Bruener",
@@ -13130,7 +13130,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "Hunter Wohler",
@@ -13153,7 +13153,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Zeek Biggers",
@@ -13165,18 +13165,18 @@
   "season_avg": 2.4,
   "last": 1,
   "base": 2.4093,
-  "proj": 2.466,
-  "proj_solo": 0.9372,
+  "proj": 2.4539,
+  "proj_solo": 0.9326,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Fadil Diggs",
@@ -13199,7 +13199,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6202
+  "phi": 1.6168
  },
  {
   "player": "Adin Huntington",
@@ -13222,7 +13222,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Easton Mascarenas-Arnold",
@@ -13245,7 +13245,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Donovan McMillon",
@@ -13268,7 +13268,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Michael Reid",
@@ -13291,7 +13291,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6742
+  "phi": 1.6681
  },
  {
   "player": "Doneiko Slaughter",
@@ -13314,7 +13314,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6742
+  "phi": 1.6681
  },
  {
   "player": "Elijah Simmons",
@@ -13337,7 +13337,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Trace Ford",
@@ -13355,12 +13355,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Karene Reid",
@@ -13383,7 +13383,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "TeRah Edwards",
@@ -13406,7 +13406,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Nikko Reed",
@@ -13424,12 +13424,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Chaz Chambliss",
@@ -13452,7 +13452,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Zemaiah Vaughn",
@@ -13475,7 +13475,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Elliott Davison",
@@ -13498,7 +13498,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Sebastian Valdez",
@@ -13521,7 +13521,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Elijah Ponder",
@@ -13544,7 +13544,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Carson Schwesinger",
@@ -13567,7 +13567,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Josaiah Stewart",
@@ -13579,18 +13579,18 @@
   "season_avg": 3.0,
   "last": 5,
   "base": 2.7526,
-  "proj": 2.7346,
-  "proj_solo": 0.8385,
+  "proj": 2.7277,
+  "proj_solo": 0.8364,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Ty Hamilton",
@@ -13602,18 +13602,18 @@
   "season_avg": 1.25,
   "last": 1,
   "base": 1.1814,
-  "proj": 1.1737,
-  "proj_solo": 0.4055,
+  "proj": 1.1707,
+  "proj_solo": 0.4044,
   "fair_line": 0.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Shaun Dolac",
@@ -13625,18 +13625,18 @@
   "season_avg": 3.0,
   "last": 2,
   "base": 2.8132,
-  "proj": 2.7948,
-  "proj_solo": 1.3861,
+  "proj": 2.7878,
+  "proj_solo": 1.3826,
   "fair_line": 2.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jordan Turner",
@@ -13659,7 +13659,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Keyon Martin",
@@ -13682,7 +13682,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Ashton Gillotte",
@@ -13705,7 +13705,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Darien Porter",
@@ -13717,18 +13717,18 @@
   "season_avg": 3.0,
   "last": 2,
   "base": 2.9952,
-  "proj": 3.0663,
-  "proj_solo": 2.0653,
+  "proj": 3.0739,
+  "proj_solo": 2.0704,
   "fair_line": 2.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Vernon Broughton",
@@ -13751,7 +13751,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.2922
+  "phi": 1.2908
  },
  {
   "player": "Jonas Sanker",
@@ -13774,7 +13774,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6742
+  "phi": 1.6681
  },
  {
   "player": "Cody Simon",
@@ -13797,7 +13797,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Rylie Mills",
@@ -13820,7 +13820,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Keith Cooper Jr.",
@@ -13832,18 +13832,18 @@
   "season_avg": 0.3333,
   "last": 1,
   "base": 0.8749,
-  "proj": 0.8954,
-  "proj_solo": 0.3572,
+  "proj": 0.8911,
+  "proj_solo": 0.3554,
   "fair_line": 0.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Mykel Williams",
@@ -13866,7 +13866,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Ty Robinson",
@@ -13889,7 +13889,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Nohl Williams",
@@ -13912,7 +13912,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Tyleik Williams",
@@ -13935,7 +13935,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Abdul Carter",
@@ -13953,12 +13953,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Derrick Harmon",
@@ -13981,7 +13981,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.2922
+  "phi": 1.2908
  },
  {
   "player": "Sean Fresch",
@@ -14004,7 +14004,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Mason Graham",
@@ -14027,7 +14027,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Malaki Starks",
@@ -14050,7 +14050,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Anthony Campbell",
@@ -14073,7 +14073,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Darius Alexander",
@@ -14091,12 +14091,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Walter Nolen",
@@ -14119,7 +14119,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jihaad Campbell",
@@ -14142,7 +14142,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Craig Woodson",
@@ -14165,7 +14165,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jahdae Barron",
@@ -14188,7 +14188,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Mike Green",
@@ -14211,7 +14211,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Donovan Ezeiruaku",
@@ -14234,7 +14234,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Nick Emmanwori",
@@ -14257,7 +14257,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Demetrius Knight Jr.",
@@ -14280,7 +14280,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Shemar Turner",
@@ -14303,7 +14303,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jaylahn Tuimoloau",
@@ -14326,7 +14326,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Andrew Mukuba",
@@ -14349,7 +14349,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Oluwafemi Oladejo",
@@ -14372,7 +14372,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Shemar Stewart",
@@ -14395,7 +14395,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Caleb Downs",
@@ -14418,7 +14418,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Treydan Stukes",
@@ -14430,18 +14430,18 @@
   "season_avg": 5.2,
   "last": 9,
   "base": 5.082,
-  "proj": 5.2026,
-  "proj_solo": 3.1336,
+  "proj": 5.2154,
+  "proj_solo": 3.1413,
   "fair_line": 4.5,
   "fair_line_solo": 2.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Chris McClellan",
@@ -14464,7 +14464,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jaishawn Barham",
@@ -14487,7 +14487,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Julian Neal",
@@ -14510,7 +14510,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Dani Dennis-Sutton",
@@ -14533,7 +14533,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "LT Overton",
@@ -14556,7 +14556,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Chandler Rivers",
@@ -14579,7 +14579,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Hezekiah Masses",
@@ -14591,18 +14591,18 @@
   "season_avg": 3.3333,
   "last": 1,
   "base": 3.3766,
-  "proj": 3.4567,
-  "proj_solo": 2.1042,
+  "proj": 3.4652,
+  "proj_solo": 2.1094,
   "fair_line": 3.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Cole Wisniewski",
@@ -14625,7 +14625,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Keyshawn James-Newby",
@@ -14648,7 +14648,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Maximus Pulley",
@@ -14660,18 +14660,18 @@
   "season_avg": 1.5,
   "last": 1,
   "base": 2.5046,
-  "proj": 2.4883,
-  "proj_solo": 1.3145,
+  "proj": 2.482,
+  "proj_solo": 1.3112,
   "fair_line": 2.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Kapena Gushiken",
@@ -14694,7 +14694,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Xavier Nwankpa",
@@ -14717,7 +14717,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Ethan Burke",
@@ -14740,7 +14740,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "David Bailey",
@@ -14752,18 +14752,18 @@
   "season_avg": 5.0,
   "last": 5,
   "base": 5.1426,
-  "proj": 5.0319,
-  "proj_solo": 2.9164,
+  "proj": 5.0576,
+  "proj_solo": 2.9314,
   "fair_line": 4.5,
   "fair_line_solo": 2.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Rueben Bain Jr.",
@@ -14786,7 +14786,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Caleb Banks",
@@ -14809,7 +14809,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "D'Angelo Ponds",
@@ -14821,18 +14821,18 @@
   "season_avg": 1.5,
   "last": 0,
   "base": 2.1585,
-  "proj": 2.1121,
-  "proj_solo": 1.3001,
+  "proj": 2.1229,
+  "proj_solo": 1.3068,
   "fair_line": 1.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "CJ Allen",
@@ -14855,7 +14855,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "A.J. Haulcy",
@@ -14878,7 +14878,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Domonique Orange",
@@ -14901,7 +14901,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Keionte Scott",
@@ -14924,7 +14924,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Malik Muhammad",
@@ -14947,7 +14947,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Will Lee III",
@@ -14970,7 +14970,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Kendal Daniels",
@@ -14993,7 +14993,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Justin Jefferson",
@@ -15016,7 +15016,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Zakee Wheatley",
@@ -15039,7 +15039,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Jaden Dugger",
@@ -15062,7 +15062,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "George Gumbs Jr.",
@@ -15085,7 +15085,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Lorenzo Styles Jr.",
@@ -15108,7 +15108,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6742
+  "phi": 1.6681
  },
  {
   "player": "Karson Sharar",
@@ -15131,7 +15131,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Bobby Jamison-Travis",
@@ -15149,12 +15149,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jack Kelly",
@@ -15172,12 +15172,12 @@
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Namdi Obiazor",
@@ -15200,7 +15200,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jordan van den Berg",
@@ -15223,7 +15223,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Caden Curry",
@@ -15246,7 +15246,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Harold Perkins Jr.",
@@ -15269,7 +15269,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Toriano Pride Jr.",
@@ -15292,7 +15292,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jackson Kuwatch",
@@ -15315,7 +15315,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Aaron Hall",
@@ -15338,7 +15338,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Rodney McGraw",
@@ -15350,18 +15350,18 @@
   "season_avg": 2.5,
   "last": 3,
   "base": 2.5,
-  "proj": 2.5588,
-  "proj_solo": 0.8996,
+  "proj": 2.5463,
+  "proj_solo": 0.8952,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Skyler Thomas",
@@ -15384,7 +15384,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Sabastian Harsh",
@@ -15402,12 +15402,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Channing Canada",
@@ -15430,7 +15430,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Jacob Thomas",
@@ -15453,7 +15453,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Bryson Eason",
@@ -15476,7 +15476,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "James Thompson Jr.",
@@ -15499,7 +15499,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Wydett Williams Jr.",
@@ -15522,7 +15522,7 @@
   "venue": "ARI",
   "gameday": "2026-10-25",
   "gametime": "16:05",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Avery Smith",
@@ -15545,7 +15545,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Christen Miller",
@@ -15568,7 +15568,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.2922
+  "phi": 1.2908
  },
  {
   "player": "Daylen Everette",
@@ -15591,7 +15591,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.5478
+  "phi": 1.548
  },
  {
   "player": "Gabe Rubio",
@@ -15614,7 +15614,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.2922
+  "phi": 1.2908
  },
  {
   "player": "Robert Spears-Jennings",
@@ -15637,7 +15637,7 @@
   "venue": "NEUTRAL",
   "gameday": "2026-10-25",
   "gametime": "09:30",
-  "phi": 1.6742
+  "phi": 1.6681
  },
  {
   "player": "Wesley Bailey",
@@ -15649,18 +15649,18 @@
   "season_avg": 1.6,
   "last": 3,
   "base": 2.3337,
-  "proj": 2.3185,
-  "proj_solo": 1.1533,
+  "proj": 2.3126,
+  "proj_solo": 1.1504,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": -3.0,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jaden Keller",
@@ -15672,18 +15672,18 @@
   "season_avg": 1.0,
   "last": 1,
   "base": 3.4959,
-  "proj": 3.4207,
-  "proj_solo": 1.578,
+  "proj": 3.4382,
+  "proj_solo": 1.5861,
   "fair_line": 3.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Kayden McDonald",
@@ -15701,12 +15701,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Derrick Moore",
@@ -15729,7 +15729,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jimmy Rolder",
@@ -15752,7 +15752,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Keith Abney II",
@@ -15775,7 +15775,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Skyler Gill-Howard",
@@ -15798,7 +15798,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Aiden Fisher",
@@ -15816,12 +15816,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Erick Hunter",
@@ -15844,7 +15844,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Eric O'Neill",
@@ -15867,7 +15867,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Colton Hood",
@@ -15885,12 +15885,12 @@
   "fair_line_solo": 2.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Tacario Davis",
@@ -15913,7 +15913,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Wade Woodaz",
@@ -15931,12 +15931,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Kamari Ramsey",
@@ -15954,12 +15954,12 @@
   "fair_line_solo": 0.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": -10.5,
+  "spread_dog": -10.0,
   "role_signal": true,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Avieon Terrell",
@@ -15982,7 +15982,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Brandon Cisse",
@@ -16005,7 +16005,7 @@
   "venue": "DET",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Emmanuel McNeil-Warren",
@@ -16028,7 +16028,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Lee Hunter",
@@ -16042,7 +16042,7 @@
   "base": 2.2329,
   "proj": 2.2012,
   "proj_solo": 1.008,
-  "fair_line": 1.5,
+  "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.0008,
   "crew_solo": 0.9985,
@@ -16051,7 +16051,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Anthony Hill Jr.",
@@ -16074,7 +16074,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Zion Young",
@@ -16097,7 +16097,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jake Golday",
@@ -16120,7 +16120,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "R Mason Thomas",
@@ -16143,7 +16143,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Josiah Trotter",
@@ -16166,7 +16166,7 @@
   "venue": "CAR",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Keldric Faulk",
@@ -16189,7 +16189,7 @@
   "venue": "TEN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Arvell Reese",
@@ -16207,12 +16207,12 @@
   "fair_line_solo": 5.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9838,
-  "spread_dog": 10.5,
+  "spread_dog": 10.0,
   "role_signal": false,
   "venue": "HOU",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Bryce Boettcher",
@@ -16235,7 +16235,7 @@
   "venue": "MIN",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Jacob Rodriguez",
@@ -16247,18 +16247,18 @@
   "season_avg": 11.4,
   "last": 11,
   "base": 10.4909,
-  "proj": 10.7375,
-  "proj_solo": 4.6443,
+  "proj": 10.685,
+  "proj_solo": 4.6216,
   "fair_line": 10.5,
   "fair_line_solo": 4.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Michael Taaffe",
@@ -16270,18 +16270,18 @@
   "season_avg": 6.0,
   "last": 4,
   "base": 5.7255,
-  "proj": 5.8602,
-  "proj_solo": 2.9503,
+  "proj": 5.8315,
+  "proj_solo": 2.9358,
   "fair_line": 5.5,
   "fair_line_solo": 2.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Chris Johnson",
@@ -16293,18 +16293,18 @@
   "season_avg": 6.2,
   "last": 6,
   "base": 5.7486,
-  "proj": 5.8838,
-  "proj_solo": 2.9816,
+  "proj": 5.855,
+  "proj_solo": 2.967,
   "fair_line": 5.5,
   "fair_line_solo": 2.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": 4.5,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Malachi Lawrence",
@@ -16327,7 +16327,7 @@
   "venue": "PHI",
   "gameday": "2026-10-26",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  },
  {
   "player": "Dillon Thieneman",
@@ -16350,7 +16350,7 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.5242
+  "phi": 1.5181
  },
  {
   "player": "Mansoor Delane",
@@ -16373,7 +16373,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Peter Woods",
@@ -16396,7 +16396,7 @@
   "venue": "SEA",
   "gameday": "2026-10-25",
   "gametime": "20:20",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Cashius Howell",
@@ -16419,7 +16419,7 @@
   "venue": "BAL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Darrell Jackson Jr.",
@@ -16431,18 +16431,18 @@
   "season_avg": 2.5,
   "last": 3,
   "base": 2.4962,
-  "proj": 2.4424,
-  "proj_solo": 1.1297,
+  "proj": 2.4549,
+  "proj_solo": 1.1355,
   "fair_line": 2.5,
   "fair_line_solo": 0.5,
   "crew_comb": 1.001,
   "crew_solo": 0.9981,
-  "spread_dog": -4.5,
+  "spread_dog": -3.5,
   "role_signal": false,
   "venue": "NYJ",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Romello Height",
@@ -16465,7 +16465,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Gracen Halton",
@@ -16488,7 +16488,7 @@
   "venue": "ATL",
   "gameday": "2026-10-25",
   "gametime": "13:00",
-  "phi": 1.1422
+  "phi": 1.1408
  },
  {
   "player": "Jermod McCoy",
@@ -16500,18 +16500,18 @@
   "season_avg": 1.5,
   "last": 1,
   "base": 2.1781,
-  "proj": 2.2298,
-  "proj_solo": 1.5244,
+  "proj": 2.2353,
+  "proj_solo": 1.5282,
   "fair_line": 1.5,
   "fair_line_solo": 1.5,
   "crew_comb": 1.0086,
   "crew_solo": 0.9839,
-  "spread_dog": 3.0,
+  "spread_dog": 3.5,
   "role_signal": false,
   "venue": "LV",
   "gameday": "2026-10-25",
   "gametime": "16:25",
-  "phi": 1.3978
+  "phi": 1.398
  },
  {
   "player": "Gabe Jacas",
@@ -16534,6 +16534,6 @@
   "venue": "CHI",
   "gameday": "2026-10-22",
   "gametime": "20:15",
-  "phi": 1.4702
+  "phi": 1.4668
  }
 ]
