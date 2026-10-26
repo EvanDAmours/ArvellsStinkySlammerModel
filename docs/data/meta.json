@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-26T18:36+00:00",
+ "generated_at": "2026-10-26T18:48+00:00",
  "season": 2026,
  "week": 7,
  "lines_pulled": "20261026T181124Z",
@@ -43,13 +43,14 @@
    "C": 0.25
   },
   "weights": {
-   "ev": 0.25,
-   "market": 0.4,
+   "ev": 0.35,
+   "model": 0.25,
    "consistency": 0.2,
-   "sample": 0.15
+   "sample": 0.1,
+   "signal": 0.1
   },
   "ev_full": 0.15,
-  "fade_bonus": 5,
+  "model_full": 0.75,
   "locks": {
    "single": 3,
    "multi": 5
