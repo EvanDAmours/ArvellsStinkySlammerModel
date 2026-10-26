@@ -266,15 +266,17 @@ def _log(row, col):
     return list(v)
 
 
-def lock_score(ev, mkt_side, consistency, n_games, fade):
-    """0-100 confidence in a pick. Components are in config.LOCK_WEIGHTS; validated week by week on the Track record tab."""
+def lock_score(ev, p_side, consistency, n_games, signal):
+    """0-100 confidence in a pick from the model's own evidence only: expected return at the price, the model's
+    probability for the side, how often the player cleared the line this season, games of data, and whether a
+    role-change or outlier-fade signal backs the pick. Weights in config.LOCK_WEIGHTS; tested on the Track record tab."""
     w = C.LOCK_WEIGHTS
     ev_part = float(np.clip(ev / C.LOCK_EV_FULL, 0, 1))
-    mkt_part = float(np.clip((mkt_side - 0.35) / 0.30, 0, 1))        # 35% market chance -> 0, 65% -> 1
+    model_part = float(np.clip((p_side - 0.5) / (C.LOCK_MODEL_FULL - 0.5), 0, 1))
     cons_part = 0.5 if consistency is None or np.isnan(consistency) else float(consistency)
     n_part = float(np.clip(n_games / 6.0, 0, 1))
-    score = 100 * (w["ev"] * ev_part + w["market"] * mkt_part + w["consistency"] * cons_part + w["sample"] * n_part)
-    return float(np.clip(score + (C.LOCK_FADE_BONUS if fade else 0), 0, 100))
+    score = 100 * (w["ev"] * ev_part + w["model"] * model_part + w["consistency"] * cons_part + w["sample"] * n_part + w["signal"] * (1.0 if signal else 0.0))
+    return float(np.clip(score, 0, 100))
 
 
 def grade_of(score):
@@ -332,7 +334,8 @@ def price_lines(lines, P):
         thin = p.n_prev < C.MIN_GAMES_FOR_PICK and not role
         bar = C.SIGNAL_BAR if (fade or role) else C.PICK_BAR
         pick = side if (ev >= bar and not flagged and not thin) else "Pass"
-        lock = lock_score(ev, mkt_side, consistency, int(p.n_prev), fade)
+        p_side = po if side == "Over" else 1 - po
+        lock = lock_score(ev, p_side, consistency, int(p.n_prev), fade or role)
         if flagged:
             why = f"His own status is {p.status or 'uncertain'}: wait for the final report"
         elif thin:

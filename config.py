@@ -50,13 +50,13 @@ FADE_GAP = 3.0                     # last game this many tackles from his averag
 MIN_GAMES_FOR_PICK = 3
 
 # --- confidence grade for every pick (0-100 "lock score", then a letter) ---
-# Weighted blend of: expected return, whether the market also favours our side, how often the player cleared this
-# line in his games this season, and how many games of data he has; an outlier-fade signal adds a bonus.
-# Market agreement carries the most weight: in week 7 of 2026 picks on the side the market also favoured hit 60%,
-# picks against the market 45%, while the size of the model's disagreement predicted nothing. Provisional; see MODEL_LOG.md.
-LOCK_WEIGHTS = dict(ev=0.25, market=0.40, consistency=0.20, sample=0.15)
+# Built only from the model's own evidence, never from the book's opinion (see the vision in MODEL_LOG.md):
+# the expected return at the posted price, the model's own probability for the side, how often the player cleared
+# this line in his games this season, how many games of data he has, and whether a role-change or outlier-fade
+# signal is behind the pick. Owner's decision 2026-10-26, replacing a version that rewarded market agreement.
+LOCK_WEIGHTS = dict(ev=0.35, model=0.25, consistency=0.20, sample=0.10, signal=0.10)
 LOCK_EV_FULL = 0.15                # an expected return this high scores full marks on the EV component
-LOCK_FADE_BONUS = 5
+LOCK_MODEL_FULL = 0.75             # a model probability this high for our side scores full marks (50% scores zero)
 GRADE_BARS = dict(A=72, B=55)      # lock score at or above these is an A or a B; the rest are C
 GRADE_UNITS = dict(A=1.0, B=0.5, C=0.25)   # suggested stake per grade, in units (shown in the site legend)
 

@@ -26,6 +26,17 @@ def log_picks(bets, season, week, pulled_at):
     new = new[[c for c in cols if c in new.columns]]
     old = pd.read_csv(PICKS) if PICKS.exists() else pd.DataFrame(columns=cols)
     both = pd.concat([old, new], ignore_index=True).drop_duplicates(KEY, keep="first")  # keep the first price we took
+    # a pick whose game has not started gets its score, grade and evidence refreshed from the current board
+    # (the price we took stays, for closing-line value); the current formula and the latest game logs apply
+    start = pd.to_datetime(both.commence_time, utc=True, errors="coerce")
+    open_ = both.index[(both.season == season) & (both.week == week) & (start > O._utcnow())]
+    fresh = new.set_index(KEY)
+    for i in open_:
+        k = tuple(both.loc[i, KEY])
+        if k in fresh.index:
+            for c in ["lock", "grade", "consistency", "cons_hits", "cons_n", "ev", "proj", "proj_model", "mkt_line", "model_over", "market_over", "why"]:
+                if c in fresh.columns:
+                    both.loc[i, c] = fresh.loc[k, c]
     both = mark_locks(both, season, week)
     PICKS.parent.mkdir(parents=True, exist_ok=True)
     both.to_csv(PICKS, index=False)

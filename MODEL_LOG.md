@@ -12,6 +12,14 @@ change is judged against all three:
    certain as a tackle prop can be**: the "weekly five", five locks a week that the model is nearly certain will
    hit.
 
+**Where the wins come from (owner, 2026-10-26): an edge the market has not seen or is not pricing.** The
+model's job is to know something the book does not: a stadium crew that splits tackles differently, a backup
+stepping into a vacated role, an outlier game the line overreacts to, a defence that will be on the field more.
+So no grade, lock or parlay may be sourced from the book's opinion. The book's price is what we bet *against*;
+it is used to compute the expected return and, in the projection blend, to keep our claimed edges honest. It is
+never an input that makes a pick look better because the book agrees with it. Agreement with the market is not
+evidence; disagreement backed by our own evidence is the product.
+
 No tackle prop is a guarantee, so the weekly five is run as a measured target, not a promise: the five highest
 lock-score picks of the week (one per player) are named before kickoff, pinned at the top of the site, and their
 record is tracked on its own. The season-long standard for the weekly five is a 70%+ hit rate. If it falls short,
@@ -122,6 +130,21 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 - **Running tally of the weekly five**: `data/weekly_five.md` is rewritten by the daily job with the record to date,
   a line per week with the running record, and every pick with its result. The site shows the same tally in the
   five box on Plays ("season to date 24-1") and as a per-week table on Track record.
+
+### 2026-10-26, afternoon MDT (lock score rebuilt from model evidence only)
+- Owner's principle recorded in the vision: wins come from edges the market has not priced; nothing is graded
+  by the book's opinion. The lock score's 40% "market agreement" component is gone. New weights: 35% expected
+  return, 25% the model's own probability for the side, 20% game-log consistency, 10% games of data, 10% for a
+  role-change or outlier-fade signal. `LOCK_MODEL_FULL` 0.75.
+- Evidence note, kept for honesty: in week 7 picks the book also favoured hit 60% and picks against it 45%, which
+  is why the old score leaned on agreement. The owner's call is that the project exists to find what the market
+  misses, so the grade must measure our evidence, not theirs. Watch the by-grade table: the standard for the
+  new score is that A beats C over 150+ graded picks.
+- Open picks (game not started) now have their lock score, grade and evidence refreshed from the board at every
+  pull, so the current formula and latest game logs apply; the logged price stays as first taken.
+- The 60% line weight in the projection stays. It is calibration, not deference: without it the model claimed
+  62% and hit 53%; with it, claimed 56% and hit 55%. It makes the model's disagreements honest in size; it does
+  not decide which side we take or how a pick is graded.
 
 ### 2026-10-26, afternoon MDT (name, grading legend)
 - Site titled "Arvell's Stinky Slammer Model" with the week as a subtitle.

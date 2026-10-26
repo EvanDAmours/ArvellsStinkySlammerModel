@@ -236,16 +236,16 @@ function renderPlays() {
 const slateDate = (b) => { const d = betKick(b); return !d || isNaN(d) ? "" : new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d); };
 function legend() {
   const g = DATA.meta?.grading || {};
-  const bars = g.bars || { A: 72, B: 55 }, u = g.units || { A: 1, B: 0.5, C: 0.25 }, w = g.weights || { ev: 0.25, market: 0.4, consistency: 0.2, sample: 0.15 };
+  const bars = g.bars || { A: 72, B: 55 }, u = g.units || { A: 1, B: 0.5, C: 0.25 }, w = g.weights || { ev: 0.35, model: 0.25, consistency: 0.2, sample: 0.1, signal: 0.1 };
   const row = (grade, cut, stake, what) => el("tr", {}, el("td", {}, el("span", { class: `grade ${grade}` }, grade)), el("td", {}, cut), el("td", {}, stake), el("td", {}, what));
   return el("details", { class: "legend", open: "" },
     el("summary", {}, "How picks are graded and how much to bet"),
     el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Grade"), el("th", {}, "Lock score"), el("th", {}, "Suggested stake"), el("th", {}, "Read it as"))),
       el("tbody", {},
-        row("A", `${bars.A} and up`, `${u.A} unit`, "Strong price, market leans the same way, he has cleared this line most weeks. The locks come from here."),
-        row("B", `${bars.B} to ${bars.A - 1}`, `${u.B} unit`, "Good price or good agreement, not both. Playable, smaller."),
+        row("A", `${bars.A} and up`, `${u.A} unit`, "The model is confident and the price is wrong by a lot, backed by his game log. The locks come from here."),
+        row("B", `${bars.B} to ${bars.A - 1}`, `${u.B} unit`, "A real edge with one weak spot: a thinner game log, a smaller gap, or no signal behind it."),
         row("C", `below ${bars.B}`, `${u.C} unit or pass`, "Clears the bar on price alone. Play only if you like the matchup."))),
-    el("p", {}, `The lock score is out of 100: ${pct(w.ev)} expected return (full marks at ${signedPct(g.ev_full ?? 0.15)}), ${pct(w.market)} market agreement (whether the book's own price leans our way), ${pct(w.consistency)} how often he cleared this line in his games this season, ${pct(w.sample)} games of data this season, plus ${g.fade_bonus ?? 5} points when the pick fades an outlier last game. Expected return comes from a projection that is ${pct(1 - (g.line_weight ?? 0.6))} model and ${pct(g.line_weight ?? 0.6)} the posted line.`),
+    el("p", {}, `The lock score is out of 100 and uses the model's own evidence only, never the book's opinion: ${pct(w.ev)} expected return at the posted price (full marks at ${signedPct(g.ev_full ?? 0.15)}), ${pct(w.model)} the model's own chance for the side (full marks at ${pct(g.model_full ?? 0.75)}), ${pct(w.consistency)} how often he cleared this line in his games this season, ${pct(w.sample)} games of data this season, and ${pct(w.signal)} for a role-change or outlier-fade signal behind the pick. The projection it prices from is ${pct(1 - (g.line_weight ?? 0.6))} model and ${pct(g.line_weight ?? 0.6)} the posted line, which keeps the model's claimed edges honest.`),
     el("p", {}, "Stakes are a guide, not a promise: the grades are being tested on the Track record tab, and if A does not beat B and C over time the formula changes."));
 }
 const slateName = (iso) => { const d = new Date(iso + "T12:00:00"); return isNaN(d) ? iso : d.toLocaleDateString("en-CA", { weekday: "long" }); };

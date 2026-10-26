@@ -1,7 +1,8 @@
 # Working on this repository
 
 0. The vision at the top of `MODEL_LOG.md` is the test for every change: easier site, timelier updates, or a more
-   reliable weekly five. A change that serves none of these does not get pushed.
+   reliable weekly five. A change that serves none of these does not get pushed. The edge comes from what the
+   market has not priced: never grade, rank or choose a pick by whether the book agrees with it.
 1. Read `MODEL_LOG.md` first. It records every change, the evidence behind it, what was tried and rejected, and
    the pitfalls already hit. Do not repeat an experiment listed as rejected without new evidence.
 2. Follow the validation protocol in `MODEL_LOG.md` before pushing any change to the model, pricing, bars, grade
