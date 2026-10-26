@@ -209,6 +209,10 @@ Open, with what would justify them:
 - pandas 3: `groupby(...).apply(f)` no longer passes the grouping columns to `f`; use `.agg`.
 - Duplicate player names within a week (two "Mack Wilson"-type cases) break `.map` on a name index; dedupe first.
 - Neutral-site games (international) are flagged `NEUTRAL` and get crew factor 1.0.
+- Two jobs can run at the same moment despite the shared concurrency group when they are queued within seconds
+  of each other; the second one's rebase then conflicts on generated files and its work is lost. The save step now
+  keeps the job's own version of conflicting files and retries; the daily cron sits at 11:15 UTC, off the
+  half-hour the pull job uses.
 - The smoke test copies the repo into a temp dir; it must skip live data (`data/odds/<season>`, `data/picks.csv`,
   `data/cache`, `docs/data/*.json`) or the synthetic run appends to real picks and the checks fail (fixed 2026-10-26).
 - The daily job runs at 7:30 am Eastern; Sunday's box scores are in nflverse by then, Monday night's are graded
