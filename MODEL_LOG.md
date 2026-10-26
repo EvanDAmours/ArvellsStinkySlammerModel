@@ -216,6 +216,8 @@ Open, with what would justify them:
   keeps the job's own version of conflicting files and retries; the daily cron sits at 11:15 UTC, off the
   half-hour the pull job uses.
 - The smoke test copies the repo into a temp dir; it must skip live data (`data/odds/<season>`, `data/picks.csv`,
-  `data/cache`, `docs/data/*.json`) or the synthetic run appends to real picks and the checks fail (fixed 2026-10-26).
+  `data/cache`, `data/parlays.csv`, `data/retro_five.json`, `docs/data/*.json`) or the synthetic run appends to real
+  picks and parlays and the checks fail (fixed 2026-10-26; recurred when parlays.csv first appeared). Any new live
+  data file must be added to that list. Also: chain a push on the test's exit code, never on a grep of its output.
 - The daily job runs at 7:30 am Eastern; Sunday's box scores are in nflverse by then, Monday night's are graded
   Tuesday.

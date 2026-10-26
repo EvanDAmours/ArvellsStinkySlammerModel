@@ -14,7 +14,7 @@ def _ignore_live_data(d, names):
     rel = os.path.relpath(d, ROOT)
     skip = {".git", "__pycache__"}
     if rel == "data":
-        skip |= {"cache", "picks.csv"}
+        skip |= {"cache", "picks.csv", "parlays.csv", "retro_five.json", "weekly_five.md"}
     if rel == os.path.join("data", "odds"):
         skip |= {n for n in names if n.isdigit()}
     if rel == os.path.join("docs", "data"):
