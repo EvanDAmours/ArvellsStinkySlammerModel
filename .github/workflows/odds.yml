@@ -13,7 +13,12 @@ on:
     - cron: "45 19 * * 0"      # Sun 3:45 pm ET: late games, after inactives
     - cron: "35 23 * * 0"      # Sun 7:35 pm ET: Sunday night game
     - cron: "35 23 * * 1"      # Mon 7:35 pm ET: Monday night game
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      hours:
+        description: "Only games starting within this many hours (blank = choose from the day and time)"
+        required: false
+        default: ""
 permissions:
   contents: write
 concurrency:
@@ -35,7 +40,8 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - run: python run.py odds --auto
+      - run: |
+          if [ -n "${{ github.event.inputs.hours }}" ]; then python run.py odds --hours "${{ github.event.inputs.hours }}"; else python run.py odds --auto; fi
       - name: Save results
         run: |
           git config user.name "tackle-bot"

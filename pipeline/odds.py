@@ -133,6 +133,14 @@ def latest_lines(season, week):
     return s.drop_duplicates(["event_id", "book", "market", "player", "line"], keep="last")
 
 
+def upcoming_only(lines):
+    """Drop lines for games that have already kicked off, so the board only shows bets that can still be placed."""
+    if lines is None or len(lines) == 0 or "commence_time" not in lines:
+        return lines
+    start = pd.to_datetime(lines.commence_time, utc=True, errors="coerce")
+    return lines[start.isna() | (start > _utcnow())]
+
+
 def closing_lines(season, week):
     """Last price pulled before each game's kickoff: the closing line used to grade our timing."""
     s = load_snapshots(season, week)

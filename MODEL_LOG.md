@@ -101,6 +101,9 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
   ev 0.25 / market 0.40 / consistency 0.20 / sample 0.15, fade bonus 5, A at 72, B at 55. **Unvalidated**: on
   week 7 no component correlated with winning. The Track record tab shows results by grade; if A does not beat C
   after ~150 graded picks, change or drop the grade.
+- The board drops lines for games that have kicked off (it was showing Sunday's lines on Monday). Snapshots are
+  untouched, so grading and closing-line value still work.
+- `Pull tackle lines` can be run by hand with an `hours` input to reach a game outside the automatic window.
 - Game logs (`log_comb`, `log_solo`) saved with projections so the pricer can report "cleared this line in x of n".
 - Picks are sorted by lock score on the site.
 

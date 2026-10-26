@@ -96,7 +96,7 @@ def cmd_daily():
         P.to_csv(CACHE / "projections.csv", index=False)
     json.dump(dict(phi=phi, k=k, week=week), open(CACHE / "model_state.json", "w"))
     graded, summary = G.grade(pw)
-    lines = O.latest_lines(C.SEASON, week)
+    lines = O.upcoming_only(O.latest_lines(C.SEASON, week))
     bets = M.price_lines(lines, P) if len(lines) else pd.DataFrame()
     write_site(P, bets, bt, graded, summary, week, status, lines_pulled=None if lines.empty else str(lines.pulled_at.max()))
     print(f"daily: week {week}, {len(P)} projections, {len(bets)} priced lines, backtest on {bt.get('games', 0)} games")
@@ -123,7 +123,7 @@ def cmd_odds(hours=None, auto=False):
     numeric = [c for c in credits.values() if isinstance(c, (int, float))]
     remaining = int(sum(numeric)) if numeric else next(iter(credits.values()), None)
     O.save_snapshot(rows, C.SEASON, week)
-    lines = O.latest_lines(C.SEASON, week)
+    lines = O.upcoming_only(O.latest_lines(C.SEASON, week))
     bets = M.price_lines(lines, P)
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     n_new = G.log_picks(bets, C.SEASON, week, stamp)
