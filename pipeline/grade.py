@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+import config as C
 from pipeline import odds as O
 from pipeline.model import american_to_decimal
 from pipeline.sources import norm_name
@@ -25,35 +26,176 @@ def log_picks(bets, season, week, pulled_at):
     new = new[[c for c in cols if c in new.columns]]
     old = pd.read_csv(PICKS) if PICKS.exists() else pd.DataFrame(columns=cols)
     both = pd.concat([old, new], ignore_index=True).drop_duplicates(KEY, keep="first")  # keep the first price we took
-    both = mark_weekly_five(both, season, week)
+    both = mark_locks(both, season, week)
     PICKS.parent.mkdir(parents=True, exist_ok=True)
     both.to_csv(PICKS, index=False)
     return len(both) - len(old)
 
 
 FIVE = 5
+EDMONTON = "America/Edmonton"
 
 
-def mark_weekly_five(P, season, week, now=None):
-    """Flag this week's five highest lock-score picks (one per player). A pick whose game has started keeps its
-    place; the remaining places are re-chosen among games still to come at every pull."""
+def slate_of(commence_time):
+    """Kickoff date in Edmonton time: the slate a game belongs to."""
+    t = pd.to_datetime(commence_time, utc=True, errors="coerce")
+    if isinstance(t, pd.Series):
+        return t.dt.tz_convert(EDMONTON).dt.strftime("%Y-%m-%d").where(t.notna(), "")
+    return "" if pd.isna(t) else t.tz_convert(EDMONTON).strftime("%Y-%m-%d")
+
+
+def games_by_slate(season, week, extra=None):
+    """Distinct games kicking off on each slate day, from every snapshot of the week (plus any frame given)."""
+    frames = [O.load_snapshots(season, week)]
+    if extra is not None and len(extra) and "event_id" in extra:
+        frames.append(extra)
+    frames = [f[["event_id", "commence_time"]] for f in frames if f is not None and len(f) and "commence_time" in f]
+    if not frames:
+        return {}
+    d = pd.concat(frames, ignore_index=True).drop_duplicates("event_id")
+    d["slate"] = slate_of(d.commence_time)
+    return d.groupby("slate").event_id.nunique().to_dict()
+
+
+def locks_for(n_games):
+    return C.LOCKS_PER_SLATE["single"] if n_games <= 1 else C.LOCKS_PER_SLATE["multi"]
+
+
+def mark_locks(P, season, week, now=None):
+    """Flag each slate day's locks: the highest lock-score picks (one per player), 3 on a one-game day and 5 on a
+    multi-game day. A pick whose game has started keeps its place; the remaining places are re-chosen among games
+    still to come at every pull. The flag column is `five` for historical reasons."""
     now = now or O._utcnow()
     P = P.copy()
     if "five" not in P.columns:
         P["five"] = False
     P["five"] = P.five.fillna(False).astype(bool)
+    P["slate"] = slate_of(P.commence_time)
     wk = (P.season == season) & (P.week == week)
     start = pd.to_datetime(P.commence_time, utc=True, errors="coerce")
-    started = wk & start.notna() & (start <= now)
-    open_ = wk & ~started
-    kept = P[started & P.five]
-    P.loc[open_, "five"] = False
-    slots = max(0, FIVE - kept.player.nunique())
-    if slots and "lock" in P.columns:
-        cand = P[open_ & ~P.player.isin(set(kept.player))].sort_values("lock", ascending=False)
-        cand = cand[cand.lock.notna()].drop_duplicates("player").head(slots)
-        P.loc[cand.index, "five"] = True
+    games = games_by_slate(season, week, P[wk])
+    for slate in sorted(P[wk].slate.unique()):
+        day = wk & (P.slate == slate)
+        started = day & start.notna() & (start <= now)
+        open_ = day & ~started
+        kept = P[started & P.five]
+        P.loc[open_, "five"] = False
+        slots = max(0, locks_for(games.get(slate, 1)) - kept.player.nunique())
+        if slots and "lock" in P.columns:
+            cand = P[open_ & ~P.player.isin(set(kept.player))].sort_values("lock", ascending=False)
+            cand = cand[cand.lock.notna()].drop_duplicates("player").head(slots)
+            P.loc[cand.index, "five"] = True
     return P
+
+
+mark_weekly_five = mark_locks   # old name
+
+
+# ---------------------------------------------------------------- parlays
+PARLAYS = Path("data/parlays.csv")
+LEG_COLS = ["season", "week", "slate", "parlay_id", "leg", "player", "team", "opp", "market", "side", "line", "book", "odds",
+            "p_side", "lock", "grade", "event_id", "commence_time", "n_legs", "combined_decimal", "combined_prob", "units", "chosen_at"]
+
+
+def american(dec):
+    return int(round((dec - 1) * 100)) if dec >= 2 else int(round(-100 / (dec - 1)))
+
+
+def choose_parlay(bets, slate):
+    """The parlay with the best chance of hitting on one slate day: the highest blended probabilities on the board,
+    one per player, never a side the model dislikes. Returns leg rows with parlay-level fields, or None."""
+    if bets is None or len(bets) == 0 or "ev" not in bets:
+        return None
+    b = bets[(bets.slate == slate) & bets.proj.notna() & bets.ev.notna() & (bets.ev >= 0)].copy()
+    if b.empty:
+        return None
+    b["p_side"] = np.where(b.side == "Over", b.model_over, 1 - b.model_over)
+    b["dec"] = b.payout + 1
+    b = b.sort_values(["p_side", "ev"], ascending=False).drop_duplicates("player")
+    lo, hi = C.PARLAY_LEGS
+    legs = b[b.p_side >= C.PARLAY_MIN_PROB].head(hi)
+    if len(legs) < lo:
+        legs = b.head(lo)
+    if len(legs) < lo:
+        return None
+    dec, prob = float(legs.dec.prod()), float(legs.p_side.prod())
+    edge = dec - 1
+    kelly = (prob * edge - (1 - prob)) / edge if edge > 0 else 0.0
+    units = float(np.clip(round(C.PARLAY_KELLY_FRACTION * kelly, 1), *C.PARLAY_UNITS)) if kelly > 0 else C.PARLAY_UNITS[0]
+    out = legs.assign(leg=range(1, len(legs) + 1), n_legs=len(legs), combined_decimal=dec, combined_prob=prob, units=units)
+    return out
+
+
+def build_parlays(bets, season, week, stamp, now=None):
+    """Re-choose the recommended parlay for every slate day whose first game has not kicked off, and keep the
+    rest as they were placed. One parlay per slate day, saved to data/parlays.csv."""
+    now = now or O._utcnow()
+    old = pd.read_csv(PARLAYS) if PARLAYS.exists() else pd.DataFrame(columns=LEG_COLS)
+    if bets is None or len(bets) == 0 or "side" not in bets:
+        return old
+    bets = bets.copy()
+    bets["slate"] = slate_of(bets.commence_time)
+    snaps = O.load_snapshots(season, week)
+    if len(snaps):
+        snaps = snaps.assign(slate=slate_of(snaps.commence_time), start=pd.to_datetime(snaps.commence_time, utc=True, errors="coerce"))
+    for slate in sorted(s for s in bets.slate.unique() if s):
+        if len(snaps) and ((snaps.slate == slate) & (snaps.start <= now)).any():
+            continue   # a game on this slate has started: the parlay was placed and stays as it was
+        legs = choose_parlay(bets, slate)
+        if legs is None:
+            continue
+        legs = legs.assign(season=season, week=week, slate=slate, parlay_id=f"{season}-wk{week:02d}-{slate}", chosen_at=stamp,
+                           odds=np.where(legs.side == "Over", legs.over_odds, legs.under_odds))
+        legs = legs[[c for c in LEG_COLS if c in legs.columns]]
+        old = old[~((old.season == season) & (old.week == week) & (old.slate == slate))]
+        old = pd.concat([old, legs], ignore_index=True)
+    PARLAYS.parent.mkdir(parents=True, exist_ok=True)
+    old.to_csv(PARLAYS, index=False)
+    return old
+
+
+def grade_parlay_legs(L, stats):
+    """Leg results from box-score stats (name_key, season, week -> comb, solo), then one row per parlay."""
+    L = L.copy()
+    L["name_key"] = L.player.map(norm_name)
+    L = L.merge(stats, on=["season", "week", "name_key"], how="left")
+    L["actual"] = np.where(L.market.str.contains("solo"), L.solo, L.comb)
+    done = L.actual.notna()
+    win = np.where(L.side == "Over", L.actual > L.line, L.actual < L.line)
+    L["result"] = np.where(~done, "Pending", np.where(L.actual == L.line, "Push", np.where(win, "Win", "Loss")))
+    L["dec"] = L.odds.map(lambda a: american_to_decimal(a) if pd.notna(a) else np.nan)
+    rows = []
+    for pid, legs in L.groupby("parlay_id", sort=False):
+        res = legs.result
+        result = "Loss" if (res == "Loss").any() else "Pending" if (res == "Pending").any() else "Win"
+        live = legs[legs.result != "Push"]
+        eff_dec = float(live.dec.prod()) if len(live) else 1.0
+        units = float(legs.units.iloc[0])
+        won = units * (eff_dec - 1) if result == "Win" else -units if result == "Loss" else 0.0
+        first = legs.iloc[0]
+        rows.append(dict(parlay_id=pid, season=int(first.season), week=int(first.week), slate=first.slate, n_legs=int(len(legs)),
+                         combined_decimal=float(first.combined_decimal), combined_american=american(float(first.combined_decimal)),
+                         combined_prob=float(first.combined_prob), units=units, chosen_at=first.chosen_at, result=result, units_won=won,
+                         legs=[dict(player=r.player, team=r.team, opp=r.opp, market=r.market, side=r.side, line=float(r.line), book=r.book,
+                                    odds=None if pd.isna(r.odds) else float(r.odds), p_side=float(r.p_side), lock=None if pd.isna(r.lock) else float(r.lock),
+                                    grade=r.grade, actual=None if pd.isna(r.actual) else float(r.actual), result=r.result,
+                                    commence_time=r.commence_time) for r in legs.itertuples()]))
+    return pd.DataFrame(rows)
+
+
+def grade_parlays(pw_comb):
+    if not PARLAYS.exists():
+        return pd.DataFrame(), {}
+    L = pd.read_csv(PARLAYS)
+    if L.empty:
+        return pd.DataFrame(), {}
+    stats = pw_comb.groupby(["season", "week", "name_key"]).agg(comb=("comb", "sum"), solo=("solo_t", "sum")).reset_index()
+    P = grade_parlay_legs(L, stats)
+    g = P[P.result.isin(["Win", "Loss"])]
+    summary = dict(parlays=int(len(P)), wins=int((g.result == "Win").sum()), losses=int((g.result == "Loss").sum()),
+                   pending=int((P.result == "Pending").sum()), units=float(g.units_won.sum()) if len(g) else 0.0,
+                   staked=float(g.units.sum()) if len(g) else 0.0, hit=float((g.result == "Win").mean()) if len(g) else None)
+    return P, summary
 
 
 def weekly_five_keys(season, week):
@@ -136,29 +278,28 @@ def grade(pw_comb):
     return P.drop(columns=["name_key"]), summary
 
 
-def write_five_log(P, summary, path):
+def write_five_log(P, summary, path, parlays=None):
     """Rewrite the running tally of the weekly five as a markdown file: the record to date, a line per week, and
     every pick with its result. Regenerated by the daily job from data/picks.csv, so it is never edited by hand."""
     import datetime as dt
     f = (summary or {}).get("five") or {}
     weeks = f.get("weeks") or []
-    lines = ["# Weekly five: running tally", "",
-             "The five highest-confidence picks of each week, named before kickoff and tracked here. Target: 70% hits.",
+    lines = ["# Locks and parlays: running tally", "",
+             "The locks: the highest-confidence picks of each slate day (3 on a one-game day, 5 on a multi-game day), named "
+             "before kickoff and tracked here. Target: 70% hits. Then the recommended parlay for each slate day.",
              f"Generated {dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%d %H:%M')} UTC by the daily job. Do not edit by hand.", ""]
     if not weeks:
-        lines.append("No weekly five graded yet.")
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("\n".join(lines) + "\n")
-        return
+        lines.append("No locks graded yet.")
     hit = f.get("hit")
-    lines += [f"**Record: {f.get('wins', 0)}-{f.get('losses', 0)}" + (f"-{f['pushes']}" if f.get("pushes") else "") +
-              (f" ({hit:.0%})" if hit is not None else "") + f", {f.get('units', 0):+.2f} units, {f.get('pending', 0)} pending.**", "",
-              "| Week | Picks | Record | Units | Running record |", "| --- | --- | --- | --- | --- |"]
+    if weeks:
+        lines += [f"**Locks record: {f.get('wins', 0)}-{f.get('losses', 0)}" + (f"-{f['pushes']}" if f.get("pushes") else "") +
+                  (f" ({hit:.0%})" if hit is not None else "") + f", {f.get('units', 0):+.2f} units, {f.get('pending', 0)} pending.**", "",
+                  "| Week | Picks | Record | Units | Running record |", "| --- | --- | --- | --- | --- |"]
     for w in weeks:
         rec = f"{w['wins']}-{w['losses']}" + (f"-{w['pushes']}" if w["pushes"] else "") + (f" ({w['pending']} pending)" if w["pending"] else "")
         lines.append(f"| {w['season']} wk {w['week']} | {w['picks']} | {rec} | {w['units']:+.2f} | {w['running_wins']}-{w['running_losses']} |")
     five = P[P.five.fillna(False).astype(bool)] if "five" in P.columns else P.iloc[0:0]
-    for (sn, wk), part in five.groupby(["season", "week"]):
+    for (sn, wk), part in (five.groupby(["season", "week"]) if len(five) else []):
         lines += ["", f"## {sn} week {wk}", "", "| Pick | Price | Book | Grade | Lock | Actual | Result |", "| --- | --- | --- | --- | --- | --- | --- |"]
         for r in part.sort_values("lock", ascending=False).itertuples():
             market = "solo" if "solo" in str(r.market) else "tackles + assists"
@@ -166,5 +307,15 @@ def write_five_log(P, summary, path):
             actual = "" if pd.isna(r.actual) else str(int(r.actual))
             lock = "" if pd.isna(getattr(r, "lock", np.nan)) else str(int(round(r.lock)))
             lines.append(f"| {r.player} {r.side} {r.line:g} {market} | {price} | {r.book} | {getattr(r, 'grade', '')} | {lock} | {actual} | {r.result} |")
+    ps = (summary or {}).get("parlays") or {}
+    lines += ["", "## Parlays", ""]
+    if parlays is None or len(parlays) == 0:
+        lines.append("No parlays yet.")
+    else:
+        lines += [f"**Parlays record: {ps.get('wins', 0)}-{ps.get('losses', 0)}, {ps.get('units', 0):+.2f} units on {ps.get('staked', 0):.1f} staked, {ps.get('pending', 0)} pending.**", "",
+                  "| Slate | Legs | Odds | Model chance | Stake | Result | Units |", "| --- | --- | --- | --- | --- | --- | --- |"]
+        for r in parlays.sort_values(["season", "week", "slate"]).itertuples():
+            legs = "; ".join(f"{l['player']} {l['side']} {l['line']:g} ({l['result']})" for l in r.legs)
+            lines.append(f"| {r.slate} (wk {r.week}) | {legs} | {'+' if r.combined_american > 0 else ''}{r.combined_american} | {r.combined_prob:.0%} | {r.units:.1f}u | {r.result} | {r.units_won:+.2f} |")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n")

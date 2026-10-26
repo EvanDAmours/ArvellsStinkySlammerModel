@@ -37,24 +37,21 @@ Everything runs on GitHub's servers on a schedule. You don't run anything by han
 
 ## When things run
 
-All times are set for US daylight time (Eastern = UTC−4).
+Pull slots are in **Edmonton time** (Mountain, daylight or standard as in force; the job converts, so the clock
+change needs no edits). The pull job runs every half hour and does nothing unless it lands on a slot.
 
-| Job | When (Eastern) | What it does |
+| Job | When (Edmonton) | What it does |
 | --- | --- | --- |
-| Daily model update | Every day 7:30 am | New stats, backtest, projections, grading |
-| Pull tackle lines | Thu 6:45 pm | Thursday night game |
-| | Fri 6:00 pm | Full weekend slate |
-| | Sat 11:00 am, 4:00 pm, midnight (9 am, 2 pm, 10 pm Mountain) | Full slate |
-| | Sun 9:00 am | Full slate |
-| | Sun 11:50 am | 1 pm games, after inactives |
-| | Sun 3:45 pm | Late games, after inactives |
-| | Sun 7:35 pm, Mon 7:35 pm | Night games |
-| | Mon 4:00 pm (2 pm Mountain) | Monday night game as lines post |
+| Daily model update | Every day, early morning | New stats, backtest, projections, grading, parlay grading |
+| Pull tackle lines | Thu 9:00 am, 2:00 pm, 5:30 pm | Thursday game, and Friday games on holiday weeks |
+| | Fri 6:00 pm | Saturday games, if any (late season, playoffs) |
+| | Sat 9:00 am | Saturday and Sunday games |
+| | Sat 6:00 pm | Sunday games |
+| | Mon 9:00 am, 5:30 pm | Monday game |
+| | 12 h and 1 h before kickoff | Any international game (neutral-site game overseas), that game only |
 
-**When daylight time ends** (first Sunday in November), add one hour to every `cron` line in
-`.github/workflows/odds.yml` and `daily.yml` (for example `50 15 * * 0` becomes `50 16 * * 0`),
-or the Sunday pulls will run before inactives are announced. Reverse it in March.
-GitHub can start scheduled jobs a few minutes late at busy times.
+Locks and the recommended parlay for a slate day are re-chosen at every pull until the day's first kickoff.
+GitHub can start scheduled jobs a few minutes late at busy times; a slot tolerates 14 minutes.
 
 ## Odds credits
 

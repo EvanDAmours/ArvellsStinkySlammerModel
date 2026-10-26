@@ -20,6 +20,10 @@ does it make the site easier, the updates timelier, or the weekly five more reli
 
 ## About this file
 
+**Dates and times in this log are Edmonton local time** (MDT or MST, whichever is in force on that date), and
+every schedule in the project is defined in Edmonton time. Earlier entries from 2026-10-23 to 2026-10-26 were
+written against UTC timestamps; from 2026-10-26 (MDT) onward they are local.
+
 The memory of this project. Every change to the model, the pipeline, the schedule or the site is recorded here
 with the evidence behind it, and every idea that was tried and rejected is recorded so it is not tried again by
 accident. **Read this file before changing anything. Append to it after changing anything.** A change that is not
@@ -118,6 +122,34 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 - **Running tally of the weekly five**: `data/weekly_five.md` is rewritten by the daily job with the record to date,
   a line per week with the running record, and every pick with its result. The site shows the same tally in the
   five box on Plays ("season to date 24-1") and as a per-week table on Track record.
+
+### 2026-10-26, afternoon MDT (pull schedule in Edmonton time, international games, Projections day filter)
+- **Pull schedule rewritten** (owner's spec): Thu 9:00 am / 2:00 pm / 5:30 pm for Thursday and Friday games;
+  Fri 6:00 pm for Saturday games when there are any; Sat 9:00 am (Saturday and Sunday games) and 6:00 pm (Sunday
+  games); Mon 9:00 am / 5:30 pm for the Monday game. Slots live in `PULL_SLOTS` in `run.py` in Edmonton local time;
+  the workflow runs every half hour and `--auto` does nothing unless within 14 minutes of a slot, so the clock
+  change needs no cron edits. **No Sunday pulls are in this spec**: Sunday locks and the Sunday parlay are placed on
+  Saturday 6 pm prices and inactives (announced 90 minutes before kickoff) are not captured. Flagged to the owner.
+- **International games**: nflverse marks overseas games as neutral site. The daily job writes this week's games
+  with kickoff and an international flag to `data/cache/games.json` and the site header; cards carry an
+  "International" tag; the half-hourly job pulls that game alone 12 h and 1 h before kickoff.
+- Projections tab: day buttons (Thursday to Monday, greyed when there are no games that day); Sunday opens the
+  early / afternoon / prime-time slate filter.
+- Credit note: a Thursday or Saturday pull with a day filter only requests games on those days; empty responses
+  stay free.
+
+### 2026-10-26 (locks per slate day, recommended parlays)
+- **Locks are per slate day** (Edmonton date of kickoff): 3 on a one-game day (Thursday, Monday), 5 on a
+  multi-game day. Same mechanics as before (highest lock scores, one per player, a pick keeps its place once its
+  game starts). The running tally is the total of all locks. `LOCKS_PER_SLATE` in config.
+- **Recommended parlay per slate day**: the highest blended probabilities on the board, one per player, 2 to 4
+  legs, never a side with negative expected return; combined odds, the model's chance all legs hit (product of the
+  blended probabilities), and a stake from a quarter-Kelly rule bounded to 0.1-1.0 units. Re-chosen at every pull
+  until the day's first kickoff, then frozen as placed. Saved to `data/parlays.csv`, graded leg by leg (a push drops
+  the leg), record on both tabs and in `data/weekly_five.md`. Replayed for week 7 alongside the locks.
+- Correlation caveat: legs from the same game are allowed and treated as independent in the chance shown, which
+  overstates the chance a little when legs are correlated (two Unders on the same defence). Revisit if parlays
+  underperform their stated chance over 20+ parlays.
 
 ### 2026-10-26 (replay tool, locks record on both screens)
 - `tools/replay_five.py --week N` replays a finished week under the current rules, pull by pull, using only what

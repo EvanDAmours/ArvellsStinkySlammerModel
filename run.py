@@ -2,7 +2,8 @@
 
   python run.py daily            refresh stats, rerun backtest and projections, grade picks, rebuild the site data
   python run.py odds [--hours N] pull tackle lines (needs ODDS_API_KEY), price them, log picks, rebuild the site data
-  python run.py odds --auto      choose the pull window from the day and time (used by the scheduled job)
+  python run.py odds --auto      run only if this is a scheduled pull slot (Edmonton time) or an international game is
+                                 12 h or 1 h from kickoff; the job runs every half hour and this decides what, if anything, to pull
 """
 import argparse
 import datetime as dt
@@ -10,6 +11,8 @@ import json
 import os
 import sys
 from pathlib import Path
+
+from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
@@ -23,6 +26,19 @@ from pipeline import sources as S
 
 SITE = Path("docs/data")
 CACHE = Path("data/cache")
+EDMONTON = ZoneInfo("America/Edmonton")
+EASTERN = ZoneInfo("America/New_York")
+
+# Scheduled pull slots, Edmonton local time (minutes after midnight) by weekday (Mon=0), and which games each covers.
+# The job runs every half hour; a run that is not within 14 minutes of a slot does nothing.
+PULL_SLOTS = {
+    3: [(9 * 60, "thu_fri"), (14 * 60, "thu_fri"), (17 * 60 + 30, "thu_fri")],   # Thursday: Thursday and Friday games
+    4: [(18 * 60, "sat")],                                                        # Friday evening: Saturday games, if any
+    5: [(9 * 60, "sat_sun"), (18 * 60, "sun")],                                   # Saturday: Saturday and Sunday games, then Sunday
+    0: [(9 * 60, "mon"), (17 * 60 + 30, "mon")],                                  # Monday: the Monday game
+}
+INTL_WINDOWS_H = (12, 1)           # international games are pulled this many hours before kickoff
+SLOT_TOLERANCE_MIN = 14
 
 
 def _json(path, obj):
@@ -47,6 +63,43 @@ def records(df, cols=None):
         return []
     d = df[cols] if cols else df
     return json.loads(d.to_json(orient="records", date_format="iso"))
+
+
+def week_games(sched, season, week):
+    """This week's games with kickoff in UTC and an international flag (nflverse marks overseas games as neutral site)."""
+    g = sched[(sched.season == season) & (sched.week == week)]
+    out = []
+    for r in g.itertuples():
+        try:
+            kick = dt.datetime.strptime(f"{r.gameday} {r.gametime}", "%Y-%m-%d %H:%M").replace(tzinfo=EASTERN)
+        except ValueError:
+            continue
+        out.append(dict(game_id=r.game_id, home=r.home_team, away=r.away_team, kickoff=kick.astimezone(dt.timezone.utc).isoformat(),
+                        edmonton=kick.astimezone(EDMONTON).strftime("%a %Y-%m-%d %H:%M"), international=str(r.location).lower().startswith("neutral")))
+    return out
+
+
+def auto_plan(now=None, games=None):
+    """What a scheduled run should pull right now: a dict of pull() keyword arguments, or None to do nothing."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    local = now.astimezone(EDMONTON)
+    minutes = local.hour * 60 + local.minute
+    today = local.date()
+    for slot, what in PULL_SLOTS.get(local.weekday(), []):
+        if abs(minutes - slot) <= SLOT_TOLERANCE_MIN:
+            d = lambda n: str(today + dt.timedelta(days=n))
+            days = {"thu_fri": [d(0), d(1)], "sat": [d(1)], "sat_sun": [d(0), d(1)], "sun": [d(1)], "mon": [d(0)]}[what]
+            return dict(days=days, reason=f"{local.strftime('%A %H:%M')} slot: games on {days}")
+    # international games: 12 h and 1 h before kickoff
+    for g in games or []:
+        if not g.get("international"):
+            continue
+        kick = dt.datetime.fromisoformat(g["kickoff"])
+        ahead_h = (kick - now).total_seconds() / 3600
+        for h in INTL_WINDOWS_H:
+            if abs(ahead_h - h) * 60 <= SLOT_TOLERANCE_MIN:
+                return dict(teams=(g["home"], g["away"]), reason=f"international game {g['away']} at {g['home']} is {h} h from kickoff")
+    return None
 
 
 def upcoming_week(sched, season):
@@ -78,6 +131,12 @@ def mark_five(bets, season, week):
     keys = G.weekly_five_keys(season, week)
     bets = bets.copy()
     bets["five"] = [(r.player, r.market, r.side, float(r.line), r.book) in keys for r in bets.itertuples()]
+    pk = set()
+    if G.PARLAYS.exists():
+        L = pd.read_csv(G.PARLAYS)
+        L = L[(L.season == season) & (L.week == week)]
+        pk = {(r.player, r.market, r.side, float(r.line), r.book) for r in L.itertuples()}
+    bets["parlay"] = [(r.player, r.market, r.side, float(r.line), r.book) in pk for r in bets.itertuples()]
     return bets
 
 
@@ -105,12 +164,18 @@ def cmd_daily():
     if len(P):
         P.to_csv(CACHE / "projections.csv", index=False)
     json.dump(dict(phi=phi, k=k, week=week), open(CACHE / "model_state.json", "w"))
+    games = week_games(sched, C.SEASON, week)
+    json.dump(games, open(CACHE / "games.json", "w"), indent=1)
+    status["international_games"] = [f"{g['away']} at {g['home']}, {g['edmonton']} Edmonton" for g in games if g["international"]]
     graded, summary = G.grade(pw)
-    G.write_five_log(graded, summary, Path("data/weekly_five.md"))
+    parlays, psum = G.grade_parlays(pw)
+    summary["parlays"] = psum
+    G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)
     lines = O.upcoming_only(O.latest_lines(C.SEASON, week))
     bets = M.price_lines(lines, P) if len(lines) else pd.DataFrame()
     bets = mark_five(bets, C.SEASON, week)
-    write_site(P, bets, bt, graded, summary, week, status, lines_pulled=None if lines.empty else str(lines.pulled_at.max()))
+    write_site(P, bets, bt, graded, summary, week, status, lines_pulled=None if lines.empty else str(lines.pulled_at.max()), parlays=parlays)
+    write_parlays(C.SEASON, week)
     print(f"daily: week {week}, {len(P)} projections, {len(bets)} priced lines, backtest on {bt.get('games', 0)} games")
 
 
@@ -125,14 +190,21 @@ def cmd_odds(hours=None, auto=False):
     P = pd.read_csv(CACHE / "projections.csv")
     state = json.load(open(CACHE / "model_state.json"))
     week = int(state["week"])
+    pull_kw = dict(hours_ahead=hours)
     if auto:
-        now = dt.datetime.now(dt.timezone.utc)
-        # full slate Friday, all Saturday and early Sunday; otherwise only games starting in the next few hours.
-        # The events feed also lists next week's games, so cap the full slate at four days
-        # (Friday evening to Tuesday, or Sunday morning to Thursday morning) to keep credits in budget.
-        # Monday pulls always reach the night game, whatever the hour
-        hours = 96 if (now.weekday() in (4, 5) or (now.weekday() == 6 and now.hour < 14)) else 12 if now.weekday() == 0 else 4
-    rows, credits = O.pull(keys, hours_ahead=hours)
+        games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
+        plan = auto_plan(games=games)
+        if plan is None:
+            print("odds: not a scheduled pull slot and no international game in a pull window; nothing to do")
+            return
+        print(f"odds: {plan.pop('reason')}")
+        if "teams" in plan:
+            home, away = plan.pop("teams")
+            names = {M.TEAM_NAMES.get(home), M.TEAM_NAMES.get(away)}
+            ev = O.list_events(next(iter(keys.values())))
+            plan["event_ids"] = [e["id"] for e in ev if e.get("home_team") in names or e.get("away_team") in names]
+        pull_kw = plan
+    rows, credits = O.pull(keys, **pull_kw)
     numeric = [c for c in credits.values() if isinstance(c, (int, float))]
     remaining = int(sum(numeric)) if numeric else next(iter(credits.values()), None)
     O.save_snapshot(rows, C.SEASON, week)
@@ -140,7 +212,9 @@ def cmd_odds(hours=None, auto=False):
     bets = M.price_lines(lines, P)
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     n_new = G.log_picks(bets, C.SEASON, week, stamp)
+    G.build_parlays(bets, C.SEASON, week, stamp)
     bets = mark_five(bets, C.SEASON, week)
+    write_parlays(C.SEASON, week)
     meta_path = SITE / "meta.json"
     meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
     meta.update(odds_credits_remaining=remaining, odds_credits_by_key=credits, lines_pulled=stamp, lines_count=int(len(lines)))
@@ -149,7 +223,25 @@ def cmd_odds(hours=None, auto=False):
     print(f"odds: {len(rows)} prices pulled, {len(lines)} current lines, {n_new} new picks logged, credits left {remaining}")
 
 
-def write_site(P, bets, bt, graded, summary, week, status, lines_pulled):
+def write_parlays(season, week):
+    """This week's recommended parlays for the Plays tab, with whether each is still open or already placed."""
+    out = []
+    if G.PARLAYS.exists():
+        L = pd.read_csv(G.PARLAYS)
+        L = L[(L.season == season) & (L.week == week)]
+        now = dt.datetime.now(dt.timezone.utc)
+        for pid, legs in L.groupby("parlay_id", sort=False):
+            first = legs.iloc[0]
+            start = pd.to_datetime(legs.commence_time, utc=True, errors="coerce")
+            out.append(dict(parlay_id=pid, slate=first.slate, n_legs=int(len(legs)), combined_decimal=float(first.combined_decimal),
+                            combined_american=G.american(float(first.combined_decimal)), combined_prob=float(first.combined_prob),
+                            units=float(first.units), chosen_at=first.chosen_at, placed=bool((start <= now).any()),
+                            first_kickoff=None if start.isna().all() else start.min().isoformat(),
+                            legs=records(legs[["leg", "player", "team", "opp", "market", "side", "line", "book", "odds", "p_side", "lock", "grade", "commence_time"]])))
+    _json(SITE / "parlays.json", out)
+
+
+def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays=None):
     now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes")
     meta = dict(generated_at=now, season=C.SEASON, week=week, lines_pulled=lines_pulled, **status,
                 bars=dict(pick=C.PICK_BAR, signal=C.SIGNAL_BAR))
@@ -165,7 +257,8 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled):
     _json(SITE / "bets.json", records(bets))
     _json(SITE / "backtest.json", bt)
     retro = Path("data/retro_five.json")
-    _json(SITE / "results.json", dict(summary=summary, picks=records(graded), retro=json.loads(retro.read_text()) if retro.exists() else None))
+    _json(SITE / "results.json", dict(summary=summary, picks=records(graded), parlays=records(parlays) if parlays is not None and len(parlays) else [],
+                                      retro=json.loads(retro.read_text()) if retro.exists() else None))
 
 
 if __name__ == "__main__":

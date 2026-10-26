@@ -58,3 +58,10 @@ LOCK_WEIGHTS = dict(ev=0.25, market=0.40, consistency=0.20, sample=0.15)
 LOCK_EV_FULL = 0.15                # an expected return this high scores full marks on the EV component
 LOCK_FADE_BONUS = 5
 GRADE_BARS = dict(A=72, B=55)      # lock score at or above these is an A or a B; the rest are C
+
+# --- locks per slate day (Edmonton time) and the recommended parlay ---
+LOCKS_PER_SLATE = dict(single=3, multi=5)   # one game kicking off that day -> 3 locks; more games -> 5
+PARLAY_LEGS = (2, 3)                        # fewest and most legs in the recommended parlay (fewer legs = better chance of hitting)
+PARLAY_MIN_PROB = 0.60                      # a leg needs at least this blended chance of hitting
+PARLAY_KELLY_FRACTION = 0.25                # stake = this fraction of the Kelly stake for the parlay
+PARLAY_UNITS = (0.1, 1.0)                   # stake bounds, in units

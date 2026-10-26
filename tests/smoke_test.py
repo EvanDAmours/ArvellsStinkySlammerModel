@@ -83,7 +83,12 @@ check({"lock", "grade", "consistency", "payout"} <= set(picks.columns) and picks
 five = picks[picks.five.fillna(False).astype(bool)] if "five" in picks.columns else pd.DataFrame()
 others = picks[~picks.player.isin(five.player)] if len(five) else picks
 check(1 <= len(five) <= 5 and five.player.nunique() == len(five) and (others.empty or five.lock.min() >= others.lock.max() - 1e-9), f"weekly five flagged: top lock scores, one per player ({len(five)})")
-check(sum(1 for b in bets if b.get("five")) == len(five), "weekly five marked on the board")
+check(sum(1 for b in bets if b.get("five")) == len(five), "locks marked on the board")
+parlays = pd.read_csv(tmp / "data/parlays.csv") if (tmp / "data/parlays.csv").exists() else pd.DataFrame()
+check(len(parlays) >= 2 and parlays.parlay_id.nunique() >= 1 and parlays.groupby("parlay_id").size().between(2, 4).all(), f"recommended parlay built ({parlays.parlay_id.nunique() if len(parlays) else 0} parlay, {len(parlays)} legs)")
+check(len(parlays) and parlays.player.nunique() == len(parlays) and parlays.units.between(0.1, 1.0).all(), "parlay legs are distinct players with a stake between 0.1 and 1 unit")
+pj = json.loads((tmp / "docs/data/parlays.json").read_text())
+check(len(pj) >= 1 and pj[0]["n_legs"] == len(pj[0]["legs"]) and sum(1 for b in bets if b.get("parlay")) == len(parlays), "parlay written for the site and marked on the board")
 
 # grading: fake picks on finished week-6 games with a closing snapshot
 from pipeline import grade as G
@@ -105,9 +110,41 @@ check(abs(summary["units"] - (2 * (100 / 110) - 1)) < 1e-6, f"units computed ({s
 check(list(graded.clv_line) == [1.0, -1.0, 1.0], f"closing line value computed ({list(graded.clv_line)})")
 f5 = summary["five"]
 check(f5["wins"] == 1 and f5["losses"] == 1 and len(f5["weeks"]) == 1 and f5["weeks"][0]["running_wins"] == 1, f"weekly five tally ({f5['wins']}-{f5['losses']}, {len(f5['weeks'])} week)")
-G.write_five_log(graded, summary, tmp / "data/weekly_five.md")
+# a fake two-leg parlay on the same finished games: both legs cashed
+legs = []
+for i, r in enumerate(week6.head(2).itertuples()):
+    side = "Over" if i % 2 == 0 else "Under"
+    legs.append(dict(season=2026, week=6, slate="2026-10-18", parlay_id="2026-wk06-2026-10-18", leg=i + 1, player=r.player, team=r.team, opp="", market="player_tackles_assists",
+                     side=side, line=r.comb - 0.5 if side == "Over" else r.comb + 0.5, book="DraftKings", odds=-110, p_side=0.65, lock=75.0, grade="A",
+                     event_id=f"X{i}", commence_time="2026-10-18T17:00:00Z", n_legs=2, combined_decimal=(1 + 100 / 110) ** 2, combined_prob=0.65 ** 2, units=0.3, chosen_at="20261018T120000Z"))
+pd.DataFrame(legs).to_csv("data/parlays.csv", index=False)
+pq, psum = G.grade_parlays(pw)
+check(len(pq) == 1 and pq.result.iloc[0] == "Win" and abs(pq.units_won.iloc[0] - 0.3 * ((1 + 100 / 110) ** 2 - 1)) < 1e-6 and psum["wins"] == 1, f"parlay graded ({pq.result.iloc[0] if len(pq) else 'none'}, {pq.units_won.iloc[0] if len(pq) else 0:+.3f}u)")
+summary["parlays"] = psum
+G.write_five_log(graded, summary, tmp / "data/weekly_five.md", pq)
 log = (tmp / "data/weekly_five.md").read_text()
-check("Record: 1-1" in log and "| 2026 wk 6 | 2 | 1-1 |" in log and "| 1-1 |" in log, "weekly five log written with record, week line and running record")
+check("Locks record: 1-1" in log and "| 2026 wk 6 | 2 | 1-1 |" in log and "Parlays record: 1-0" in log, "locks and parlays log written with records, week line and parlay line")
+
+# scheduled pull slots and international windows, in Edmonton time
+import datetime as _dt
+from zoneinfo import ZoneInfo as _Z
+_ed = _Z("America/Edmonton")
+def _at(y, m, d, hh, mm):
+    return _dt.datetime(y, m, d, hh, mm, tzinfo=_ed).astimezone(_dt.timezone.utc)
+plan = R.auto_plan(now=_at(2026, 10, 29, 9, 4))     # Thursday 9:04 am
+check(plan and plan.get("days") == ["2026-10-29", "2026-10-30"], f"Thursday 9 am slot covers Thursday and Friday games ({plan and plan.get('days')})")
+check(R.auto_plan(now=_at(2026, 10, 29, 11, 0)) is None, "Thursday 11 am is not a pull slot")
+check(R.auto_plan(now=_at(2026, 11, 1, 9, 0)) is None, "Sunday 9 am is not a pull slot (none specified)")
+plan = R.auto_plan(now=_at(2026, 11, 7, 18, 2))      # Saturday 6:02 pm, after the clock change
+check(plan and plan.get("days") == ["2026-11-08"], f"Saturday 6 pm slot covers Sunday games in standard time ({plan and plan.get('days')})")
+plan = R.auto_plan(now=_at(2026, 11, 9, 17, 30))     # Monday 5:30 pm
+check(plan and plan.get("days") == ["2026-11-09"], "Monday 5:30 pm slot covers the Monday game")
+intl = [dict(home="PIT", away="NO", kickoff=_at(2026, 10, 25, 7, 30).isoformat(), international=True)]
+check(R.auto_plan(now=_at(2026, 10, 24, 19, 30), games=intl).get("teams") == ("PIT", "NO"), "international game pulled 12 h before kickoff")
+check(R.auto_plan(now=_at(2026, 10, 25, 6, 30), games=intl).get("teams") == ("PIT", "NO"), "international game pulled 1 h before kickoff")
+check(R.auto_plan(now=_at(2026, 10, 25, 5, 0), games=intl) is None, "no pull between the international windows")
+games = json.loads((tmp / "data/cache/games.json").read_text())
+check(len(games) > 10 and all({"home", "away", "kickoff", "international"} <= set(g) for g in games), f"this week's games written with kickoff and international flag ({len(games)})")
 
 print("\nALL CHECKS PASSED" if not fails else f"\n{len(fails)} CHECK(S) FAILED")
 sys.exit(1 if fails else 0)

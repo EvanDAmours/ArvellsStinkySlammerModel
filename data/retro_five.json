@@ -3,7 +3,7 @@
   {
    "season": 2026,
    "week": 7,
-   "replayed_at": "2026-10-26T17:17+00:00",
+   "replayed_at": "2026-10-26T18:04+00:00",
    "rules": {
     "line_weight": 0.6,
     "pick_bar": 0.06,
@@ -37,6 +37,72 @@
     "units": 15.811911252449836,
     "hit": 0.5443037974683544
    },
+   "parlays": [
+    {
+     "parlay_id": "2026-wk07-2026-10-25",
+     "season": 2026,
+     "week": 7,
+     "slate": "2026-10-25",
+     "n_legs": 3,
+     "combined_decimal": 4.1232272298,
+     "combined_american": 312,
+     "combined_prob": 0.3588357287,
+     "units": 0.1,
+     "chosen_at": "20261025T132312Z",
+     "result": "Win",
+     "units_won": 0.312322723,
+     "legs": [
+      {
+       "player": "Kaden Elliss",
+       "team": "NO",
+       "opp": "PIT",
+       "market": "player_solo_tackles",
+       "side": "Under",
+       "line": 4.5,
+       "book": "DraftKings",
+       "odds": -167.0,
+       "p_side": 0.7164023891,
+       "lock": 83.4390159547,
+       "grade": "A",
+       "actual": 4.0,
+       "result": "Win",
+       "commence_time": "2026-10-25T13:30:00Z"
+      },
+      {
+       "player": "Minkah Fitzpatrick",
+       "team": "NYJ",
+       "opp": "MIA",
+       "market": "player_tackles_assists",
+       "side": "Over",
+       "line": 4.5,
+       "book": "DraftKings",
+       "odds": -152.0,
+       "p_side": 0.707863384,
+       "lock": 81.4188322105,
+       "grade": "A",
+       "actual": 10.0,
+       "result": "Win",
+       "commence_time": "2026-10-25T17:00:00Z"
+      },
+      {
+       "player": "Drue Tranquill",
+       "team": "KC",
+       "opp": "SEA",
+       "market": "player_solo_tackles",
+       "side": "Under",
+       "line": 4.5,
+       "book": "theScore Bet",
+       "odds": -180.0,
+       "p_side": 0.7076022498,
+       "lock": 78.8466978196,
+       "grade": "A",
+       "actual": 4.0,
+       "result": "Win",
+       "commence_time": "2026-10-26T00:20:00Z"
+      }
+     ]
+    }
+   ],
    "picks": [
     {
      "player": "Kaden Elliss",

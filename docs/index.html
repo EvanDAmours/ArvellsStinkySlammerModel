@@ -59,6 +59,18 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 .five-box h3 { margin: 0 0 6px; font: 700 1.1rem/1.2 var(--cond); }
 .five-box .note { margin: 0 0 8px; }
 .play.five { border-left: 4px solid #1f8a4c; }
+[hidden] { display: none !important; }
+.daybar button { padding: 6px 12px; border: 1px solid var(--line, #cfd4dc); background: transparent; border-radius: 8px; margin-right: 4px; cursor: pointer; font: inherit; color: var(--ink); }
+.daybar button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.daybar button:disabled { opacity: 0.35; cursor: not-allowed; }
+.intl { display: inline-block; padding: 1px 6px; border-radius: 6px; background: #2c5aa0; color: #fff; font-size: 0.75rem; margin-left: 6px; vertical-align: middle; }
+.parlay-box { border: 2px solid #2c5aa0; border-radius: 10px; padding: 10px 12px 8px; margin: 0 0 16px; }
+.parlay-box h3 { margin: 0 0 4px; font: 700 1.1rem/1.2 var(--cond); }
+.parlay-box .terms { display: flex; flex-wrap: wrap; gap: 4px 22px; margin: 6px 0 8px; font-variant-numeric: tabular-nums; }
+.parlay-box .terms b { font: 700 1.25rem/1.1 var(--cond); display: block; }
+.parlay-box .terms span { color: var(--muted); font-size: 0.85rem; }
+.parlay-box ol { margin: 0 0 4px 1.2em; padding: 0; } .parlay-box li { margin: 2px 0; }
+.parlay-box .placed { color: var(--muted); font-size: 0.85rem; }
 .star { color: #1f8a4c; font-weight: 700; margin-right: 4px; }
 .play .ev span { font-size: 0.8rem; color: var(--muted); }
 .play .why { grid-column: 1 / -1; color: var(--muted); font-size: 0.9rem; }
@@ -106,7 +118,8 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
   <section id="proj" hidden>
     <p class="note">Projected tackles for every defender playing this week. The fair line is the half-point line the model puts closest to a coin flip. Stat crew is the home scorekeepers’ effect on combined tackles.</p>
     <div class="controls"><input type="search" id="q" placeholder="Search player or team" aria-label="Search player or team">
-      <label>Slate <select id="proj-slate"><option value="">All games</option><option value="early">Early (11 am)</option><option value="late">Afternoon (2 pm)</option><option value="prime">Prime time</option></select></label></div>
+      <span class="daybar" id="daybar" role="group" aria-label="Game day"></span>
+      <label id="proj-slate-label" hidden>Sunday slate <select id="proj-slate"><option value="">All Sunday games</option><option value="early">Early (11 am)</option><option value="late">Afternoon (2 pm)</option><option value="prime">Prime time</option></select></label></div>
     <div class="scroll"><table id="proj-table"></table></div>
   </section>
 
@@ -140,12 +153,15 @@ function recordsBar(s) {
   const hit = f.hit == null ? "" : ` (${pct(f.hit)})`;
   bar.append(el("div", { class: "rec" }, wl(f.wins, f.losses, f.pushes), el("span", { class: "label" }, `Locks${hit}${f.pending ? `, ${f.pending} pending` : ""}`)));
   bar.append(el("div", { class: "rec" }, wl(s?.wins, s?.losses, s?.pushes), el("span", { class: "label" }, `All plays${s?.pending ? `, ${s.pending} pending` : ""}`)));
+  const pr = (s || {}).parlays || {};
+  bar.append(el("div", { class: "rec" }, wl(pr.wins, pr.losses), el("span", { class: "label" }, `Parlays${pr.units == null ? "" : `, ${pr.units >= 0 ? "+" : ""}${pr.units.toFixed(1)}u`}${pr.pending ? `, ${pr.pending} pending` : ""}`)));
   const rw = (r.retro && r.retro.weeks) || [];
   if (rw.length) {
-    const tot = rw.reduce((a, w) => ({ w: a.w + w.five.wins, l: a.l + w.five.losses, pw: a.pw + w.plays.wins, pl: a.pl + w.plays.losses, pend: a.pend + w.five.pending }), { w: 0, l: 0, pw: 0, pl: 0, pend: 0 });
+    const tot = rw.reduce((a, w) => ({ w: a.w + w.five.wins, l: a.l + w.five.losses, pw: a.pw + w.plays.wins, pl: a.pl + w.plays.losses, pend: a.pend + w.five.pending,
+      qw: a.qw + ((w.parlays || []).filter((q) => q.result === "Win").length), ql: a.ql + ((w.parlays || []).filter((q) => q.result === "Loss").length) }), { w: 0, l: 0, pw: 0, pl: 0, pend: 0, qw: 0, ql: 0 });
     const weeks = rw.map((w) => `wk ${w.week}`).join(", ");
     bar.append(el("div", { class: "sub" }, "Projected under the current rules, replayed on ", weeks, " using only what was known before each kickoff: locks ",
-      wl(tot.w, tot.l), tot.pend ? ` (${tot.pend} pending)` : "", ", all plays ", wl(tot.pw, tot.pl), ". ",
+      wl(tot.w, tot.l), tot.pend ? ` (${tot.pend} pending)` : "", ", all plays ", wl(tot.pw, tot.pl), ", parlays ", wl(tot.qw, tot.ql), ". ",
       "Weeks 1-6 can't be replayed: no lines were collected before week 7, and historical lines need a paid Odds API plan."));
   }
   return bar;
@@ -182,6 +198,7 @@ function renderMeta() {
   const m = DATA.meta;
   if (!m) { $("#meta").append("Waiting for the first run. Start it from the Actions tab (see README)."); return; }
   $("#title").textContent = `Week ${m.week} tackle board`;
+  if (m.international_games && m.international_games.length) $("#meta").append(el("span", { class: "intl" }, `International: ${m.international_games.join("; ")}`));
   $("#meta").append(el("span", {}, `Model updated ${when(m.generated_at)}`),
                     el("span", {}, m.lines_pulled ? `Lines pulled ${when(m.lines_pulled)}` : "No lines pulled yet this week"),
                     el("span", {}, m.odds_credits_remaining != null ? `${m.odds_credits_remaining} odds credits left this month` : ""));
@@ -204,8 +221,26 @@ function renderPlays() {
     five.sort((a, b) => (b.lock ?? 0) - (a.lock ?? 0)).forEach((b) => fb.append(card(b)));
     box.append(fb);
   }
+  if (!slate && !market) for (const q of (DATA.parlays || [])) box.append(parlayBox(q));
   if (!rows.length) { box.append(el("div", { class: "empty" }, picksOnly ? "No line clears the bar right now. Untick Picks only to see every priced line." : "Nothing matches these filters.")); return; }
   for (const b of rows) box.append(card(b));
+}
+
+const slateName = (iso) => { const d = new Date(iso + "T12:00:00"); return isNaN(d) ? iso : d.toLocaleDateString("en-CA", { weekday: "long" }); };
+function parlayBox(q, graded) {
+  const legs = el("ol", {}, ...q.legs.map((l) => el("li", {}, `${l.player} ${l.side} ${num(l.line)} ${(MARKET[l.market] || l.market).toLowerCase()} (${odds(l.odds)} at ${l.book}, ${pct(l.p_side)} chance)`,
+    l.result ? el("span", { class: l.result === "Win" ? "w" : l.result === "Loss" ? "l" : "" }, ` · ${l.result}${l.actual == null ? "" : ` (${num(l.actual, 0)})`}`) : "")));
+  const am = q.combined_american;
+  return el("div", { class: "parlay-box" },
+    el("h3", {}, `${slateName(q.slate)} parlay · ${q.n_legs} legs`, q.result ? el("span", { class: q.result === "Win" ? "w" : q.result === "Loss" ? "l" : "" }, ` · ${q.result}`) : ""),
+    el("div", { class: "terms" },
+      el("div", {}, el("b", {}, (am > 0 ? "+" : "") + am), el("span", {}, "combined odds")),
+      el("div", {}, el("b", {}, pct(q.combined_prob)), el("span", {}, "model chance all legs hit")),
+      el("div", {}, el("b", {}, `${q.units.toFixed(1)}u`), el("span", {}, "suggested stake")),
+      el("div", {}, el("b", {}, `${(q.units * (q.combined_decimal - 1)).toFixed(2)}u`), el("span", {}, "pays if it hits")),
+      q.units_won == null ? "" : el("div", {}, units(q.units_won, 2), el("span", {}, "result"))),
+    legs,
+    q.placed ? el("div", { class: "placed" }, "First game has kicked off: this is the parlay as placed before kickoff.") : el("div", { class: "placed" }, "Re-chosen at every line pull until the first game of the day kicks off."));
 }
 
 function card(b) {
@@ -214,7 +249,7 @@ function card(b) {
     const side = b.side || b.pick;
     const price = side === "Under" ? b.under_odds : b.over_odds;
     const card = el("div", { class: "play" + (isPick ? " pick" : "") + (b.five ? " five" : "") },
-      el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}`, title: "Confidence grade" }, b.grade) : "", b.five ? el("span", { class: "star", title: "This week's five" }, "★") : "", b.player, el("small", {}, [b.team, b.opp ? `vs ${b.opp}` : "", kickoffLocal(betKick(b)) ? `· ${kickoffLocal(betKick(b))}` : ""].filter(Boolean).join(" ")),
+      el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}`, title: "Confidence grade" }, b.grade) : "", b.five ? el("span", { class: "star", title: "Lock" }, "★") : "", b.player, b.international ? el("span", { class: "intl", title: "Neutral-site game overseas: stat crew unknown, lines pulled 12 h and 1 h before kickoff" }, "International") : "", el("small", {}, [b.team, b.opp ? `vs ${b.opp}` : "", kickoffLocal(betKick(b)) ? `· ${kickoffLocal(betKick(b))}` : ""].filter(Boolean).join(" ")),
         b.lock == null ? "" : el("div", { class: "lock" }, `Lock score ${Math.round(b.lock)}/100`)),
       el("div", { class: "ev" }, el("b", {}, b.ev == null ? "" : signedPct(b.ev)), el("span", {}, "expected return")),
       el("div", { class: "bet" }, el("span", { class: side === "Under" ? "under" : "over" }, `${side || ""} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market).toLowerCase()}`),
@@ -227,14 +262,29 @@ function card(b) {
 }
 
 let projSort = { key: "proj", dir: -1 };
+let projDay = "";
+const DAYS = [["", "All"], ["Thu", "Thursday"], ["Fri", "Friday"], ["Sat", "Saturday"], ["Sun", "Sunday"], ["Mon", "Monday"]];
+const dayOf = (d) => (!d || isNaN(d)) ? "" : new Intl.DateTimeFormat("en-CA", { timeZone: TZ, weekday: "short" }).format(d);
+function renderDaybar() {
+  const bar = $("#daybar"); bar.replaceChildren();
+  const have = new Set((DATA.proj || []).map((p) => dayOf(projKick(p))));
+  for (const [key, label] of DAYS) {
+    const on = key === "" || have.has(key);
+    const b = el("button", { type: "button", "aria-pressed": String(projDay === key), title: on ? "" : `No ${label} games this week` }, label);
+    if (!on) b.disabled = true;
+    b.onclick = () => { projDay = key; $("#proj-slate").value = ""; renderDaybar(); renderProj(); };
+    bar.append(b);
+  }
+  $("#proj-slate-label").hidden = projDay !== "Sun";
+}
 function renderProj() {
   const t = $("#proj-table"); t.replaceChildren();
   const q = $("#q").value.trim().toLowerCase();
   const cols = [["Player", "player"], ["Team", "team"], ["Opp", "opp_team"], ["Pos", "group"], ["Status", "status"], ["Games", "n_prev", "n"],
                 ["Season avg", "season_avg", "n"], ["Last game", "last", "n"], ["Projection", "proj", "n"], ["Solo proj", "proj_solo", "n"],
                 ["Fair line", "fair_line", "n"], ["Stat crew", "crew_comb", "n"], ["Role up", "role_signal"]];
-  const slate = $("#proj-slate").value;
-  let rows = (DATA.proj || []).filter((p) => (!q || `${p.player} ${p.team} ${p.opp_team}`.toLowerCase().includes(q)) && (!slate || slateOf(projKick(p)) === slate));
+  const slate = projDay === "Sun" ? $("#proj-slate").value : "";
+  let rows = (DATA.proj || []).filter((p) => (!q || `${p.player} ${p.team} ${p.opp_team}`.toLowerCase().includes(q)) && (!projDay || dayOf(projKick(p)) === projDay) && (!slate || slateOf(projKick(p)) === slate));
   rows.sort((a, b) => { const x = a[projSort.key] ?? -99, y = b[projSort.key] ?? -99; return (typeof x === "number" ? x - y : String(x).localeCompare(String(y))) * projSort.dir; });
   const head = el("tr");
   cols.forEach(([label, key, cls]) => { const btn = el("button", {}, label + (projSort.key === key ? (projSort.dir < 0 ? " ↓" : " ↑") : "")); btn.onclick = () => { projSort = { key, dir: projSort.key === key ? -projSort.dir : (typeof rows[0]?.[key] === "number" ? -1 : 1) }; renderProj(); }; head.append(el("th", { class: cls || "" }, btn)); });
@@ -277,6 +327,15 @@ function renderRecord() {
     }
     box.append(el("p", { class: "note" }, "The same tally is kept in data/weekly_five.md in the repository, rewritten every morning."));
   }
+  const ps = s.parlays || {};
+  if (r.parlays && r.parlays.length) {
+    box.append(el("h3", {}, "Parlays"));
+    box.append(el("div", { class: "stat-line" },
+      el("div", {}, wl(ps.wins, ps.losses), "Record"),
+      el("div", {}, units(ps.units), `Units (${(ps.staked ?? 0).toFixed(1)} staked)`),
+      el("div", {}, el("b", {}, String(ps.pending ?? 0)), "Pending")));
+    for (const q of [...r.parlays].reverse()) box.append(parlayBox({ ...q, placed: true }, true));
+  }
   if (r.retro && r.retro.weeks && r.retro.weeks.length) {
     box.append(el("h3", {}, "Replayed under the current rules"));
     box.append(el("p", { class: "note" }, r.retro.note || ""));
@@ -288,6 +347,7 @@ function renderRecord() {
         el("div", {}, units(w.plays.units), "Plays units")));
       box.append(el("div", { class: "scroll" }, table([["Lock"], ["Price", "n"], ["Book"], ["Grade"], ["Score", "n"], ["Actual", "n"], ["Result"]],
         w.picks.map((p) => [`${p.player} ${p.side} ${num(p.line)} ${(MARKET[p.market] || p.market).toLowerCase()}`, odds(p.odds), p.book, p.grade, Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result]))));
+      for (const q of (w.parlays || [])) box.append(parlayBox({ ...q, placed: true }, true));
     }
   }
   if (s.by_grade && s.by_grade.length) {
@@ -296,8 +356,48 @@ function renderRecord() {
       s.by_grade.map((g) => [g.grade, g.bets, wl(g.wins, g.losses), units(g.units, 2), el("b", { class: g.roi == null ? "" : g.roi >= 0 ? "pos" : "neg" }, g.roi == null ? "" : signedPct(g.roi))]))));
     box.append(el("p", { class: "note" }, "If the grades mean anything, A should beat B and B should beat C over time. If they don't, the grading formula in config.py is wrong and gets changed."));
   }
-  const rows = [...r.picks].reverse().map((p) => [(p.five ? "★ " : "") + (p.grade || ""), `Wk ${p.week}`, p.player, `${p.side} ${num(p.line)}`, MARKET[p.market] || p.market, odds(p.odds), p.book, p.lock == null ? "" : Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result, p.units == null ? "" : units(p.units, 2), p.clv_line == null ? "" : (p.clv_line >= 0 ? "+" : "") + num(p.clv_line)]);
-  box.append(el("div", { class: "scroll" }, table([["Grade"], ["Week"], ["Player"], ["Bet"], ["Market"], ["Price", "n"], ["Book"], ["Lock", "n"], ["Actual", "n"], ["Result"], ["Units", "n"], ["Line vs close", "n"]], rows)));
+  box.append(el("h3", {}, "Every pick"));
+  box.append(el("p", { class: "note" }, "Click a column heading to sort; click again to flip. Sorting by grade or lock score shows whether confidence is tracking results."));
+  const holder = el("div", { class: "scroll" }); box.append(holder);
+  renderPicksTable(holder, r.picks);
+}
+
+let recSort = { key: "week", dir: -1 };
+const REC_COLS = [
+  ["Grade", "grade", (p) => (p.five ? "★ " : "") + (p.grade || ""), (p) => (p.grade || "Z") + (p.five ? "0" : "1")],
+  ["Week", "week", (p) => `Wk ${p.week}`, (p) => p.week],
+  ["Player", "player", (p) => p.player, (p) => p.player],
+  ["Bet", "side", (p) => `${p.side} ${num(p.line)}`, (p) => `${p.side} ${p.line}`],
+  ["Market", "market", (p) => MARKET[p.market] || p.market, (p) => p.market],
+  ["Price", "odds", (p) => odds(p.odds), (p) => p.odds, "n"],
+  ["Book", "book", (p) => p.book, (p) => p.book],
+  ["Lock", "lock", (p) => (p.lock == null ? "" : Math.round(p.lock)), (p) => p.lock ?? -1, "n"],
+  ["Actual", "actual", (p) => (p.actual == null ? "" : num(p.actual, 0)), (p) => p.actual ?? -1, "n"],
+  ["Result", "result", (p) => p.result, (p) => ({ Win: 0, Push: 1, Loss: 2, Pending: 3 })[p.result] ?? 9],
+  ["Units", "units", (p) => (p.units == null ? "" : units(p.units, 2)), (p) => p.units ?? 0, "n"],
+  ["Line vs close", "clv_line", (p) => (p.clv_line == null ? "" : (p.clv_line >= 0 ? "+" : "") + num(p.clv_line)), (p) => p.clv_line ?? 0, "n"],
+];
+function renderPicksTable(holder, picks) {
+  holder.replaceChildren();
+  const col = REC_COLS.find((c) => c[1] === recSort.key) || REC_COLS[1];
+  const key = col[3];
+  const rows = [...picks].sort((a, b) => {
+    const x = key(a), y = key(b);
+    const d = typeof x === "number" && typeof y === "number" ? x - y : String(x).localeCompare(String(y));
+    return (d || (b.lock ?? 0) - (a.lock ?? 0)) * recSort.dir;
+  });
+  const t = el("table");
+  const head = el("tr");
+  REC_COLS.forEach(([label, k, , , cls]) => {
+    const btn = el("button", { type: "button" }, label + (recSort.key === k ? (recSort.dir < 0 ? " ↓" : " ↑") : ""));
+    btn.onclick = () => { recSort = { key: k, dir: recSort.key === k ? -recSort.dir : (k === "player" || k === "book" || k === "market" || k === "grade" ? 1 : -1) }; renderPicksTable(holder, picks); };
+    head.append(el("th", { class: cls || "" }, btn));
+  });
+  t.append(el("thead", {}, head));
+  const tb = el("tbody");
+  rows.forEach((p) => tb.append(el("tr", {}, ...REC_COLS.map(([, , show, , cls]) => { const v = show(p); return cell(v) || el("td", { class: cls || "" }, v); }))));
+  t.append(tb);
+  holder.append(t);
 }
 
 function renderCheck() {
@@ -335,8 +435,8 @@ function show(id) {
 }
 
 (async () => {
-  [DATA.meta, DATA.bets, DATA.proj, DATA.results, DATA.backtest] = await Promise.all(["meta", "bets", "projections", "results", "backtest"].map(load));
-  renderMeta(); renderPlays(); renderProj(); renderRecord(); renderCheck();
+  [DATA.meta, DATA.bets, DATA.proj, DATA.results, DATA.backtest, DATA.parlays] = await Promise.all(["meta", "bets", "projections", "results", "backtest", "parlays"].map(load));
+  renderMeta(); renderPlays(); renderDaybar(); renderProj(); renderRecord(); renderCheck();
   ["#picks-only", "#market", "#best-only", "#slate"].forEach((s) => $(s).addEventListener("change", renderPlays));
   $("#q").addEventListener("input", renderProj);
   $("#proj-slate").addEventListener("change", renderProj);

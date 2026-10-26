@@ -25,12 +25,23 @@ def _utcnow():
     return dt.datetime.now(dt.timezone.utc)
 
 
+def local_date(t):
+    """Edmonton calendar date of a UTC datetime, as YYYY-MM-DD."""
+    from zoneinfo import ZoneInfo
+    return t.astimezone(ZoneInfo("America/Edmonton")).strftime("%Y-%m-%d")
+
+
 def _credits(api_key):
     """Credits left this month for one key (the events call is free), plus the event list."""
     ev = requests.get(f"{BASE}/sports/{C.ODDS_SPORT}/events", params={"apiKey": api_key}, timeout=30)
     ev.raise_for_status()
     rem = ev.headers.get("x-requests-remaining")
     return (float(rem) if rem is not None else None), ev.json()
+
+
+def list_events(api_key):
+    """Upcoming NFL events (free call)."""
+    return _credits(api_key)[1]
 
 
 def _pick_key(credits):
@@ -47,8 +58,9 @@ def _book_params():
     return {"regions": C.ODDS_REGIONS}
 
 
-def pull(api_keys, hours_ahead=None):
-    """Return (rows, credits_by_key). api_keys: {name: key}. Only games that haven't started; optionally only those within hours_ahead."""
+def pull(api_keys, hours_ahead=None, days=None, event_ids=None):
+    """Return (rows, credits_by_key). api_keys: {name: key}. Only games that haven't started; optionally only those
+    within hours_ahead, or kicking off on the given Edmonton dates (days), or with the given event ids."""
     if os.environ.get("TACKLE_FAKE_ODDS"):
         from tests.fake_data import fake_odds_rows
         return fake_odds_rows(), {name: "synthetic" for name in api_keys}
@@ -65,12 +77,16 @@ def pull(api_keys, hours_ahead=None):
     if events is None:
         raise RuntimeError("No Odds API key worked")
     now, rows = _utcnow(), []
-    window = f"next {hours_ahead:g} hours" if hours_ahead else "all upcoming"
+    window = f"next {hours_ahead:g} hours" if hours_ahead else f"games on {sorted(days)}" if days else f"events {sorted(event_ids)}" if event_ids else "all upcoming"
     print(f"odds api: {len(events)} NFL events listed, pulling {window}, credits left " +
           ", ".join(f"{n} {c if c is not None else '?'}" for n, c in credits.items()))
     for e in events:
         start = dt.datetime.fromisoformat(e["commence_time"].replace("Z", "+00:00"))
         if start <= now or (hours_ahead and (start - now).total_seconds() > hours_ahead * 3600):
+            continue
+        if days is not None and local_date(start) not in set(days):
+            continue
+        if event_ids is not None and e["id"] not in set(event_ids):
             continue
         name = _pick_key(credits)
         if name is None:

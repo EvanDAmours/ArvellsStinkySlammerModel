@@ -347,6 +347,7 @@ def price_lines(lines, P):
                      "season_avg": float(p.season_avg), "last": None if pd.isna(p["last"]) else float(p["last"]),
                      "n_prev": int(p.n_prev), "consistency": consistency, "cons_hits": int(sum(hits)), "cons_n": len(hits),
                      "mkt_side": float(mkt_side), "payout": None if dec is None else float(dec - 1),
+                     "international": str(p.get("venue", "")) == "NEUTRAL",
                      "lock": lock, "grade": grade_of(lock)})
     out = pd.DataFrame(rows)
     if "ev" in out:

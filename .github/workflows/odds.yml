@@ -1,19 +1,9 @@
 name: Pull tackle lines
-# Times are UTC and set for US daylight time. After daylight time ends (first Sunday of November),
-# add one hour to each so the Sunday pulls still land after inactives are announced. See README.
+# Pull slots are defined in Edmonton local time in run.py (PULL_SLOTS), so the clock change needs no edits here.
 on:
   schedule:
-    - cron: "45 22 * * 4"      # Thu 6:45 pm ET: Thursday night game
-    - cron: "0 22 * * 5"       # Fri 6:00 pm ET: full weekend slate as lines post
-    - cron: "0 15 * * 6"       # Sat 9:00 am Mountain: full slate
-    - cron: "0 20 * * 6"       # Sat 2:00 pm Mountain: full slate
-    - cron: "0 4 * * 0"        # Sat 10:00 pm Mountain (04:00 UTC Sunday): full slate
-    - cron: "0 13 * * 0"       # Sun 9:00 am ET: full slate
-    - cron: "50 15 * * 0"      # Sun 11:50 am ET: 1 pm games, after inactives
-    - cron: "45 19 * * 0"      # Sun 3:45 pm ET: late games, after inactives
-    - cron: "35 23 * * 0"      # Sun 7:35 pm ET: Sunday night game
-    - cron: "0 20 * * 1"       # Mon 2:00 pm Mountain: Monday night game, as lines post
-    - cron: "35 23 * * 1"      # Mon 7:35 pm ET: Monday night game, after inactives
+    - cron: "0,30 * * * *"     # every half hour; run.py decides whether this is a pull slot (Edmonton time) or an
+                               # international game is 12 h / 1 h from kickoff, and does nothing otherwise. See README.
   workflow_dispatch:
     inputs:
       hours:

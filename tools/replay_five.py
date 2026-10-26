@@ -53,12 +53,26 @@ def replay(season, week):
     if snaps.empty:
         sys.exit(f"No odds snapshots for {season} week {week}")
     snaps["pulled_at"] = snaps.pulled_at.astype(str)
-    picks = pd.DataFrame()
+    picks, parlays = pd.DataFrame(), pd.DataFrame(columns=G.LEG_COLS)
+    all_games = snaps.drop_duplicates("event_id").assign(slate=G.slate_of(snaps.drop_duplicates("event_id").commence_time),
+                                                         start=pd.to_datetime(snaps.drop_duplicates("event_id").commence_time, utc=True))
     for t in sorted(snaps.pulled_at.unique()):
         lines, now = lines_as_of(snaps, t)
         bets = M.price_lines(lines, P)
         if bets.empty or "pick" not in bets:
             continue
+        # recommended parlay per slate day, re-chosen until the day's first kickoff
+        bets["slate"] = G.slate_of(bets.commence_time)
+        for slate in sorted(x for x in bets.slate.unique() if x):
+            if ((all_games.slate == slate) & (all_games.start <= now)).any():
+                continue
+            legs = G.choose_parlay(bets, slate)
+            if legs is None:
+                continue
+            legs = legs.assign(season=season, week=week, slate=slate, parlay_id=f"{season}-wk{week:02d}-{slate}", chosen_at=t,
+                               odds=np.where(legs.side == "Over", legs.over_odds, legs.under_odds))
+            legs = legs[[c for c in G.LEG_COLS if c in legs.columns]]
+            parlays = pd.concat([parlays[parlays.slate != slate], legs], ignore_index=True)
         new = bets[bets.pick.isin(["Over", "Under"]) & bets.best_price.fillna(False)].copy()
         if new.empty:
             continue
@@ -68,8 +82,8 @@ def replay(season, week):
                         "lock", "grade", "consistency", "cons_hits", "cons_n", "payout", "event_id", "commence_time", "pulled_at"]
         new = new[[c for c in cols if c in new.columns]]
         picks = pd.concat([picks, new], ignore_index=True).drop_duplicates(G.KEY, keep="first")
-        picks = G.mark_weekly_five(picks, season, week, now=now)
-        print(f"{t}: {len(lines)} lines on the board, {len(picks)} picks logged, five = "
+        picks = G.mark_locks(picks, season, week, now=now)
+        print(f"{t}: {len(lines)} lines on the board, {len(picks)} picks logged, locks = "
               + ", ".join(f"{r.player} {r.side} {r.line:g}" for r in picks[picks.five].itertuples()))
     # grade against box scores
     picks["name_key"] = picks.player.map(S.norm_name)
@@ -89,9 +103,12 @@ def replay(season, week):
                     pushes=int((g.result == "Push").sum()), pending=int((d.result == "Pending").sum()),
                     units=float(g.units.sum()), hit=float((g.result == "Win").sum() / max(1, (g.result != "Push").sum())) if len(g) else None)
     five = picks[picks.five]
+    stats = pw[(pw.season == season) & (pw.week == week)].groupby(["season", "week", "name_key"]).agg(comb=("comb", "sum"), solo=("solo_t", "sum")).reset_index()
+    PQ = G.grade_parlay_legs(parlays, stats) if len(parlays) else pd.DataFrame()
     entry = dict(season=season, week=week, replayed_at=dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
                  rules=dict(line_weight=C.LINE_WEIGHT, pick_bar=C.PICK_BAR, signal_bar=C.SIGNAL_BAR, lock_weights=C.LOCK_WEIGHTS, grade_bars=C.GRADE_BARS),
                  five=rec(five), plays=rec(picks),
+                 parlays=[] if PQ.empty else json.loads(PQ.to_json(orient="records")),
                  picks=[dict(player=r.player, team=r.team, opp=r.opp, market=r.market, side=r.side, line=float(r.line), odds=float(r.odds),
                              book=r.book, lock=float(r.lock), grade=r.grade, proj=float(r.proj), actual=None if pd.isna(r.actual) else float(r.actual),
                              result=r.result, units=float(r.units), commence_time=r.commence_time) for r in five.itertuples()])
@@ -106,6 +123,10 @@ def replay(season, week):
           f"all plays {p['wins']}-{p['losses']} of {p['n']} ({p['units']:+.2f}u)")
     for r in five.itertuples():
         print(f"  {r.grade} {r.lock:4.0f}  {r.player:22}{r.side:6}{r.line:>4} {r.market[7:]:17}{int(r.odds):>5} {r.book:13} actual {r.actual!s:>5} {r.result}")
+    for q in entry["parlays"]:
+        print(f"  parlay {q['slate']}: {q['n_legs']} legs {q['combined_american']:+d}, chance {q['combined_prob']:.0%}, stake {q['units']:.1f}u -> {q['result']} ({q['units_won']:+.2f}u)")
+        for l in q["legs"]:
+            print(f"      {l['player']} {l['side']} {l['line']:g} {l['market'][7:]} {l['odds']:+.0f} {l['book']}  p {l['p_side']:.2f}  actual {l['actual']}  {l['result']}")
 
 
 if __name__ == "__main__":
