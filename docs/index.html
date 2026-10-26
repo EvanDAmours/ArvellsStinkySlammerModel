@@ -49,6 +49,11 @@ select, input[type="search"] { font: inherit; padding: 6px 8px; border: 1px soli
 .grade { display: inline-block; min-width: 1.6em; padding: 2px 7px; border-radius: 6px; font: 700 0.95rem/1.3 var(--cond); text-align: center; color: #fff; background: #8a8f98; vertical-align: middle; margin-right: 6px; }
 .grade.A { background: #1f8a4c; } .grade.B { background: #c98a1b; } .grade.C { background: #8a8f98; }
 .lock { color: var(--muted); font-size: 0.85rem; }
+.five-box { border: 2px solid #1f8a4c; border-radius: 10px; padding: 10px 12px 2px; margin: 0 0 16px; }
+.five-box h3 { margin: 0 0 6px; font: 700 1.1rem/1.2 var(--cond); }
+.five-box .note { margin: 0 0 8px; }
+.play.five { border-left: 4px solid #1f8a4c; }
+.star { color: #1f8a4c; font-weight: 700; margin-right: 4px; }
 .play .ev span { font-size: 0.8rem; color: var(--muted); }
 .play .why { grid-column: 1 / -1; color: var(--muted); font-size: 0.9rem; }
 .play .price { color: var(--muted); font-size: 0.95rem; }
@@ -164,13 +169,23 @@ function renderPlays() {
   if (!all.length) { box.append(el("div", { class: "empty" }, "No tackle lines yet this week. Books usually post them Thursday to Saturday; the odds job pulls them automatically and this list fills in.")); return; }
   const picksOnly = $("#picks-only").checked, market = $("#market").value, best = $("#best-only").checked, slate = $("#slate").value;
   const rows = all.filter((b) => (!picksOnly || b.pick === "Over" || b.pick === "Under") && (!market || b.market === market) && (!best || b.best_price !== false) && (!slate || slateOf(betKick(b)) === slate));
+  const five = all.filter((b) => b.five);
+  if (five.length && !slate && !market) {
+    const fb = el("div", { class: "five-box" }, el("h3", {}, `This week's five`), el("p", { class: "note" }, "The five highest-confidence picks of the week, one per player, named before kickoff and tracked on their own in the Track record tab."));
+    five.sort((a, b) => (b.lock ?? 0) - (a.lock ?? 0)).forEach((b) => fb.append(card(b)));
+    box.append(fb);
+  }
   if (!rows.length) { box.append(el("div", { class: "empty" }, picksOnly ? "No line clears the bar right now. Untick Picks only to see every priced line." : "Nothing matches these filters.")); return; }
-  for (const b of rows) {
+  for (const b of rows) box.append(card(b));
+}
+
+function card(b) {
+  {
     const isPick = b.pick === "Over" || b.pick === "Under";
     const side = b.side || b.pick;
     const price = side === "Under" ? b.under_odds : b.over_odds;
-    const card = el("div", { class: "play" + (isPick ? " pick" : "") },
-      el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}`, title: "Confidence grade" }, b.grade) : "", b.player, el("small", {}, [b.team, b.opp ? `vs ${b.opp}` : "", kickoffLocal(betKick(b)) ? `· ${kickoffLocal(betKick(b))}` : ""].filter(Boolean).join(" ")),
+    const card = el("div", { class: "play" + (isPick ? " pick" : "") + (b.five ? " five" : "") },
+      el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}`, title: "Confidence grade" }, b.grade) : "", b.five ? el("span", { class: "star", title: "This week's five" }, "★") : "", b.player, el("small", {}, [b.team, b.opp ? `vs ${b.opp}` : "", kickoffLocal(betKick(b)) ? `· ${kickoffLocal(betKick(b))}` : ""].filter(Boolean).join(" ")),
         b.lock == null ? "" : el("div", { class: "lock" }, `Lock score ${Math.round(b.lock)}/100`)),
       el("div", { class: "ev" }, el("b", {}, b.ev == null ? "" : signedPct(b.ev)), el("span", {}, "expected return")),
       el("div", { class: "bet" }, el("span", { class: side === "Under" ? "under" : "over" }, `${side || ""} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market).toLowerCase()}`),
@@ -178,7 +193,7 @@ function renderPlays() {
       el("div", { class: "nums" }, ...(b.proj == null ? [] : [el("span", {}, `Projection ${num(b.proj)}`), b.proj_model == null ? "" : el("span", {}, `Model alone ${num(b.proj_model)}`), el("span", {}, `Model over ${pct(b.model_over)}`), el("span", {}, `Market over ${pct(b.market_over)}`),
         b.cons_n ? el("span", {}, `Cleared this line in ${b.cons_hits} of ${b.cons_n} games`) : ""])),
       el("div", { class: "why" }, b.why || ""));
-    box.append(card);
+    return card;
   }
 }
 
@@ -213,13 +228,19 @@ function renderRecord() {
     el("div", {}, el("b", {}, s.beat_close_share == null ? "" : pct(s.beat_close_share)), "Beat the closing line"),
     el("div", {}, el("b", {}, String(s.pending ?? 0)), "Pending")));
   box.append(el("p", { class: "note" }, "Beating the closing line is the earliest reliable sign of a real edge: over a few hundred bets it predicts profit better than the win-loss record does."));
+  if (s.five && s.five.bets) {
+    box.append(el("div", { class: "stat-line" },
+      el("div", {}, el("b", {}, `${s.five.wins}-${s.five.losses}${s.five.pushes ? "-" + s.five.pushes : ""}`), "Weekly five record"),
+      el("div", {}, el("b", {}, s.five.hit == null ? "" : pct(s.five.hit)), "Weekly five hit rate (target 70%)"),
+      el("div", {}, el("b", {}, (s.five.units >= 0 ? "+" : "") + s.five.units.toFixed(1)), "Weekly five units")));
+  }
   if (s.by_grade && s.by_grade.length) {
     box.append(el("h3", {}, "By confidence grade"));
     box.append(el("div", { class: "scroll" }, table([["Grade"], ["Bets", "n"], ["Record"], ["Units", "n"], ["Return per bet", "n"]],
       s.by_grade.map((g) => [g.grade, g.bets, `${g.wins}-${g.losses}`, num(g.units, 2), g.roi == null ? "" : signedPct(g.roi)]))));
     box.append(el("p", { class: "note" }, "If the grades mean anything, A should beat B and B should beat C over time. If they don't, the grading formula in config.py is wrong and gets changed."));
   }
-  const rows = [...r.picks].reverse().map((p) => [p.grade || "", `Wk ${p.week}`, p.player, `${p.side} ${num(p.line)}`, MARKET[p.market] || p.market, odds(p.odds), p.book, p.lock == null ? "" : Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result, p.units == null ? "" : num(p.units, 2), p.clv_line == null ? "" : (p.clv_line >= 0 ? "+" : "") + num(p.clv_line)]);
+  const rows = [...r.picks].reverse().map((p) => [(p.five ? "★ " : "") + (p.grade || ""), `Wk ${p.week}`, p.player, `${p.side} ${num(p.line)}`, MARKET[p.market] || p.market, odds(p.odds), p.book, p.lock == null ? "" : Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result, p.units == null ? "" : num(p.units, 2), p.clv_line == null ? "" : (p.clv_line >= 0 ? "+" : "") + num(p.clv_line)]);
   box.append(el("div", { class: "scroll" }, table([["Grade"], ["Week"], ["Player"], ["Bet"], ["Market"], ["Price", "n"], ["Book"], ["Lock", "n"], ["Actual", "n"], ["Result"], ["Units", "n"], ["Line vs close", "n"]], rows)));
 }
 

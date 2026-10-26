@@ -25,9 +25,46 @@ def log_picks(bets, season, week, pulled_at):
     new = new[[c for c in cols if c in new.columns]]
     old = pd.read_csv(PICKS) if PICKS.exists() else pd.DataFrame(columns=cols)
     both = pd.concat([old, new], ignore_index=True).drop_duplicates(KEY, keep="first")  # keep the first price we took
+    both = mark_weekly_five(both, season, week)
     PICKS.parent.mkdir(parents=True, exist_ok=True)
     both.to_csv(PICKS, index=False)
     return len(both) - len(old)
+
+
+FIVE = 5
+
+
+def mark_weekly_five(P, season, week, now=None):
+    """Flag this week's five highest lock-score picks (one per player). A pick whose game has started keeps its
+    place; the remaining places are re-chosen among games still to come at every pull."""
+    now = now or O._utcnow()
+    P = P.copy()
+    if "five" not in P.columns:
+        P["five"] = False
+    P["five"] = P.five.fillna(False).astype(bool)
+    wk = (P.season == season) & (P.week == week)
+    start = pd.to_datetime(P.commence_time, utc=True, errors="coerce")
+    started = wk & start.notna() & (start <= now)
+    open_ = wk & ~started
+    kept = P[started & P.five]
+    P.loc[open_, "five"] = False
+    slots = max(0, FIVE - kept.player.nunique())
+    if slots and "lock" in P.columns:
+        cand = P[open_ & ~P.player.isin(set(kept.player))].sort_values("lock", ascending=False)
+        cand = cand[cand.lock.notna()].drop_duplicates("player").head(slots)
+        P.loc[cand.index, "five"] = True
+    return P
+
+
+def weekly_five_keys(season, week):
+    """(player, market, side, line, book) of this week's five, for marking the board."""
+    if not PICKS.exists():
+        return set()
+    P = pd.read_csv(PICKS)
+    if "five" not in P.columns:
+        return set()
+    P = P[(P.season == season) & (P.week == week) & P.five.fillna(False).astype(bool)]
+    return {(r.player, r.market, r.side, float(r.line), r.book) for r in P.itertuples()}
 
 
 def _no_vig_side(over, under, side):
@@ -77,7 +114,11 @@ def grade(pw_comb):
             by_grade.append(dict(grade=gr, bets=int(len(part)), wins=int((part.result == "Win").sum()),
                                  losses=int((part.result == "Loss").sum()), units=float(part.units.sum()),
                                  roi=float(part.units.mean()) if len(part) else None))
-    summary = dict(by_grade=by_grade,bets=int(len(g)), wins=int((g.result == "Win").sum()), losses=int((g.result == "Loss").sum()),
+    five = g[g.five.fillna(False).astype(bool)] if "five" in g.columns else g.iloc[0:0]
+    summary = dict(by_grade=by_grade,
+                   five=dict(bets=int(len(five)), wins=int((five.result == "Win").sum()), losses=int((five.result == "Loss").sum()),
+                             pushes=int((five.result == "Push").sum()), units=float(five.units.sum()) if len(five) else 0.0,
+                             hit=float((five.result == "Win").sum() / max(1, (five.result != "Push").sum())) if len(five) else None),bets=int(len(g)), wins=int((g.result == "Win").sum()), losses=int((g.result == "Loss").sum()),
                    pushes=int((g.result == "Push").sum()), units=float(g.units.sum()) if len(g) else 0.0,
                    roi=float(g.units.sum() / len(g)) if len(g) else None,
                    avg_clv_line=float(P.clv_line.mean()) if P.clv_line.notna().any() else None,

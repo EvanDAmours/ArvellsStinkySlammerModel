@@ -71,6 +71,16 @@ def load_all():
     return seasons, pw, sched, snaps, inj, H, status
 
 
+def mark_five(bets, season, week):
+    """Flag the board's rows that are this week's five."""
+    if bets is None or len(bets) == 0 or "side" not in bets:
+        return bets
+    keys = G.weekly_five_keys(season, week)
+    bets = bets.copy()
+    bets["five"] = [(r.player, r.market, r.side, float(r.line), r.book) in keys for r in bets.itertuples()]
+    return bets
+
+
 def attach_game_logs(P, H, season, week):
     """This season's game-by-game tackles for every projected player, so the pricer can say how often he cleared a line."""
     if P is None or len(P) == 0:
@@ -98,6 +108,7 @@ def cmd_daily():
     graded, summary = G.grade(pw)
     lines = O.upcoming_only(O.latest_lines(C.SEASON, week))
     bets = M.price_lines(lines, P) if len(lines) else pd.DataFrame()
+    bets = mark_five(bets, C.SEASON, week)
     write_site(P, bets, bt, graded, summary, week, status, lines_pulled=None if lines.empty else str(lines.pulled_at.max()))
     print(f"daily: week {week}, {len(P)} projections, {len(bets)} priced lines, backtest on {bt.get('games', 0)} games")
 
@@ -128,6 +139,7 @@ def cmd_odds(hours=None, auto=False):
     bets = M.price_lines(lines, P)
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     n_new = G.log_picks(bets, C.SEASON, week, stamp)
+    bets = mark_five(bets, C.SEASON, week)
     meta_path = SITE / "meta.json"
     meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
     meta.update(odds_credits_remaining=remaining, odds_credits_by_key=credits, lines_pulled=stamp, lines_count=int(len(lines)))

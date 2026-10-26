@@ -80,6 +80,10 @@ picks = pd.read_csv(tmp / "data/picks.csv") if (tmp / "data/picks.csv").exists()
 check(len(picks) >= 1, f"picks logged ({len(picks)})")
 check(picks.drop_duplicates(["player", "market", "side", "line"]).shape[0] == len(picks), "one logged pick per player/line (best price only)")
 check({"lock", "grade", "consistency", "payout"} <= set(picks.columns) and picks.grade.isin(["A", "B", "C"]).all(), "logged picks carry their grade, lock score, consistency and payout")
+five = picks[picks.five.fillna(False).astype(bool)] if "five" in picks.columns else pd.DataFrame()
+others = picks[~picks.player.isin(five.player)] if len(five) else picks
+check(1 <= len(five) <= 5 and five.player.nunique() == len(five) and (others.empty or five.lock.min() >= others.lock.max() - 1e-9), f"weekly five flagged: top lock scores, one per player ({len(five)})")
+check(sum(1 for b in bets if b.get("five")) == len(five), "weekly five marked on the board")
 
 # grading: fake picks on finished week-6 games with a closing snapshot
 from pipeline import grade as G

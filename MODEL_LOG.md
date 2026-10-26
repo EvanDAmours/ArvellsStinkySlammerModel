@@ -1,5 +1,24 @@
 # Model log
 
+## Vision (set by the owner, 2026-10-26)
+
+The product is the most comprehensive resource for betting on NFL tackles. That means three things, and every
+change is judged against all three:
+
+1. **A site that is easy to use** and shows what matters without digging.
+2. **Automatic updates at the right times**: fresh stats every morning, fresh lines as books post them and again
+   after inactives, grading the morning after.
+3. **The most accurate picks**, with the standard being **at least five picks per NFL week that are as close to
+   certain as a tackle prop can be**: the "weekly five". The owner wants five walks a week.
+
+No tackle prop is a guarantee, so the weekly five is run as a measured target, not a promise: the five highest
+lock-score picks of the week (one per player) are named before kickoff, pinned at the top of the site, and their
+record is tracked on its own. The season-long standard for the weekly five is a 70%+ hit rate. If it falls short,
+the lock score and the pick rules are what gets changed, in that order. Before any change is pushed, answer:
+does it make the site easier, the updates timelier, or the weekly five more reliable? If none, don't push it.
+
+## About this file
+
 The memory of this project. Every change to the model, the pipeline, the schedule or the site is recorded here
 with the evidence behind it, and every idea that was tried and rejected is recorded so it is not tried again by
 accident. **Read this file before changing anything. Append to it after changing anything.** A change that is not
@@ -89,6 +108,12 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 ### 2026-10-25
 - Site: slate filter (early 11 am / afternoon 2 pm / prime time, Edmonton time) on Plays and Projections; kickoff
   time on each card.
+
+### 2026-10-26 (vision and the weekly five)
+- Vision recorded above. **Weekly five** added: at every line pull, the five highest lock-score picks of the week
+  (one per player, among games not yet kicked off; a pick whose game has started keeps its place) are flagged
+  `five` in `data/picks.csv`, shown in a pinned block at the top of Plays, and reported as their own record on the
+  Track record tab. Target: 70%+ hit rate over the season. First measured week: week 8.
 
 ### 2026-10-26 (after the week 7 post-mortem)
 - **Pricing mean blends toward the market line**: `LINE_WEIGHT = 0.6`. Evidence: the regression above.
