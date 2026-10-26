@@ -9,7 +9,8 @@ change is judged against all three:
 2. **Automatic updates at the right times**: fresh stats every morning, fresh lines as books post them and again
    after inactives, grading the morning after.
 3. **The most accurate picks**, with the standard being **at least five picks per NFL week that are as close to
-   certain as a tackle prop can be**: the "weekly five". The owner wants five walks a week.
+   certain as a tackle prop can be**: the "weekly five", five locks a week that the model is nearly certain will
+   hit.
 
 No tackle prop is a guarantee, so the weekly five is run as a measured target, not a promise: the five highest
 lock-score picks of the week (one per player) are named before kickoff, pinned at the top of the site, and their
