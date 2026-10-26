@@ -20,7 +20,8 @@ def log_picks(bets, season, week, pulled_at):
         return 0
     new = new.assign(season=season, week=week, pulled_at=pulled_at, side=new.pick,
                      odds=np.where(new.pick == "Over", new.over_odds, new.under_odds))
-    cols = KEY + ["team", "opp", "odds", "proj", "model_over", "market_over", "ev", "why", "event_id", "commence_time", "pulled_at"]
+    cols = KEY + ["team", "opp", "odds", "proj", "proj_model", "mkt_line", "model_over", "market_over", "ev", "why",
+                  "lock", "grade", "consistency", "cons_hits", "cons_n", "payout", "event_id", "commence_time", "pulled_at"]
     new = new[[c for c in cols if c in new.columns]]
     old = pd.read_csv(PICKS) if PICKS.exists() else pd.DataFrame(columns=cols)
     both = pd.concat([old, new], ignore_index=True).drop_duplicates(KEY, keep="first")  # keep the first price we took
@@ -70,7 +71,13 @@ def grade(pw_comb):
     dec = P.odds.map(lambda a: american_to_decimal(a) if pd.notna(a) else np.nan)
     P["units"] = np.where(P.result == "Win", dec - 1, np.where(P.result == "Loss", -1.0, 0.0))
     g = P[P.result.isin(["Win", "Loss", "Push"])]
-    summary = dict(bets=int(len(g)), wins=int((g.result == "Win").sum()), losses=int((g.result == "Loss").sum()),
+    by_grade = []
+    if "grade" in P.columns:
+        for gr, part in g.groupby(P.grade.fillna("ungraded")):
+            by_grade.append(dict(grade=gr, bets=int(len(part)), wins=int((part.result == "Win").sum()),
+                                 losses=int((part.result == "Loss").sum()), units=float(part.units.sum()),
+                                 roi=float(part.units.mean()) if len(part) else None))
+    summary = dict(by_grade=by_grade,bets=int(len(g)), wins=int((g.result == "Win").sum()), losses=int((g.result == "Loss").sum()),
                    pushes=int((g.result == "Push").sum()), units=float(g.units.sum()) if len(g) else 0.0,
                    roi=float(g.units.sum() / len(g)) if len(g) else None,
                    avg_clv_line=float(P.clv_line.mean()) if P.clv_line.notna().any() else None,

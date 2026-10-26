@@ -80,11 +80,25 @@ the totals it computes for a few players against verified official totals in `da
 If they don't match, the site shows a warning. Add more checks to that file over time (any player's
 season total from Pro Football Reference works).
 
+## Confidence grades
+
+Every priced line gets a lock score (0-100) and a grade: **A** (72+), **B** (55+) or **C**. The score blends the
+expected return, whether the market also favours the side, how often the player has cleared the line this season,
+and how many games of data he has; an outlier-fade signal adds a bonus. Weights are in `config.py`. The Track record
+tab reports results by grade so the grade itself is tested: if A does not beat C over time, the weights are wrong.
+
+## The model log
+
+`MODEL_LOG.md` is the project's memory: every change with its evidence, weekly post-mortems, ideas tried and
+rejected, and pitfalls. Read it before changing anything and append to it after.
+
 ## Changing settings
 
 Edit `config.py`. The most useful knobs:
 
+- `LINE_WEIGHT`: how far the pricing mean leans toward the posted line (0 = pure model, 1 = pure market).
 - `PICK_BAR` and `SIGNAL_BAR`: minimum expected return for a pick, without and with a supporting signal.
+- `LOCK_WEIGHTS` and `GRADE_BARS`: the confidence grade.
 - `FADE_GAP`: how far off his average a last game must be to count as an outlier.
 - `SEASON` and `HISTORY_SEASONS`: update every year.
 

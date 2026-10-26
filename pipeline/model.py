@@ -256,13 +256,39 @@ def finalize_projections(F, phi_by_group, k=None):
 
 
 # ---------------------------------------------------------------- pricing posted lines
+def _log(row, col):
+    """Game log stored on a projection row: a list, or a '|'-joined string from projections.csv."""
+    v = row.get(col) if hasattr(row, "get") else None
+    if v is None or (isinstance(v, float) and np.isnan(v)):
+        return []
+    if isinstance(v, str):
+        return [float(x) for x in v.split("|") if x not in ("", "nan")]
+    return list(v)
+
+
+def lock_score(ev, mkt_side, consistency, n_games, fade):
+    """0-100 confidence in a pick. Components are in config.LOCK_WEIGHTS; validated week by week on the Track record tab."""
+    w = C.LOCK_WEIGHTS
+    ev_part = float(np.clip(ev / C.LOCK_EV_FULL, 0, 1))
+    mkt_part = float(np.clip((mkt_side - 0.35) / 0.30, 0, 1))        # 35% market chance -> 0, 65% -> 1
+    cons_part = 0.5 if consistency is None or np.isnan(consistency) else float(consistency)
+    n_part = float(np.clip(n_games / 6.0, 0, 1))
+    score = 100 * (w["ev"] * ev_part + w["market"] * mkt_part + w["consistency"] * cons_part + w["sample"] * n_part)
+    return float(np.clip(score + (C.LOCK_FADE_BONUS if fade else 0), 0, 100))
+
+
+def grade_of(score):
+    return "A" if score >= C.GRADE_BARS["A"] else "B" if score >= C.GRADE_BARS["B"] else "C"
+
+
 def price_lines(lines, P):
-    """Evaluate every posted line against the projection; return one row per line with EV and pick."""
+    """Evaluate every posted line against the projection; return one row per line with EV, pick and confidence grade."""
     if lines is None or len(lines) == 0 or P is None or len(P) == 0:
         return pd.DataFrame()
     from pipeline.sources import norm_name
     L = lines.copy()
     L["name_key"] = L.player.map(norm_name)
+    L["mkt_line"] = L.groupby(["player", "market"]).line.transform("median")   # consensus line across books
     P = P.copy()
     P["team_name"] = P.team.map(TEAM_NAMES)
     rows = []
@@ -278,8 +304,9 @@ def price_lines(lines, P):
             rows.append({**base, "pick": "No projection", "why": "Player not in the model (no defensive snaps logged)"})
             continue
         p = cand.iloc[0]
-        mu = p.proj_solo if solo else p.proj
-        po = p_over(mu, p.phi, float(r.line))
+        mu_model = p.proj_solo if solo else p.proj
+        mu = (1 - C.LINE_WEIGHT) * mu_model + C.LINE_WEIGHT * float(r.mkt_line)
+        po_model = p_over(mu, p.phi, float(r.line))
         has_u = pd.notna(r.under_odds)
         d_o = american_to_decimal(r.over_odds) if pd.notna(r.over_odds) else None
         d_u = american_to_decimal(r.under_odds) if has_u else None
@@ -289,9 +316,15 @@ def price_lines(lines, P):
             mkt = 1 / d_o
         else:
             mkt = 1 - 1 / d_u
+        po = mkt + C.PROB_SHRINK * (po_model - mkt)
         ev_o = po * (d_o - 1) - (1 - po) if d_o else -9
         ev_u = (1 - po) * (d_u - 1) - po if d_u else -9
         side, ev = ("Over", ev_o) if ev_o >= ev_u else ("Under", ev_u)
+        log = _log(p, "log_solo" if solo else "log_comb")
+        hits = [(x > r.line) if side == "Over" else (x < r.line) for x in log]
+        consistency = float(np.mean(hits)) if hits else float("nan")
+        mkt_side = mkt if side == "Over" else 1 - mkt
+        dec = d_o if side == "Over" else d_u
         gap = (p["last"] - p.base) if pd.notna(p["last"]) else 0.0
         fade = abs(gap) >= C.FADE_GAP and ((side == "Under" and gap > 0) or (side == "Over" and gap < 0))
         role = bool(p.role_signal) and side == "Over"
@@ -299,6 +332,7 @@ def price_lines(lines, P):
         thin = p.n_prev < C.MIN_GAMES_FOR_PICK and not role
         bar = C.SIGNAL_BAR if (fade or role) else C.PICK_BAR
         pick = side if (ev >= bar and not flagged and not thin) else "Pass"
+        lock = lock_score(ev, mkt_side, consistency, int(p.n_prev), fade)
         if flagged:
             why = f"His own status is {p.status or 'uncertain'}: wait for the final report"
         elif thin:
@@ -307,13 +341,17 @@ def price_lines(lines, P):
             why = f"Best side returns {ev:+.0%}; needs {bar:.0%}"
         else:
             why = f"{side} returns {ev:+.0%}" + (", backed by a role change" if role else ", fading an outlier last game" if fade else ", price gap only")
-        rows.append({**base, "team": p.team, "opp": p.opp_team, "group": p.group, "proj": float(mu), "phi": float(p.phi),
-                     "model_over": po, "market_over": mkt, "ev": ev, "side": side, "pick": pick, "why": why,
-                     "signal_fade": bool(fade), "signal_role": role, "status": p.status, "season_avg": float(p.season_avg),
-                     "last": None if pd.isna(p["last"]) else float(p["last"])})
+        rows.append({**base, "team": p.team, "opp": p.opp_team, "group": p.group, "proj": float(mu), "proj_model": float(mu_model),
+                     "mkt_line": float(r.mkt_line), "phi": float(p.phi), "model_over": po, "market_over": mkt, "ev": ev, "side": side,
+                     "pick": pick, "why": why, "signal_fade": bool(fade), "signal_role": role, "status": p.status,
+                     "season_avg": float(p.season_avg), "last": None if pd.isna(p["last"]) else float(p["last"]),
+                     "n_prev": int(p.n_prev), "consistency": consistency, "cons_hits": int(sum(hits)), "cons_n": len(hits),
+                     "mkt_side": float(mkt_side), "payout": None if dec is None else float(dec - 1),
+                     "lock": lock, "grade": grade_of(lock)})
     out = pd.DataFrame(rows)
     if "ev" in out:
         out = out.sort_values("ev", ascending=False, na_position="last")
         # line shopping: mark the best book for each player / market / side / line
         out["best_price"] = ~out.duplicated(["player", "market", "side", "line"]) & out.ev.notna()
+        out = out.sort_values(["lock", "ev"], ascending=[False, False], na_position="last")
     return out

@@ -37,8 +37,24 @@ CREW_PSEUDO_TACKLES = 250          # how hard each stadium's crew rate is pulled
 ROLE_BUMP = 1.10                   # boost for a backup when a regular at his position group is inactive
 DEFAULT_PHI = {"LB": 0.75, "S": 1.0, "CB": 1.0, "DL": 1.0}  # variance / mean; replaced by backtest estimates
 
+# --- pricing: how much to trust the market ---
+# The posted line is itself a forecast, and in week 7 of 2026 it predicted tackles better than the raw projection
+# (actual = 0.44 x projection + 0.60 x line). The mean used for pricing is a blend of the two.
+LINE_WEIGHT = 0.6                  # weight on the consensus line (median across books); 0 = pure model, 1 = pure market
+PROB_SHRINK = 1.0                  # 1 = use the blended model probability as is; <1 pulls it further toward the market's no-vig probability
+
 # --- betting rules ---
-PICK_BAR = 0.08                    # minimum expected return without a supporting signal
-SIGNAL_BAR = 0.05                  # minimum with a role-change or outlier-fade signal
+PICK_BAR = 0.06                    # minimum expected return without a supporting signal
+SIGNAL_BAR = 0.04                  # minimum with a role-change or outlier-fade signal
 FADE_GAP = 3.0                     # last game this many tackles from his average counts as an outlier
 MIN_GAMES_FOR_PICK = 3
+
+# --- confidence grade for every pick (0-100 "lock score", then a letter) ---
+# Weighted blend of: expected return, whether the market also favours our side, how often the player cleared this
+# line in his games this season, and how many games of data he has; an outlier-fade signal adds a bonus.
+# Market agreement carries the most weight: in week 7 of 2026 picks on the side the market also favoured hit 60%,
+# picks against the market 45%, while the size of the model's disagreement predicted nothing. Provisional; see MODEL_LOG.md.
+LOCK_WEIGHTS = dict(ev=0.25, market=0.40, consistency=0.20, sample=0.15)
+LOCK_EV_FULL = 0.15                # an expected return this high scores full marks on the EV component
+LOCK_FADE_BONUS = 5
+GRADE_BARS = dict(A=72, B=55)      # lock score at or above these is an A or a B; the rest are C

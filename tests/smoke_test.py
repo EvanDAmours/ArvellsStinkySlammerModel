@@ -9,7 +9,18 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 tmp = Path(tempfile.mkdtemp()) / "repo"
-shutil.copytree(ROOT, tmp, ignore=shutil.ignore_patterns(".git", "__pycache__"))
+def _ignore_live_data(d, names):
+    """Copy the code but not the live outputs (odds snapshots, logged picks, caches, site JSON) so the test starts clean."""
+    rel = os.path.relpath(d, ROOT)
+    skip = {".git", "__pycache__"}
+    if rel == "data":
+        skip |= {"cache", "picks.csv"}
+    if rel == os.path.join("data", "odds"):
+        skip |= {n for n in names if n.isdigit()}
+    if rel == os.path.join("docs", "data"):
+        skip |= {n for n in names if n.endswith(".json")}
+    return skip
+shutil.copytree(ROOT, tmp, ignore=_ignore_live_data)
 env = dict(os.environ, TACKLE_FAKE_DATA="1", TACKLE_FAKE_ODDS="1", PYTHONPATH=str(tmp))
 fails = []
 
@@ -61,9 +72,14 @@ check(len(up) >= 6, f"role signals raised for backups whose starter is listed ou
 check(run("odds") == 0, "odds pull, pricing and pick logging run")
 bets = json.loads((tmp / "docs/data/bets.json").read_text())
 check(len(bets) > 50 and all(b["model_over"] is None or 0 <= b["model_over"] <= 1 for b in bets), f"lines priced ({len(bets)})")
+priced = [b for b in bets if b.get("proj") is not None]
+check(all(b.get("grade") in ("A", "B", "C") and 0 <= b.get("lock", -1) <= 100 for b in priced), "every priced line has a confidence grade and lock score")
+check(all(b.get("mkt_line") is not None and abs(b["proj"] - b["proj_model"]) <= abs(b["mkt_line"] - b["proj_model"]) + 1e-9 for b in priced), "pricing mean sits between the model and the market line")
+check(any(b.get("cons_n", 0) > 0 for b in priced), "consistency (games cleared) computed from game logs")
 picks = pd.read_csv(tmp / "data/picks.csv") if (tmp / "data/picks.csv").exists() else pd.DataFrame()
 check(len(picks) >= 1, f"picks logged ({len(picks)})")
 check(picks.drop_duplicates(["player", "market", "side", "line"]).shape[0] == len(picks), "one logged pick per player/line (best price only)")
+check({"lock", "grade", "consistency", "payout"} <= set(picks.columns) and picks.grade.isin(["A", "B", "C"]).all(), "logged picks carry their grade, lock score, consistency and payout")
 
 # grading: fake picks on finished week-6 games with a closing snapshot
 from pipeline import grade as G

@@ -71,12 +71,26 @@ def load_all():
     return seasons, pw, sched, snaps, inj, H, status
 
 
+def attach_game_logs(P, H, season, week):
+    """This season's game-by-game tackles for every projected player, so the pricer can say how often he cleared a line."""
+    if P is None or len(P) == 0:
+        return P
+    done = H[(H.season == season) & (H.week < week)].sort_values("week")
+    comb = done.groupby("player_id").comb.apply(lambda x: "|".join(str(int(v)) for v in x))
+    solo = done.groupby("player_id").solo_t.apply(lambda x: "|".join(str(int(v)) for v in x))
+    P = P.copy()
+    P["log_comb"] = P.player_id.map(comb).fillna("")
+    P["log_solo"] = P.player_id.map(solo).fillna("")
+    return P
+
+
 def cmd_daily():
     seasons, pw, sched, snaps, inj, H, status = load_all()
     week = upcoming_week(sched, C.SEASON)
     bt, phi, k = B.run_backtest(H, seasons)
     F = M.upcoming_rows(H, sched, inj, C.SEASON, week)
     P = M.finalize_projections(F, phi, k=k)
+    P = attach_game_logs(P, H, C.SEASON, week)
     CACHE.mkdir(parents=True, exist_ok=True)
     if len(P):
         P.to_csv(CACHE / "projections.csv", index=False)
