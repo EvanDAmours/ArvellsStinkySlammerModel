@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-26T18:07+00:00",
+ "generated_at": "2026-10-26T18:36+00:00",
  "season": 2026,
  "week": 7,
  "lines_pulled": "20261026T181124Z",
@@ -32,10 +32,33 @@
   "pick": 0.06,
   "signal": 0.04
  },
+ "grading": {
+  "bars": {
+   "A": 72,
+   "B": 55
+  },
+  "units": {
+   "A": 1.0,
+   "B": 0.5,
+   "C": 0.25
+  },
+  "weights": {
+   "ev": 0.25,
+   "market": 0.4,
+   "consistency": 0.2,
+   "sample": 0.15
+  },
+  "ev_full": 0.15,
+  "fade_bonus": 5,
+  "locks": {
+   "single": 3,
+   "multi": 5
+  },
+  "line_weight": 0.6
+ },
  "odds_credits_remaining": 412,
  "odds_credits_by_key": {
   "ODDS_API_KEY": 412.0,
   "PARLAY_API_KEY": 0.0
- },
- "lines_count": 4
+ }
 }
