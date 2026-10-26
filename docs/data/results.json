@@ -52,7 +52,8 @@
   "roi": 0.018,
   "avg_clv_line": -0.0088,
   "beat_close_share": 0.0441,
-  "pending": 4
+  "pending": 4,
+  "parlays": {}
  },
  "picks": [
   {
@@ -8001,12 +8002,13 @@
    "units": -1.0
   }
  ],
+ "parlays": [],
  "retro": {
   "weeks": [
    {
     "season": 2026,
     "week": 7,
-    "replayed_at": "2026-10-26T17:17+00:00",
+    "replayed_at": "2026-10-26T18:04+00:00",
     "rules": {
      "line_weight": 0.6,
      "pick_bar": 0.06,
@@ -8040,6 +8042,72 @@
      "units": 15.8119,
      "hit": 0.5443
     },
+    "parlays": [
+     {
+      "parlay_id": "2026-wk07-2026-10-25",
+      "season": 2026,
+      "week": 7,
+      "slate": "2026-10-25",
+      "n_legs": 3,
+      "combined_decimal": 4.1232,
+      "combined_american": 312,
+      "combined_prob": 0.3588,
+      "units": 0.1,
+      "chosen_at": "20261025T132312Z",
+      "result": "Win",
+      "units_won": 0.3123,
+      "legs": [
+       {
+        "player": "Kaden Elliss",
+        "team": "NO",
+        "opp": "PIT",
+        "market": "player_solo_tackles",
+        "side": "Under",
+        "line": 4.5,
+        "book": "DraftKings",
+        "odds": -167.0,
+        "p_side": 0.7164,
+        "lock": 83.439,
+        "grade": "A",
+        "actual": 4.0,
+        "result": "Win",
+        "commence_time": "2026-10-25T13:30:00Z"
+       },
+       {
+        "player": "Minkah Fitzpatrick",
+        "team": "NYJ",
+        "opp": "MIA",
+        "market": "player_tackles_assists",
+        "side": "Over",
+        "line": 4.5,
+        "book": "DraftKings",
+        "odds": -152.0,
+        "p_side": 0.7079,
+        "lock": 81.4188,
+        "grade": "A",
+        "actual": 10.0,
+        "result": "Win",
+        "commence_time": "2026-10-25T17:00:00Z"
+       },
+       {
+        "player": "Drue Tranquill",
+        "team": "KC",
+        "opp": "SEA",
+        "market": "player_solo_tackles",
+        "side": "Under",
+        "line": 4.5,
+        "book": "theScore Bet",
+        "odds": -180.0,
+        "p_side": 0.7076,
+        "lock": 78.8467,
+        "grade": "A",
+        "actual": 4.0,
+        "result": "Win",
+        "commence_time": "2026-10-26T00:20:00Z"
+       }
+      ]
+     }
+    ],
     "picks": [
      {
       "player": "Kaden Elliss",

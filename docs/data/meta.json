@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-26T17:21+00:00",
+ "generated_at": "2026-10-26T18:07+00:00",
  "season": 2026,
  "week": 7,
  "lines_pulled": null,
@@ -25,6 +25,9 @@
  ],
  "snaps_rows": 86011,
  "injury_rows": 2139,
+ "international_games": [
+  "PIT at NO, Sun 2026-10-25 07:30 Edmonton"
+ ],
  "bars": {
   "pick": 0.06,
   "signal": 0.04
