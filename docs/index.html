@@ -227,15 +227,26 @@ function renderPlays() {
 }
 
 const slateName = (iso) => { const d = new Date(iso + "T12:00:00"); return isNaN(d) ? iso : d.toLocaleDateString("en-CA", { weekday: "long" }); };
+const decimalOf = (a) => (a == null ? null : a > 0 ? 1 + a / 100 : 1 + 100 / Math.abs(a));
+const pts = (x) => (x == null ? "" : (x >= 0 ? "+" : "") + (x * 100).toFixed(0) + " pts");
 function parlayBox(q, graded) {
-  const legs = el("ol", {}, ...q.legs.map((l) => el("li", {}, `${l.player} ${l.side} ${num(l.line)} ${(MARKET[l.market] || l.market).toLowerCase()} (${odds(l.odds)} at ${l.book}, ${pct(l.p_side)} chance)`,
-    l.result ? el("span", { class: l.result === "Win" ? "w" : l.result === "Loss" ? "l" : "" }, ` · ${l.result}${l.actual == null ? "" : ` (${num(l.actual, 0)})`}`) : "")));
+  // per leg: the model's chance beside what the book's price implies, so the edge is visible
+  const legs = el("ol", {}, ...q.legs.map((l) => {
+    const book = l.mkt_side ?? (decimalOf(l.odds) ? 1 / decimalOf(l.odds) : null);
+    const edge = book == null ? null : l.p_side - book;
+    return el("li", {}, `${l.player} ${l.side} ${num(l.line)} ${(MARKET[l.market] || l.market).toLowerCase()} (${odds(l.odds)} at ${l.book}) · model ${pct(l.p_side)} vs book ${pct(book)} `,
+      el("span", { class: edge == null ? "" : edge >= 0 ? "pos" : "neg" }, edge == null ? "" : `(${pts(edge)})`),
+      l.result ? el("span", { class: l.result === "Win" ? "w" : l.result === "Loss" ? "l" : "" }, ` · ${l.result}${l.actual == null ? "" : ` (${num(l.actual, 0)})`}`) : "");
+  }));
   const am = q.combined_american;
+  const bookProb = 1 / q.combined_decimal, edge = q.combined_prob - bookProb, ret = q.combined_prob * q.combined_decimal - 1;
   return el("div", { class: "parlay-box" },
     el("h3", {}, `${slateName(q.slate)} parlay · ${q.n_legs} legs`, q.result ? el("span", { class: q.result === "Win" ? "w" : q.result === "Loss" ? "l" : "" }, ` · ${q.result}`) : ""),
     el("div", { class: "terms" },
       el("div", {}, el("b", {}, (am > 0 ? "+" : "") + am), el("span", {}, "combined odds")),
       el("div", {}, el("b", {}, pct(q.combined_prob)), el("span", {}, "model chance all legs hit")),
+      el("div", {}, el("b", {}, pct(bookProb)), el("span", {}, "book's implied chance")),
+      el("div", {}, el("b", { class: edge >= 0 ? "pos" : "neg" }, pts(edge)), el("span", {}, `edge (${signedPct(ret)} expected return)`)),
       el("div", {}, el("b", {}, `${q.units.toFixed(1)}u`), el("span", {}, "suggested stake")),
       el("div", {}, el("b", {}, `${(q.units * (q.combined_decimal - 1)).toFixed(2)}u`), el("span", {}, "pays if it hits")),
       q.units_won == null ? "" : el("div", {}, units(q.units_won, 2), el("span", {}, "result"))),

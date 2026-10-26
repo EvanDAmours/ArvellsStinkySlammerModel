@@ -237,7 +237,7 @@ def write_parlays(season, week):
                             combined_american=G.american(float(first.combined_decimal)), combined_prob=float(first.combined_prob),
                             units=float(first.units), chosen_at=first.chosen_at, placed=bool((start <= now).any()),
                             first_kickoff=None if start.isna().all() else start.min().isoformat(),
-                            legs=records(legs[["leg", "player", "team", "opp", "market", "side", "line", "book", "odds", "p_side", "lock", "grade", "commence_time"]])))
+                            legs=records(legs[[c for c in ["leg", "player", "team", "opp", "market", "side", "line", "book", "odds", "p_side", "mkt_side", "lock", "grade", "commence_time"] if c in legs.columns]])))
     _json(SITE / "parlays.json", out)
 
 

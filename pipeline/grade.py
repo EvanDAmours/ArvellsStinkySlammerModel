@@ -94,7 +94,7 @@ mark_weekly_five = mark_locks   # old name
 # ---------------------------------------------------------------- parlays
 PARLAYS = Path("data/parlays.csv")
 LEG_COLS = ["season", "week", "slate", "parlay_id", "leg", "player", "team", "opp", "market", "side", "line", "book", "odds",
-            "p_side", "lock", "grade", "event_id", "commence_time", "n_legs", "combined_decimal", "combined_prob", "units", "chosen_at"]
+            "p_side", "mkt_side", "lock", "grade", "event_id", "commence_time", "n_legs", "combined_decimal", "combined_prob", "units", "chosen_at"]
 
 
 def american(dec):
@@ -177,7 +177,8 @@ def grade_parlay_legs(L, stats):
                          combined_decimal=float(first.combined_decimal), combined_american=american(float(first.combined_decimal)),
                          combined_prob=float(first.combined_prob), units=units, chosen_at=first.chosen_at, result=result, units_won=won,
                          legs=[dict(player=r.player, team=r.team, opp=r.opp, market=r.market, side=r.side, line=float(r.line), book=r.book,
-                                    odds=None if pd.isna(r.odds) else float(r.odds), p_side=float(r.p_side), lock=None if pd.isna(r.lock) else float(r.lock),
+                                    odds=None if pd.isna(r.odds) else float(r.odds), p_side=float(r.p_side),
+                                    mkt_side=None if pd.isna(getattr(r, "mkt_side", np.nan)) else float(r.mkt_side), lock=None if pd.isna(r.lock) else float(r.lock),
                                     grade=r.grade, actual=None if pd.isna(r.actual) else float(r.actual), result=r.result,
                                     commence_time=r.commence_time) for r in legs.itertuples()]))
     return pd.DataFrame(rows)

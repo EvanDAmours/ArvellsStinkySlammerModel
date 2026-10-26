@@ -123,6 +123,11 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
   a line per week with the running record, and every pick with its result. The site shows the same tally in the
   five box on Plays ("season to date 24-1") and as a per-week table on Track record.
 
+### 2026-10-26, afternoon MDT (parlay edge shown)
+- Parlay boxes show the book's implied chance (1 / combined decimal odds, so including the vig) beside the model's
+  chance, the edge in percentage points and the expected return; each leg shows model vs book (no-vig market
+  probability where saved, else the price's implied chance). `mkt_side` is now saved with every parlay leg.
+
 ### 2026-10-26, afternoon MDT (pull schedule in Edmonton time, international games, Projections day filter)
 - **Pull schedule rewritten** (owner's spec): Thu 9:00 am / 2:00 pm / 5:30 pm for Thursday and Friday games;
   Fri 6:00 pm for Saturday games when there are any; Sat 9:00 am (Saturday and Sunday games) and 6:00 pm (Sunday
