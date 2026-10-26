@@ -71,6 +71,7 @@ GRADE_UNITS = dict(A=1.0, B=0.5, C=0.25)   # suggested stake per grade, in units
 
 # --- locks per slate day (Edmonton time) and the recommended parlay ---
 LOCKS_PER_SLATE = dict(single=3, multi=5)   # one game kicking off that day -> 3 locks; more games -> 5
+LOCK_MIN_SCORE = 55                         # a pick needs at least a B to be a lock; fewer locks beats fake ones
 PARLAY_LEGS = (2, 3)                        # fewest and most legs in the recommended parlay (fewer legs = better chance of hitting)
 PARLAY_MIN_PROB = 0.60                      # a leg needs at least this blended chance of hitting
 PARLAY_FALLBACK_PROB = 0.55                 # if too few legs clear that, legs down to this chance are allowed; below it, no parlay

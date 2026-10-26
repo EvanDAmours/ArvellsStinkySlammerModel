@@ -192,6 +192,12 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
   a line per week with the running record, and every pick with its result. The site shows the same tally in the
   five box on Plays ("season to date 24-1") and as a per-week table on Track record.
 
+### 2026-10-26, evening MDT (lock floor, parlay removal)
+- A lock needs a lock score of 55+ (grade B or better; `LOCK_MIN_SCORE`). On a two-player Monday board the top
+  three were C grades flagged as locks, which is not what a lock means. Fewer locks beats fake ones.
+- An open slate's parlay is re-chosen from scratch at every pull; if the board no longer supports one, the old
+  parlay is removed rather than left showing (it was lingering with a leg under the 55% floor).
+
 ### 2026-10-26, evening MDT (model: snap trend, opportunity volume, shrink by position, calibration)
 - See the research section above. New config: `SHRINK_GAMES_BY_GROUP`, `SNAP_TREND`, `VOLUME`. New loader
   `sources.load_team_volume` (nflverse team weekly stats; synthetic fallback). The daily backtest has ablation

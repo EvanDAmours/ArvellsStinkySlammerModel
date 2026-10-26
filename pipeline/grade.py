@@ -94,7 +94,7 @@ def mark_locks(P, season, week, now=None):
         slots = max(0, locks_for(games.get(slate, 1)) - kept.player.nunique())
         if slots and "lock" in P.columns:
             cand = P[open_ & ~P.player.isin(set(kept.player))].sort_values("lock", ascending=False)
-            cand = cand[cand.lock.notna()].drop_duplicates("player").head(slots)
+            cand = cand[cand.lock.notna() & (cand.lock >= C.LOCK_MIN_SCORE)].drop_duplicates("player").head(slots)
             P.loc[cand.index, "five"] = True
     return P
 
@@ -152,13 +152,13 @@ def build_parlays(bets, season, week, stamp, now=None):
     for slate in sorted(s for s in bets.slate.unique() if s):
         if len(snaps) and ((snaps.slate == slate) & (snaps.start <= now)).any():
             continue   # a game on this slate has started: the parlay was placed and stays as it was
+        old = old[~((old.season == season) & (old.week == week) & (old.slate == slate))]   # open slate: re-chosen from scratch
         legs = choose_parlay(bets, slate)
         if legs is None:
-            continue
+            continue   # the board no longer supports a parlay for this slate: none is shown
         legs = legs.assign(season=season, week=week, slate=slate, parlay_id=f"{season}-wk{week:02d}-{slate}", chosen_at=stamp,
                            odds=np.where(legs.side == "Over", legs.over_odds, legs.under_odds))
         legs = legs[[c for c in LEG_COLS if c in legs.columns]]
-        old = old[~((old.season == season) & (old.week == week) & (old.slate == slate))]
         old = pd.concat([old, legs], ignore_index=True)
     PARLAYS.parent.mkdir(parents=True, exist_ok=True)
     old.to_csv(PARLAYS, index=False)

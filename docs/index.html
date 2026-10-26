@@ -220,6 +220,10 @@ function renderPlays() {
   const rows = all.filter((b) => (!picksOnly || b.pick === "Over" || b.pick === "Under") && (!market || b.market === market) && (!best || b.best_price !== false) && (!slate || slateOf(betKick(b)) === slate));
   if (!slate && !market) box.append(legend());
   const five = all.filter((b) => b.five);
+  if (!five.length && !slate && !market && all.some((b) => b.pick === "Over" || b.pick === "Under")) {
+    const g = DATA.meta?.grading?.bars || { B: 55 };
+    box.append(el("div", { class: "five-box" }, el("h3", {}, "Locks"), el("p", { class: "note" }, `No pick on the board scores ${g.B} or better yet, so no lock is named. Locks are re-chosen at every line pull until kickoff.`)));
+  }
   if (five.length && !slate && !market) {
     const f = DATA.results?.summary?.five, g = DATA.meta?.grading?.locks || { single: 3, multi: 5 };
     const tally = f && f.bets ? ` · season to date ${f.wins}-${f.losses}${f.pushes ? "-" + f.pushes : ""}${f.hit == null ? "" : ` (${pct(f.hit)})`}` : "";
