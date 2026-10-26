@@ -29,7 +29,7 @@ def _metrics(actual, pred):
 def run_backtest(H, seasons):
     T = build_test_rows(H, seasons)
     if T.empty:
-        return {"error": "No games to test yet."}, {g: v for g, v in C.DEFAULT_PHI.items()}, C.SHRINK_GAMES
+        return {"error": "No games to test yet."}, {g: v for g, v in C.DEFAULT_PHI.items()}, C.SHRINK_GAMES, 1.0
     a = T.comb.astype(float)
     preds = {"Season average": T.comb_prev_raw / T.n_prev}
     for k in [1, 2, 4]:
@@ -40,10 +40,13 @@ def run_backtest(H, seasons):
     # choose shrinkage by MAE, then evaluate the full model and ablations with it
     shrink_opts = {0: preds["Season average"], **{k: preds[f"Season average shrunk {k} game{'s' if k > 1 else ''} toward last season"] for k in [1, 2, 4]}}
     best_k = min(shrink_opts, key=lambda k: float(np.nanmean(np.abs(a - shrink_opts[k]))))
-    preds["Full model"] = M.project_frame(T, k=best_k)[1]
-    preds["Full model without stat crew"] = M.project_frame(T, k=best_k, use_crew=False)[1]
-    preds["Full model without spread tilt"] = M.project_frame(T, k=best_k, use_tilt=False)[1]
-    preds["Full model without role bump"] = M.project_frame(T, k=best_k, use_role=False)[1]
+    preds["Full model"] = M.project_frame(T)[1]
+    preds["Full model with one shrink for every position"] = M.project_frame(T, k=best_k)[1]
+    preds["Full model without stat crew"] = M.project_frame(T, use_crew=False)[1]
+    preds["Full model without spread tilt"] = M.project_frame(T, use_tilt=False)[1]
+    preds["Full model without role bump"] = M.project_frame(T, use_role=False)[1]
+    preds["Full model without snap trend"] = M.project_frame(T, use_snap=False)[1]
+    preds["Full model without opportunity volume"] = M.project_frame(T, use_volume=False)[1]
 
     table = []
     for name, p in preds.items():
@@ -117,7 +120,8 @@ def run_backtest(H, seasons):
         role = dict(n=int(len(rs)), actual_vs_avg=float((rs.comb - avg).mean()),
                     actual_vs_avg_pct=float((rs.comb.sum() / avg.sum()) - 1))
 
-    result = dict(seasons=[int(s) for s in seasons], games=int(len(T)), best_shrink_games=int(best_k),
+    scale = float(np.clip(T.comb.sum() / max(1e-9, float(np.nansum(full))), 0.9, 1.1))   # level calibration of the full model
+    result = dict(seasons=[int(s) for s in seasons], games=int(len(T)), best_shrink_games=int(best_k), scale=scale,
                   predictors=table, by_season=by_season, dispersion=phi_rows, calibration=cal_rows,
                   regression=reg, role=role)
-    return result, phi_by_group, best_k
+    return result, phi_by_group, best_k, scale

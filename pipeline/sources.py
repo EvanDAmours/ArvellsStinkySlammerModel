@@ -231,3 +231,37 @@ def load_injuries(seasons):
     if not frames:
         return pd.DataFrame(columns=["season", "week", "team", "name_key", "status"])
     return pd.concat(frames, ignore_index=True)
+
+
+# ---------------------------------------------------------------- team volume (plays that end in a tackle)
+def load_team_volume(seasons):
+    """Per team-game: opportunities the offense generated (carries + completions + sacks taken) and, from the
+    defense's side, the opportunities it faced. Columns: season, week, team, opp_team, gen, faced."""
+    if os.environ.get("TACKLE_FAKE_DATA"):
+        from tests.fake_data import fake_team_volume
+        return fake_team_volume(seasons)
+    frames = []
+    for s in seasons:
+        try:
+            df, _ = _first_working([
+                ("nflreadpy", lambda s=s: _nflreadpy("load_team_stats", seasons=[s], summary_level="week")),
+                ("stats_team csv.gz", lambda s=s: _read_url(f"{REL}/stats_team/stats_team_week_{s}.csv.gz")),
+            ])
+        except RuntimeError:
+            continue
+        d = pd.DataFrame({
+            "season": pd.to_numeric(_col(df, "season", default=s)).astype(int),
+            "week": pd.to_numeric(_col(df, "week")).astype(int),
+            "season_type": _col(df, "season_type", default="REG").astype(str),
+            "team": _col(df, "team").astype(str),
+            "opp_team": _col(df, "opponent_team", "opponent").astype(str),
+            "gen": pd.to_numeric(_col(df, "carries", default=0), errors="coerce").fillna(0)
+                   + pd.to_numeric(_col(df, "completions", default=0), errors="coerce").fillna(0)
+                   + pd.to_numeric(_col(df, "sacks_suffered", default=0), errors="coerce").fillna(0),
+        })
+        frames.append(d[d.season_type.str.upper().str.startswith("REG")].drop(columns=["season_type"]))
+    if not frames:
+        return pd.DataFrame(columns=["season", "week", "team", "opp_team", "gen", "faced"])
+    v = pd.concat(frames, ignore_index=True)
+    faced = v.rename(columns={"team": "opp_team", "opp_team": "team", "gen": "faced"})
+    return v.merge(faced, on=["season", "week", "team", "opp_team"], how="left")

@@ -43,9 +43,12 @@ to prevent those.
 
 ## How the model works (current)
 
-1. **Projection.** Season-to-date tackles per game shrunk toward last season (or a position prior), a small
-   point-spread tilt, a stat-crew factor for the venue, and a role bump when a regular at the position group is
-   out. Count distribution tighter or looser than Poisson per position, re-estimated daily by the backtest.
+1. **Projection.** Season-to-date tackles per game shrunk toward last season (or a position prior) with a
+   position-specific weight (LB 0.5 games, S 1, CB 3, DL 3), times: a small point-spread tilt, a stat-crew factor
+   for the venue, a role bump when a regular at the position group is out, a **snap-share trend** factor (last 3
+   games vs season, damped), and a **tackle-opportunity volume** factor (expected opponent carries + completions +
+   sacks vs what the player has faced, damped and capped). A level calibration from the backtest (about 0.99) is
+   applied. Count distribution tighter or looser than Poisson per position, re-estimated daily by the backtest.
 2. **Pricing (changed 2026-10-26).** The mean used to price a line is `0.4 x projection + 0.6 x consensus line`
    (`LINE_WEIGHT`). Expected return is computed from that mean against the no-vig market price.
 3. **Picks.** A side is a pick when its expected return clears `PICK_BAR` (6%), or `SIGNAL_BAR` (4%) with a
@@ -65,6 +68,64 @@ to prevent those.
    worse than the season-average predictor.
 4. Record the change here: date, what, why, evidence, and what would make us revert it.
 5. Never fit a parameter to the same week used to judge it and call it validated. Mark it provisional.
+
+## Research: where the model was missing (2026-10-26, evening MDT)
+
+Question from the owner: what are we not using that predicts tackles? Method: one leakage-free table of 36,379
+defender-games 2023-2026 with every candidate feature computed from prior games only; 28,781 test rows (2+ games
+of history, week 3+); anything with a fitted parameter was fitted on 2023-24 and scored on 2025-26. Scripts are
+in the session scratchpad; the adopted pieces are reproducible from the daily backtest's ablation rows.
+
+### Adopted (validated, now in the model)
+
+1. **Playing-time trend.** Snap share over the last 3 games vs the season share. Residual ratio actual/model ran
+   from 0.70 (share down 20+ points) to 1.25 (up 20+ points); the model only used snaps for the role signal. As a
+   multiplier, rises want exponent 0.45 (ratio 1.12 -> 1.00 on rows up 10%+) and drops a gentler 0.35 (0.45
+   overcorrected them). Out of sample: MAE -0.95% with the shrink change; backtest ablation: removing it costs 0.36%.
+2. **Tackle-opportunity volume.** Opponent carries + completions + sacks is the number of plays that end in a
+   tackle. Defences that have faced few so far go on to face more (regression to the league mean), and a season
+   average bakes the past volume in. Expected opportunities (defence's faced average and the opponent's generated
+   average, each shrunk 4 games toward last season) vs the player's own faced average, power 0.5, capped at +/-10%
+   because the extreme adjustments were wrong (ratio 1.00 -> 0.95 on the most-moved rows). Ablation: 0.25%.
+3. **Shrinkage by position.** Linebackers are best predicted almost unshrunk (k 0.5), safeties at 1, corners and
+   linemen pulled hard toward last season (k 3). MAE by group fell 0.6-1.0% out of sample. Ablation: 0.54%.
+4. **Level calibration.** The full model ran 1.5-3% high overall (most of it on games where no new factor
+   applied). The backtest now returns a scale (0.986 today) applied to the projected means.
+
+Combined, on all 28,781 test games: full model MAE 1.679 -> 1.659 (-1.2%), RMSE 2.225 -> 2.197. Every ablation
+row is worse than the full model.
+
+### Measured and not adopted (do not retry without new data)
+
+5. **Role bump size.** Flagged backups beat the model by 15-18% even after the 10% bump (1,204 games), and by 52%
+   when their own snaps jumped 30%+. But raising the bump to 1.2-1.35 worsened out-of-sample MAE, and the snap
+   trend now captures the jump. Kept at 1.10; re-measure after 4 weeks with the snap trend live.
+6. **Opponent run/pass mix by position.** Fitted per +10 points of opponent run share: DL +8.5%, LB +6%, CB -4.8%,
+   S -1.4%. Logical, but no out-of-sample gain (+0.09% MAE). Candidate for a second look with another season.
+7. **Indoor games.** CB +3%, LB -4% fitted; test gain 0.06%. Not worth a parameter.
+8. **Weather.** Wind 15+ mph: DL +3%, CB flat; temperature 40F or below: DL +2%, CB -2%. No test gain. Rejected.
+9. **Point spread and total.** The current tilt slightly overshoots (underdog rows 0.98, favourites 1.005) but
+   removing it costs 0.04% MAE. The game total shows nothing. Leave as is.
+10. **Home/away, division games, rematches, week of season.** Ratios 0.986-1.000. Nothing there. Rejected.
+11. **Recency weighting** (exponentially weighted average, half-life 3/5/8 games). -0.2% at 8; overlaps with the
+    position shrinkage. Not adopted; candidate.
+12. **Player-level dispersion.** Per-player variance shrunk to the position value had worse likelihood than the
+    position value at every shrinkage tried. Rejected: keep phi by position.
+13. **Opponent yards after catch** (for DB tackles). Nothing. Rejected.
+14. **Rate per snap x expected snaps** as a full replacement for the average: worse alone (+1.7% MAE), useful only
+    as a 30% blend (-0.5%); superseded by the snap-trend factor.
+
+### Open avenues (need data we do not load yet)
+
+15. **Play-by-play opportunity model**: tackles per opponent play while on the field, split run/pass, with
+    participation data. Would replace the volume proxy with the real thing and give per-player run/pass rates.
+16. **Opponent offensive injuries** (starting RB or QB out) as drivers of run/pass mix and plays.
+17. **Official depth charts** (`nflreadpy.load_depth_charts`) to project snaps for a newly promoted starter before
+    his first start, instead of waiting for one game of evidence.
+18. **Game-script plays model**: expected plays from win probability rather than a flat spread tilt.
+19. **Solo-share crews with multi-season venue pooling and neutral-site handling**: crew unknown overseas, so
+    downgrade solo picks at neutral sites or treat them at league share.
+20. **Two-season player prior** weighted by games, instead of last season only.
 
 ## Weekly post-mortems
 
@@ -130,6 +191,17 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 - **Running tally of the weekly five**: `data/weekly_five.md` is rewritten by the daily job with the record to date,
   a line per week with the running record, and every pick with its result. The site shows the same tally in the
   five box on Plays ("season to date 24-1") and as a per-week table on Track record.
+
+### 2026-10-26, evening MDT (model: snap trend, opportunity volume, shrink by position, calibration)
+- See the research section above. New config: `SHRINK_GAMES_BY_GROUP`, `SNAP_TREND`, `VOLUME`. New loader
+  `sources.load_team_volume` (nflverse team weekly stats; synthetic fallback). The daily backtest has ablation
+  rows for snap trend, volume and single-shrink, and returns a level `scale` stored in `model_state.json`.
+- Full model MAE 1.679 -> 1.659 on 28,781 games. Revert condition: any ablation row beating the full model on
+  the daily backtest for two weeks running.
+- **Week 7 replay under the new model and the model-only grade: Sunday locks 1-4, the Sunday parlay lost.** The
+  locks it now picks are all solo Unders where the model sits far below the line (Queen, Abdul Carter, Anzalone,
+  Lenoir, Elliss). Five picks is noise, but it is the profile the week 7 post-mortem flagged: our largest
+  disagreements with the book were the least reliable. Watch the live by-grade table; the standard stands.
 
 ### 2026-10-26, afternoon MDT (lock score rebuilt from model evidence only)
 - Owner's principle recorded in the vision: wins come from edges the market has not priced; nothing is graded

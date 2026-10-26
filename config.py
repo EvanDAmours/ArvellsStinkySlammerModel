@@ -28,7 +28,16 @@ ODDS_KEY_ENV = ["ODDS_API_KEY", "PARLAY_API_KEY"]   # GitHub secrets holding Odd
 MIN_CREDITS_LEFT = 25              # a key with fewer credits left this month is skipped; pulling stops when every key is below it
 
 # --- model ---
-SHRINK_GAMES = 1                   # weight (in games) of the prior when averaging; the backtest reports the best value
+SHRINK_GAMES = 1                   # weight (in games) of the prior when averaging; the backtest reports the best single value
+# Shrinkage by position (research 2026-10-26, out of sample 2025-26): linebackers are best predicted by their own season
+# almost unshrunk, corners and linemen need a heavy pull toward last season. MAE by group fell 0.6-1.0%.
+SHRINK_GAMES_BY_GROUP = {"LB": 0.5, "S": 1.0, "CB": 3.0, "DL": 3.0}
+# Snap-share trend: last 3 games' defensive snap share vs the season share, as a multiplier (ratio ** power).
+# Rises are captured almost fully at 0.45; drops are overcorrected at that power, so they get 0.25.
+SNAP_TREND = dict(games=3, power_up=0.45, power_down=0.35, cap=(0.6, 1.5), min_share=0.05)
+# Tackle opportunities (opponent carries + completions + sacks) expected this game vs the ones the player has faced:
+# volume regresses to the league mean, which a season average ignores. Damped and capped: the extremes were wrong.
+VOLUME = dict(power=0.5, cap=(0.9, 1.1), pseudo_games=4)
 POS_PRIOR = {"LB": 6.0, "S": 4.5, "CB": 3.5, "DL": 2.5}       # tackles per game, used only with no history
 POS_SOLO_SHARE = {"LB": 0.52, "S": 0.62, "CB": 0.72, "DL": 0.45}
 SPREAD_TILT = 0.005                # +0.5% tackles per point a defense is an underdog (capped)

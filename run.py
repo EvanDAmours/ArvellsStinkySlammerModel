@@ -117,11 +117,12 @@ def load_all():
     sched = S.load_schedule(seasons)
     snaps = S.load_snaps(seasons)
     inj = S.load_injuries([C.SEASON])
-    H = M.add_history_features(M.prepare(pw, sched, snaps))
+    vol = S.load_team_volume(seasons)
+    H = M.add_history_features(M.attach_volume(M.prepare(pw, sched, snaps), vol))
     H = M.role_signals_backtest(H)
     status = dict(stats_source=used, tackle_formula=formula, formula_check_ok=ok, formula_check=report,
-                  snaps_rows=int(len(snaps)), injury_rows=int(len(inj)))
-    return seasons, pw, sched, snaps, inj, H, status
+                  snaps_rows=int(len(snaps)), injury_rows=int(len(inj)), volume_rows=int(len(vol)))
+    return seasons, pw, sched, snaps, inj, H, status, vol
 
 
 def mark_five(bets, season, week):
@@ -154,16 +155,16 @@ def attach_game_logs(P, H, season, week):
 
 
 def cmd_daily():
-    seasons, pw, sched, snaps, inj, H, status = load_all()
+    seasons, pw, sched, snaps, inj, H, status, vol = load_all()
     week = upcoming_week(sched, C.SEASON)
-    bt, phi, k = B.run_backtest(H, seasons)
-    F = M.upcoming_rows(H, sched, inj, C.SEASON, week)
-    P = M.finalize_projections(F, phi, k=k)
+    bt, phi, k, scale = B.run_backtest(H, seasons)
+    F = M.upcoming_rows(H, sched, inj, C.SEASON, week, vol=vol)
+    P = M.finalize_projections(F, phi, scale=scale)
     P = attach_game_logs(P, H, C.SEASON, week)
     CACHE.mkdir(parents=True, exist_ok=True)
     if len(P):
         P.to_csv(CACHE / "projections.csv", index=False)
-    json.dump(dict(phi=phi, k=k, week=week), open(CACHE / "model_state.json", "w"))
+    json.dump(dict(phi=phi, k=k, scale=scale, week=week), open(CACHE / "model_state.json", "w"))
     games = week_games(sched, C.SEASON, week)
     json.dump(games, open(CACHE / "games.json", "w"), indent=1)
     status["international_games"] = [f"{g['away']} at {g['home']}, {g['edmonton']} Edmonton" for g in games if g["international"]]

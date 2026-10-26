@@ -60,7 +60,7 @@ os.environ["TACKLE_FAKE_DATA"] = "1"
 import run as R
 from pipeline import model as M
 from tests.fake_data import planted_crews
-seasons, pw, sched, snaps, inj, H, status = R.load_all()
+seasons, pw, sched, snaps, inj, H, status, vol = R.load_all()
 share, lg = M.crew_factors(H, 2026, 7)
 planted = planted_crews()
 common = [t for t in share if t in planted and t != "NEUTRAL"]

@@ -140,3 +140,13 @@ def fake_odds_rows():
                              over_odds=int(rng.choice([-125, -115, -110, -105, 100])), under_odds=int(rng.choice([-115, -110, -105, -120])),
                              book_update=start))
     return rows
+
+
+def fake_team_volume(seasons):
+    """Synthetic opportunities: what a defence faced is roughly the tackles its players made; the offence that
+    generated them is the opponent."""
+    pw = fake_player_week(seasons)
+    pw = pw.assign(comb=pw.solo + pw.ast + pw.with_ast)
+    faced = pw.groupby(["season", "week", "team", "opp"]).comb.sum().reset_index().rename(columns={"opp": "opp_team", "comb": "faced"})
+    gen = faced.rename(columns={"team": "opp_team", "opp_team": "team", "faced": "gen"})
+    return faced.merge(gen, on=["season", "week", "team", "opp_team"], how="left")
