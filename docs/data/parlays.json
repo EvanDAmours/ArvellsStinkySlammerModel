@@ -1,1 +1,46 @@
-[]
+[
+ {
+  "parlay_id": "2026-wk07-2026-10-26",
+  "slate": "2026-10-26",
+  "n_legs": 2,
+  "combined_decimal": 4.2021,
+  "combined_american": 320,
+  "combined_prob": 0.2713,
+  "units": 0.1,
+  "chosen_at": "20261026T181124Z",
+  "placed": false,
+  "first_kickoff": "2026-10-27T00:15:00+00:00",
+  "legs": [
+   {
+    "leg": 1,
+    "player": "DaRon Bland",
+    "team": "DAL",
+    "opp": "PHI",
+    "market": "player_tackles_assists",
+    "side": "Under",
+    "line": 4.5,
+    "book": "DraftKings",
+    "odds": 103.0,
+    "p_side": 0.5534,
+    "lock": 60.5666,
+    "grade": "B",
+    "commence_time": "2026-10-27T00:15:00Z"
+   },
+   {
+    "leg": 2,
+    "player": "Caleb Downs",
+    "team": "DAL",
+    "opp": "PHI",
+    "market": "player_tackles_assists",
+    "side": "Under",
+    "line": 5.5,
+    "book": "DraftKings",
+    "odds": 107.0,
+    "p_side": 0.4902,
+    "lock": 42.9564,
+    "grade": "C",
+    "commence_time": "2026-10-27T00:15:00Z"
+   }
+  ]
+ }
+]
