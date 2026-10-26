@@ -164,7 +164,8 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled):
     _json(SITE / "projections.json", records(P, [c for c in cols if c in P.columns]) if len(P) else [])
     _json(SITE / "bets.json", records(bets))
     _json(SITE / "backtest.json", bt)
-    _json(SITE / "results.json", dict(summary=summary, picks=records(graded)))
+    retro = Path("data/retro_five.json")
+    _json(SITE / "results.json", dict(summary=summary, picks=records(graded), retro=json.loads(retro.read_text()) if retro.exists() else None))
 
 
 if __name__ == "__main__":

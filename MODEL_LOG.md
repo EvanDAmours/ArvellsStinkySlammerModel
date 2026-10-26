@@ -119,6 +119,16 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
   a line per week with the running record, and every pick with its result. The site shows the same tally in the
   five box on Plays ("season to date 24-1") and as a per-week table on Track record.
 
+### 2026-10-26 (replay tool, locks record on both screens)
+- `tools/replay_five.py --week N` replays a finished week under the current rules, pull by pull, using only what
+  was known at each pull (small stated look-ahead: final injury report, phi from a backtest including the week).
+  Writes `data/retro_five.json`; the daily job copies it into `results.json`; the site shows it under the locks
+  record on Plays and Track record. **Week 7 replay: locks 4-1 (+1.6 units), all plays 86-72 (+15.8 units).**
+  Weeks 1-6 cannot be replayed: no lines were collected before week 7. Re-run the replay whenever pricing or
+  grade rules change, so the projected record always reflects the current rules.
+- Site: wins green, losses red, units coloured by sign; locks and all-plays records side by side at the top of
+  both the Plays and Track record tabs; the replayed record in a line underneath.
+
 ### 2026-10-26 (after the week 7 post-mortem)
 - **Pricing mean blends toward the market line**: `LINE_WEIGHT = 0.6`. Evidence: the regression above.
   Revert if, over 4+ weeks, picks under the pure model (`LINE_WEIGHT = 0`, re-priced offline) beat the blend.

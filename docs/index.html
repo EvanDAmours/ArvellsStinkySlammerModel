@@ -49,6 +49,12 @@ select, input[type="search"] { font: inherit; padding: 6px 8px; border: 1px soli
 .grade { display: inline-block; min-width: 1.6em; padding: 2px 7px; border-radius: 6px; font: 700 0.95rem/1.3 var(--cond); text-align: center; color: #fff; background: #8a8f98; vertical-align: middle; margin-right: 6px; }
 .grade.A { background: #1f8a4c; } .grade.B { background: #c98a1b; } .grade.C { background: #8a8f98; }
 .lock { color: var(--muted); font-size: 0.85rem; }
+.w { color: #1f8a4c; } .l { color: #c0392b; } .pos { color: #1f8a4c; } .neg { color: #c0392b; }
+td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weight: 600; }
+.records { display: flex; flex-wrap: wrap; gap: 8px 28px; align-items: baseline; margin: 0 0 14px; }
+.records .rec b { font: 700 1.5rem/1.1 var(--cond); font-variant-numeric: tabular-nums; }
+.records .rec .label { color: var(--muted); font-size: 0.9rem; margin-left: 6px; }
+.records .sub { flex-basis: 100%; color: var(--muted); font-size: 0.88rem; margin: -4px 0 0; }
 .five-box { border: 2px solid #1f8a4c; border-radius: 10px; padding: 10px 12px 2px; margin: 0 0 16px; }
 .five-box h3 { margin: 0 0 6px; font: 700 1.1rem/1.2 var(--cond); }
 .five-box .note { margin: 0 0 8px; }
@@ -125,6 +131,25 @@ const pct = (x, d = 0) => (x == null ? "" : (x * 100).toFixed(d) + "%");
 const signedPct = (x) => (x == null ? "" : (x >= 0 ? "+" : "") + (x * 100).toFixed(0) + "%");
 const num = (x, d = 1) => (x == null || Number.isNaN(x) ? "" : Number(x).toFixed(d));
 const odds = (a) => (a == null ? "" : (a > 0 ? "+" : "") + Math.round(a));
+const wl = (w, l, p) => el("b", {}, el("span", { class: "w" }, String(w ?? 0)), "-", el("span", { class: "l" }, String(l ?? 0)), p ? `-${p}` : "");
+const units = (u, d = 1) => (u == null ? el("b", {}) : el("b", { class: u >= 0 ? "pos" : "neg" }, (u >= 0 ? "+" : "") + Number(u).toFixed(d)));
+const cell = (v) => (v === "Win" || v === "Loss" ? el("td", { class: v }, v) : null);
+function recordsBar(s) {
+  // Locks and plays records side by side, plus the replayed record under the current rules
+  const r = DATA.results || {}, f = (s || {}).five || {}, bar = el("div", { class: "records" });
+  const hit = f.hit == null ? "" : ` (${pct(f.hit)})`;
+  bar.append(el("div", { class: "rec" }, wl(f.wins, f.losses, f.pushes), el("span", { class: "label" }, `Locks${hit}${f.pending ? `, ${f.pending} pending` : ""}`)));
+  bar.append(el("div", { class: "rec" }, wl(s?.wins, s?.losses, s?.pushes), el("span", { class: "label" }, `All plays${s?.pending ? `, ${s.pending} pending` : ""}`)));
+  const rw = (r.retro && r.retro.weeks) || [];
+  if (rw.length) {
+    const tot = rw.reduce((a, w) => ({ w: a.w + w.five.wins, l: a.l + w.five.losses, pw: a.pw + w.plays.wins, pl: a.pl + w.plays.losses, pend: a.pend + w.five.pending }), { w: 0, l: 0, pw: 0, pl: 0, pend: 0 });
+    const weeks = rw.map((w) => `wk ${w.week}`).join(", ");
+    bar.append(el("div", { class: "sub" }, "Projected under the current rules, replayed on ", weeks, " using only what was known before each kickoff: locks ",
+      wl(tot.w, tot.l), tot.pend ? ` (${tot.pend} pending)` : "", ", all plays ", wl(tot.pw, tot.pl), ". ",
+      "Weeks 1-6 can't be replayed: no lines were collected before week 7, and historical lines need a paid Odds API plan."));
+  }
+  return bar;
+}
 const MARKET = { player_tackles_assists: "Tackles + assists", player_solo_tackles: "Solo tackles" };
 // Slates in Edmonton time: early = kickoffs before noon (11 am, plus London games), afternoon = noon to 5 pm, prime time = 5 pm onward (incl. Thu/Mon night).
 const TZ = "America/Edmonton";
@@ -142,10 +167,11 @@ async function load(name) {
 }
 
 function table(headers, rows) {
+  // a cell value that is "Win"/"Loss" is coloured
   const t = el("table");
   t.append(el("thead", {}, el("tr", {}, ...headers.map(([label, cls]) => el("th", { class: cls || "" }, label)))));
   const tb = el("tbody");
-  rows.forEach((r) => tb.append(el("tr", {}, ...r.map((c, i) => el("td", { class: headers[i][1] || "" }, c)))));
+  rows.forEach((r) => tb.append(el("tr", {}, ...r.map((c, i) => cell(c) || el("td", { class: headers[i][1] || "" }, c)))));
   t.append(tb);
   return t;
 }
@@ -166,6 +192,7 @@ function renderMeta() {
 function renderPlays() {
   const box = $("#plays-list"); box.replaceChildren();
   const all = DATA.bets || [];
+  box.append(recordsBar(DATA.results?.summary));
   if (!all.length) { box.append(el("div", { class: "empty" }, "No tackle lines yet this week. Books usually post them Thursday to Saturday; the odds job pulls them automatically and this list fills in.")); return; }
   const picksOnly = $("#picks-only").checked, market = $("#market").value, best = $("#best-only").checked, slate = $("#slate").value;
   const rows = all.filter((b) => (!picksOnly || b.pick === "Over" || b.pick === "Under") && (!market || b.market === market) && (!best || b.best_price !== false) && (!slate || slateOf(betKick(b)) === slate));
@@ -223,23 +250,25 @@ function renderRecord() {
   const r = DATA.results;
   if (!r || !r.picks || !r.picks.length) { box.append(el("div", { class: "empty" }, "No picks logged yet. Every pick the board makes is saved with the price at the time and graded against the official box score the next morning.")); return; }
   const s = r.summary || {};
+  box.append(recordsBar(s));
+  box.append(el("h3", {}, "All plays"));
   box.append(el("div", { class: "stat-line" },
-    el("div", {}, el("b", {}, `${s.wins ?? 0}-${s.losses ?? 0}${s.pushes ? "-" + s.pushes : ""}`), "Record"),
-    el("div", {}, el("b", {}, s.units == null ? "" : (s.units >= 0 ? "+" : "") + s.units.toFixed(1)), "Units (1 per bet)"),
-    el("div", {}, el("b", {}, s.roi == null ? "" : signedPct(s.roi)), "Return per bet"),
+    el("div", {}, wl(s.wins, s.losses, s.pushes), "Record"),
+    el("div", {}, units(s.units), "Units (1 per bet)"),
+    el("div", {}, el("b", { class: s.roi == null ? "" : s.roi >= 0 ? "pos" : "neg" }, s.roi == null ? "" : signedPct(s.roi)), "Return per bet"),
     el("div", {}, el("b", {}, s.beat_close_share == null ? "" : pct(s.beat_close_share)), "Beat the closing line"),
     el("div", {}, el("b", {}, String(s.pending ?? 0)), "Pending")));
   box.append(el("p", { class: "note" }, "Beating the closing line is the earliest reliable sign of a real edge: over a few hundred bets it predicts profit better than the win-loss record does."));
   if (s.five && (s.five.bets || (s.five.weeks && s.five.weeks.length))) {
-    box.append(el("h3", {}, "The weekly five"));
+    box.append(el("h3", {}, "The locks (weekly five)"));
     box.append(el("div", { class: "stat-line" },
-      el("div", {}, el("b", {}, `${s.five.wins}-${s.five.losses}${s.five.pushes ? "-" + s.five.pushes : ""}`), "Record"),
-      el("div", {}, el("b", {}, s.five.hit == null ? "" : pct(s.five.hit)), "Hit rate (target 70%)"),
-      el("div", {}, el("b", {}, (s.five.units >= 0 ? "+" : "") + s.five.units.toFixed(1)), "Units"),
+      el("div", {}, wl(s.five.wins, s.five.losses, s.five.pushes), "Record"),
+      el("div", {}, el("b", { class: s.five.hit == null ? "" : s.five.hit >= 0.7 ? "pos" : "neg" }, s.five.hit == null ? "" : pct(s.five.hit)), "Hit rate (target 70%)"),
+      el("div", {}, units(s.five.units), "Units"),
       el("div", {}, el("b", {}, String(s.five.pending ?? 0)), "Pending")));
     if (s.five.weeks && s.five.weeks.length) {
       box.append(el("div", { class: "scroll" }, table([["Week"], ["Picks", "n"], ["Record"], ["Units", "n"], ["Running record"]],
-        [...s.five.weeks].reverse().map((w) => [`Wk ${w.week}`, w.picks, `${w.wins}-${w.losses}${w.pushes ? "-" + w.pushes : ""}${w.pending ? ` (${w.pending} pending)` : ""}`, num(w.units, 2), `${w.running_wins}-${w.running_losses}`]))));
+        [...s.five.weeks].reverse().map((w) => [`Wk ${w.week}`, w.picks, el("span", {}, wl(w.wins, w.losses, w.pushes), w.pending ? ` (${w.pending} pending)` : ""), units(w.units, 2), wl(w.running_wins, w.running_losses)]))));
     }
     const fp = r.picks.filter((p) => p.five);
     if (fp.length) {
@@ -248,13 +277,26 @@ function renderRecord() {
     }
     box.append(el("p", { class: "note" }, "The same tally is kept in data/weekly_five.md in the repository, rewritten every morning."));
   }
+  if (r.retro && r.retro.weeks && r.retro.weeks.length) {
+    box.append(el("h3", {}, "Replayed under the current rules"));
+    box.append(el("p", { class: "note" }, r.retro.note || ""));
+    for (const w of [...r.retro.weeks].reverse()) {
+      box.append(el("div", { class: "stat-line" },
+        el("div", {}, wl(w.five.wins, w.five.losses, w.five.pushes), `Week ${w.week} locks`),
+        el("div", {}, units(w.five.units), "Locks units"),
+        el("div", {}, wl(w.plays.wins, w.plays.losses, w.plays.pushes), `Week ${w.week} all plays (${w.plays.n})`),
+        el("div", {}, units(w.plays.units), "Plays units")));
+      box.append(el("div", { class: "scroll" }, table([["Lock"], ["Price", "n"], ["Book"], ["Grade"], ["Score", "n"], ["Actual", "n"], ["Result"]],
+        w.picks.map((p) => [`${p.player} ${p.side} ${num(p.line)} ${(MARKET[p.market] || p.market).toLowerCase()}`, odds(p.odds), p.book, p.grade, Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result]))));
+    }
+  }
   if (s.by_grade && s.by_grade.length) {
     box.append(el("h3", {}, "By confidence grade"));
     box.append(el("div", { class: "scroll" }, table([["Grade"], ["Bets", "n"], ["Record"], ["Units", "n"], ["Return per bet", "n"]],
-      s.by_grade.map((g) => [g.grade, g.bets, `${g.wins}-${g.losses}`, num(g.units, 2), g.roi == null ? "" : signedPct(g.roi)]))));
+      s.by_grade.map((g) => [g.grade, g.bets, wl(g.wins, g.losses), units(g.units, 2), el("b", { class: g.roi == null ? "" : g.roi >= 0 ? "pos" : "neg" }, g.roi == null ? "" : signedPct(g.roi))]))));
     box.append(el("p", { class: "note" }, "If the grades mean anything, A should beat B and B should beat C over time. If they don't, the grading formula in config.py is wrong and gets changed."));
   }
-  const rows = [...r.picks].reverse().map((p) => [(p.five ? "★ " : "") + (p.grade || ""), `Wk ${p.week}`, p.player, `${p.side} ${num(p.line)}`, MARKET[p.market] || p.market, odds(p.odds), p.book, p.lock == null ? "" : Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result, p.units == null ? "" : num(p.units, 2), p.clv_line == null ? "" : (p.clv_line >= 0 ? "+" : "") + num(p.clv_line)]);
+  const rows = [...r.picks].reverse().map((p) => [(p.five ? "★ " : "") + (p.grade || ""), `Wk ${p.week}`, p.player, `${p.side} ${num(p.line)}`, MARKET[p.market] || p.market, odds(p.odds), p.book, p.lock == null ? "" : Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result, p.units == null ? "" : units(p.units, 2), p.clv_line == null ? "" : (p.clv_line >= 0 ? "+" : "") + num(p.clv_line)]);
   box.append(el("div", { class: "scroll" }, table([["Grade"], ["Week"], ["Player"], ["Bet"], ["Market"], ["Price", "n"], ["Book"], ["Lock", "n"], ["Actual", "n"], ["Result"], ["Units", "n"], ["Line vs close", "n"]], rows)));
 }
 
