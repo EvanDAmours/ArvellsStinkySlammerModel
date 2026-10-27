@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-27T18:00+00:00",
+ "generated_at": "2026-10-27T19:04+00:00",
  "season": 2026,
  "week": 8,
  "lines_pulled": null,
@@ -57,7 +57,12 @@
    "single": 3,
    "multi": 5
   },
-  "line_weight": 0.6
+  "line_weight": 0.6,
+  "clv": {
+   "decent": 0.52,
+   "good": 0.56,
+   "great": 0.6
+  }
  },
  "odds_credits_remaining": 406,
  "odds_credits_by_key": {

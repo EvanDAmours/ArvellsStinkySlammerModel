@@ -64,7 +64,10 @@
   "units": 7.4148,
   "roi": 0.0327,
   "avg_clv_line": -0.0087,
-  "beat_close_share": 0.0433,
+  "avg_clv_prob": 0.0007,
+  "beat_close_share": 0.5317,
+  "close_moved": 126,
+  "close_known": 231,
   "pending": 4,
   "parlays": {}
  },
@@ -102,7 +105,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": 0.0657,
+   "clv_prob": 0.0902,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -139,7 +143,8 @@
    "solo": 7.0,
    "actual": 7.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0341,
+   "clv_prob": -0.001,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -176,7 +181,8 @@
    "solo": 3.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0376,
+   "clv_prob": -0.007,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -213,7 +219,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.022,
+   "clv_prob": 0.0044,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.28
   },
@@ -251,6 +258,7 @@
    "actual": 10.0,
    "clv_line": -1.0,
    "clv_prob": null,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -287,7 +295,8 @@
    "solo": 2.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": 0.0524,
+   "clv_prob": 0.0853,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -325,6 +334,7 @@
    "actual": 10.0,
    "clv_line": 1.0,
    "clv_prob": null,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.6579
   },
@@ -361,7 +371,8 @@
    "solo": 5.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0084,
+   "clv_prob": 0.021,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -398,7 +409,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0324,
+   "clv_prob": -0.0061,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.23
   },
@@ -435,7 +447,8 @@
    "solo": 1.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0013,
+   "clv_prob": 0.0241,
+   "clv_pos": true,
    "result": "Win",
    "units": 1.33
   },
@@ -472,7 +485,8 @@
    "solo": 1.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0229,
+   "clv_prob": 0.0057,
+   "clv_pos": true,
    "result": "Win",
    "units": 1.11
   },
@@ -509,7 +523,8 @@
    "solo": 6.0,
    "actual": 6.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0167,
+   "clv_prob": 0.0085,
+   "clv_pos": true,
    "result": "Win",
    "units": 1.32
   },
@@ -547,6 +562,7 @@
    "actual": 4.0,
    "clv_line": -1.0,
    "clv_prob": null,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -583,7 +599,8 @@
    "solo": 0.0,
    "actual": 0.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0834,
+   "clv_prob": -0.052,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -620,7 +637,8 @@
    "solo": 6.0,
    "actual": 6.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0313,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -657,7 +675,8 @@
    "solo": 1.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0174,
+   "clv_prob": 0.0144,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.9174
   },
@@ -694,7 +713,8 @@
    "solo": 4.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.1289,
+   "clv_prob": -0.0916,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -732,6 +752,7 @@
    "actual": 6.0,
    "clv_line": 1.0,
    "clv_prob": null,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.7246
   },
@@ -768,7 +789,8 @@
    "solo": 8.0,
    "actual": 8.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0439,
+   "clv_prob": -0.0078,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -805,7 +827,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0355,
+   "clv_prob": -0.0081,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.18
   },
@@ -843,6 +866,7 @@
    "actual": 3.0,
    "clv_line": -1.0,
    "clv_prob": null,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -879,7 +903,8 @@
    "solo": 4.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0114,
+   "clv_prob": 0.0159,
+   "clv_pos": true,
    "result": "Win",
    "units": 1.18
   },
@@ -916,7 +941,8 @@
    "solo": 5.0,
    "actual": 9.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0022,
+   "clv_prob": 0.0257,
+   "clv_pos": true,
    "result": "Win",
    "units": 1.13
   },
@@ -953,7 +979,8 @@
    "solo": 0.0,
    "actual": 0.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0265,
+   "clv_prob": 0.0096,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.6803
   },
@@ -990,7 +1017,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0408,
+   "clv_prob": -0.0056,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.6849
   },
@@ -1027,7 +1055,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0515,
+   "clv_prob": -0.0195,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -1064,7 +1093,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.045,
+   "clv_prob": -0.0089,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.6803
   },
@@ -1101,7 +1131,8 @@
    "solo": 7.0,
    "actual": 10.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0169,
+   "clv_prob": 0.0133,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -1138,7 +1169,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0291,
+   "clv_prob": 0.005,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.8
   },
@@ -1175,7 +1207,8 @@
    "solo": 6.0,
    "actual": 7.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0285,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -1212,7 +1245,8 @@
    "solo": 1.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0375,
+   "clv_prob": -0.0062,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -1249,7 +1283,8 @@
    "solo": 1.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0155,
+   "clv_prob": 0.0135,
+   "clv_pos": true,
    "result": "Win",
    "units": 1.08
   },
@@ -1286,7 +1321,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.01,
+   "clv_prob": 0.0253,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.6897
   },
@@ -1323,7 +1359,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0343,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.7246
   },
@@ -1360,7 +1397,8 @@
    "solo": 0.0,
    "actual": 0.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0203,
+   "clv_prob": 0.0086,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -1397,7 +1435,8 @@
    "solo": 2.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0307,
+   "clv_prob": -0.0025,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -1434,7 +1473,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0365,
+   "clv_prob": 0.0027,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.5155
   },
@@ -1471,7 +1511,8 @@
    "solo": 8.0,
    "actual": 12.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0422,
+   "clv_prob": -0.0082,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -1509,6 +1550,7 @@
    "actual": 6.0,
    "clv_line": 1.0,
    "clv_prob": null,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.5952
   },
@@ -1545,7 +1587,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0135,
+   "clv_prob": 0.0244,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.5848
   },
@@ -1582,7 +1625,8 @@
    "solo": 2.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0359,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.6757
   },
@@ -1619,7 +1663,8 @@
    "solo": 5.0,
    "actual": 7.0,
    "clv_line": 0.0,
-   "clv_prob": 0.0278,
+   "clv_prob": 0.0581,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.9615
   },
@@ -1656,7 +1701,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": 0.0052,
+   "clv_prob": 0.0384,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -1693,7 +1739,8 @@
    "solo": 5.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.006,
+   "clv_prob": 0.023,
+   "clv_pos": true,
    "result": "Win",
    "units": 1.06
   },
@@ -1730,7 +1777,8 @@
    "solo": 1.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0029,
+   "clv_prob": 0.0237,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -1767,7 +1815,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0309,
+   "clv_prob": 0.004,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.7407
   },
@@ -1804,7 +1853,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0395,
+   "clv_prob": -0.0139,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.29
   },
@@ -1841,7 +1891,8 @@
    "solo": 8.0,
    "actual": 8.0,
    "clv_line": 0.0,
-   "clv_prob": 0.0055,
+   "clv_prob": 0.0392,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.7812
   },
@@ -1878,7 +1929,8 @@
    "solo": 0.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0223,
+   "clv_prob": 0.0136,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.7042
   },
@@ -1915,7 +1967,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0655,
+   "clv_prob": -0.0339,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.9259
   },
@@ -1952,7 +2005,8 @@
    "solo": 7.0,
    "actual": 7.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0597,
+   "clv_prob": -0.024,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.6452
   },
@@ -1990,6 +2044,7 @@
    "actual": 7.0,
    "clv_line": -1.0,
    "clv_prob": null,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -2026,7 +2081,8 @@
    "solo": 0.0,
    "actual": 0.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0841,
+   "clv_prob": -0.0471,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -2063,7 +2119,8 @@
    "solo": 6.0,
    "actual": 10.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0251,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.25
   },
@@ -2100,7 +2157,8 @@
    "solo": 4.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0403,
+   "clv_prob": -0.0113,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -2137,7 +2195,8 @@
    "solo": 8.0,
    "actual": 8.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0272,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -2175,6 +2234,7 @@
    "actual": null,
    "clv_line": -1.0,
    "clv_prob": null,
+   "clv_pos": false,
    "result": "Pending",
    "units": 0.0
   },
@@ -2211,7 +2271,8 @@
    "solo": 3.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.106,
+   "clv_prob": -0.0714,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -2248,7 +2309,8 @@
    "solo": 4.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0177,
+   "clv_prob": 0.0144,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.9091
   },
@@ -2285,7 +2347,8 @@
    "solo": 5.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0375,
+   "clv_prob": -0.0089,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -2322,7 +2385,8 @@
    "solo": 5.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0249,
+   "clv_prob": 0.0103,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -2360,6 +2424,7 @@
    "actual": 4.0,
    "clv_line": -1.0,
    "clv_prob": null,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -2396,7 +2461,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0352,
+   "clv_prob": -0.0085,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.2
   },
@@ -2433,7 +2499,8 @@
    "solo": 6.0,
    "actual": 7.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0384,
+   "clv_prob": -0.0098,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -2470,7 +2537,8 @@
    "solo": 4.0,
    "actual": 7.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0268,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -2507,7 +2575,8 @@
    "solo": 1.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0317,
+   "clv_prob": -0.0036,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.14
   },
@@ -2544,7 +2613,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0224,
+   "clv_prob": 0.0014,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -2581,7 +2651,8 @@
    "solo": 4.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.1155,
+   "clv_prob": -0.0806,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -2618,7 +2689,8 @@
    "solo": 1.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0466,
+   "clv_prob": -0.0162,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.9615
   },
@@ -2656,6 +2728,7 @@
    "actual": 4.0,
    "clv_line": -1.0,
    "clv_prob": null,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -2692,7 +2765,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0339,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.7463
   },
@@ -2729,7 +2803,8 @@
    "solo": 4.0,
    "actual": 7.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0245,
+   "clv_prob": 0.0072,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -2766,7 +2841,8 @@
    "solo": 4.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0458,
+   "clv_prob": -0.0173,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -2803,7 +2879,8 @@
    "solo": 4.0,
    "actual": 10.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0436,
+   "clv_prob": -0.0077,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -2840,7 +2917,8 @@
    "solo": 0.0,
    "actual": 0.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0306,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.0
   },
@@ -2877,7 +2955,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0494,
+   "clv_prob": -0.0128,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.6667
   },
@@ -2914,7 +2993,8 @@
    "solo": 6.0,
    "actual": 6.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0353,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -2951,7 +3031,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0284,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -2988,7 +3069,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0595,
+   "clv_prob": -0.0233,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.7092
   },
@@ -3025,7 +3107,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0267,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.2
   },
@@ -3062,7 +3145,8 @@
    "solo": 3.0,
    "actual": 8.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0543,
+   "clv_prob": -0.0184,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -3099,7 +3183,8 @@
    "solo": 1.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0248,
+   "clv_prob": 0.0101,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.8696
   },
@@ -3136,7 +3221,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0337,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.7407
   },
@@ -3173,7 +3259,8 @@
    "solo": 2.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0135,
+   "clv_prob": 0.0165,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -3210,7 +3297,8 @@
    "solo": 2.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0348,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -3247,7 +3335,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": 0.0339,
+   "clv_prob": 0.0623,
+   "clv_pos": true,
    "result": "Win",
    "units": 1.15
   },
@@ -3284,7 +3373,8 @@
    "solo": 1.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0298,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.02
   },
@@ -3322,6 +3412,7 @@
    "actual": 9.0,
    "clv_line": 0.0,
    "clv_prob": null,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.1
   },
@@ -3358,7 +3449,8 @@
    "solo": 7.0,
    "actual": 10.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0225,
+   "clv_prob": 0.0082,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -3395,7 +3487,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0863,
+   "clv_prob": -0.0481,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.5714
   },
@@ -3432,7 +3525,8 @@
    "solo": 1.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0306,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -3469,7 +3563,8 @@
    "solo": 0.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0383,
+   "clv_prob": -0.0102,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.14
   },
@@ -3506,7 +3601,8 @@
    "solo": 5.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0286,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.05
   },
@@ -3543,7 +3639,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0235,
+   "clv_prob": 0.0035,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -3580,7 +3677,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": 0.0289,
+   "clv_prob": 0.0558,
+   "clv_pos": true,
    "result": "Win",
    "units": 1.23
   },
@@ -3617,7 +3715,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0027,
+   "clv_prob": 0.0301,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.7143
   },
@@ -3654,7 +3753,8 @@
    "solo": 5.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0494,
+   "clv_prob": -0.0128,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -3691,7 +3791,8 @@
    "solo": 5.0,
    "actual": 12.0,
    "clv_line": 0.0,
-   "clv_prob": -0.029,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -3728,7 +3829,8 @@
    "solo": 4.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0268,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.1
   },
@@ -3765,7 +3867,8 @@
    "solo": 2.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0284,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -3802,7 +3905,8 @@
    "solo": 3.0,
    "actual": 10.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0337,
+   "clv_prob": -0.003,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -3839,7 +3943,8 @@
    "solo": 0.0,
    "actual": 0.0,
    "clv_line": 0.0,
-   "clv_prob": -0.017,
+   "clv_prob": 0.0098,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -3876,7 +3981,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0352,
+   "clv_prob": -0.0021,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.8333
   },
@@ -3914,6 +4020,7 @@
    "actual": 2.0,
    "clv_line": 1.0,
    "clv_prob": null,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.5587
   },
@@ -3950,7 +4057,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0211,
+   "clv_prob": 0.0058,
+   "clv_pos": true,
    "result": "Win",
    "units": 1.21
   },
@@ -3987,7 +4095,8 @@
    "solo": 0.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.031,
+   "clv_prob": 0.0021,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.8475
   },
@@ -4024,7 +4133,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0346,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.7692
   },
@@ -4061,7 +4171,8 @@
    "solo": 5.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0178,
+   "clv_prob": 0.0099,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -4098,7 +4209,8 @@
    "solo": 1.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0184,
+   "clv_prob": 0.0102,
+   "clv_pos": true,
    "result": "Win",
    "units": 1.05
   },
@@ -4135,7 +4247,8 @@
    "solo": 2.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0361,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.6536
   },
@@ -4172,7 +4285,8 @@
    "solo": 4.0,
    "actual": 9.0,
    "clv_line": 0.0,
-   "clv_prob": -0.008,
+   "clv_prob": 0.0251,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.8197
   },
@@ -4209,7 +4323,8 @@
    "solo": 1.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0166,
+   "clv_prob": 0.0085,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -4246,7 +4361,8 @@
    "solo": 3.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0184,
+   "clv_prob": 0.0102,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -4283,7 +4399,8 @@
    "solo": 4.0,
    "actual": 6.0,
    "clv_line": 0.0,
-   "clv_prob": 0.0068,
+   "clv_prob": 0.0407,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -4320,7 +4437,8 @@
    "solo": 4.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0388,
+   "clv_prob": -0.0015,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -4357,7 +4475,8 @@
    "solo": 3.0,
    "actual": 10.0,
    "clv_line": 0.0,
-   "clv_prob": -0.026,
+   "clv_prob": 0.0071,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.8197
   },
@@ -4394,7 +4513,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.106,
+   "clv_prob": -0.0714,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -4431,7 +4551,8 @@
    "solo": 7.0,
    "actual": 10.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0441,
+   "clv_prob": -0.0102,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -4468,7 +4589,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0445,
+   "clv_prob": -0.0142,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.9615
   },
@@ -4505,7 +4627,8 @@
    "solo": 3.0,
    "actual": 7.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0087,
+   "clv_prob": 0.025,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -4542,7 +4665,8 @@
    "solo": 0.0,
    "actual": 0.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0354,
+   "clv_prob": -0.0064,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -4579,7 +4703,8 @@
    "solo": 2.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0632,
+   "clv_prob": -0.0346,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -4616,7 +4741,8 @@
    "solo": 5.0,
    "actual": 9.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0279,
+   "clv_prob": 0.0088,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -4653,7 +4779,8 @@
    "solo": 12.0,
    "actual": 19.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0325,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.9524
   },
@@ -4690,7 +4817,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0059,
+   "clv_prob": 0.0225,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -4727,7 +4855,8 @@
    "solo": 2.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0207,
+   "clv_prob": 0.0133,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -4764,7 +4893,8 @@
    "solo": 3.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0338,
+   "clv_prob": -0.003,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -4801,7 +4931,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0223,
+   "clv_prob": 0.0102,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -4838,7 +4969,8 @@
    "solo": 4.0,
    "actual": 7.0,
    "clv_line": 0.0,
-   "clv_prob": -0.1095,
+   "clv_prob": -0.0754,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.8
   },
@@ -4875,7 +5007,8 @@
    "solo": 6.0,
    "actual": 9.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0035,
+   "clv_prob": 0.0304,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -4912,7 +5045,8 @@
    "solo": 2.0,
    "actual": 7.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0205,
+   "clv_prob": 0.0097,
+   "clv_pos": true,
    "result": "Win",
    "units": 1.05
   },
@@ -4949,7 +5083,8 @@
    "solo": 2.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0441,
+   "clv_prob": -0.0102,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.9091
   },
@@ -4986,7 +5121,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0331,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.8197
   },
@@ -5023,7 +5159,8 @@
    "solo": 2.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0435,
+   "clv_prob": -0.0075,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.6289
   },
@@ -5060,7 +5197,8 @@
    "solo": null,
    "actual": null,
    "clv_line": 0.0,
-   "clv_prob": -0.0537,
+   "clv_prob": -0.0205,
+   "clv_pos": false,
    "result": "Pending",
    "units": 0.0
   },
@@ -5097,7 +5235,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0315,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.9259
   },
@@ -5134,7 +5273,8 @@
    "solo": 2.0,
    "actual": 9.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0198,
+   "clv_prob": 0.0133,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -5171,7 +5311,8 @@
    "solo": 1.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0558,
+   "clv_prob": -0.0252,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.9804
   },
@@ -5208,7 +5349,8 @@
    "solo": 4.0,
    "actual": 8.0,
    "clv_line": 0.0,
-   "clv_prob": 0.0002,
+   "clv_prob": 0.0316,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.8929
   },
@@ -5245,7 +5387,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0215,
+   "clv_prob": 0.0091,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -5282,7 +5425,8 @@
    "solo": 3.0,
    "actual": 7.0,
    "clv_line": 0.0,
-   "clv_prob": 0.0305,
+   "clv_prob": 0.0623,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -5319,7 +5463,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.053,
+   "clv_prob": -0.0205,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.9524
   },
@@ -5356,7 +5501,8 @@
    "solo": 4.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.02,
+   "clv_prob": 0.0113,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -5394,6 +5540,7 @@
    "actual": 7.0,
    "clv_line": -1.0,
    "clv_prob": null,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -5430,7 +5577,8 @@
    "solo": 6.0,
    "actual": 10.0,
    "clv_line": 0.0,
-   "clv_prob": -0.027,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.21
   },
@@ -5467,7 +5615,8 @@
    "solo": 4.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0453,
+   "clv_prob": -0.0173,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -5504,7 +5653,8 @@
    "solo": 4.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0137,
+   "clv_prob": 0.0202,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.9091
   },
@@ -5541,7 +5691,8 @@
    "solo": 4.0,
    "actual": 7.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0282,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -5578,7 +5729,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0346,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.7692
   },
@@ -5615,7 +5767,8 @@
    "solo": 4.0,
    "actual": 6.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0187,
+   "clv_prob": 0.0077,
+   "clv_pos": true,
    "result": "Win",
    "units": 1.28
   },
@@ -5652,7 +5805,8 @@
    "solo": 4.0,
    "actual": 10.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0445,
+   "clv_prob": -0.0088,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -5690,6 +5844,7 @@
    "actual": 1.0,
    "clv_line": -1.0,
    "clv_prob": null,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.52
   },
@@ -5727,6 +5882,7 @@
    "actual": 3.0,
    "clv_line": -1.0,
    "clv_prob": null,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -5763,7 +5919,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0347,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -5800,7 +5957,8 @@
    "solo": 5.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0499,
+   "clv_prob": -0.0132,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -5837,7 +5995,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0337,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.7407
   },
@@ -5874,7 +6033,8 @@
    "solo": 4.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0377,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.5988
   },
@@ -5911,7 +6071,8 @@
    "solo": 7.0,
    "actual": 7.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0328,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.7143
   },
@@ -5948,7 +6109,8 @@
    "solo": 2.0,
    "actual": 7.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0184,
+   "clv_prob": 0.0102,
+   "clv_pos": true,
    "result": "Win",
    "units": 1.05
   },
@@ -5986,6 +6148,7 @@
    "actual": 5.0,
    "clv_line": 1.0,
    "clv_prob": null,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.6289
   },
@@ -6022,7 +6185,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0377,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.565
   },
@@ -6059,7 +6223,8 @@
    "solo": 4.0,
    "actual": 9.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0337,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.7407
   },
@@ -6096,7 +6261,8 @@
    "solo": 3.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0441,
+   "clv_prob": -0.0102,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -6133,7 +6299,8 @@
    "solo": 4.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0513,
+   "clv_prob": -0.0102,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.5556
   },
@@ -6170,7 +6337,8 @@
    "solo": 2.0,
    "actual": 9.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0148,
+   "clv_prob": 0.0205,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -6207,7 +6375,8 @@
    "solo": 1.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0157,
+   "clv_prob": 0.0128,
+   "clv_pos": true,
    "result": "Win",
    "units": 1.15
   },
@@ -6245,6 +6414,7 @@
    "actual": 5.0,
    "clv_line": -1.0,
    "clv_prob": null,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -6281,7 +6451,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0184,
+   "clv_prob": 0.0102,
+   "clv_pos": true,
    "result": "Win",
    "units": 1.05
   },
@@ -6319,6 +6490,7 @@
    "actual": 7.0,
    "clv_line": -1.0,
    "clv_prob": null,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -6355,7 +6527,8 @@
    "solo": 0.0,
    "actual": 0.0,
    "clv_line": 0.0,
-   "clv_prob": -0.1093,
+   "clv_prob": -0.0712,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -6392,7 +6565,8 @@
    "solo": 7.0,
    "actual": 9.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0359,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.6757
   },
@@ -6429,7 +6603,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.025,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.36
   },
@@ -6466,7 +6641,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0328,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.7143
   },
@@ -6503,7 +6679,8 @@
    "solo": null,
    "actual": null,
    "clv_line": 0.0,
-   "clv_prob": -0.0379,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Pending",
    "units": 0.0
   },
@@ -6540,7 +6717,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0278,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -6577,7 +6755,8 @@
    "solo": 3.0,
    "actual": 9.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0325,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -6614,7 +6793,8 @@
    "solo": 2.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0251,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -6651,7 +6831,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0337,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.7407
   },
@@ -6688,7 +6869,8 @@
    "solo": 7.0,
    "actual": 10.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0325,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -6725,7 +6907,8 @@
    "solo": 2.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0339,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -6762,7 +6945,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0267,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.2
   },
@@ -6799,7 +6983,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0353,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.8333
   },
@@ -6836,7 +7021,8 @@
    "solo": 6.0,
    "actual": 10.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0302,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.01
   },
@@ -6873,7 +7059,8 @@
    "solo": 4.0,
    "actual": 6.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0324,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -6910,7 +7097,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0439,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.5263
   },
@@ -6948,6 +7136,7 @@
    "actual": 4.0,
    "clv_line": 0.0,
    "clv_prob": null,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -6984,7 +7173,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0349,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -7021,7 +7211,8 @@
    "solo": 4.0,
    "actual": 6.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0263,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.3
   },
@@ -7058,7 +7249,8 @@
    "solo": 0.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0267,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.2
   },
@@ -7095,7 +7287,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0267,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -7132,7 +7325,8 @@
    "solo": 1.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0268,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.1
   },
@@ -7169,7 +7363,8 @@
    "solo": 2.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0359,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.6494
   },
@@ -7206,7 +7401,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0417,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -7243,7 +7439,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0359,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.6757
   },
@@ -7280,7 +7477,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0349,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.7407
   },
@@ -7317,7 +7515,8 @@
    "solo": 4.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0368,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.6024
   },
@@ -7354,7 +7553,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.032,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -7392,6 +7592,7 @@
    "actual": 6.0,
    "clv_line": 1.0,
    "clv_prob": null,
+   "clv_pos": true,
    "result": "Loss",
    "units": -1.0
   },
@@ -7429,6 +7630,7 @@
    "actual": 2.0,
    "clv_line": 1.0,
    "clv_prob": null,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.6173
   },
@@ -7465,7 +7667,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0337,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.7407
   },
@@ -7503,6 +7706,7 @@
    "actual": 1.0,
    "clv_line": 1.0,
    "clv_prob": null,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.5587
   },
@@ -7540,6 +7744,7 @@
    "actual": 2.0,
    "clv_line": 1.0,
    "clv_prob": null,
+   "clv_pos": true,
    "result": "Win",
    "units": 0.5714
   },
@@ -7577,6 +7782,7 @@
    "actual": null,
    "clv_line": 1.0,
    "clv_prob": null,
+   "clv_pos": true,
    "result": "Pending",
    "units": 0.0
   },
@@ -7613,7 +7819,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0284,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.15
   },
@@ -7650,7 +7857,8 @@
    "solo": 0.0,
    "actual": 0.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0284,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.15
   },
@@ -7687,7 +7895,8 @@
    "solo": 1.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0282,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.12
   },
@@ -7724,7 +7933,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0251,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.25
   },
@@ -7761,7 +7971,8 @@
    "solo": 5.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0268,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -7798,7 +8009,8 @@
    "solo": 3.0,
    "actual": 8.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0306,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -7835,7 +8047,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0325,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.9524
   },
@@ -7872,7 +8085,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0316,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -7909,7 +8123,8 @@
    "solo": 2.0,
    "actual": 6.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0285,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -7946,7 +8161,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0302,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -7983,7 +8199,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0285,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -8020,7 +8237,8 @@
    "solo": 1.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.025,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.36
   },
@@ -8057,7 +8275,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0263,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.3
   },
@@ -8094,7 +8313,8 @@
    "solo": 3.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0268,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.1
   },
@@ -8131,7 +8351,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0267,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.2
   },
@@ -8168,7 +8389,8 @@
    "solo": 3.0,
    "actual": 6.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0282,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -8205,7 +8427,8 @@
    "solo": 4.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0339,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -8242,7 +8465,8 @@
    "solo": 4.0,
    "actual": 4.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0266,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -8279,7 +8503,8 @@
    "solo": 0.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0256,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -8316,7 +8541,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0272,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.35
   },
@@ -8353,7 +8579,8 @@
    "solo": 4.0,
    "actual": 12.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0274,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -8390,7 +8617,8 @@
    "solo": 1.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0255,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.36
   },
@@ -8427,7 +8655,8 @@
    "solo": 2.0,
    "actual": 3.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0281,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.14
   },
@@ -8464,7 +8693,8 @@
    "solo": 8.0,
    "actual": 8.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0267,
+   "clv_prob": -0.0,
+   "clv_pos": false,
    "result": "Loss",
    "units": -1.0
   },
@@ -8501,7 +8731,8 @@
    "solo": 2.0,
    "actual": 2.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0203,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.03
   },
@@ -8538,7 +8769,8 @@
    "solo": 3.0,
    "actual": 5.0,
    "clv_line": 0.0,
-   "clv_prob": -0.018,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.12
   },
@@ -8575,7 +8807,8 @@
    "solo": 0.0,
    "actual": 1.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0302,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 0.9901
   },
@@ -8612,7 +8845,8 @@
    "solo": 0.0,
    "actual": 0.0,
    "clv_line": 0.0,
-   "clv_prob": -0.0209,
+   "clv_prob": 0.0,
+   "clv_pos": false,
    "result": "Win",
    "units": 1.76
   }
