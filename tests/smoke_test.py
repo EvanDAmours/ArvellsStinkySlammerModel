@@ -108,6 +108,7 @@ graded, summary = G.grade(pw)
 check(list(graded.result) == ["Win", "Loss", "Win"], f"picks graded correctly ({list(graded.result)})")
 check(abs(summary["units"] - (2 * (100 / 110) - 1)) < 1e-6, f"units computed ({summary['units']:.3f})")
 check(list(graded.clv_line) == [1.0, -1.0, 1.0], f"closing line value computed ({list(graded.clv_line)})")
+check(summary["close_moved"] == 3 and abs(summary["beat_close_share"] - 2 / 3) < 1e-9, f"beat-the-close share counts only moved lines ({summary['beat_close_share']:.3f} of {summary['close_moved']})")
 f5 = summary["five"]
 check(f5["wins"] == 1 and f5["losses"] == 1 and len(f5["weeks"]) == 1 and f5["weeks"][0]["running_wins"] == 1, f"weekly five tally ({f5['wins']}-{f5['losses']}, {len(f5['weeks'])} week)")
 # a fake two-leg parlay on the same finished games: both legs cashed

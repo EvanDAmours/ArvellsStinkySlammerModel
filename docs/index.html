@@ -242,7 +242,7 @@ function renderPlays() {
 const slateDate = (b) => { const d = betKick(b); return !d || isNaN(d) ? "" : new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d); };
 function legend() {
   const g = DATA.meta?.grading || {};
-  const bars = g.bars || { A: 72, B: 55 }, u = g.units || { A: 1, B: 0.5, C: 0.25 }, w = g.weights || { ev: 0.35, model: 0.25, consistency: 0.2, sample: 0.1, signal: 0.1 };
+  const bars = g.bars || { A: 72, B: 55 }, u = g.units || { A: 1, B: 0.5, C: 0.25 }, w = g.weights || { ev: 0.35, model: 0.25, consistency: 0.2, sample: 0.1, signal: 0.1 }, cl = g.clv || { decent: 0.52, good: 0.56, great: 0.6 };
   const row = (grade, cut, stake, what) => el("tr", {}, el("td", {}, el("span", { class: `grade ${grade}` }, grade)), el("td", {}, cut), el("td", {}, stake), el("td", {}, what));
   return el("details", { class: "legend", open: "" },
     el("summary", {}, "How picks are graded and how much to bet"),
@@ -252,8 +252,21 @@ function legend() {
         row("B", `${bars.B} to ${bars.A - 1}`, `${u.B} unit`, "A real edge with one weak spot: a thinner game log, a smaller gap, or no signal behind it."),
         row("C", `below ${bars.B}`, `${u.C} unit or pass`, "Clears the bar on price alone. Play only if you like the matchup."))),
     el("p", {}, `The lock score is out of 100 and uses the model's own evidence only, never the book's opinion: ${pct(w.ev)} expected return at the posted price (full marks at ${signedPct(g.ev_full ?? 0.15)}), ${pct(w.model)} the model's own chance for the side (full marks at ${pct(g.model_full ?? 0.75)}), ${pct(w.consistency)} how often he cleared this line in his games this season, ${pct(w.sample)} games of data this season, and ${pct(w.signal)} for a role-change or outlier-fade signal behind the pick. The projection it prices from is ${pct(1 - (g.line_weight ?? 0.6))} model and ${pct(g.line_weight ?? 0.6)} the posted line, which keeps the model's claimed edges honest.`),
-    el("p", {}, "Stakes are a guide, not a promise: the grades are being tested on the Track record tab, and if A does not beat B and C over time the formula changes."));
+    el("p", {}, "Stakes are a guide, not a promise: the grades are being tested on the Track record tab, and if A does not beat B and C over time the formula changes."),
+    el("h4", {}, "Beating the closing line"),
+    el("p", {}, "A line moves between the time we bet it and kickoff as money comes in and the book sharpens its number. The last number before kickoff, the closing line, is the market's best estimate with everything priced in. If we took Under 3.5 and it closed at Under 2.5, we got a number a point better than the market's considered view: we beat the close. If it closed at 4.5, the market moved against us. One bet's result is mostly luck, but the direction the line moves is the whole market's judgement on whether we were right, and over a few hundred bets the share of picks that beat the close predicts profit better than the win-loss record does."),
+    el("p", {}, `How it is measured here: every pick is logged with the line and price at the time, and the morning after it is compared with the last pull before kickoff at the same book. A pick beats the close if the line moved our way, or the line held and the no-vig price moved our way. Picks whose number did not change at all are left out of the share, because tackle lines only move in half points and most never move between our pulls.`),
+    el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Share that beat the close"), el("th", {}, "Read it as"))),
+      el("tbody", {},
+        el("tr", {}, el("td", {}, `below ${pct(cl.decent)}`), el("td", {}, "No edge the market can see. Over a few hundred bets this is indistinguishable from flipping a coin.")),
+        el("tr", {}, el("td", {}, `${pct(cl.decent)} to ${pct(cl.good)}`), el("td", {}, "Decent: a real but small edge, the kind that survives the vig only at good prices.")),
+        el("tr", {}, el("td", {}, `${pct(cl.good)} to ${pct(cl.great)}`), el("td", {}, "Good: what sharp bettors sustain. Profitable over a season if stakes follow the grades.")),
+        el("tr", {}, el("td", {}, `${pct(cl.great)} and up`), el("td", {}, "Great: rare, and usually means the books have not caught up to something the model sees. Enjoy it while it lasts, because they will.")))),
+    el("p", {}, "Judge it on a few hundred moved lines, not a weekend: with 100 picks the share swings 10 points on luck alone, with 300 about 6."));
 }
+const clvBars = () => DATA.meta?.grading?.clv || { decent: 0.52, good: 0.56, great: 0.6 };
+const clvWord = (x) => { const c = clvBars(); return x == null ? "no moved lines graded yet" : x >= c.great ? "great so far" : x >= c.good ? "good so far" : x >= c.decent ? "decent so far" : "no edge visible yet"; };
+const clvClass = (x) => { const c = clvBars(); return x == null ? "" : x >= c.good ? "pos" : x < c.decent ? "neg" : ""; };
 const slateName = (iso) => { const d = new Date(iso + "T12:00:00"); return isNaN(d) ? iso : d.toLocaleDateString("en-CA", { weekday: "long" }); };
 const decimalOf = (a) => (a == null ? null : a > 0 ? 1 + a / 100 : 1 + 100 / Math.abs(a));
 const pts = (x) => (x == null ? "" : (x >= 0 ? "+" : "") + (x * 100).toFixed(0) + " pts");
@@ -348,9 +361,9 @@ function renderRecord() {
     el("div", {}, wl(s.wins, s.losses, s.pushes), "Record"),
     el("div", {}, units(s.units), "Units (1 per bet)"),
     el("div", {}, el("b", { class: s.roi == null ? "" : s.roi >= 0 ? "pos" : "neg" }, s.roi == null ? "" : signedPct(s.roi)), "Return per bet"),
-    el("div", {}, el("b", {}, s.beat_close_share == null ? "" : pct(s.beat_close_share)), "Beat the closing line"),
+    el("div", {}, el("b", { class: clvClass(s.beat_close_share) }, s.beat_close_share == null ? "" : pct(s.beat_close_share)), `Beat the closing line${s.close_moved ? ` (${s.close_moved} moved lines of ${s.close_known})` : ""}`),
     el("div", {}, el("b", {}, String(s.pending ?? 0)), "Pending")));
-  box.append(el("p", { class: "note" }, "Beating the closing line is the earliest reliable sign of a real edge: over a few hundred bets it predicts profit better than the win-loss record does."));
+  box.append(el("p", { class: "note" }, `Beating the closing line is the earliest reliable sign of a real edge: over a few hundred moved lines it predicts profit better than the win-loss record does. Cutoffs and the full explanation are in the legend on the Plays tab: ${clvWord(s.beat_close_share)}.`));
   if (s.five && (s.five.bets || (s.five.weeks && s.five.weeks.length))) {
     box.append(el("h3", {}, "The locks (weekly five)"));
     box.append(el("div", { class: "stat-line" },

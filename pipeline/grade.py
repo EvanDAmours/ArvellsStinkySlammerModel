@@ -250,11 +250,21 @@ def grade(pw_comb):
                 continue
             c = c.iloc[0]
             line_move = (c.line - r.line) if r.side == "Over" else (r.line - c.line)   # positive = we beat the close
-            prob_gain = _no_vig_side(c.over_odds, c.under_odds, r.side) - (1 / american_to_decimal(r.odds)) if c.line == r.line else np.nan
+            prob_gain = np.nan
+            if c.line == r.line:
+                # same line: did the no-vig price move our way? compare the closing no-vig chance of our side with the
+                # no-vig chance when we bet (logged as market_over), falling back to our implied price
+                mo = getattr(r, "market_over", np.nan)
+                open_side = (mo if r.side == "Over" else 1 - mo) if pd.notna(mo) else 1 / american_to_decimal(r.odds)
+                prob_gain = _no_vig_side(c.over_odds, c.under_odds, r.side) - open_side
             clv.append((r.Index, line_move, prob_gain))
     for idx, lm, pg in clv:
         P.loc[idx, "clv_line"] = lm
         P.loc[idx, "clv_prob"] = pg
+    # closing-line value: the line moved our way, or the line held and the no-vig price moved our way (0.5 pt tolerance)
+    moved = P.clv_line.notna() & ((P.clv_line != 0) | (P.clv_prob.abs() > 0.005))
+    P["clv_pos"] = np.where(P.clv_line.notna(), (P.clv_line > 0) | ((P.clv_line == 0) & (P.clv_prob > 0.005)), False)
+    P["clv_pos"] = P.clv_pos.astype(bool)
     done = P.actual.notna()
     win = np.where(P.side == "Over", P.actual > P.line, P.actual < P.line)
     push = P.actual == P.line
@@ -285,7 +295,9 @@ def grade(pw_comb):
                    pushes=int((g.result == "Push").sum()), units=float(g.units.sum()) if len(g) else 0.0,
                    roi=float(g.units.sum() / len(g)) if len(g) else None,
                    avg_clv_line=float(P.clv_line.mean()) if P.clv_line.notna().any() else None,
-                   beat_close_share=float((P.clv_line > 0).mean()) if P.clv_line.notna().any() else None,
+                   avg_clv_prob=float(P.clv_prob.mean()) if P.clv_prob.notna().any() else None,
+                   beat_close_share=float(P.clv_pos[moved].mean()) if moved.any() else None,
+                   close_moved=int(moved.sum()), close_known=int(P.clv_line.notna().sum()),
                    pending=int((P.result == "Pending").sum()))
     return P.drop(columns=["name_key"]), summary
 

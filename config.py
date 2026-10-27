@@ -73,6 +73,10 @@ LOCK_EV_FULL = 0.15                # an expected return this high scores full ma
 LOCK_MODEL_FULL = 0.75             # a model probability this high for our side scores full marks (50% scores zero)
 GRADE_BARS = dict(A=72, B=55)      # lock score at or above these is an A or a B; the rest are C
 GRADE_UNITS = dict(A=1.0, B=0.5, C=0.25)   # suggested stake per grade, in units (shown in the site legend)
+# Closing-line value: among picks whose closing number differed from ours, the share that moved our way. Below
+# ~52% is indistinguishable from noise over a few hundred bets (standard error ~3% at 300); sharp bettors sustain
+# 55-60% and 60%+ is rare. Shown in the site legend.
+CLV_BARS = dict(decent=0.52, good=0.56, great=0.60)
 
 # --- locks per slate day (Edmonton time) and the recommended parlay ---
 LOCKS_PER_SLATE = dict(single=3, multi=5)   # one game kicking off that day -> 3 locks; more games -> 5

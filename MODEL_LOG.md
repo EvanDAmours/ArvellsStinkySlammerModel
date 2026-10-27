@@ -247,6 +247,15 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
   a line per week with the running record, and every pick with its result. The site shows the same tally in the
   five box on Plays ("season to date 24-1") and as a per-week table on Track record.
 
+### 2026-10-27, afternoon MDT (closing-line value: definition, cutoffs, legend)
+- "Beat the close" is now the standard definition: among picks whose closing number differed from ours at all,
+  the share where the line moved our way or the line held and the no-vig price moved our way. Unmoved lines are
+  excluded (half-point tackle lines rarely move between pulls, and counting them as misses pinned the figure near
+  zero). The same-line price comparison now uses the no-vig chance at bet time, not our price with the vig in it.
+- Cutoffs (`CLV_BARS`): below 52% no visible edge, 52-56% decent, 56-60% good, 60%+ great. The legend on the Plays
+  tab explains the concept, the measurement and the cutoffs; the Track record figure is coloured by them and
+  shows how many moved lines it rests on.
+
 ### 2026-10-27, afternoon MDT (five new data sources in the model)
 - See research round 2 above. New loaders in `pipeline/sources.py`: `load_depth_charts`, `load_pfr_def`,
   `load_pbp_tackles`; `load_schedule` carries rest days; `load_injuries` carries player ids. New config:

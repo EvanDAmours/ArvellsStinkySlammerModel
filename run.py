@@ -279,7 +279,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
     meta = dict(generated_at=now, season=C.SEASON, week=week, lines_pulled=lines_pulled, **status,
                 bars=dict(pick=C.PICK_BAR, signal=C.SIGNAL_BAR),
                 grading=dict(bars=C.GRADE_BARS, units=C.GRADE_UNITS, weights=C.LOCK_WEIGHTS, ev_full=C.LOCK_EV_FULL,
-                             model_full=C.LOCK_MODEL_FULL, locks=C.LOCKS_PER_SLATE, line_weight=C.LINE_WEIGHT))
+                             model_full=C.LOCK_MODEL_FULL, locks=C.LOCKS_PER_SLATE, line_weight=C.LINE_WEIGHT, clv=C.CLV_BARS))
     old = SITE / "meta.json"
     if old.exists():
         prev = json.loads(old.read_text())
