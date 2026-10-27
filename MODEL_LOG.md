@@ -257,11 +257,17 @@ numbers below are what they printed).
 - The replay tool used a cached `model_state.json` for phi and scale and would have had no corrector; it now
   runs the backtest itself so the replay prices with the same model the daily job would have had.
 
-**Week 7 replayed under this model** (`tools/replay_five.py --week 7`, Sunday and Monday slates): Sunday locks
-2-3 (-1.49 units; same five as before: Elliss W, Lenoir L, Tranquill W, two losses), all plays 100-91
-(+9.77 units; was 96-92, +5.3), Sunday parlay Elliss/Lenoir/Tranquill (+310) Loss. Monday night's four picks and
-the Kenny Clark lock were already graded as wins live. One week is noise; the evidence for the change is the
-walk-forward backtest, not this replay.
+**Week 7 replayed under this model** (`tools/replay_five.py --week 7`, every pull from Saturday to Monday):
+locks 2-3 (-1.49 units: Elliss W, Schwesinger W, Lenoir L, Queen L, Carter L; the same five the round-2 model
+chose), all plays 100-91 (+9.77 units; was 96-92, +5.3), Sunday parlay Elliss/Lenoir/Tranquill (+310) Loss.
+**The Monday slate produced no locks and no parlay under the corrector**: the board had nine lines on three
+players, and Kenny Clark Under 2.5 (the live lock, which won) scored 54 against the 55 floor, down from 64 under
+the factor model, because the corrector projects him at 2.43 instead of 2.34 against a 2.5 line. Only one Monday
+leg cleared the 55% parlay fallback, so no parlay could be built. The live Monday record (lock 1-0, parlay win)
+stands as it was chosen; replays never rewrite live records. Trade-off to watch: the corrector sits closer to the
+line than the factor model, so on a thin single-game board fewer picks clear the lock floor, against the
+owner's target of three locks on Thursday and Monday. Nothing is changed for that here; see the backlog.
+One week is noise; the evidence for the change is the walk-forward backtest, not this replay.
 
 ## Weekly post-mortems
 
@@ -487,6 +493,10 @@ Open, with what would justify them:
 - Alternate-line markets (`player_tackles_assists_alternate`): more lines to shop, double the credit cost per game.
 - Role-change signal: 0-3 so far. Keep logging; judge at 30 picks.
 - Second key: fix `PARLAY_API_KEY` so Saturday pulls stay inside the credit budget.
+- Single-game slates can come up short of three locks now that the corrector sits closer to the line (week 7
+  Monday replay: zero locks, best score 54 against the 55 floor). Options, none adopted without evidence: a lower
+  floor on single-game slates, or filling the three with the best scores and marking any below 55 as "lean".
+  Decide after the Thursday and Monday slates of weeks 8-9 have been graded.
 - Corrector weight 0.7: marginally better in sample (-1.11% vs -1.08%); revisit after 2026 ends with a full
   extra season of walk-forward evidence.
 - A corrector for solo tackles: the current one moves the solo projection in proportion to the combined one.
@@ -519,6 +529,8 @@ Open, with what would justify them:
   data file must be added to that list. Also: chain a push on the test's exit code, never on a grep of its output.
 - The daily job runs at 7:30 am Eastern; Sunday's box scores are in nflverse by then, Monday night's are graded
   Tuesday.
+- Never run two pipeline processes at once on one machine: the corrector's thread pools oversubscribe the cores
+  and both crawl (a 50 s smoke test and an 80 s replay both hit a 10-minute limit when run together).
 - Any second model must be reported walk-forward (trained on earlier seasons, scored on the latest). In-sample
   numbers for a boosted model are 3x the honest ones.
 - `picks.csv` gains columns over time (`uncertain` added 2026-10-27); older rows read back as empty, so every use
