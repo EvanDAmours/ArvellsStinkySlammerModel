@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-10-26T19:53+00:00",
+ "generated_at": "2026-10-27T11:42+00:00",
  "season": 2026,
- "week": 7,
- "lines_pulled": "20261026T210128Z",
+ "week": 8,
+ "lines_pulled": null,
  "stats_source": "2023: nflreadpy; 2024: nflreadpy; 2025: nflreadpy; 2026: nflreadpy",
  "tackle_formula": "solo+with_ast+ast",
  "formula_check_ok": true,
@@ -23,12 +23,10 @@
    "mean_abs_error": 28.2857
   }
  ],
- "snaps_rows": 86011,
+ "snaps_rows": 86104,
  "injury_rows": 2139,
- "volume_rows": 1844,
- "international_games": [
-  "PIT at NO, Sun 2026-10-25 07:30 Edmonton"
- ],
+ "volume_rows": 1846,
+ "international_games": [],
  "bars": {
   "pick": 0.06,
   "signal": 0.04
@@ -62,6 +60,5 @@
  "odds_credits_by_key": {
   "ODDS_API_KEY": 406.0,
   "PARLAY_API_KEY": 0.0
- },
- "lines_count": 9
+ }
 }

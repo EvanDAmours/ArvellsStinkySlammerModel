@@ -5,119 +5,119 @@
   2025,
   2026
  ],
- "games": 28781,
+ "games": 28824,
  "best_shrink_games": 1,
- "scale": 0.986,
+ "scale": 0.9859,
  "predictors": [
   {
-   "n": 28781,
-   "mae": 1.6585,
-   "rmse": 2.1967,
-   "bias": -0.0479,
+   "n": 28824,
+   "mae": 1.6582,
+   "rmse": 2.1961,
+   "bias": -0.0481,
    "predictor": "Full model without stat crew",
-   "beats_last_game": 16770
+   "beats_last_game": 16788
   },
   {
-   "n": 28781,
-   "mae": 1.6586,
-   "rmse": 2.1995,
-   "bias": -0.0369,
+   "n": 28824,
+   "mae": 1.6582,
+   "rmse": 2.1989,
+   "bias": -0.0371,
    "predictor": "Full model without role bump",
-   "beats_last_game": 16762
+   "beats_last_game": 16780
   },
   {
-   "n": 28781,
-   "mae": 1.659,
-   "rmse": 2.1972,
-   "bias": -0.0484,
+   "n": 28824,
+   "mae": 1.6586,
+   "rmse": 2.1966,
+   "bias": -0.0485,
    "predictor": "Full model",
-   "beats_last_game": 16760
+   "beats_last_game": 16778
   },
   {
-   "n": 28781,
-   "mae": 1.6597,
-   "rmse": 2.1987,
-   "bias": -0.0483,
+   "n": 28824,
+   "mae": 1.6594,
+   "rmse": 2.1981,
+   "bias": -0.0484,
    "predictor": "Full model without spread tilt",
-   "beats_last_game": 16753
+   "beats_last_game": 16771
   },
   {
-   "n": 28781,
-   "mae": 1.6631,
-   "rmse": 2.204,
-   "bias": -0.0461,
+   "n": 28824,
+   "mae": 1.6628,
+   "rmse": 2.2035,
+   "bias": -0.0464,
    "predictor": "Full model without opportunity volume",
-   "beats_last_game": 16767
+   "beats_last_game": 16785
   },
   {
-   "n": 28781,
-   "mae": 1.665,
-   "rmse": 2.2087,
-   "bias": -0.0187,
+   "n": 28824,
+   "mae": 1.6646,
+   "rmse": 2.2081,
+   "bias": -0.0188,
    "predictor": "Full model without snap trend",
-   "beats_last_game": 16708
+   "beats_last_game": 16726
   },
   {
-   "n": 28781,
-   "mae": 1.668,
-   "rmse": 2.2054,
-   "bias": -0.0493,
+   "n": 28824,
+   "mae": 1.6675,
+   "rmse": 2.2047,
+   "bias": -0.0494,
    "predictor": "Full model with one shrink for every position",
-   "beats_last_game": 16730
+   "beats_last_game": 16748
   },
   {
-   "n": 28781,
-   "mae": 1.6777,
-   "rmse": 2.2268,
-   "bias": -0.0056,
+   "n": 28824,
+   "mae": 1.6773,
+   "rmse": 2.2262,
+   "bias": -0.0059,
    "predictor": "Season average shrunk 1 game toward last season",
-   "beats_last_game": 16577
+   "beats_last_game": 16595
   },
   {
-   "n": 28781,
-   "mae": 1.6909,
-   "rmse": 2.2798,
-   "bias": 0.0798,
+   "n": 28824,
+   "mae": 1.6905,
+   "rmse": 2.2793,
+   "bias": 0.0795,
    "predictor": "Season average",
-   "beats_last_game": 15703
+   "beats_last_game": 15718
   },
   {
-   "n": 28781,
-   "mae": 1.6947,
-   "rmse": 2.227,
-   "bias": -0.0587,
+   "n": 28824,
+   "mae": 1.6943,
+   "rmse": 2.2263,
+   "bias": -0.059,
    "predictor": "Season average shrunk 2 games toward last season",
-   "beats_last_game": 16280
+   "beats_last_game": 16298
   },
   {
-   "n": 28781,
-   "mae": 1.696,
-   "rmse": 2.2811,
-   "bias": 0.0657,
+   "n": 28824,
+   "mae": 1.6954,
+   "rmse": 2.2804,
+   "bias": 0.0654,
    "predictor": "80% season average, 20% last game",
-   "beats_last_game": 16287
+   "beats_last_game": 16305
   },
   {
-   "n": 28781,
-   "mae": 1.7372,
-   "rmse": 2.2599,
-   "bias": -0.1236,
+   "n": 28824,
+   "mae": 1.7367,
+   "rmse": 2.2592,
+   "bias": -0.1239,
    "predictor": "Season average shrunk 4 games toward last season",
-   "beats_last_game": 15981
+   "beats_last_game": 15999
   },
   {
-   "n": 28781,
-   "mae": 1.8339,
-   "rmse": 2.4844,
-   "bias": 0.0267,
+   "n": 28824,
+   "mae": 1.8334,
+   "rmse": 2.4837,
+   "bias": 0.0264,
    "predictor": "Average of last two games",
-   "beats_last_game": 13418
+   "beats_last_game": 13429
   },
   {
-   "n": 28781,
-   "mae": 2.0608,
-   "rmse": 2.8183,
-   "bias": 0.0093,
+   "n": 28824,
+   "mae": 2.0598,
+   "rmse": 2.8172,
+   "bias": 0.0091,
    "predictor": "Last game",
    "beats_last_game": 0
   }
@@ -196,26 +196,26 @@
    "predictor": "Last game"
   },
   {
-   "n": 2606,
-   "mae": 1.7129,
-   "rmse": 2.2963,
-   "bias": 0.0944,
+   "n": 2649,
+   "mae": 1.7084,
+   "rmse": 2.2899,
+   "bias": 0.0914,
    "season": 2026,
    "predictor": "Season average"
   },
   {
-   "n": 2606,
-   "mae": 1.6411,
-   "rmse": 2.1715,
-   "bias": 0.0032,
+   "n": 2649,
+   "mae": 1.6375,
+   "rmse": 2.1654,
+   "bias": 0.0011,
    "season": 2026,
    "predictor": "Full model"
   },
   {
-   "n": 2606,
-   "mae": 2.0445,
-   "rmse": 2.7757,
-   "bias": 0.0054,
+   "n": 2649,
+   "mae": 2.0347,
+   "rmse": 2.7648,
+   "bias": 0.003,
    "season": 2026,
    "predictor": "Last game"
   }
@@ -223,83 +223,83 @@
  "dispersion": [
   {
    "group": "CB",
-   "n": 5303,
-   "raw": 1.4364,
-   "corrected": 1.2728,
-   "used": 1.2728
+   "n": 5313,
+   "raw": 1.4349,
+   "corrected": 1.2713,
+   "used": 1.2713
   },
   {
    "group": "DL",
-   "n": 9529,
-   "raw": 1.1799,
-   "corrected": 1.0239,
-   "used": 1.0239
+   "n": 9539,
+   "raw": 1.1795,
+   "corrected": 1.0236,
+   "used": 1.0236
   },
   {
    "group": "LB",
-   "n": 8443,
-   "raw": 1.6533,
-   "corrected": 1.4916,
-   "used": 1.4916
+   "n": 8459,
+   "raw": 1.6523,
+   "corrected": 1.4906,
+   "used": 1.4906
   },
   {
    "group": "S",
-   "n": 5466,
-   "raw": 1.6101,
-   "corrected": 1.4473,
-   "used": 1.4473
+   "n": 5473,
+   "raw": 1.6098,
+   "corrected": 1.4469,
+   "used": 1.4469
   }
  ],
  "calibration": [
   {
    "bucket": "(-0.001, 0.2]",
-   "n": 3714,
-   "predicted": 0.1312,
-   "observed": 0.1508
+   "n": 3738,
+   "predicted": 0.131,
+   "observed": 0.1348
   },
   {
    "bucket": "(0.2, 0.35]",
-   "n": 4133,
+   "n": 4149,
    "predicted": 0.2718,
-   "observed": 0.277
+   "observed": 0.2552
   },
   {
    "bucket": "(0.35, 0.45]",
-   "n": 2161,
-   "predicted": 0.3988,
-   "observed": 0.4007
+   "n": 2138,
+   "predicted": 0.3983,
+   "observed": 0.3807
   },
   {
    "bucket": "(0.45, 0.55]",
-   "n": 2036,
+   "n": 2034,
    "predicted": 0.4982,
-   "observed": 0.4843
+   "observed": 0.4715
   },
   {
    "bucket": "(0.55, 0.65]",
-   "n": 1768,
-   "predicted": 0.5994,
-   "observed": 0.5764
+   "n": 1799,
+   "predicted": 0.5986,
+   "observed": 0.5709
   },
   {
    "bucket": "(0.65, 0.8]",
-   "n": 1099,
-   "predicted": 0.7001,
-   "observed": 0.6615
+   "n": 1065,
+   "predicted": 0.702,
+   "observed": 0.6601
   }
  ],
  "regression": [
   {
    "situation": "After a game 4+ above his average",
-   "n": 920,
-   "vs_avg": 0.3239,
-   "vs_last": -4.913
+   "n": 922,
+   "vs_avg": 0.3219,
+   "vs_last": -4.9154
   },
   {
    "situation": "After a game 3+ below his average",
-   "n": 1188,
-   "vs_avg": -0.8205,
-   "vs_last": 3.0034
+   "n": 1189,
+   "vs_avg": -0.8219,
+   "vs_last": 3.0017
   }
  ],
  "role": {
