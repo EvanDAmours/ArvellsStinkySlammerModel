@@ -40,6 +40,8 @@ proj = json.loads((tmp / "docs/data/projections.json").read_text())
 bt = json.loads((tmp / "docs/data/backtest.json").read_text())
 check(meta["week"] == 7, f"upcoming week detected ({meta['week']})")
 check(meta["formula_check_ok"], f"tackle formula self-check matched official totals ({meta['tackle_formula']})")
+check(any("boosted corrector" in r["predictor"] for r in bt["predictors"]), "boosted corrector scored walk-forward in the backtest")
+check(all(p.get("proj_gbm") is None or p["proj_gbm"] > 0 for p in proj) and any(p.get("proj_gbm") for p in proj), "projections carry the corrector's own number")
 check(len(proj) > 300, f"projections built ({len(proj)})")
 
 P = {r["predictor"]: r for r in bt["predictors"]}

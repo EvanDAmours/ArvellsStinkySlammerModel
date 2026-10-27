@@ -40,9 +40,10 @@ def lines_as_of(snaps, t):
 
 def replay(season, week):
     seasons, pw, sched, snaps_df, inj, H, status, src = R.load_all()
-    state = json.load(open("data/cache/model_state.json"))
+    from pipeline import backtest as B
+    _, phi, _, scale, gbm = B.run_backtest(H, seasons)     # same calibration and corrector the daily job would have built
     P = M.finalize_projections(M.upcoming_rows(H, sched, inj, season, week, vol=src["vol"], dc=src["dc"], pbp_starters=src["pbp"]["starters"]),
-                               state["phi"], scale=state.get("scale", 1.0))
+                               phi, scale=scale, gbm=gbm)
     P = R.attach_game_logs(P, H, season, week)
     snaps = O.load_snapshots(season, week)
     if snaps.empty:

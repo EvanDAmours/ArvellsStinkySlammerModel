@@ -30,7 +30,7 @@ def _metrics(actual, pred):
 def run_backtest(H, seasons):
     T = build_test_rows(H, seasons)
     if T.empty:
-        return {"error": "No games to test yet."}, {g: v for g, v in C.DEFAULT_PHI.items()}, C.SHRINK_GAMES, 1.0
+        return {"error": "No games to test yet."}, {g: v for g, v in C.DEFAULT_PHI.items()}, C.SHRINK_GAMES, 1.0, None
     a = T.comb.astype(float)
     preds = {"Season average": T.comb_prev_raw / T.n_prev}
     for k in [1, 2, 4]:
@@ -52,6 +52,7 @@ def run_backtest(H, seasons):
     preds["Full model without PFR targets and missed tackles"] = M.project_frame(T, use_pfr=False)[1]
     preds["Full model without run/pass mix"] = M.project_frame(T, use_mix=False)[1]
     preds["Full model without rest days"] = M.project_frame(T, use_rest=False)[1]
+    preds["Full model without injury report"] = M.project_frame(T, use_injury=False)[1]
 
     table = []
     for name, p in preds.items():
@@ -126,7 +127,18 @@ def run_backtest(H, seasons):
                     actual_vs_avg_pct=float((rs.comb.sum() / avg.sum()) - 1))
 
     scale = float(np.clip(T.comb.sum() / max(1e-9, float(np.nansum(full))), 0.9, 1.1))   # level calibration of the full model
+    # second model, reported honestly: trained on all seasons but the latest, scored on the latest; then trained on everything for live use
+    gbm_rows, gbm_live = [], None
+    last = max(seasons)
+    X = M.gbm_features(T, full * scale)
+    if (T.season < last).sum() > 2000 and (T.season == last).sum() > 200:
+        fold = M.fit_gbm(X[T.season < last], T.comb[T.season < last])
+        if fold is not None:
+            sel = (T.season == last).values
+            fm, gm = _metrics(T.comb[sel], (full * scale)[sel]), _metrics(T.comb[sel], M.blend_gbm((full * scale)[sel], fold(X[sel])))
+            gbm_rows = [dict(predictor=f"Full model, {last} fold", **fm), dict(predictor=f"{int(C.GBM['weight'] * 100)}% boosted corrector blend, {last} fold (trained on earlier seasons)", **gm)]
+    gbm_live = M.fit_gbm(X, T.comb)
     result = dict(seasons=[int(s) for s in seasons], games=int(len(T)), best_shrink_games=int(best_k), scale=scale,
-                  predictors=table, by_season=by_season, dispersion=phi_rows, calibration=cal_rows,
+                  predictors=table + gbm_rows, by_season=by_season, dispersion=phi_rows, calibration=cal_rows,
                   regression=reg, role=role)
-    return result, phi_by_group, best_k, scale
+    return result, phi_by_group, best_k, scale, gbm_live

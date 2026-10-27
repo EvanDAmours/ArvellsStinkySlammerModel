@@ -22,7 +22,7 @@ def log_picks(bets, season, week, pulled_at):
     new = new.assign(season=season, week=week, pulled_at=pulled_at, side=new.pick,
                      odds=np.where(new.pick == "Over", new.over_odds, new.under_odds))
     cols = KEY + ["team", "opp", "odds", "proj", "proj_model", "mkt_line", "model_over", "market_over", "ev", "why",
-                  "lock", "grade", "consistency", "cons_hits", "cons_n", "payout", "event_id", "commence_time", "pulled_at"]
+                  "lock", "grade", "consistency", "cons_hits", "cons_n", "payout", "uncertain", "event_id", "commence_time", "pulled_at"]
     new = new[[c for c in cols if c in new.columns]]
     old = pd.read_csv(PICKS) if PICKS.exists() else pd.DataFrame(columns=cols)
     both = pd.concat([old, new], ignore_index=True).drop_duplicates(KEY, keep="first")  # keep the first price we took
@@ -94,7 +94,10 @@ def mark_locks(P, season, week, now=None):
         slots = max(0, locks_for(games.get(slate, 1)) - kept.player.nunique())
         if slots and "lock" in P.columns:
             cand = P[open_ & ~P.player.isin(set(kept.player))].sort_values("lock", ascending=False)
-            cand = cand[cand.lock.notna() & (cand.lock >= C.LOCK_MIN_SCORE)].drop_duplicates("player").head(slots)
+            cand = cand[cand.lock.notna() & (cand.lock >= C.LOCK_MIN_SCORE)]
+            if "uncertain" in cand.columns:
+                cand = cand[~cand.uncertain.fillna(False).astype(bool)]
+            cand = cand.drop_duplicates("player").head(slots)
             P.loc[cand.index, "five"] = True
     return P
 
@@ -118,6 +121,8 @@ def choose_parlay(bets, slate):
     if bets is None or len(bets) == 0 or "ev" not in bets:
         return None
     b = bets[(bets.slate == slate) & bets.proj.notna() & bets.ev.notna() & (bets.ev >= 0)].copy()
+    if "uncertain" in b.columns:
+        b = b[~b.uncertain.fillna(False).astype(bool)]
     if b.empty:
         return None
     b["p_side"] = np.where(b.side == "Over", b.model_over, 1 - b.model_over)

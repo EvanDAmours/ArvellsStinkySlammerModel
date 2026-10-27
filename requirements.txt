@@ -3,3 +3,4 @@ numpy>=1.26
 requests>=2.31
 pyarrow>=15
 nflreadpy>=0.1
+scikit-learn>=1.5

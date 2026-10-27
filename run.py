@@ -141,7 +141,7 @@ def load_all():
     pw = S.apply_tackle_formula(pw, formula)
     sched = S.load_schedule(seasons)
     snaps = S.load_snaps(seasons)
-    inj = S.load_injuries([C.SEASON])
+    inj = S.load_injuries(seasons)
     vol = S.load_team_volume(seasons)
     pbp, pfr, dc = S.load_pbp_tackles(seasons), S.load_pfr_def(seasons), S.load_depth_charts(seasons)
     if len(pbp["teams"]):
@@ -149,6 +149,7 @@ def load_all():
         vol = vol.merge(t, on=["season", "week", "team"], how="left")
         vol = vol.merge(t.rename(columns={"team": "opp_team", "faced_runs": "gen_runs", "faced_comps": "gen_comps"}), on=["season", "week", "opp_team"], how="left")
     H = M.add_history_features(M.attach_extras(M.attach_volume(M.prepare(pw, sched, snaps), vol), pbp, pfr, dc))
+    H = M.attach_injury_status(H, inj)
     H = M.role_signals_backtest(H)
     status = dict(stats_source=used, tackle_formula=formula, formula_check_ok=ok, formula_check=report,
                   snaps_rows=int(len(snaps)), injury_rows=int(len(inj)), volume_rows=int(len(vol)),
@@ -188,9 +189,9 @@ def attach_game_logs(P, H, season, week):
 def cmd_daily():
     seasons, pw, sched, snaps, inj, H, status, src = load_all()
     week = upcoming_week(sched, C.SEASON)
-    bt, phi, k, scale = B.run_backtest(H, seasons)
+    bt, phi, k, scale, gbm = B.run_backtest(H, seasons)
     F = M.upcoming_rows(H, sched, inj, C.SEASON, week, vol=src["vol"], dc=src["dc"], pbp_starters=src["pbp"]["starters"])
-    P = M.finalize_projections(F, phi, scale=scale)
+    P = M.finalize_projections(F, phi, scale=scale, gbm=gbm)
     P = attach_game_logs(P, H, C.SEASON, week)
     CACHE.mkdir(parents=True, exist_ok=True)
     if len(P):
@@ -288,7 +289,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
     _json(SITE / "meta.json", meta)
     cols = ["player", "team", "opp_team", "group", "status", "n_prev", "season_avg", "last", "base", "proj", "proj_solo",
             "fair_line", "fair_line_solo", "crew_comb", "crew_solo", "spread_dog", "role_signal", "venue", "gameday", "gametime", "phi",
-            "dc_status", "opp_qb_out", "opp_rb_out", "rest", "pct_last3", "pct_prev"]
+            "dc_status", "opp_qb_out", "opp_rb_out", "rest", "pct_last3", "pct_prev", "proj_factor", "proj_gbm"]
     _json(SITE / "projections.json", records(P, [c for c in cols if c in P.columns]) if len(P) else [])
     _json(SITE / "bets.json", records(bets))
     _json(SITE / "backtest.json", bt)

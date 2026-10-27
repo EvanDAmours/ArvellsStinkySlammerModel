@@ -13,7 +13,7 @@ Everything runs on GitHub's servers on a schedule. You don't run anything by han
 | `run.py` | Entry point: `python run.py daily` and `python run.py odds --auto` |
 | `config.py` | Every setting (seasons, betting thresholds, model knobs) in one place |
 | `pipeline/sources.py` | Loads nflverse data (player stats, snaps, schedule, injuries, team stats, play-by-play, depth charts, PFR advanced defence) with fallbacks and a self-check against official tackle totals |
-| `pipeline/model.py` | Projections (season rate, stat crews, snap-share trend, opportunity volume, role bump), the tackle distribution, line pricing and grading |
+| `pipeline/model.py` | Projections (season rate, stat crews, snap-share trend, opportunity volume, role bump, depth chart, PFR, run/pass mix, rest, injury report), a gradient-boosted second model blended in, the tackle distribution, line pricing and grading |
 | `pipeline/backtest.py` | Walk-forward test of every predictor on every past game |
 | `pipeline/odds.py` | Pulls tackle lines from The Odds API and stores timestamped snapshots |
 | `pipeline/grade.py` | Logs picks and grades them against box scores and the closing line |
@@ -81,9 +81,11 @@ season total from Pro Football Reference works).
 ## Confidence grades
 
 Every priced line gets a lock score (0-100) and a grade: **A** (72+), **B** (55+) or **C**. The score blends the
-expected return, whether the market also favours the side, how often the player has cleared the line this season,
-and how many games of data he has; an outlier-fade signal adds a bonus. Weights are in `config.py`. The Track record
-tab reports results by grade so the grade itself is tested: if A does not beat C over time, the weights are wrong.
+expected return, the model's own probability for the side, how often the player has cleared the line this season,
+and how many games of data he has; a role-change or outlier-fade signal adds a bonus. Nothing in the score comes
+from the market agreeing with the pick: the edge is what the market has not priced. Weights are in `config.py`.
+The Track record tab reports results by grade so the grade itself is tested: if A does not beat C over time, the
+weights are wrong. A player listed questionable is priced 8% under his average and is never a lock or a parlay leg.
 
 ## The model log
 
@@ -100,8 +102,13 @@ Edit `config.py`. The most useful knobs:
 - `FADE_GAP`: how far off his average a last game must be to count as an outlier.
 - `SEASON` and `HISTORY_SEASONS`: update every year.
 
-The backtest re-estimates the averaging weight and the spread of tackle counts every day,
-so those adjust themselves.
+- `GBM`: the second model. `weight` is how much of the final projection comes from the gradient-boosted
+  corrector (0.6); the rest is the factor model.
+
+The backtest re-estimates the averaging weight, the level calibration and the spread of tackle counts every day,
+and retrains the second model on every finished game, so those adjust themselves. The backtest table reports the
+second model walk-forward (trained on earlier seasons, scored on the latest) so its gain is never measured on
+games it was trained on. `scikit-learn` is required for it; without it the factor model runs alone.
 
 ## Testing on your own computer
 

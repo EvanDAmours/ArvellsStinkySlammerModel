@@ -43,6 +43,13 @@ DEPTH = dict(demoted=0.90, promoted=1.02)            # listed below a starter he
 PFR = dict(target_slope=-0.065, target_cap=(0.85, 1.12), miss_slope=0.22, miss_base=0.10, miss_cap=(0.95, 1.12))
 MIX = dict(weight=0.3, power=0.5, cap=(0.85, 1.15))   # opponent run/pass mix vs the player's own run- and pass-tackle rates
 REST = dict(bye=0.96, bye_days=10)                    # a defence coming off a bye runs ~4% under its average
+# Own injury report (research round 3): listed questionable and played, -6% over 1,191 games; limited practice -4%.
+# Questionable players are priced (not passed) but never locks or parlay legs, since they may not play.
+INJURY = dict(questionable=0.92, limited_practice=0.97)
+# Second model (research round 3): a gradient-boosted corrector on the same features, Poisson loss, trained fresh each
+# morning on every finished game, blended with the factor model. Out of sample it cut error 1.1% (2025-26) and 1.5%
+# (2026 trained through 2025). The backtest reports it walk-forward: trained on earlier seasons, scored on the latest.
+GBM = dict(weight=0.6, max_iter=800, learning_rate=0.02, max_leaf_nodes=31, min_samples_leaf=40, l2=0.5, seeds=(0, 1, 2))
 POS_PRIOR = {"LB": 6.0, "S": 4.5, "CB": 3.5, "DL": 2.5}       # tackles per game, used only with no history
 POS_SOLO_SHARE = {"LB": 0.52, "S": 0.62, "CB": 0.72, "DL": 0.45}
 SPREAD_TILT = 0.005                # +0.5% tackles per point a defense is an underdog (capped)

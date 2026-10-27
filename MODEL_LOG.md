@@ -49,13 +49,21 @@ to prevent those.
    games vs season, damped), a **tackle-opportunity volume** factor (expected opponent carries + completions +
    sacks vs what the player has faced, damped and capped), a **depth-chart** factor (demoted x0.90, promoted
    x1.02), **PFR** factors (coverage targets for DBs, missed-tackle rate), a **run/pass mix** factor from
-   play-by-play, and a **bye-week** factor (x0.96). A level calibration from the backtest (about 1.0) is applied. Count distribution tighter or looser than Poisson per position, re-estimated daily by the backtest.
+   play-by-play, a **bye-week** factor (x0.96) and an **injury-report** factor (listed questionable x0.92, limited
+   practice x0.97). A level calibration from the backtest (about 1.0) is applied. Then a **second model** (added
+   2026-10-27): a gradient-boosted regressor with Poisson loss, trained every morning on every finished
+   defender-game since 2023 from the same 25 signals plus the factor projection itself, takes 60% of the final
+   number and the factor model 40% (`GBM`). The solo projection moves in the same proportion. Count distribution
+   tighter or looser than Poisson per position, re-estimated daily by the backtest.
 2. **Pricing (changed 2026-10-26).** The mean used to price a line is `0.4 x projection + 0.6 x consensus line`
    (`LINE_WEIGHT`). Expected return is computed from that mean against the no-vig market price.
 3. **Picks.** A side is a pick when its expected return clears `PICK_BAR` (6%), or `SIGNAL_BAR` (4%) with a
-   role-change or outlier-fade signal, the player is not flagged on the injury report, and he has at least 3 games.
-4. **Grade (added 2026-10-26).** Every priced line gets a 0-100 lock score and an A/B/C grade from expected return,
-   market agreement, how often the player cleared the line this season, and games of data. Logged with every pick
+   role-change or outlier-fade signal, the player is not out or doubtful, and he has at least 3 games. A player
+   listed questionable is priced (with the x0.92 factor) and can be a pick, tagged "Questionable", but is never a
+   lock or a parlay leg: he may not play, and the bet voids if he sits.
+4. **Grade (added 2026-10-26, market agreement removed the same day).** Every priced line gets a 0-100 lock score
+   and an A/B/C grade from expected return, the model's own side probability, how often the player cleared the line
+   this season, games of data, and a signal bonus. Nothing from the market. Logged with every pick
    and summarised by grade on the Track record tab so the grade itself is tested.
 5. **Grading.** Picks are graded against official box scores the next morning, with closing-line value.
 
@@ -182,6 +190,79 @@ is worse than the full model (depth +0.0013, mix +0.0014, rest +0.0023, PFR +0.0
 (+5.3 units); Sunday parlay Loss, Monday parlay Win.
 Live Monday night: lock Kenny Clark Under 2.5 won; all four Monday picks won.
 
+## Research round 3: ten more data sets and a second model (2026-10-27, late afternoon MDT)
+
+The owner asked for ten more data sets or models to find an edge beyond the one measured so far. Same method:
+36,424 defender-games built with every source loaded daily plus the candidates below, 28,824 scored (2+ prior
+games, week 3+), fitted on 2023-24 (17,213), scored on 2025-26 (11,611). Reference: the round-2 full model,
+test-years MAE 1.6254. Scripts: scratch `research/build3.py`, `evaluate3.py`, `gbm3b.py` (not in the repo; the
+numbers below are what they printed).
+
+### Adopted
+
+1. **Own injury report, played anyway** (`load_injuries`, all seasons; now also `practice_status`). A defender
+   listed questionable who played ran 6% under the model over 1,191 games; limited practice that week, 4% under
+   over 1,274 games; did-not-practise, nothing (550). Factors x0.92 and x0.97 (`INJURY`): test MAE -0.07% and
+   -0.05%, both halves agree. Questionable players were previously passed outright; they are now priced with the
+   factor and can be picks (tagged "Questionable" on the card, with a note in the reason), but never locks or
+   parlay legs. Backtest row "Full model without injury report": +0.0025 worse than the full model.
+2. **A second model: gradient-boosted corrector.** A `HistGradientBoostingRegressor` with Poisson loss (800 trees,
+   learning rate 0.02, 31 leaves, 40 games per leaf, L2 0.5, three seeds averaged) on 25 features the pipeline
+   already computes: the factor model's log projection, games, snap-share trend, snap share, volume ratio, spread,
+   PFR target and missed-tackle rates, depth-chart flags, starter flag, questionable and limited flags, rest, week,
+   last game, raw average, last-season average, crew factor, position, home, expected opponent runs and
+   completions, and the player's run- and pass-tackle rates. Fitted on 2023-24 and scored on 2025-26: alone
+   -0.91% MAE; blended 50/60/70% with the factor model -1.00 / -1.08 / -1.11%. A second, stricter check trained
+   through 2025 and scored 2026 only (2,649 games): 1.6281 -> 1.6041 (-1.47%). Calibration of the 60% blend is
+   as honest as the factor model's (the 0.55-0.65 bucket predicts 0.567 and hits 0.550; the factor model predicts
+   0.570 and hits 0.605). Weight set at 0.6 (`GBM`): 0.7 was marginally better in sample but leans harder on the
+   less interpretable half. Training takes a few seconds; the daily job is now about 80 s.
+   How it is reported: the backtest table carries two walk-forward rows, "Full model, 2026 fold" and "60% boosted
+   corrector blend, 2026 fold (trained on earlier seasons)", so the gain shown is never measured on games the
+   corrector saw. Live, it is retrained each morning on every finished game, and each projection carries
+   `proj_factor` and `proj_gbm` beside the blended `proj`. Without scikit-learn the factor model runs alone.
+   Real daily run on 2026-10-27: full model 1.6482 on 28,824 games (was 1.6507); 2026 fold 1.6289 -> 1.6032 with
+   the corrector; scale 1.0012; every ablation row worse than the full model.
+
+### Measured and not adopted (do not retry without new data)
+
+3. **Zone matchups** (play-by-play `run_location`, `pass_length`, scrambles): each player's tackle rate by run
+   direction and pass depth, times the opponent's mix of those zones, against a neutral mix. The raw diagnostic
+   showed a 2% spread between the lowest and highest fifths, but as a factor it was worse at half strength
+   (+0.09%) and much worse at full (+1.03%). The run/pass mix factor already carries what is real here.
+4-12. **Opponent offensive tendencies**, nine of them, each as a per-position multiplier fitted on the train
+   years: short-pass rate (air yards 5 or less), running-back target rate, screen rate, play-action rate, RPO
+   rate, no-huddle rate, pre-snap motion rate, quarterback out-of-pocket rate, players in the backfield (the last
+   six from FTN charting). Not one moved the test error by more than 0.04% in either direction, and the fitted
+   slopes flipped sign across positions. None loaded; FTN charting stays out of the pipeline.
+13. **Cross-position starters out** (own team, from the report by position group): fitted +7% DL when a DL starter
+   is out, +14% LB, +12% S, +14% CB, +8% CB when a safety is out, +6% LB when a corner is out. Every one was
+   worse on the test years (LB +0.39%), because the role bump already pays the same-group effect and the
+   cross-group effects did not hold out of sample. Not adopted; the role bump stays as is.
+14. **Blitz rate** (PFR `def_times_blitzed`, LB and S): heavy blitzers ran 2% under the model, light ones 2% over,
+   but the fitted slope rounded to zero out of sample (-0.00%).
+15. **Play-by-play solo share** for the solo projection (run tackles are solo 42% of the time, pass tackles 69%):
+   the player's own run/pass solo shares weighted by the expected mix scored worse than the current solo share
+   (MAE 1.1406 vs 1.1276), and a 50/50 blend was still worse (1.1327). Kept the current solo method.
+16. **Participation data** (`load_participation`: defenders on the field per play) ends with the 2025 season on
+   nflverse and cannot be used live. Not built.
+
+### Pitfalls found this round
+
+- The corrector must be scored walk-forward. Trained and scored on the same seasons it looks 3-4% better than
+  the factor model; the honest number is 1.1-1.5%. The backtest rows are built that way on purpose.
+- A corrector feature must exist for upcoming rows exactly as in the backtest rows. `gbm_features` fills every
+  missing column with the same neutral value in both paths; a column present in one and absent in the other
+  silently shifts the prediction.
+- The replay tool used a cached `model_state.json` for phi and scale and would have had no corrector; it now
+  runs the backtest itself so the replay prices with the same model the daily job would have had.
+
+**Week 7 replayed under this model** (`tools/replay_five.py --week 7`, Sunday and Monday slates): Sunday locks
+2-3 (-1.49 units; same five as before: Elliss W, Lenoir L, Tranquill W, two losses), all plays 100-91
+(+9.77 units; was 96-92, +5.3), Sunday parlay Elliss/Lenoir/Tranquill (+310) Loss. Monday night's four picks and
+the Kenny Clark lock were already graded as wins live. One week is noise; the evidence for the change is the
+walk-forward backtest, not this replay.
+
 ## Weekly post-mortems
 
 ### Week 7, 2026 (first live week; graded 2026-10-26)
@@ -218,6 +299,23 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-10-27, late afternoon MDT (research round 3: injury report factor, second model)
+- See research round 3 above. **Injury factor** (`INJURY`, `injury_factor`, `attach_injury_status`): questionable
+  x0.92, limited practice x0.97; injuries now loaded for every history season with practice status. Questionable
+  players are priced and can be picks (`uncertain` flag in `price_lines`, logged in `data/picks.csv`, "Questionable"
+  tag on cards) but `mark_locks` and `choose_parlay` skip them. Backtest ablation row "Full model without injury
+  report". Revert condition: the ablation row beats the full model two weeks running.
+- **Second model** (`GBM`, `gbm_features`, `fit_gbm`, `blend_gbm` in `pipeline/model.py`): a gradient-boosted
+  Poisson corrector trained each morning on all finished games, 60% of the final projection. `run_backtest` now
+  returns it as a fifth value and reports it walk-forward in two extra table rows; `finalize_projections` takes
+  `gbm=` and writes `proj_factor` / `proj_gbm` to `projections.json`. New dependency `scikit-learn>=1.5`. Smoke
+  test checks the walk-forward row and the corrector's numbers. Daily job about 80 s. Revert condition: the
+  "boosted corrector blend" fold row worse than the "Full model" fold row on the daily backtest two weeks running,
+  or the live plays record by grade turning worse than before the change over 200+ picks.
+- `tools/replay_five.py` now runs the backtest for phi, scale and the corrector instead of reading the cached
+  model state, so replays use the same model the daily job would have had.
+- README: model description, grade description (market agreement was still mentioned there), `GBM` knob.
 
 ### 2026-10-23
 - Imported the tackle model into the repo; default branch is `claude/sleepy-bell-wot0ys`.
@@ -389,6 +487,12 @@ Open, with what would justify them:
 - Alternate-line markets (`player_tackles_assists_alternate`): more lines to shop, double the credit cost per game.
 - Role-change signal: 0-3 so far. Keep logging; judge at 30 picks.
 - Second key: fix `PARLAY_API_KEY` so Saturday pulls stay inside the credit budget.
+- Corrector weight 0.7: marginally better in sample (-1.11% vs -1.08%); revisit after 2026 ends with a full
+  extra season of walk-forward evidence.
+- A corrector for solo tackles: the current one moves the solo projection in proportion to the combined one.
+  Justified if the solo-line record by grade lags the combined-line record.
+- Stop pricing a questionable player at all when his practice status is "did not participate" on Friday: needs
+  the daily report timing, which nflverse does not carry.
 
 ## Known pitfalls
 
@@ -415,3 +519,7 @@ Open, with what would justify them:
   data file must be added to that list. Also: chain a push on the test's exit code, never on a grep of its output.
 - The daily job runs at 7:30 am Eastern; Sunday's box scores are in nflverse by then, Monday night's are graded
   Tuesday.
+- Any second model must be reported walk-forward (trained on earlier seasons, scored on the latest). In-sample
+  numbers for a boosted model are 3x the honest ones.
+- `picks.csv` gains columns over time (`uncertain` added 2026-10-27); older rows read back as empty, so every use
+  of a newer column must `fillna` a neutral value.

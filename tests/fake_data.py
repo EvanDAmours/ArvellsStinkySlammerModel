@@ -117,7 +117,7 @@ def fake_injuries(seasons):
     inj = _league(_key(sorted(set([2023, 2024, 2025, 2026]) | set(seasons))))[3]
     inj = inj[inj.season.isin(list(seasons))]
     return pd.DataFrame(dict(season=inj.season, week=inj.week, team=inj.team, name_key=inj.full_name.map(norm_name),
-                             status=inj.report_status))
+                             player_id=inj.full_name.map(norm_name), status=inj.report_status, practice=""))
 
 
 def planted_crews():

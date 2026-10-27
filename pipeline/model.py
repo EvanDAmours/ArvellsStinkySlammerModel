@@ -365,12 +365,35 @@ def mix_factor(F):
     return (1 + c["weight"] * (ratio - 1)).fillna(1.0)
 
 
+def injury_factor(F):
+    """Listed questionable (and expected to play) or limited in practice: a few percent under his average."""
+    c = C.INJURY
+    status = F["status"].fillna("").astype(str).str.lower() if "status" in F else pd.Series("", index=F.index)
+    practice = F["practice"].fillna("").astype(str).str.lower() if "practice" in F else pd.Series("", index=F.index)
+    f = np.where(status == "questionable", c["questionable"], 1.0) * np.where(practice.str.startswith("limited"), c["limited_practice"], 1.0)
+    return pd.Series(f, index=F.index)
+
+
+def attach_injury_status(H, inj):
+    """Each defender-game's own report status and practice status that week (for the backtest of the injury factor)."""
+    H = H.copy()
+    if inj is None or len(inj) == 0:
+        H["status"], H["practice"] = "", ""
+        return H
+    cols = ["season", "week", "team", "name_key", "status"] + (["practice"] if "practice" in inj.columns else [])
+    i = inj.drop_duplicates(["season", "week", "team", "name_key"])[cols]
+    H = H.merge(i, on=["season", "week", "team", "name_key"], how="left")
+    H["status"] = H.status.fillna("")
+    H["practice"] = H["practice"].fillna("") if "practice" in H.columns else ""
+    return H
+
+
 def rest_factor(F):
     r = C.REST
     return pd.Series(np.where(F.get("rest", pd.Series(7, index=F.index)).fillna(7) >= r["bye_days"], r["bye"], 1.0), index=F.index)
 
 
-def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_snap=True, use_volume=True, use_depth=True, use_pfr=True, use_mix=True, use_rest=True):
+def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_snap=True, use_volume=True, use_depth=True, use_pfr=True, use_mix=True, use_rest=True, use_injury=True):
     k = F.group.map(C.SHRINK_GAMES_BY_GROUP).fillna(C.SHRINK_GAMES) if k is None else k
     if use_crew:
         prev, ps = F.comb_prev, F.ps_avg
@@ -394,6 +417,8 @@ def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_sn
         extra = extra * mix_factor(F).values
     if use_rest:
         extra = extra * rest_factor(F).values
+    if use_injury:
+        extra = extra * injury_factor(F).values
     solo_share = (F.solo_prev + 8 * F.group.map(C.POS_SOLO_SHARE).fillna(0.6)) / (F.comb_prev + 8)
     mu = base * tilt * crew_c * role * snap * volume * extra
     mu_solo = base * tilt * solo_share * crew_s * role * snap * volume * extra
@@ -480,7 +505,9 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
     # injuries for this week: own status, and role signal when a regular at his position group is out
     inj = injuries[(injuries.season == season) & (injuries.week == week)] if len(injuries) else injuries
     status = {(r.team, r.name_key): r.status for r in inj.itertuples()} if len(inj) else {}
+    practice = {(r.team, r.name_key): getattr(r, "practice", "") for r in inj.itertuples()} if len(inj) else {}
     F["status"] = [status.get((t, n), "") for t, n in zip(F.team, F.name_key)]
+    F["practice"] = [practice.get((t, n), "") for t, n in zip(F.team, F.name_key)]
     out_keys = {(t, n) for (t, n), s in status.items() if str(s).lower() in OUT_STATUSES}
     regs = F[(F.pct_prev >= 0.75) & (F.n_prev >= 2)]
     vacated = {(r.team, r.group) for r in regs.itertuples() if (r.team, r.name_key) in out_keys}
@@ -489,12 +516,19 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
     return F
 
 
-def finalize_projections(F, phi_by_group, k=None, scale=1.0):
-    """scale: the backtest's level calibration (actual / predicted), applied to the projected means."""
+def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
+    """scale: the backtest's level calibration (actual / predicted), applied to the projected means.
+    gbm: the trained corrector's predict function; its blend moves the combined projection and the solo one in step."""
     if F.empty:
         return F
     base, mu, mu_solo = project_frame(F, k=k)
     mu, mu_solo = mu * scale, mu_solo * scale
+    if gbm is not None:
+        g = gbm(gbm_features(F, mu))
+        blended = pd.Series(blend_gbm(mu, g), index=F.index)
+        ratio = (blended / mu.clip(lower=1e-6)).clip(0.5, 2.0)
+        F = F.assign(proj_factor=mu.values, proj_gbm=np.asarray(g))
+        mu, mu_solo = blended, mu_solo * ratio
     F = F.assign(base=base.values, proj=mu.values, proj_solo=mu_solo.values)
     F["phi"] = F.group.map(phi_by_group).fillna(1.0)
     F.loc[F.venue == "NEUTRAL", "phi"] = F.phi + 0.15
@@ -579,7 +613,8 @@ def price_lines(lines, P):
         gap = (p["last"] - p.base) if pd.notna(p["last"]) else 0.0
         fade = abs(gap) >= C.FADE_GAP and ((side == "Under" and gap > 0) or (side == "Over" and gap < 0))
         role = bool(p.role_signal) and side == "Over"
-        flagged = str(p.status).lower() in OUT_STATUSES or str(p.status).lower() == "questionable"
+        flagged = str(p.status).lower() in OUT_STATUSES
+        uncertain = str(p.status).lower() == "questionable"
         thin = p.n_prev < C.MIN_GAMES_FOR_PICK and not role
         bar = C.SIGNAL_BAR if (fade or role) else C.PICK_BAR
         pick = side if (ev >= bar and not flagged and not thin) else "Pass"
@@ -593,13 +628,15 @@ def price_lines(lines, P):
             why = f"Best side returns {ev:+.0%}; needs {bar:.0%}"
         else:
             why = f"{side} returns {ev:+.0%}" + (", backed by a role change" if role else ", fading an outlier last game" if fade else ", price gap only")
+            if uncertain:
+                why += "; listed questionable: priced 8% under his average, not a lock, voids if he sits"
         rows.append({**base, "team": p.team, "opp": p.opp_team, "group": p.group, "proj": float(mu), "proj_model": float(mu_model),
                      "mkt_line": float(r.mkt_line), "phi": float(p.phi), "model_over": po, "market_over": mkt, "ev": ev, "side": side,
                      "pick": pick, "why": why, "signal_fade": bool(fade), "signal_role": role, "status": p.status,
                      "season_avg": float(p.season_avg), "last": None if pd.isna(p["last"]) else float(p["last"]),
                      "n_prev": int(p.n_prev), "consistency": consistency, "cons_hits": int(sum(hits)), "cons_n": len(hits),
                      "mkt_side": float(mkt_side), "payout": None if dec is None else float(dec - 1),
-                     "international": str(p.get("venue", "")) == "NEUTRAL", "depth": p.get("dc_status", ""),
+                     "international": str(p.get("venue", "")) == "NEUTRAL", "depth": p.get("dc_status", ""), "uncertain": bool(uncertain),
                      "opp_qb_out": bool(p.get("opp_qb_out", False)), "opp_rb_out": bool(p.get("opp_rb_out", False)),
                      "rest": None if pd.isna(p.get("rest", np.nan)) else int(p.get("rest")),
                      "lock": lock, "grade": grade_of(lock)})
@@ -610,3 +647,56 @@ def price_lines(lines, P):
         out["best_price"] = ~out.duplicated(["player", "market", "side", "line"]) & out.ev.notna()
         out = out.sort_values(["lock", "ev"], ascending=[False, False], na_position="last")
     return out
+
+
+# ---------------------------------------------------------------- second model: gradient-boosted corrector
+GBM_FEATURES = ["log_mu", "n_prev", "snap", "pct_prev", "vol", "spread", "tgt", "miss", "demoted", "promoted", "starter", "q", "limited",
+                "rest", "week", "last", "avg", "ps_avg", "crew", "grp", "is_home", "exp_runs", "exp_comps", "run_tk_rate", "pass_tk_rate"]
+
+
+def gbm_features(F, mu):
+    """The feature frame for the corrector: the factor model's projection plus the raw signals behind it."""
+    n = F.n_prev.astype(float).clip(lower=1)
+    col = lambda c, d=np.nan: F[c] if c in F else pd.Series(d, index=F.index)
+    status = col("status", "").fillna("").astype(str).str.lower(); practice = col("practice", "").fillna("").astype(str).str.lower()
+    X = pd.DataFrame({
+        "log_mu": np.log(pd.Series(np.asarray(mu, dtype=float), index=F.index).clip(lower=0.05)),
+        "n_prev": F.n_prev.astype(float),
+        "snap": (col("pct_last3") / col("pct_prev").clip(lower=0.05)).fillna(1.0).clip(0.3, 3.0),
+        "pct_prev": col("pct_prev").fillna(0),
+        "vol": (col("exp_opps") / col("opps_prev_mean")).fillna(1.0).clip(0.6, 1.6),
+        "spread": col("spread_dog").fillna(0),
+        "tgt": (col("targets_prev") / n).fillna(0),
+        "miss": (col("missed_prev") / (col("pfr_comb_prev").fillna(0) + col("missed_prev").fillna(0)).clip(lower=1)).fillna(0.1),
+        "demoted": col("demoted", False).fillna(False).astype(float), "promoted": col("promoted", False).fillna(False).astype(float),
+        "starter": col("dc_starter").astype(float).fillna(0.5),
+        "q": (status == "questionable").astype(float), "limited": practice.str.startswith("limited").astype(float),
+        "rest": col("rest").fillna(7), "week": F.week.astype(float), "last": col("last").fillna(0),
+        "avg": (F.comb_prev_raw / n), "ps_avg": col("ps_avg").fillna(-1), "crew": col("crew_comb").fillna(1.0),
+        "grp": F.group.map({"LB": 0, "S": 1, "CB": 2, "DL": 3}).fillna(4), "is_home": col("is_home", False).fillna(False).astype(float),
+        "exp_runs": col("exp_runs").fillna(26), "exp_comps": col("exp_comps").fillna(21),
+        "run_tk_rate": (col("run_tk_prev") / col("runs_faced_prev").clip(lower=1)).fillna(0),
+        "pass_tk_rate": (col("pass_tk_prev") / col("comps_faced_prev").clip(lower=1)).fillna(0),
+    })
+    return X[GBM_FEATURES].astype(float)
+
+
+def fit_gbm(X, y):
+    """Train the corrector (a few seeds averaged). Returns a predict function, or None if scikit-learn is missing."""
+    try:
+        from sklearn.ensemble import HistGradientBoostingRegressor
+    except ImportError:
+        return None
+    c = C.GBM
+    models = []
+    for seed in c["seeds"]:
+        m = HistGradientBoostingRegressor(loss="poisson", max_iter=c["max_iter"], learning_rate=c["learning_rate"], max_leaf_nodes=c["max_leaf_nodes"],
+                                          min_samples_leaf=c["min_samples_leaf"], l2_regularization=c["l2"], random_state=seed)
+        m.fit(X, y)
+        models.append(m)
+    return lambda Xn: np.mean([m.predict(Xn) for m in models], axis=0)
+
+
+def blend_gbm(mu, gbm_pred):
+    w = C.GBM["weight"]
+    return (1 - w) * np.asarray(mu, dtype=float) + w * np.clip(np.asarray(gbm_pred, dtype=float), 0.05, None)

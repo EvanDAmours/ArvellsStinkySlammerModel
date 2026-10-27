@@ -230,9 +230,10 @@ def load_injuries(seasons):
             "name_key": _col(df, "full_name", "player_name").map(norm_name),
             "player_id": _col(df, "gsis_id", default="").astype(str),
             "status": _col(df, "report_status", default="").fillna("").astype(str),
+            "practice": _col(df, "practice_status", default="").fillna("").astype(str),
         }))
     if not frames:
-        return pd.DataFrame(columns=["season", "week", "team", "name_key", "player_id", "status"])
+        return pd.DataFrame(columns=["season", "week", "team", "name_key", "player_id", "status", "practice"])
     return pd.concat(frames, ignore_index=True)
 
 
