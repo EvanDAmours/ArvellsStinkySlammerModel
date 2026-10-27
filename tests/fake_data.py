@@ -150,3 +150,34 @@ def fake_team_volume(seasons):
     faced = pw.groupby(["season", "week", "team", "opp"]).comb.sum().reset_index().rename(columns={"opp": "opp_team", "comb": "faced"})
     gen = faced.rename(columns={"team": "opp_team", "opp_team": "team", "faced": "gen"})
     return faced.merge(gen, on=["season", "week", "team", "opp_team"], how="left")
+
+
+def fake_depth_charts(seasons):
+    """Old-format charts from the synthetic snaps: rank 1 if the player had 60%+ of defensive snaps in the previous game."""
+    sn = fake_snaps(seasons)
+    sn = sn.sort_values(["season", "week"])
+    rows = []
+    for (s, t), part in sn.groupby(["season", "team"]):
+        weeks = sorted(part.week.unique())
+        for i, w in enumerate(weeks):
+            prev = part[part.week == weeks[i - 1]] if i else part[part.week == w]
+            for r in prev.itertuples():
+                rows.append(dict(season=int(s), week=int(w), date=None, team=t, player_id=r.name_key, rank=1 if r.def_pct >= 0.6 else 2))
+    return pd.DataFrame(rows)
+
+
+def fake_pfr_def(seasons):
+    pw = fake_player_week(seasons)
+    comb = pw.solo + pw.ast + pw.with_ast
+    return pd.DataFrame(dict(season=pw.season, week=pw.week, team=pw.team, name_key=pw.player.map(__import__("pipeline.sources", fromlist=["norm_name"]).norm_name),
+                             targets=np.where(pw.group.isin(["CB", "S"]), (comb * 0.8).round(), 0.0), missed=(comb * 0.1).round(), pfr_comb=comb))
+
+
+def fake_pbp_tackles(seasons):
+    pw = fake_player_week(seasons)
+    comb = pw.solo + pw.ast + pw.with_ast
+    players = pd.DataFrame(dict(season=pw.season, week=pw.week, player_id=pw.player_id, run_tk=(comb * 0.55).round(), pass_tk=(comb * 0.45).round()))
+    vol = fake_team_volume(seasons)
+    teams = pd.DataFrame(dict(season=vol.season, week=vol.week, team=vol.team, runs_faced=(vol.faced * 0.55).round(), comps_faced=(vol.faced * 0.45).round()))
+    starters = pd.DataFrame(dict(season=vol.season, week=vol.week, team=vol.team, qb1="QB_" + vol.team, rb1="RB_" + vol.team))
+    return dict(players=players, teams=teams, starters=starters)

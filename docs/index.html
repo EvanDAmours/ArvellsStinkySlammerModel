@@ -67,6 +67,8 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 .daybar button { padding: 6px 12px; border: 1px solid var(--line, #cfd4dc); background: transparent; border-radius: 8px; margin-right: 4px; cursor: pointer; font: inherit; color: var(--ink); }
 .daybar button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
 .daybar button:disabled { opacity: 0.35; cursor: not-allowed; }
+.tag { display: inline-block; padding: 1px 6px; border-radius: 6px; background: #8a8f98; color: #fff; font-size: 0.75rem; margin-left: 6px; vertical-align: middle; }
+.tag.ok { background: #1f8a4c; } .tag.warn { background: #c0392b; }
 .intl { display: inline-block; padding: 1px 6px; border-radius: 6px; background: #2c5aa0; color: #fff; font-size: 0.75rem; margin-left: 6px; vertical-align: middle; }
 .parlay-box { border: 2px solid #2c5aa0; border-radius: 10px; padding: 10px 12px 8px; margin: 0 0 16px; }
 .parlay-box h3 { margin: 0 0 4px; font: 700 1.1rem/1.2 var(--cond); }
@@ -286,7 +288,10 @@ function card(b) {
     const side = b.side || b.pick;
     const price = side === "Under" ? b.under_odds : b.over_odds;
     const card = el("div", { class: "play" + (isPick ? " pick" : "") + (b.five ? " five" : "") },
-      el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}`, title: "Confidence grade" }, b.grade) : "", b.five ? el("span", { class: "star", title: "Lock" }, "★") : "", b.player, b.international ? el("span", { class: "intl", title: "Neutral-site game overseas: stat crew unknown, lines pulled 12 h and 1 h before kickoff" }, "International") : "", el("small", {}, [b.team, b.opp ? `vs ${b.opp}` : "", kickoffLocal(betKick(b)) ? `· ${kickoffLocal(betKick(b))}` : ""].filter(Boolean).join(" ")),
+      el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}`, title: "Confidence grade" }, b.grade) : "", b.five ? el("span", { class: "star", title: "Lock" }, "★") : "", b.player, b.international ? el("span", { class: "intl", title: "Neutral-site game overseas: stat crew unknown, lines pulled 12 h and 1 h before kickoff" }, "International") : "",
+        b.depth === "promoted" ? el("span", { class: "tag ok", title: "Listed as a starter on the latest depth chart; was not before his last game" }, "Promoted") : b.depth === "demoted" ? el("span", { class: "tag warn", title: "No longer listed as a starter on the latest depth chart" }, "Demoted") : "",
+        b.opp_qb_out ? el("span", { class: "tag", title: "The opponent's starting quarterback is listed out or doubtful" }, "Opp QB out") : "", b.opp_rb_out ? el("span", { class: "tag", title: "The opponent's lead rusher is listed out or doubtful" }, "Opp RB out") : "",
+        b.rest != null && b.rest >= 10 ? el("span", { class: "tag", title: "Defence coming off a bye week" }, "Off a bye") : b.rest != null && b.rest <= 4 ? el("span", { class: "tag", title: "Short week" }, "Short week") : "", el("small", {}, [b.team, b.opp ? `vs ${b.opp}` : "", kickoffLocal(betKick(b)) ? `· ${kickoffLocal(betKick(b))}` : ""].filter(Boolean).join(" ")),
         b.lock == null ? "" : el("div", { class: "lock" }, `Lock score ${Math.round(b.lock)}/100`)),
       el("div", { class: "ev" }, el("b", {}, b.ev == null ? "" : signedPct(b.ev)), el("span", {}, "expected return")),
       el("div", { class: "bet" }, el("span", { class: side === "Under" ? "under" : "over" }, `${side || ""} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market).toLowerCase()}`),

@@ -202,6 +202,8 @@ def load_schedule(seasons):
         # nflverse convention: positive spread_line means the home team is favored
         "spread_line": pd.to_numeric(_col(df, "spread_line", default=0), errors="coerce").fillna(0),
         "total_line": pd.to_numeric(_col(df, "total_line", default=float("nan")), errors="coerce"),
+        "home_rest": pd.to_numeric(_col(df, "home_rest", default=7), errors="coerce").fillna(7),
+        "away_rest": pd.to_numeric(_col(df, "away_rest", default=7), errors="coerce").fillna(7),
     })
     sc = sc[sc.season.isin(list(seasons)) & sc.game_type.str.upper().str.startswith("REG")]
     return sc.drop(columns=["game_type"]).reset_index(drop=True)
@@ -226,10 +228,11 @@ def load_injuries(seasons):
             "week": pd.to_numeric(_col(df, "week")).astype(int),
             "team": _col(df, "team").astype(str),
             "name_key": _col(df, "full_name", "player_name").map(norm_name),
+            "player_id": _col(df, "gsis_id", default="").astype(str),
             "status": _col(df, "report_status", default="").fillna("").astype(str),
         }))
     if not frames:
-        return pd.DataFrame(columns=["season", "week", "team", "name_key", "status"])
+        return pd.DataFrame(columns=["season", "week", "team", "name_key", "player_id", "status"])
     return pd.concat(frames, ignore_index=True)
 
 
@@ -265,3 +268,121 @@ def load_team_volume(seasons):
     v = pd.concat(frames, ignore_index=True)
     faced = v.rename(columns={"team": "opp_team", "opp_team": "team", "gen": "faced"})
     return v.merge(faced, on=["season", "week", "team", "opp_team"], how="left")
+
+
+# ---------------------------------------------------------------- depth charts
+def load_depth_charts(seasons):
+    """Defensive depth-chart starters. Two nflverse formats: through 2024 one chart per (season, week, team) with a
+    rank in depth_team; from 2025 dated snapshots with pos_rank. Returns rows (season, week|None, date|None, team,
+    player_id, rank) for defensive positions only."""
+    if os.environ.get("TACKLE_FAKE_DATA"):
+        from tests.fake_data import fake_depth_charts
+        return fake_depth_charts(seasons)
+    frames = []
+    for s in seasons:
+        try:
+            df, _ = _first_working([("nflreadpy", lambda s=s: _nflreadpy("load_depth_charts", seasons=[s]))])
+        except RuntimeError:
+            continue
+        if "depth_team" in df.columns and df.depth_team.notna().any():
+            d = df[_col(df, "formation", default="").astype(str).eq("Defense")]
+            d = d[pd.to_numeric(d.week, errors="coerce").notna() & pd.to_numeric(d.season, errors="coerce").notna() & d.gsis_id.notna()]
+            frames.append(pd.DataFrame({"season": pd.to_numeric(d.season).astype(int), "week": pd.to_numeric(d.week).astype(int), "date": None,
+                                        "team": d.club_code.astype(str), "player_id": d.gsis_id.astype(str),
+                                        "rank": pd.to_numeric(d.depth_team, errors="coerce")}))
+        elif "dt" in df.columns:
+            d = df[df.pos_grp.fillna("").astype(str).str.contains(" D")]
+            frames.append(pd.DataFrame({"season": s, "week": None, "date": d.dt.astype(str).str[:10], "team": d.team.astype(str),
+                                        "player_id": d.gsis_id.astype(str), "rank": pd.to_numeric(d.pos_rank, errors="coerce")}))
+    if not frames:
+        return pd.DataFrame(columns=["season", "week", "date", "team", "player_id", "rank"])
+    return pd.concat(frames, ignore_index=True).dropna(subset=["rank"])
+
+
+def starters_for(dc, season, week, team, gameday):
+    """Set of starters (rank 1) for a team's game, from the chart for that week (old format) or the latest dated
+    chart on or before the game day (new format)."""
+    if dc is None or len(dc) == 0:
+        return None
+    d = dc[(dc.season == season) & (dc.team == team)]
+    if d.empty:
+        return None
+    if d.week.notna().any():
+        d = d[d.week == week]
+        return set(d[d["rank"] == 1].player_id) if len(d) else None
+    d = d[(d.date <= str(gameday)) & (d.date >= f"{season}-08-01")]
+    if d.empty:
+        return None
+    last = d.date.max()
+    return set(d[(d.date == last) & (d["rank"] == 1)].player_id)
+
+
+# ---------------------------------------------------------------- PFR advanced defence (targets, missed tackles)
+def load_pfr_def(seasons):
+    """Per player-game: targets in coverage and missed tackles (Pro Football Reference via nflverse)."""
+    if os.environ.get("TACKLE_FAKE_DATA"):
+        from tests.fake_data import fake_pfr_def
+        return fake_pfr_def(seasons)
+    frames = []
+    for s in seasons:
+        try:
+            df, _ = _first_working([("nflreadpy", lambda s=s: _nflreadpy("load_pfr_advstats", seasons=[s], stat_type="def", summary_level="week"))])
+        except RuntimeError:
+            continue
+        d = df[_col(df, "game_type", default="REG").astype(str).str.upper().str.startswith("REG")]
+        frames.append(pd.DataFrame({"season": pd.to_numeric(_col(d, "season", default=s)).astype(int), "week": pd.to_numeric(d.week).astype(int),
+                                    "team": d.team.astype(str), "name_key": d.pfr_player_name.map(norm_name),
+                                    "targets": pd.to_numeric(d.def_targets, errors="coerce").fillna(0),
+                                    "missed": pd.to_numeric(d.def_missed_tackles, errors="coerce").fillna(0),
+                                    "pfr_comb": pd.to_numeric(d.def_tackles_combined, errors="coerce").fillna(0)}))
+    if not frames:
+        return pd.DataFrame(columns=["season", "week", "team", "name_key", "targets", "missed", "pfr_comb"])
+    return pd.concat(frames, ignore_index=True).groupby(["season", "week", "team", "name_key"], as_index=False).sum()
+
+
+# ---------------------------------------------------------------- play-by-play: run / pass tackle split, starters
+PBP_COLS = ["season", "week", "season_type", "play_type", "defteam", "posteam", "complete_pass", "qb_scramble", "passer_player_id",
+            "rusher_player_id", "solo_tackle_1_player_id", "solo_tackle_2_player_id", "assist_tackle_1_player_id", "assist_tackle_2_player_id",
+            "assist_tackle_3_player_id", "assist_tackle_4_player_id", "tackle_with_assist_1_player_id", "tackle_with_assist_2_player_id"]
+
+
+def load_pbp_tackles(seasons):
+    """From play-by-play: per player-game tackle credits on run plays and on pass plays; per team-game the run plays
+    and completions the defence faced; and each offence's most-used passer and rusher (its starters)."""
+    if os.environ.get("TACKLE_FAKE_DATA"):
+        from tests.fake_data import fake_pbp_tackles
+        return fake_pbp_tackles(seasons)
+    frames = []
+    for s in seasons:
+        try:
+            import nflreadpy as nfl
+            df = nfl.load_pbp(seasons=[s])
+            df = df.select([c for c in PBP_COLS if c in df.columns]).to_pandas()
+        except Exception as e:  # noqa: BLE001
+            print(f"  play-by-play {s}: {type(e).__name__}: {e}")
+            continue
+        frames.append(df)
+    empty = dict(players=pd.DataFrame(columns=["season", "week", "player_id", "run_tk", "pass_tk"]),
+                 teams=pd.DataFrame(columns=["season", "week", "team", "runs_faced", "comps_faced"]),
+                 starters=pd.DataFrame(columns=["season", "week", "team", "qb1", "rb1"]))
+    if not frames:
+        return empty
+    pbp = pd.concat(frames, ignore_index=True)
+    pbp = pbp[pbp.season_type.astype(str).str.upper().str.startswith("REG") & pbp.play_type.isin(["run", "pass"])]
+    rows = []
+    for c in PBP_COLS[10:]:
+        if c in pbp.columns:
+            rows.append(pbp[["season", "week", "play_type", c]].dropna(subset=[c]).rename(columns={c: "player_id"}))
+    tk = pd.concat(rows, ignore_index=True)
+    tk["run_tk"] = (tk.play_type == "run").astype(int)
+    tk["pass_tk"] = (tk.play_type == "pass").astype(int)
+    players = tk.groupby(["season", "week", "player_id"], as_index=False)[["run_tk", "pass_tk"]].sum()
+    teams = pbp.groupby(["season", "week", "defteam"]).agg(runs_faced=("play_type", lambda x: int((x == "run").sum())),
+                                                           comps_faced=("complete_pass", lambda x: int(pd.to_numeric(x, errors="coerce").fillna(0).sum()))).reset_index().rename(columns={"defteam": "team"})
+    top = lambda x: x.dropna().value_counts().index[0] if x.notna().any() else None
+    qb = pbp[pbp.play_type == "pass"].groupby(["season", "week", "posteam"]).passer_player_id.agg(top).reset_index().rename(columns={"posteam": "team", "passer_player_id": "qb1"})
+    rb = pbp[(pbp.play_type == "run") & (pd.to_numeric(pbp.qb_scramble, errors="coerce").fillna(0) == 0)].groupby(["season", "week", "posteam"]).rusher_player_id.agg(top).reset_index().rename(columns={"posteam": "team", "rusher_player_id": "rb1"})
+    starters = qb.merge(rb, on=["season", "week", "team"], how="outer")
+    for d in (players, teams, starters):
+        d["season"] = d.season.astype(int); d["week"] = d.week.astype(int)
+    return dict(players=players, teams=teams, starters=starters)

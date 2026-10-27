@@ -22,7 +22,8 @@ def build_test_rows(H, seasons, min_prev=2, min_week=3):
 
 
 def _metrics(actual, pred):
-    e = actual - pred
+    pred = pd.Series(pred).fillna(pd.Series(actual).mean())   # an undefined prediction is scored, not dropped
+    e = np.asarray(actual) - np.asarray(pred)
     return dict(n=int(len(e)), mae=float(np.mean(np.abs(e))), rmse=float(np.sqrt(np.mean(e ** 2))), bias=float(np.mean(e)))
 
 
@@ -47,6 +48,10 @@ def run_backtest(H, seasons):
     preds["Full model without role bump"] = M.project_frame(T, use_role=False)[1]
     preds["Full model without snap trend"] = M.project_frame(T, use_snap=False)[1]
     preds["Full model without opportunity volume"] = M.project_frame(T, use_volume=False)[1]
+    preds["Full model without depth chart"] = M.project_frame(T, use_depth=False)[1]
+    preds["Full model without PFR targets and missed tackles"] = M.project_frame(T, use_pfr=False)[1]
+    preds["Full model without run/pass mix"] = M.project_frame(T, use_mix=False)[1]
+    preds["Full model without rest days"] = M.project_frame(T, use_rest=False)[1]
 
     table = []
     for name, p in preds.items():

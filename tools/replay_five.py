@@ -39,15 +39,10 @@ def lines_as_of(snaps, t):
 
 
 def replay(season, week):
-    seasons = sorted(set(C.HISTORY_SEASONS + [C.SEASON]))
-    pw, _ = S.load_player_week(seasons)
-    checks = json.loads(Path("data/known_checks.json").read_text())
-    formula, _, _ = S.choose_tackle_formula(pw, checks)
-    pw = S.apply_tackle_formula(pw, formula)
-    sched, snaps_df, inj, vol = S.load_schedule(seasons), S.load_snaps(seasons), S.load_injuries([season]), S.load_team_volume(seasons)
-    H = M.role_signals_backtest(M.add_history_features(M.attach_volume(M.prepare(pw, sched, snaps_df), vol)))
+    seasons, pw, sched, snaps_df, inj, H, status, src = R.load_all()
     state = json.load(open("data/cache/model_state.json"))
-    P = M.finalize_projections(M.upcoming_rows(H, sched, inj, season, week, vol=vol), state["phi"], scale=state.get("scale", 1.0))
+    P = M.finalize_projections(M.upcoming_rows(H, sched, inj, season, week, vol=src["vol"], dc=src["dc"], pbp_starters=src["pbp"]["starters"]),
+                               state["phi"], scale=state.get("scale", 1.0))
     P = R.attach_game_logs(P, H, season, week)
     snaps = O.load_snapshots(season, week)
     if snaps.empty:

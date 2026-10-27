@@ -72,8 +72,12 @@ def american_to_decimal(a):
 # ---------------------------------------------------------------- assembling history
 def team_games(sched):
     base = ["game_id", "season", "week", "gameday", "gametime", "home_score", "location", "spread_line", "total_line"]
-    h = sched[base + ["home_team", "away_team"]].rename(columns={"home_team": "team", "away_team": "opp_team"}).assign(is_home=True)
-    a = sched[base + ["home_team", "away_team"]].rename(columns={"away_team": "team", "home_team": "opp_team"}).assign(is_home=False)
+    sched = sched.copy()
+    for c in ("home_rest", "away_rest"):
+        if c not in sched.columns:
+            sched[c] = 7
+    h = sched[base + ["home_team", "away_team", "home_rest"]].rename(columns={"home_team": "team", "away_team": "opp_team", "home_rest": "rest"}).assign(is_home=True)
+    a = sched[base + ["home_team", "away_team", "away_rest"]].rename(columns={"away_team": "team", "home_team": "opp_team", "away_rest": "rest"}).assign(is_home=False)
     tg = pd.concat([h, a], ignore_index=True)
     neutral = tg.location.str.lower().str.startswith("neutral")
     tg["venue"] = np.where(neutral, "NEUTRAL", np.where(tg.is_home, tg.team, tg.opp_team))
@@ -105,7 +109,7 @@ def prepare(pw, sched, snaps):
         pw.loc[pw.index.isin(dup_names[dup_names].index), ["def_pct", "def_snaps"]] = np.nan
     else:
         pw["def_pct"], pw["def_snaps"] = np.nan, np.nan
-    keep = ["season", "week", "team", "game_id", "venue", "spread_dog", "is_home", "opp_team", "gameday", "gametime", "final"]
+    keep = ["season", "week", "team", "game_id", "venue", "spread_dog", "is_home", "opp_team", "gameday", "gametime", "final", "rest"]
     pw = pw.drop_duplicates(["player_id", "season", "week"], keep="first")
     H = pw.merge(tg[keep].drop_duplicates(["season", "week", "team"]), on=["season", "week", "team"], how="inner")
     H["ast_t"] = H.comb - H.solo_t
@@ -123,7 +127,7 @@ def volume_table(vol):
     if vol is None or len(vol) == 0:
         return None
     v = vol.sort_values(["season", "week"]).copy()
-    for col in ("faced", "gen"):
+    for col in [c for c in ("faced", "gen", "faced_runs", "gen_runs", "faced_comps", "gen_comps") if c in v.columns]:
         g = v.groupby(["team", "season"], sort=False)[col]
         v[f"{col}_prev"] = g.transform(lambda x: x.shift(1).expanding().mean())
         v[f"{col}_n"] = g.cumcount()
@@ -140,16 +144,21 @@ def _shrink(x, n, prior, m):
     return (x * n + prior * m) / (n + m)
 
 
-def expected_opps(frame, V):
-    """Expected tackle opportunities for each row's game: the defence's faced average and the opponent's generated
-    average, each shrunk toward last season (or the league) with VOLUME['pseudo_games']."""
-    lg = V.attrs.get("league", 50.0)
+def expected_stat(frame, V, stat=""):
+    """Expected value of a faced/generated stat for each row's game (opportunities, run plays, completions): the
+    defence's faced average and the opponent's generated average, each shrunk toward last season (or the league)."""
+    f, g = ("faced" + ("_" + stat if stat else ""), "gen" + ("_" + stat if stat else ""))
+    if f + "_prev" not in V.columns:
+        return np.full(len(frame), np.nan)
+    lg = float(V[f].mean()) if stat else V.attrs.get("league", 50.0)
     m = C.VOLUME["pseudo_games"]
-    d = frame[["season", "week", "team", "opp_team"]].merge(V[["season", "week", "team", "faced_prev", "faced_n", "faced_ps"]],
-                                                            on=["season", "week", "team"], how="left")
-    d = d.merge(V[["season", "week", "team", "gen_prev", "gen_n", "gen_ps"]].rename(columns={"team": "opp_team"}),
-                on=["season", "week", "opp_team"], how="left")
-    return ((_shrink(d.faced_prev, d.faced_n, d.faced_ps.fillna(lg), m) + _shrink(d.gen_prev, d.gen_n, d.gen_ps.fillna(lg), m)) / 2).values
+    d = frame[["season", "week", "team", "opp_team"]].merge(V[["season", "week", "team", f + "_prev", f + "_n", f + "_ps"]], on=["season", "week", "team"], how="left")
+    d = d.merge(V[["season", "week", "team", g + "_prev", g + "_n", g + "_ps"]].rename(columns={"team": "opp_team"}), on=["season", "week", "opp_team"], how="left")
+    return ((_shrink(d[f + "_prev"], d[f + "_n"], d[f + "_ps"].fillna(lg), m) + _shrink(d[g + "_prev"], d[g + "_n"], d[g + "_ps"].fillna(lg), m)) / 2).values
+
+
+def expected_opps(frame, V):
+    return expected_stat(frame, V, "")
 
 
 def attach_volume(H, vol):
@@ -161,6 +170,34 @@ def attach_volume(H, vol):
         return H
     H = H.merge(V[["season", "week", "team", "faced"]].rename(columns={"faced": "opps"}), on=["season", "week", "team"], how="left")
     H["exp_opps"] = expected_opps(H, V)
+    H["exp_runs"], H["exp_comps"] = expected_stat(H, V, "runs"), expected_stat(H, V, "comps")
+    return H
+
+
+def attach_extras(H, pbp=None, pfr=None, dc=None):
+    """Per-game run/pass tackle credits, PFR targets and missed tackles, and depth-chart status on defender rows."""
+    H = H.copy()
+    if pbp is not None and len(pbp["players"]):
+        H = H.merge(pbp["players"], on=["season", "week", "player_id"], how="left")
+        H = H.merge(pbp["teams"], on=["season", "week", "team"], how="left")
+        H[["run_tk", "pass_tk"]] = H[["run_tk", "pass_tk"]].fillna(0)      # no credit row means no tackle credits, not unknown
+    for c in ("run_tk", "pass_tk", "runs_faced", "comps_faced"):
+        if c not in H.columns:
+            H[c] = np.nan
+    if pfr is not None and len(pfr):
+        H = H.merge(pfr, on=["season", "week", "team", "name_key"], how="left")
+    for c in ("targets", "missed", "pfr_comb"):
+        if c not in H.columns:
+            H[c] = np.nan
+    H["dc_starter"] = np.nan
+    if dc is not None and len(dc):
+        from pipeline.sources import starters_for
+        flags = {}
+        for (sn, wk, tm, gd), idx in H.groupby(["season", "week", "team", "gameday"]).groups.items():
+            st = starters_for(dc, sn, wk, tm, gd)
+            if st is not None:
+                flags.update({i: (H.at[i, "player_id"] in st) for i in idx})
+        H["dc_starter"] = pd.Series(flags, dtype="float")
     return H
 
 
@@ -191,6 +228,14 @@ def add_history_features(H):
         H["opps_prev_mean"] = g.opps.transform(lambda x: x.shift(1).expanding().mean())
     else:
         H["opps_prev_mean"] = np.nan
+    for c in ("run_tk", "pass_tk", "runs_faced", "comps_faced", "targets", "missed", "pfr_comb"):
+        H[c + "_prev"] = g[c].transform(lambda x: x.shift(1).expanding().sum()) if c in H.columns else np.nan
+    if "dc_starter" in H.columns:
+        prev = g.dc_starter.shift(1)
+        H["promoted"] = (H.dc_starter == 1) & (prev == 0)
+        H["demoted"] = (H.dc_starter == 0) & (prev == 1)
+    else:
+        H["promoted"], H["demoted"] = False, False
     H["comb_prev_raw"] = g.comb.cumsum() - H.comb
     H["comb_prev"] = g.comb_adj.cumsum() - H.comb_adj
     H["solo_prev"] = g.solo_adj.cumsum() - H.solo_adj
@@ -278,7 +323,54 @@ def volume_factor(F):
     return (ratio ** v["power"]).clip(*v["cap"])
 
 
-def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_snap=True, use_volume=True):
+def depth_factor(F):
+    d = C.DEPTH
+    dem = F["demoted"].fillna(False).astype(bool) if "demoted" in F else pd.Series(False, index=F.index)
+    pro = F["promoted"].fillna(False).astype(bool) if "promoted" in F else pd.Series(False, index=F.index)
+    return pd.Series(np.where(dem, d["demoted"], np.where(pro, d["promoted"], 1.0)), index=F.index)
+
+
+def pfr_factor(F):
+    """Coverage usage (targets per game, DBs only) and missed-tackle rate, both from PFR, vs typical."""
+    c = C.PFR
+    n = F.n_prev.astype(float).clip(lower=1)
+    out = pd.Series(1.0, index=F.index)
+    if "targets_prev" in F:
+        db = F.group.isin(["CB", "S"]) & F.targets_prev.notna()
+        rate = (F.targets_prev / n).where(db)
+        typical = float(rate[db].mean()) if db.any() else np.nan
+        if typical and typical > 0:
+            tgt = (1 + c["target_slope"] * (rate / typical - 1)).clip(*c["target_cap"]).where(db, 1.0)
+            out = out * tgt.fillna(1.0)
+    if "missed_prev" in F and "pfr_comb_prev" in F:
+        tot = (F.pfr_comb_prev.fillna(0) + F.missed_prev.fillna(0))
+        rate = (F.missed_prev / tot.clip(lower=1)).where(tot >= 5)
+        miss = (1 + c["miss_slope"] * (rate - c["miss_base"])).clip(*c["miss_cap"]).fillna(1.0)
+        out = out * miss
+    return out.fillna(1.0)
+
+
+def mix_factor(F):
+    """Opponent run/pass mix this game vs what the player has faced, through his own run- and pass-tackle rates."""
+    c = C.MIX
+    need = ["run_tk_prev", "pass_tk_prev", "runs_faced_prev", "comps_faced_prev", "exp_runs", "exp_comps"]
+    if any(col not in F for col in need):
+        return pd.Series(1.0, index=F.index)
+    ok = (F.runs_faced_prev > 0) & (F.comps_faced_prev > 0) & F.exp_runs.notna() & F.exp_comps.notna()
+    n = F.n_prev.astype(float).clip(lower=1)
+    run_rate, pass_rate = F.run_tk_prev / F.runs_faced_prev.clip(lower=1), F.pass_tk_prev / F.comps_faced_prev.clip(lower=1)
+    split = run_rate * F.exp_runs + pass_rate * F.exp_comps
+    neutral = run_rate * (F.runs_faced_prev / n) + pass_rate * (F.comps_faced_prev / n)
+    ratio = (split / neutral.clip(lower=0.1)).where(ok, 1.0).clip(*c["cap"]) ** c["power"]
+    return (1 + c["weight"] * (ratio - 1)).fillna(1.0)
+
+
+def rest_factor(F):
+    r = C.REST
+    return pd.Series(np.where(F.get("rest", pd.Series(7, index=F.index)).fillna(7) >= r["bye_days"], r["bye"], 1.0), index=F.index)
+
+
+def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_snap=True, use_volume=True, use_depth=True, use_pfr=True, use_mix=True, use_rest=True):
     k = F.group.map(C.SHRINK_GAMES_BY_GROUP).fillna(C.SHRINK_GAMES) if k is None else k
     if use_crew:
         prev, ps = F.comb_prev, F.ps_avg
@@ -293,14 +385,24 @@ def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_sn
     role = np.where(F.get("role_signal", False) == True, C.ROLE_BUMP, 1.0) if use_role else 1.0  # noqa: E712
     snap = snap_trend_factor(F).values if use_snap else 1.0
     volume = volume_factor(F).values if use_volume else 1.0
+    extra = 1.0
+    if use_depth:
+        extra = extra * depth_factor(F).values
+    if use_pfr:
+        extra = extra * pfr_factor(F).values
+    if use_mix:
+        extra = extra * mix_factor(F).values
+    if use_rest:
+        extra = extra * rest_factor(F).values
     solo_share = (F.solo_prev + 8 * F.group.map(C.POS_SOLO_SHARE).fillna(0.6)) / (F.comb_prev + 8)
-    mu = base * tilt * crew_c * role * snap * volume
-    mu_solo = base * tilt * solo_share * crew_s * role * snap * volume
+    mu = base * tilt * crew_c * role * snap * volume * extra
+    mu_solo = base * tilt * solo_share * crew_s * role * snap * volume * extra
     return pd.Series(base, index=F.index), pd.Series(mu, index=F.index), pd.Series(mu_solo, index=F.index)
 
 
-def upcoming_rows(H, sched, injuries, season, week, vol=None):
-    """Feature rows for every active defender whose team plays in `week`."""
+def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_starters=None):
+    """Feature rows for every active defender whose team plays in `week`: anyone with a game in the last four
+    weeks, plus anyone listed as a starter on the current depth chart (a starter back from injury)."""
     tg = team_games(sched)
     games = tg[(tg.season == season) & (tg.week == week)]
     done = H[(H.season == season) & (H.week < week)]
@@ -308,10 +410,24 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None):
         return pd.DataFrame()
     recent = done[done.week >= week - 4]
     active = recent.drop_duplicates("player_id")[["player_id"]]
+    starters = {}
+    if dc is not None and len(dc):
+        from pipeline.sources import starters_for
+        for r in games.itertuples():
+            st = starters_for(dc, season, week, r.team, r.gameday)
+            if st:
+                starters[r.team] = st
+    if starters:
+        listed = {pid for ids in starters.values() for pid in ids}
+        back = done[done.player_id.isin(listed) & ~done.player_id.isin(active.player_id)].drop_duplicates("player_id")[["player_id"]]
+        active = pd.concat([active, back], ignore_index=True)
+    sums = {c: (c, "sum") for c in ("run_tk", "pass_tk", "runs_faced", "comps_faced", "targets", "missed", "pfr_comb") if c in done.columns}
     agg = done.groupby("player_id").agg(
         player=("player", "last"), name_key=("name_key", "last"), team=("team", "last"), group=("group", "last"),
         n_prev=("comb", "size"), comb_prev=("comb_adj", "sum"), comb_prev_raw=("comb", "sum"),
-        solo_prev=("solo_adj", "sum"), pct_prev=("def_pct", "mean")).reset_index()
+        solo_prev=("solo_adj", "sum"), pct_prev=("def_pct", "mean"), **sums).reset_index()
+    agg = agg.rename(columns={c: c + "_prev" for c in sums})
+    last_dc = done.sort_values("week").groupby("player_id").dc_starter.last() if "dc_starter" in done.columns else None
     lasts = done.sort_values("week").groupby("player_id").agg(last=("comb", "last"), pct_last=("def_pct", "last"))
     last2 = done.sort_values("week").groupby("player_id").comb.apply(lambda x: x.tail(2).mean() if len(x) >= 2 else np.nan).rename("last2")
     pct_last3 = done.sort_values("week").groupby("player_id").def_pct.apply(lambda x: x.tail(C.SNAP_TREND["games"]).mean()).rename("pct_last3")
@@ -321,17 +437,46 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None):
     ps = H[H.season == season - 1].groupby("player_id").agg(ps_games=("comb", "size"), ps_avg=("comb_adj", "mean"),
                                                             ps_avg_raw=("comb", "mean"))
     F = F.join(ps, on="player_id")
-    F = F.merge(games[["team", "game_id", "venue", "spread_dog", "is_home", "opp_team", "gameday", "gametime", "final"]], on="team", how="inner")
+    F = F.merge(games[["team", "game_id", "venue", "spread_dog", "is_home", "opp_team", "gameday", "gametime", "final", "rest"]], on="team", how="inner")
     F["season"], F["week"] = season, week
     F = attach_crews(F, H)
-    VP = volume_prior_for_week(vol, season, week) if vol is not None else None
-    if VP is not None and len(VP):
-        m, lg = C.VOLUME["pseudo_games"], VP.attrs.get("league", 50.0)
-        d = F[["team", "opp_team"]].merge(VP[["team", "faced_prev", "faced_n", "faced_ps"]], on="team", how="left")
-        d = d.merge(VP[["team", "gen_prev", "gen_n", "gen_ps"]].rename(columns={"team": "opp_team"}), on="opp_team", how="left")
-        F["exp_opps"] = ((_shrink(d.faced_prev, d.faced_n, d.faced_ps.fillna(lg), m) + _shrink(d.gen_prev, d.gen_n, d.gen_ps.fillna(lg), m)) / 2).values
+    V = volume_table(vol) if vol is not None else None
+    if V is not None and len(V):
+        Fv = F.assign(season=season, week=week)
+        Vw = V[V.season == season]
+        # a synthetic row per team for this week: prior means over played games, last season's mean as the prior
+        rows = []
+        for team in sorted(set(V.team)):
+            cur, prev = Vw[(Vw.team == team) & (Vw.week < week)], V[(V.season == season - 1) & (V.team == team)]
+            r = dict(season=season, week=week, team=team)
+            for col in [c for c in ("faced", "gen", "faced_runs", "gen_runs", "faced_comps", "gen_comps") if c in V.columns]:
+                r[col + "_prev"] = cur[col].mean() if len(cur) else np.nan
+                r[col + "_n"] = len(cur)
+                r[col + "_ps"] = prev[col].mean() if len(prev) else np.nan
+            rows.append(r)
+        Vt = pd.DataFrame(rows)
+        for col in [c for c in ("faced", "gen", "faced_runs", "gen_runs", "faced_comps", "gen_comps") if c in V.columns]:
+            Vt[col] = np.nan
+        Vt.attrs["league"] = V.attrs.get("league", 50.0)
+        for c in [c for c in ("faced", "faced_runs", "faced_comps") if c in V.columns]:
+            Vt[c] = V[c].mean()   # league level for the shrink target when there is no last season
+        F["exp_opps"] = expected_stat(Fv, Vt, "")
+        F["exp_runs"], F["exp_comps"] = expected_stat(Fv, Vt, "runs"), expected_stat(Fv, Vt, "comps")
     else:
-        F["exp_opps"] = np.nan
+        F["exp_opps"], F["exp_runs"], F["exp_comps"] = np.nan, np.nan, np.nan
+    # depth chart: starter now vs his last game; the opponent's starting QB / RB listed out
+    F["dc_starter"] = [((pid in starters[t]) if t in starters else np.nan) for pid, t in zip(F.player_id, F.team)]
+    prev_dc = F.player_id.map(last_dc) if last_dc is not None else pd.Series(np.nan, index=F.index)
+    F["promoted"] = (F.dc_starter == 1) & (prev_dc == 0)
+    F["demoted"] = (F.dc_starter == 0) & (prev_dc == 1)
+    F["dc_status"] = np.where(F.promoted, "promoted", np.where(F.demoted, "demoted", np.where(F.dc_starter == 1, "starter", "")))
+    inj_w = injuries[(injuries.season == season) & (injuries.week == week)] if len(injuries) else injuries
+    out_ids = set(inj_w[inj_w.status.str.lower().isin(["out", "doubtful"])].player_id.astype(str)) if len(inj_w) and "player_id" in inj_w else set()
+    F["opp_qb_out"], F["opp_rb_out"] = False, False
+    if pbp_starters is not None and len(pbp_starters):
+        latest = pbp_starters[pbp_starters.season == season].sort_values("week").groupby("team").last()
+        F["opp_qb_out"] = [str(latest.qb1.get(o, "")) in out_ids for o in F.opp_team]
+        F["opp_rb_out"] = [str(latest.rb1.get(o, "")) in out_ids for o in F.opp_team]
     # injuries for this week: own status, and role signal when a regular at his position group is out
     inj = injuries[(injuries.season == season) & (injuries.week == week)] if len(injuries) else injuries
     status = {(r.team, r.name_key): r.status for r in inj.itertuples()} if len(inj) else {}
@@ -454,7 +599,9 @@ def price_lines(lines, P):
                      "season_avg": float(p.season_avg), "last": None if pd.isna(p["last"]) else float(p["last"]),
                      "n_prev": int(p.n_prev), "consistency": consistency, "cons_hits": int(sum(hits)), "cons_n": len(hits),
                      "mkt_side": float(mkt_side), "payout": None if dec is None else float(dec - 1),
-                     "international": str(p.get("venue", "")) == "NEUTRAL",
+                     "international": str(p.get("venue", "")) == "NEUTRAL", "depth": p.get("dc_status", ""),
+                     "opp_qb_out": bool(p.get("opp_qb_out", False)), "opp_rb_out": bool(p.get("opp_rb_out", False)),
+                     "rest": None if pd.isna(p.get("rest", np.nan)) else int(p.get("rest")),
                      "lock": lock, "grade": grade_of(lock)})
     out = pd.DataFrame(rows)
     if "ev" in out:

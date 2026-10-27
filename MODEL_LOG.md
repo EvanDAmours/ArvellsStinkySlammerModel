@@ -46,9 +46,10 @@ to prevent those.
 1. **Projection.** Season-to-date tackles per game shrunk toward last season (or a position prior) with a
    position-specific weight (LB 0.5 games, S 1, CB 3, DL 3), times: a small point-spread tilt, a stat-crew factor
    for the venue, a role bump when a regular at the position group is out, a **snap-share trend** factor (last 3
-   games vs season, damped), and a **tackle-opportunity volume** factor (expected opponent carries + completions +
-   sacks vs what the player has faced, damped and capped). A level calibration from the backtest (about 0.99) is
-   applied. Count distribution tighter or looser than Poisson per position, re-estimated daily by the backtest.
+   games vs season, damped), a **tackle-opportunity volume** factor (expected opponent carries + completions +
+   sacks vs what the player has faced, damped and capped), a **depth-chart** factor (demoted x0.90, promoted
+   x1.02), **PFR** factors (coverage targets for DBs, missed-tackle rate), a **run/pass mix** factor from
+   play-by-play, and a **bye-week** factor (x0.96). A level calibration from the backtest (about 1.0) is applied. Count distribution tighter or looser than Poisson per position, re-estimated daily by the backtest.
 2. **Pricing (changed 2026-10-26).** The mean used to price a line is `0.4 x projection + 0.6 x consensus line`
    (`LINE_WEIGHT`). Expected return is computed from that mean against the no-vig market price.
 3. **Picks.** A side is a pick when its expected return clears `PICK_BAR` (6%), or `SIGNAL_BAR` (4%) with a
@@ -127,6 +128,60 @@ row is worse than the full model.
     downgrade solo picks at neutral sites or treat them at league share.
 20. **Two-season player prior** weighted by games, instead of last season only.
 
+## Research round 2: five new data sources (2026-10-27, MDT)
+
+Same method as round 1, on top of the round-1 model: 36,424 defender-games, 28,824 scored, fitted 2023-24,
+scored 2025-26, then joint least squares so the pieces do not double count. Sources inventoried: play-by-play,
+participation, depth charts, weekly rosters, FTN charting, PFR advanced defence, injuries (all seasons), schedule
+rest days, team EPA. Participation data ends with 2025 and cannot be used live.
+
+### Added to the pipeline (all five now loaded daily)
+
+1. **Depth charts** (`nflreadpy.load_depth_charts`, two formats). A player **demoted** below starter on the latest
+   chart ran 17% under the model over 397 games (test years 7%); promoted +7% (train fit +3%). Factors: demoted
+   x0.90 (damped from the -20% joint fit, which overcorrected the test years), promoted x1.02. Status is shown on
+   each card. Also used to keep projecting a starter who has missed four or more weeks and is listed again.
+2. **PFR advanced defence** (`load_pfr_advstats`, type def). Two signals: DBs rarely targeted in coverage beat the
+   model (10% at 2 or fewer targets a game, -6% at 6+): factor 1 - 0.065 x (target rate vs typical DB), capped
+   0.85-1.12. Players with high missed-tackle rates beat it (+11% above 25%): being around the ball is the signal:
+   factor 1 + 0.22 x (missed rate - 10%), capped 0.95-1.12.
+3. **Play-by-play** (`load_pbp`, 18 columns selected). Each player's tackle credits on run plays and on pass plays,
+   the run plays and completions each defence faced, and each offence's most-used passer and rusher. The run/pass
+   **mix factor** compares the opponent's expected mix with what the player has faced, through his own rates:
+   damped (weight 0.3, power 0.5, capped 0.85-1.15). The split model alone was 6.5% worse than the full model, so
+   it is a correction, not a replacement.
+4. **Rest days** (schedule `home_rest`/`away_rest`). A defence off a bye ran 3-4% under its average in both halves
+   of the data: x0.96. Short weeks showed nothing. Shown on cards.
+5. **Opponent starters out** (injuries x play-by-play starters). The opponent's starting QB or lead rusher listed
+   out or doubtful is shown on cards as context. Not a factor: the fitted effect (-6 to -9% for LB/S/DL) pointed
+   the other way on the test years.
+
+Backtest with all five: full model MAE 1.6586 -> 1.6507 (round 1 was 1.6792 -> 1.6586); every new ablation row
+is worse than the full model (depth +0.0013, mix +0.0014, rest +0.0023, PFR +0.0025). Level scale 0.996.
+
+### Measured and not adopted
+
+6. **FTN box counts** (`load_ftn_charting`): a defence's box-count tendency lifted corners (+8.5% per extra box
+   defender fitted) and linebackers, but no out-of-sample gain in the joint fit. Not loaded.
+7. **Weekly rosters** (years of experience): rookies run 3-8% under the model through week 10 and above it late;
+   no out-of-sample gain. Not loaded.
+8. **Opponent offensive EPA and first downs**: nothing beyond the volume factor already in the model.
+9. **Short weeks** (4 days' rest), own or opponent's: nothing.
+10. **Promotion on the depth chart** as a factor: +2% only; kept as a tag.
+
+### Pitfalls found this round
+
+- A factor that comes out undefined for some rows makes the projection undefined, and the backtest then scored
+  the full model on a different subset of games than its ablation rows, so the full model looked worse than
+  "without X" by 0.03. Every factor now fills undefined with 1.0, missing play-by-play credits are zero, and the
+  backtest scores an undefined prediction instead of dropping it.
+- Depth charts changed format in 2025 (dated snapshots with `pos_rank`, versus `depth_team` per week before), and
+  the old format has rows without a week.
+
+**Week 7 replayed under this model**: Sunday locks 2-3, Monday locks 2-0, all plays 96-92
+(+5.3 units); Sunday parlay Loss, Monday parlay Win.
+Live Monday night: lock Kenny Clark Under 2.5 won; all four Monday picks won.
+
 ## Weekly post-mortems
 
 ### Week 7, 2026 (first live week; graded 2026-10-26)
@@ -191,6 +246,14 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 - **Running tally of the weekly five**: `data/weekly_five.md` is rewritten by the daily job with the record to date,
   a line per week with the running record, and every pick with its result. The site shows the same tally in the
   five box on Plays ("season to date 24-1") and as a per-week table on Track record.
+
+### 2026-10-27, afternoon MDT (five new data sources in the model)
+- See research round 2 above. New loaders in `pipeline/sources.py`: `load_depth_charts`, `load_pfr_def`,
+  `load_pbp_tackles`; `load_schedule` carries rest days; `load_injuries` carries player ids. New config:
+  `DEPTH`, `PFR`, `MIX`, `REST`. New backtest ablation rows for each. Cards show Promoted / Demoted / Opp QB out /
+  Opp RB out / Off a bye / Short week tags. Revert condition: any new ablation row beating the full model two
+  weeks running on the daily backtest.
+- Daily job now loads play-by-play for four seasons (about 70 s total run; was 15 s).
 
 ### 2026-10-27, morning MDT (pull slots served once, not matched to the minute)
 - The Monday 5:30 pm pull was missed: GitHub ran the half-hourly job at 5:03 and 5:54 (its cron drifts up to

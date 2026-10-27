@@ -143,11 +143,17 @@ def load_all():
     snaps = S.load_snaps(seasons)
     inj = S.load_injuries([C.SEASON])
     vol = S.load_team_volume(seasons)
-    H = M.add_history_features(M.attach_volume(M.prepare(pw, sched, snaps), vol))
+    pbp, pfr, dc = S.load_pbp_tackles(seasons), S.load_pfr_def(seasons), S.load_depth_charts(seasons)
+    if len(pbp["teams"]):
+        t = pbp["teams"].rename(columns={"runs_faced": "faced_runs", "comps_faced": "faced_comps"})
+        vol = vol.merge(t, on=["season", "week", "team"], how="left")
+        vol = vol.merge(t.rename(columns={"team": "opp_team", "faced_runs": "gen_runs", "faced_comps": "gen_comps"}), on=["season", "week", "opp_team"], how="left")
+    H = M.add_history_features(M.attach_extras(M.attach_volume(M.prepare(pw, sched, snaps), vol), pbp, pfr, dc))
     H = M.role_signals_backtest(H)
     status = dict(stats_source=used, tackle_formula=formula, formula_check_ok=ok, formula_check=report,
-                  snaps_rows=int(len(snaps)), injury_rows=int(len(inj)), volume_rows=int(len(vol)))
-    return seasons, pw, sched, snaps, inj, H, status, vol
+                  snaps_rows=int(len(snaps)), injury_rows=int(len(inj)), volume_rows=int(len(vol)),
+                  pbp_rows=int(len(pbp["players"])), pfr_rows=int(len(pfr)), depth_chart_rows=int(len(dc)))
+    return seasons, pw, sched, snaps, inj, H, status, dict(vol=vol, pbp=pbp, pfr=pfr, dc=dc)
 
 
 def mark_five(bets, season, week):
@@ -180,10 +186,10 @@ def attach_game_logs(P, H, season, week):
 
 
 def cmd_daily():
-    seasons, pw, sched, snaps, inj, H, status, vol = load_all()
+    seasons, pw, sched, snaps, inj, H, status, src = load_all()
     week = upcoming_week(sched, C.SEASON)
     bt, phi, k, scale = B.run_backtest(H, seasons)
-    F = M.upcoming_rows(H, sched, inj, C.SEASON, week, vol=vol)
+    F = M.upcoming_rows(H, sched, inj, C.SEASON, week, vol=src["vol"], dc=src["dc"], pbp_starters=src["pbp"]["starters"])
     P = M.finalize_projections(F, phi, scale=scale)
     P = attach_game_logs(P, H, C.SEASON, week)
     CACHE.mkdir(parents=True, exist_ok=True)
@@ -281,7 +287,8 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
         meta.setdefault("odds_credits_by_key", prev.get("odds_credits_by_key"))
     _json(SITE / "meta.json", meta)
     cols = ["player", "team", "opp_team", "group", "status", "n_prev", "season_avg", "last", "base", "proj", "proj_solo",
-            "fair_line", "fair_line_solo", "crew_comb", "crew_solo", "spread_dog", "role_signal", "venue", "gameday", "gametime", "phi"]
+            "fair_line", "fair_line_solo", "crew_comb", "crew_solo", "spread_dog", "role_signal", "venue", "gameday", "gametime", "phi",
+            "dc_status", "opp_qb_out", "opp_rb_out", "rest", "pct_last3", "pct_prev"]
     _json(SITE / "projections.json", records(P, [c for c in cols if c in P.columns]) if len(P) else [])
     _json(SITE / "bets.json", records(bets))
     _json(SITE / "backtest.json", bt)

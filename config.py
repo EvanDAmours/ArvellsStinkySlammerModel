@@ -38,6 +38,11 @@ SNAP_TREND = dict(games=3, power_up=0.45, power_down=0.35, cap=(0.6, 1.5), min_s
 # Tackle opportunities (opponent carries + completions + sacks) expected this game vs the ones the player has faced:
 # volume regresses to the league mean, which a season average ignores. Damped and capped: the extremes were wrong.
 VOLUME = dict(power=0.5, cap=(0.9, 1.1), pseudo_games=4)
+# New data sources (research 2026-10-27, fitted on 2023-24, scored on 2025-26; see MODEL_LOG.md):
+DEPTH = dict(demoted=0.90, promoted=1.02)            # listed below a starter he was above last game: -17% observed, damped to -10%
+PFR = dict(target_slope=-0.065, target_cap=(0.85, 1.12), miss_slope=0.22, miss_base=0.10, miss_cap=(0.95, 1.12))
+MIX = dict(weight=0.3, power=0.5, cap=(0.85, 1.15))   # opponent run/pass mix vs the player's own run- and pass-tackle rates
+REST = dict(bye=0.96, bye_days=10)                    # a defence coming off a bye runs ~4% under its average
 POS_PRIOR = {"LB": 6.0, "S": 4.5, "CB": 3.5, "DL": 2.5}       # tackles per game, used only with no history
 POS_SOLO_SHARE = {"LB": 0.52, "S": 0.62, "CB": 0.72, "DL": 0.45}
 SPREAD_TILT = 0.005                # +0.5% tackles per point a defense is an underdog (capped)

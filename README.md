@@ -12,7 +12,7 @@ Everything runs on GitHub's servers on a schedule. You don't run anything by han
 | --- | --- |
 | `run.py` | Entry point: `python run.py daily` and `python run.py odds --auto` |
 | `config.py` | Every setting (seasons, betting thresholds, model knobs) in one place |
-| `pipeline/sources.py` | Loads nflverse data (free, updated nightly) with fallbacks and a self-check against official tackle totals |
+| `pipeline/sources.py` | Loads nflverse data (player stats, snaps, schedule, injuries, team stats, play-by-play, depth charts, PFR advanced defence) with fallbacks and a self-check against official tackle totals |
 | `pipeline/model.py` | Projections (season rate, stat crews, snap-share trend, opportunity volume, role bump), the tackle distribution, line pricing and grading |
 | `pipeline/backtest.py` | Walk-forward test of every predictor on every past game |
 | `pipeline/odds.py` | Pulls tackle lines from The Odds API and stores timestamped snapshots |
