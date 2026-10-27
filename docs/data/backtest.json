@@ -7,63 +7,95 @@
  ],
  "games": 28824,
  "best_shrink_games": 1,
- "scale": 0.9859,
+ "scale": 0.9962,
  "predictors": [
   {
    "n": 28824,
-   "mae": 1.6582,
-   "rmse": 2.1961,
-   "bias": -0.0481,
+   "mae": 1.6503,
+   "rmse": 2.1874,
+   "bias": -0.0124,
    "predictor": "Full model without stat crew",
-   "beats_last_game": 16788
+   "beats_last_game": 16796
   },
   {
    "n": 28824,
-   "mae": 1.6582,
-   "rmse": 2.1989,
-   "bias": -0.0371,
+   "mae": 1.6505,
+   "rmse": 2.1904,
+   "bias": -0.0014,
    "predictor": "Full model without role bump",
-   "beats_last_game": 16780
+   "beats_last_game": 16789
   },
   {
    "n": 28824,
-   "mae": 1.6586,
-   "rmse": 2.1966,
-   "bias": -0.0485,
+   "mae": 1.6507,
+   "rmse": 2.188,
+   "bias": -0.0128,
    "predictor": "Full model",
    "beats_last_game": 16778
   },
   {
    "n": 28824,
-   "mae": 1.6594,
-   "rmse": 2.1981,
-   "bias": -0.0484,
+   "mae": 1.6511,
+   "rmse": 2.1892,
+   "bias": -0.0125,
    "predictor": "Full model without spread tilt",
-   "beats_last_game": 16771
+   "beats_last_game": 16786
   },
   {
    "n": 28824,
-   "mae": 1.6628,
-   "rmse": 2.2035,
-   "bias": -0.0464,
+   "mae": 1.652,
+   "rmse": 2.1894,
+   "bias": -0.0162,
+   "predictor": "Full model without depth chart",
+   "beats_last_game": 16781
+  },
+  {
+   "n": 28824,
+   "mae": 1.6521,
+   "rmse": 2.1892,
+   "bias": -0.0137,
+   "predictor": "Full model without run/pass mix",
+   "beats_last_game": 16776
+  },
+  {
+   "n": 28824,
+   "mae": 1.653,
+   "rmse": 2.189,
+   "bias": -0.032,
+   "predictor": "Full model without rest days",
+   "beats_last_game": 16767
+  },
+  {
+   "n": 28824,
+   "mae": 1.6532,
+   "rmse": 2.1925,
+   "bias": -0.0249,
+   "predictor": "Full model without PFR targets and missed tackles",
+   "beats_last_game": 16793
+  },
+  {
+   "n": 28824,
+   "mae": 1.6533,
+   "rmse": 2.1923,
+   "bias": -0.0096,
    "predictor": "Full model without opportunity volume",
-   "beats_last_game": 16785
+   "beats_last_game": 16815
   },
   {
    "n": 28824,
-   "mae": 1.6646,
-   "rmse": 2.2081,
-   "bias": -0.0188,
+   "mae": 1.6564,
+   "rmse": 2.1996,
+   "bias": 0.017,
    "predictor": "Full model without snap trend",
-   "beats_last_game": 16726
+   "beats_last_game": 16743
   },
   {
    "n": 28824,
-   "mae": 1.6675,
-   "rmse": 2.2047,
-   "bias": -0.0494,
+   "mae": 1.6576,
+   "rmse": 2.1935,
+   "bias": -0.0122,
    "predictor": "Full model with one shrink for every position",
-   "beats_last_game": 16748
+   "beats_last_game": 16775
   },
   {
    "n": 28824,
@@ -133,9 +165,9 @@
   },
   {
    "n": 8522,
-   "mae": 1.7061,
-   "rmse": 2.2369,
-   "bias": -0.1002,
+   "mae": 1.6971,
+   "rmse": 2.2277,
+   "bias": -0.0555,
    "season": 2023,
    "predictor": "Full model"
   },
@@ -157,9 +189,9 @@
   },
   {
    "n": 8691,
-   "mae": 1.6423,
-   "rmse": 2.1982,
-   "bias": -0.0069,
+   "mae": 1.6367,
+   "rmse": 2.1904,
+   "bias": 0.0235,
    "season": 2024,
    "predictor": "Full model"
   },
@@ -181,9 +213,9 @@
   },
   {
    "n": 8962,
-   "mae": 1.6356,
-   "rmse": 2.1655,
-   "bias": -0.0545,
+   "mae": 1.6264,
+   "rmse": 2.1562,
+   "bias": -0.0254,
    "season": 2025,
    "predictor": "Full model"
   },
@@ -205,9 +237,9 @@
   },
   {
    "n": 2649,
-   "mae": 1.6375,
-   "rmse": 2.1654,
-   "bias": 0.0011,
+   "mae": 1.6292,
+   "rmse": 2.1576,
+   "bias": 0.0479,
    "season": 2026,
    "predictor": "Full model"
   },
@@ -224,68 +256,68 @@
   {
    "group": "CB",
    "n": 5313,
-   "raw": 1.4349,
-   "corrected": 1.2713,
-   "used": 1.2713
+   "raw": 1.4492,
+   "corrected": 1.2855,
+   "used": 1.2855
   },
   {
    "group": "DL",
    "n": 9539,
-   "raw": 1.1795,
-   "corrected": 1.0236,
-   "used": 1.0236
+   "raw": 1.1798,
+   "corrected": 1.0238,
+   "used": 1.0238
   },
   {
    "group": "LB",
-   "n": 8459,
-   "raw": 1.6523,
-   "corrected": 1.4906,
-   "used": 1.4906
+   "n": 8458,
+   "raw": 1.6644,
+   "corrected": 1.5026,
+   "used": 1.5026
   },
   {
    "group": "S",
-   "n": 5473,
-   "raw": 1.6098,
-   "corrected": 1.4469,
-   "used": 1.4469
+   "n": 5472,
+   "raw": 1.5794,
+   "corrected": 1.4166,
+   "used": 1.4166
   }
  ],
  "calibration": [
   {
    "bucket": "(-0.001, 0.2]",
-   "n": 3738,
-   "predicted": 0.131,
-   "observed": 0.1348
+   "n": 3794,
+   "predicted": 0.1308,
+   "observed": 0.1357
   },
   {
    "bucket": "(0.2, 0.35]",
-   "n": 4149,
-   "predicted": 0.2718,
-   "observed": 0.2552
+   "n": 4129,
+   "predicted": 0.272,
+   "observed": 0.2608
   },
   {
    "bucket": "(0.35, 0.45]",
-   "n": 2138,
-   "predicted": 0.3983,
-   "observed": 0.3807
+   "n": 2158,
+   "predicted": 0.3995,
+   "observed": 0.4013
   },
   {
    "bucket": "(0.45, 0.55]",
-   "n": 2034,
-   "predicted": 0.4982,
-   "observed": 0.4715
+   "n": 1937,
+   "predicted": 0.4986,
+   "observed": 0.4827
   },
   {
    "bucket": "(0.55, 0.65]",
    "n": 1799,
-   "predicted": 0.5986,
-   "observed": 0.5709
+   "predicted": 0.598,
+   "observed": 0.5809
   },
   {
    "bucket": "(0.65, 0.8]",
-   "n": 1065,
-   "predicted": 0.702,
-   "observed": 0.6601
+   "n": 1086,
+   "predicted": 0.7016,
+   "observed": 0.6565
   }
  ],
  "regression": [
