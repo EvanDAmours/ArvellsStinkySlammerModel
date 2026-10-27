@@ -7,95 +7,103 @@
  ],
  "games": 28824,
  "best_shrink_games": 1,
- "scale": 0.9962,
+ "scale": 1.0012,
  "predictors": [
   {
    "n": 28824,
-   "mae": 1.6503,
-   "rmse": 2.1874,
-   "bias": -0.0124,
+   "mae": 1.6479,
+   "rmse": 2.1868,
+   "bias": 0.0044,
    "predictor": "Full model without stat crew",
-   "beats_last_game": 16796
+   "beats_last_game": 16817
   },
   {
    "n": 28824,
-   "mae": 1.6505,
-   "rmse": 2.1904,
-   "bias": -0.0014,
+   "mae": 1.6481,
+   "rmse": 2.1898,
+   "bias": 0.0154,
    "predictor": "Full model without role bump",
-   "beats_last_game": 16789
+   "beats_last_game": 16819
+  },
+  {
+   "n": 28824,
+   "mae": 1.6482,
+   "rmse": 2.1874,
+   "bias": 0.004,
+   "predictor": "Full model",
+   "beats_last_game": 16812
+  },
+  {
+   "n": 28824,
+   "mae": 1.6488,
+   "rmse": 2.1888,
+   "bias": 0.0042,
+   "predictor": "Full model without spread tilt",
+   "beats_last_game": 16806
+  },
+  {
+   "n": 28824,
+   "mae": 1.6495,
+   "rmse": 2.1886,
+   "bias": 0.0007,
+   "predictor": "Full model without depth chart",
+   "beats_last_game": 16814
+  },
+  {
+   "n": 28824,
+   "mae": 1.6497,
+   "rmse": 2.1886,
+   "bias": 0.0031,
+   "predictor": "Full model without run/pass mix",
+   "beats_last_game": 16800
+  },
+  {
+   "n": 28824,
+   "mae": 1.6504,
+   "rmse": 2.1882,
+   "bias": -0.0151,
+   "predictor": "Full model without rest days",
+   "beats_last_game": 16803
+  },
+  {
+   "n": 28824,
+   "mae": 1.6506,
+   "rmse": 2.1917,
+   "bias": -0.008,
+   "predictor": "Full model without PFR targets and missed tackles",
+   "beats_last_game": 16817
   },
   {
    "n": 28824,
    "mae": 1.6507,
    "rmse": 2.188,
    "bias": -0.0128,
-   "predictor": "Full model",
+   "predictor": "Full model without injury report",
    "beats_last_game": 16778
   },
   {
    "n": 28824,
-   "mae": 1.6511,
-   "rmse": 2.1892,
-   "bias": -0.0125,
-   "predictor": "Full model without spread tilt",
-   "beats_last_game": 16786
-  },
-  {
-   "n": 28824,
-   "mae": 1.652,
-   "rmse": 2.1894,
-   "bias": -0.0162,
-   "predictor": "Full model without depth chart",
-   "beats_last_game": 16781
-  },
-  {
-   "n": 28824,
-   "mae": 1.6521,
-   "rmse": 2.1892,
-   "bias": -0.0137,
-   "predictor": "Full model without run/pass mix",
-   "beats_last_game": 16776
-  },
-  {
-   "n": 28824,
-   "mae": 1.653,
-   "rmse": 2.189,
-   "bias": -0.032,
-   "predictor": "Full model without rest days",
-   "beats_last_game": 16767
-  },
-  {
-   "n": 28824,
-   "mae": 1.6532,
-   "rmse": 2.1925,
-   "bias": -0.0249,
-   "predictor": "Full model without PFR targets and missed tackles",
-   "beats_last_game": 16793
-  },
-  {
-   "n": 28824,
-   "mae": 1.6533,
-   "rmse": 2.1923,
-   "bias": -0.0096,
+   "mae": 1.651,
+   "rmse": 2.1917,
+   "bias": 0.0072,
    "predictor": "Full model without opportunity volume",
-   "beats_last_game": 16815
+   "beats_last_game": 16834
   },
   {
    "n": 28824,
-   "mae": 1.6564,
-   "rmse": 2.1996,
-   "bias": 0.017,
+   "mae": 1.6542,
+   "rmse": 2.1991,
+   "bias": 0.0337,
    "predictor": "Full model without snap trend",
-   "beats_last_game": 16743
+   "beats_last_game": 16748
   },
   {
    "n": 28824,
-   "mae": 1.6576,
-   "rmse": 2.1935,
-   "bias": -0.0122,
+   "mae": 1.655,
+   "rmse": 2.1928,
+   "bias": 0.0046,
    "predictor": "Full model with one shrink for every position",
-   "beats_last_game": 16775
+   "beats_last_game": 16794
   },
   {
    "n": 28824,
@@ -152,6 +160,20 @@
    "bias": 0.0091,
    "predictor": "Last game",
    "beats_last_game": 0
+  },
+  {
+   "predictor": "Full model, 2026 fold",
+   "n": 2649,
+   "mae": 1.6289,
+   "rmse": 2.1606,
+   "bias": 0.0613
+  },
+  {
+   "predictor": "60% boosted corrector blend, 2026 fold (trained on earlier seasons)",
+   "n": 2649,
+   "mae": 1.6032,
+   "rmse": 2.122,
+   "bias": 0.0356
   }
  ],
  "by_season": [
@@ -165,9 +187,9 @@
   },
   {
    "n": 8522,
-   "mae": 1.6971,
-   "rmse": 2.2277,
-   "bias": -0.0555,
+   "mae": 1.6942,
+   "rmse": 2.2264,
+   "bias": -0.036,
    "season": 2023,
    "predictor": "Full model"
   },
@@ -189,9 +211,9 @@
   },
   {
    "n": 8691,
-   "mae": 1.6367,
-   "rmse": 2.1904,
-   "bias": 0.0235,
+   "mae": 1.6339,
+   "rmse": 2.1891,
+   "bias": 0.0409,
    "season": 2024,
    "predictor": "Full model"
   },
@@ -213,9 +235,9 @@
   },
   {
    "n": 8962,
-   "mae": 1.6264,
-   "rmse": 2.1562,
-   "bias": -0.0254,
+   "mae": 1.6242,
+   "rmse": 2.156,
+   "bias": -0.0119,
    "season": 2025,
    "predictor": "Full model"
   },
@@ -237,9 +259,9 @@
   },
   {
    "n": 2649,
-   "mae": 1.6292,
-   "rmse": 2.1576,
-   "bias": 0.0479,
+   "mae": 1.6285,
+   "rmse": 2.1605,
+   "bias": 0.0653,
    "season": 2026,
    "predictor": "Full model"
   },
@@ -256,68 +278,68 @@
   {
    "group": "CB",
    "n": 5313,
-   "raw": 1.4492,
-   "corrected": 1.2855,
-   "used": 1.2855
+   "raw": 1.4544,
+   "corrected": 1.2907,
+   "used": 1.2907
   },
   {
    "group": "DL",
    "n": 9539,
-   "raw": 1.1798,
-   "corrected": 1.0238,
-   "used": 1.0238
+   "raw": 1.1855,
+   "corrected": 1.0296,
+   "used": 1.0296
   },
   {
    "group": "LB",
    "n": 8458,
-   "raw": 1.6644,
-   "corrected": 1.5026,
-   "used": 1.5026
+   "raw": 1.6734,
+   "corrected": 1.5117,
+   "used": 1.5117
   },
   {
    "group": "S",
    "n": 5472,
-   "raw": 1.5794,
-   "corrected": 1.4166,
-   "used": 1.4166
+   "raw": 1.5852,
+   "corrected": 1.4223,
+   "used": 1.4223
   }
  ],
  "calibration": [
   {
    "bucket": "(-0.001, 0.2]",
-   "n": 3794,
-   "predicted": 0.1308,
-   "observed": 0.1357
+   "n": 3807,
+   "predicted": 0.131,
+   "observed": 0.1387
   },
   {
    "bucket": "(0.2, 0.35]",
-   "n": 4129,
+   "n": 4122,
    "predicted": 0.272,
-   "observed": 0.2608
+   "observed": 0.2618
   },
   {
    "bucket": "(0.35, 0.45]",
-   "n": 2158,
-   "predicted": 0.3995,
-   "observed": 0.4013
+   "n": 2169,
+   "predicted": 0.3994,
+   "observed": 0.4053
   },
   {
    "bucket": "(0.45, 0.55]",
-   "n": 1937,
-   "predicted": 0.4986,
-   "observed": 0.4827
+   "n": 1935,
+   "predicted": 0.499,
+   "observed": 0.4873
   },
   {
    "bucket": "(0.55, 0.65]",
-   "n": 1799,
-   "predicted": 0.598,
-   "observed": 0.5809
+   "n": 1786,
+   "predicted": 0.5978,
+   "observed": 0.5823
   },
   {
    "bucket": "(0.65, 0.8]",
-   "n": 1086,
-   "predicted": 0.7016,
-   "observed": 0.6565
+   "n": 1074,
+   "predicted": 0.7014,
+   "observed": 0.6611
   }
  ],
  "regression": [
