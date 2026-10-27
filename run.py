@@ -38,7 +38,7 @@ PULL_SLOTS = {
     0: [(9 * 60, "mon"), (17 * 60 + 30, "mon")],                                  # Monday: the Monday game
 }
 INTL_WINDOWS_H = (12, 1)           # international games are pulled this many hours before kickoff
-SLOT_TOLERANCE_MIN = 14
+SERVED = CACHE / "pull_slots.json"  # slots already served, so a late run still pulls once and an on-time run doesn't pull twice
 
 
 def _json(path, obj):
@@ -79,27 +79,52 @@ def week_games(sched, season, week):
     return out
 
 
-def auto_plan(now=None, games=None):
-    """What a scheduled run should pull right now: a dict of pull() keyword arguments, or None to do nothing."""
+def auto_plan(now=None, games=None, served=None):
+    """What a scheduled run should pull right now: a dict of pull() keyword arguments (with a `key` naming the slot
+    it serves), or None to do nothing. GitHub's cron drifts by up to half an hour, so a slot is served by the first
+    run after its time, once; `served` is the set of keys already served (persisted in data/cache/pull_slots.json)."""
     now = now or dt.datetime.now(dt.timezone.utc)
+    served = set(served or [])
     local = now.astimezone(EDMONTON)
-    minutes = local.hour * 60 + local.minute
     today = local.date()
+    d = lambda n: str(today + dt.timedelta(days=n))
+    due = []
     for slot, what in PULL_SLOTS.get(local.weekday(), []):
-        if abs(minutes - slot) <= SLOT_TOLERANCE_MIN:
-            d = lambda n: str(today + dt.timedelta(days=n))
+        key = f"{today} {slot // 60:02d}:{slot % 60:02d}"
+        if local.hour * 60 + local.minute >= slot and key not in served:
             days = {"thu_fri": [d(0), d(1)], "sat": [d(1)], "sat_sun": [d(0), d(1)], "sun": [d(1)], "mon": [d(0)]}[what]
-            return dict(days=days, reason=f"{local.strftime('%A %H:%M')} slot: games on {days}")
-    # international games: 12 h and 1 h before kickoff
+            due.append((slot, dict(days=days, key=key, reason=f"{local.strftime('%A')} {slot // 60:02d}:{slot % 60:02d} slot (run at {local.strftime('%H:%M')}): games on {days}")))
+    if due:
+        due.sort()
+        plan = due[-1][1]                       # the latest slot that is due; earlier unserved ones today are stale
+        plan["also_served"] = [p["key"] for _, p in due[:-1]]
+        return plan
+    # international games: once in the hour starting 12 h before kickoff, once in the hour starting 1 h before
     for g in games or []:
         if not g.get("international"):
             continue
         kick = dt.datetime.fromisoformat(g["kickoff"])
         ahead_h = (kick - now).total_seconds() / 3600
         for h in INTL_WINDOWS_H:
-            if abs(ahead_h - h) * 60 <= SLOT_TOLERANCE_MIN:
-                return dict(teams=(g["home"], g["away"]), reason=f"international game {g['away']} at {g['home']} is {h} h from kickoff")
+            key = f"{g['game_id']} {h}h"
+            if 0 < ahead_h <= h and key not in served:
+                return dict(teams=(g["home"], g["away"]), key=key, reason=f"international game {g['away']} at {g['home']} is {ahead_h:.1f} h from kickoff ({h} h window)")
     return None
+
+
+def load_served():
+    try:
+        return set(json.loads(SERVED.read_text()))
+    except (OSError, ValueError):
+        return set()
+
+
+def mark_served(keys):
+    served = load_served() | set(keys)
+    cutoff = str(dt.date.today() - dt.timedelta(days=10))
+    served = {k for k in served if k[:10] >= cutoff or not k[:4].isdigit()}   # keep slot keys for ten days; game keys stay
+    SERVED.parent.mkdir(parents=True, exist_ok=True)
+    SERVED.write_text(json.dumps(sorted(served), indent=1))
 
 
 def upcoming_week(sched, season):
@@ -194,11 +219,12 @@ def cmd_odds(hours=None, auto=False):
     pull_kw = dict(hours_ahead=hours)
     if auto:
         games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
-        plan = auto_plan(games=games)
+        plan = auto_plan(games=games, served=load_served())
         if plan is None:
-            print("odds: not a scheduled pull slot and no international game in a pull window; nothing to do")
+            print("odds: no pull slot due and no international game in a pull window; nothing to do")
             return
         print(f"odds: {plan.pop('reason')}")
+        mark_served([plan.pop("key")] + plan.pop("also_served", []))
         if "teams" in plan:
             home, away = plan.pop("teams")
             names = {M.TEAM_NAMES.get(home), M.TEAM_NAMES.get(away)}

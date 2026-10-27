@@ -192,6 +192,13 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
   a line per week with the running record, and every pick with its result. The site shows the same tally in the
   five box on Plays ("season to date 24-1") and as a per-week table on Track record.
 
+### 2026-10-27, morning MDT (pull slots served once, not matched to the minute)
+- The Monday 5:30 pm pull was missed: GitHub ran the half-hourly job at 5:03 and 5:54 (its cron drifts up to
+  25 minutes and skips some half-hours), both outside the 14-minute match window. A slot is now served by the
+  first run after its time, once; served keys live in `data/cache/pull_slots.json` (committed by the job).
+  International windows work the same way: once in the hour before 12 h out, once in the hour before 1 h out.
+- Pitfall: never match a GitHub cron run to a time; match "has this slot been served yet".
+
 ### 2026-10-26, evening MDT (lock floor, parlay removal)
 - A lock needs a lock score of 55+ (grade B or better; `LOCK_MIN_SCORE`). On a two-player Monday board the top
   three were C grades flagged as locks, which is not what a lock means. Fewer locks beats fake ones.
@@ -328,6 +335,8 @@ Open, with what would justify them:
   of each other; the second one's rebase then conflicts on generated files and its work is lost. The save step now
   keeps the job's own version of conflicting files and retries; the daily cron sits at 11:15 UTC, off the
   half-hour the pull job uses.
+- GitHub scheduled runs drift by up to half an hour and some are skipped; a job that keys off "is it 5:30 now"
+  misses slots. Key off "has the 5:30 slot been served" instead.
 - The smoke test copies the repo into a temp dir; it must skip live data (`data/odds/<season>`, `data/picks.csv`,
   `data/cache`, `data/parlays.csv`, `data/retro_five.json`, `docs/data/*.json`) or the synthetic run appends to real
   picks and parlays and the checks fail (fixed 2026-10-26; recurred when parlays.csv first appeared). Any new live
