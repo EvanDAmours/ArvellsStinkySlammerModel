@@ -1,0 +1,21 @@
+name: Keep schedules on
+# GitHub switches off every scheduled workflow in a public repository after 60 days without a push. The daily job
+# pushes a run log every day, so that should never happen. This is the backstop: any push by a person (the bot's
+# own pushes do not trigger it) switches both schedules back on, so nobody has to find the "Enable workflow"
+# button. It can also be run by hand from the Actions tab.
+on:
+  push: {}
+  workflow_dispatch: {}
+permissions:
+  actions: write
+jobs:
+  enable:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - run: |
+          gh workflow enable daily.yml
+          gh workflow enable odds.yml
+          gh workflow list --all

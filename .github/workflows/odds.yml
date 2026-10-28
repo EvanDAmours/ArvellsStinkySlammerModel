@@ -12,6 +12,7 @@ on:
         default: ""
 permissions:
   contents: write
+  actions: write             # lets a pull switch the daily schedule back on if GitHub has turned it off
 concurrency:
   group: pipeline
   cancel-in-progress: false
@@ -34,11 +35,14 @@ jobs:
       - run: |
           if [ -n "${{ github.event.inputs.hours }}" ]; then python run.py odds --hours "${{ github.event.inputs.hours }}"; else python run.py odds --auto; fi
       - name: Save results
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "tackle-bot"
           git config user.email "tackle-bot@users.noreply.github.com"
           git add data docs/data
-          git diff --cached --quiet || git commit -m "Lines $(date -u +%Y-%m-%dT%H:%M)"
+          # A pull that found lines also makes sure the daily schedule is still switched on (see keepalive.yml).
+          git diff --cached --quiet || { git commit -m "Lines $(date -u +%Y-%m-%dT%H:%M)"; gh workflow enable daily.yml || true; }
           # Another job may have pushed meanwhile. Replay our commit on top, keeping our version of any generated
           # file both touched (ours is the fresher one), and retry the push a few times.
           for i in 1 2 3 4; do

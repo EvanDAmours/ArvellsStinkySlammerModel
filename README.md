@@ -18,7 +18,7 @@ Everything runs on GitHub's servers on a schedule. You don't run anything by han
 | `pipeline/odds.py` | Pulls tackle lines from The Odds API and stores timestamped snapshots |
 | `pipeline/grade.py` | Logs picks and grades them against box scores and the closing line |
 | `docs/` | The website (`index.html`) and the data it reads (`docs/data/*.json`) |
-| `.github/workflows/` | The schedules: daily update, odds pulls, and tests on every code change |
+| `.github/workflows/` | The schedules: daily update, odds pulls, tests on every code change, and the keepalive that re-enables schedules |
 | `tests/` | A synthetic league with known effects, and an end-to-end test |
 
 ## One-time setup (about 30 minutes)
@@ -52,6 +52,21 @@ change needs no edits). The pull job runs every half hour and does nothing unles
 
 Locks and the recommended parlay for a slate day are re-chosen at every pull until the day's first kickoff.
 GitHub can start scheduled jobs a few minutes late at busy times; a slot tolerates 14 minutes.
+
+## Keeping it running with no hands on
+
+GitHub switches off every scheduled workflow in a public repository after 60 days without a push. Three things
+keep this site alive on their own:
+
+1. The daily job commits a run log (`data/cache/last_run.txt`) every day, even when the update itself failed
+   (a failed run leaves yesterday's site in place and commits only the log line). A push a day means the repo is
+   never inactive, in season or out.
+2. Each job switches the other's schedule back on: the daily job re-enables the line pulls, and a pull that found
+   lines re-enables the daily job. A workflow that was turned off, for whatever reason, comes back within a day.
+3. `keepalive.yml` runs on every push by a person and re-enables both schedules. If both were ever off at once,
+   the next commit anyone pushes brings them back, with no button to click.
+
+Schedules only run on the default branch, so keep the branch the site deploys from as the default.
 
 ## Odds credits
 

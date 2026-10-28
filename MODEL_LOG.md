@@ -306,6 +306,15 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-10-28, morning MDT (schedules kept alive without hands on)
+- GitHub switches off every scheduled workflow in a public repository after 60 days without a push (the repo is
+  public because GitHub Pages on a free account needs it). The daily job already pushed a results commit each day
+  in season, but a failed run (or an off-season with nothing new) pushed nothing. Now: the daily save step runs
+  even when the update failed, keeps yesterday's data and site, and commits a run log (`data/cache/last_run.txt`)
+  every day; the daily job re-enables `odds.yml` and a pull that found lines re-enables `daily.yml` (both have
+  `actions: write`); new `keepalive.yml` runs on any push by a person and re-enables both. Revert condition: none;
+  if GitHub changes the rule the extra commit a day is harmless.
+
 ### 2026-10-27, late afternoon MDT (research round 3: injury report factor, second model)
 - See research round 3 above. **Injury factor** (`INJURY`, `injury_factor`, `attach_injury_status`): questionable
   x0.92, limited practice x0.97; injuries now loaded for every history season with practice status. Questionable
@@ -507,6 +516,10 @@ Open, with what would justify them:
 ## Known pitfalls
 
 - Codespaces secrets are invisible to Actions. Only Actions secrets work.
+- GitHub disables scheduled workflows in a public repo after 60 days without a push, and a plain push does not
+  re-enable them (only the Actions tab, the API, or a commit that edits the cron line does). The daily run log
+  commit and `keepalive.yml` exist for this; do not remove them as "noise". Pushes made with the job's own token
+  never trigger other workflows, so the bot's commits cannot re-enable anything themselves.
 - GitHub did not register the scheduled workflows on the first push to the empty repo; a second push to the
   workflow files fixed it.
 - Cron times are UTC. Alberta leaves daylight time on 2026-11-01: every cron in `odds.yml` and `daily.yml` then runs

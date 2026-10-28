@@ -5,6 +5,7 @@ on:
   workflow_dispatch: {}        # lets you run it by hand from the Actions tab
 permissions:
   contents: write            # lets the job commit the refreshed data and site files back to the repo
+  actions: write             # lets the job switch the line-pull schedule back on if GitHub has turned it off
 concurrency:
   group: pipeline
   cancel-in-progress: false
@@ -19,13 +20,24 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - run: python run.py daily
+      - id: run
+        run: python run.py daily
       - name: Save results
+        # Runs even when the update failed: GitHub switches off every schedule in a public repository after 60 days
+        # without a push, so the run log below is committed every day whatever happened. A failed run leaves
+        # yesterday's data and site in place and commits only the log line.
+        if: always()
         run: |
           git config user.name "tackle-bot"
           git config user.email "tackle-bot@users.noreply.github.com"
+          if [ "${{ steps.run.outcome }}" != "success" ]; then
+            git checkout -- data docs/data && git clean -fdq data docs/data
+          fi
+          mkdir -p data/cache
+          echo "${{ steps.run.outcome }} $(date -u +%Y-%m-%dT%H:%MZ)" > data/cache/last_run.txt
           git add data docs/data
-          git diff --cached --quiet || git commit -m "Daily update $(date -u +%Y-%m-%d)"
+          if [ "${{ steps.run.outcome }}" = "success" ]; then msg="Daily update $(date -u +%Y-%m-%d)"; else msg="Daily run failed $(date -u +%Y-%m-%d)"; fi
+          git diff --cached --quiet || git commit -m "$msg"
           # Another job may have pushed meanwhile. Replay our commit on top, keeping our version of any generated
           # file both touched (ours is the fresher one), and retry the push a few times.
           for i in 1 2 3 4; do
@@ -33,3 +45,8 @@ jobs:
             git rebase --abort 2>/dev/null || true
             sleep $((i * 5))
           done
+      - name: Keep the line-pull schedule switched on
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow enable odds.yml
