@@ -159,6 +159,12 @@ function recordsBar(s) {
   const hit = f.hit == null ? "" : ` (${pct(f.hit)})`;
   bar.append(el("div", { class: "rec" }, wl(f.wins, f.losses, f.pushes), el("span", { class: "label" }, `Locks${hit}${f.pending ? `, ${f.pending} pending` : ""}`)));
   bar.append(el("div", { class: "rec" }, wl(s?.wins, s?.losses, s?.pushes), el("span", { class: "label" }, `All plays${s?.pending ? `, ${s.pending} pending` : ""}`)));
+  const bg = Object.fromEntries(((s || {}).by_grade || []).map((g) => [g.grade, g]));
+  for (const gr of ["A", "B", "C"]) {
+    const g = bg[gr] || {};
+    bar.append(el("div", { class: "rec" }, el("span", { class: `grade ${gr}`, title: "Confidence grade" }, gr), wl(g.wins, g.losses, g.pushes),
+      el("span", { class: "label" }, `${gr} grade${g.hit == null ? "" : ` (${pct(g.hit)})`}${g.pending ? `, ${g.pending} pending` : ""}`)));
+  }
   const pr = (s || {}).parlays || {};
   bar.append(el("div", { class: "rec" }, wl(pr.wins, pr.losses), el("span", { class: "label" }, `Parlays${pr.units == null ? "" : `, ${pr.units >= 0 ? "+" : ""}${pr.units.toFixed(1)}u`}${pr.pending ? `, ${pr.pending} pending` : ""}`)));
   const rw = (r.retro && r.retro.weeks) || [];
@@ -166,8 +172,11 @@ function recordsBar(s) {
     const tot = rw.reduce((a, w) => ({ w: a.w + w.five.wins, l: a.l + w.five.losses, pw: a.pw + w.plays.wins, pl: a.pl + w.plays.losses, pend: a.pend + w.five.pending,
       qw: a.qw + ((w.parlays || []).filter((q) => q.result === "Win").length), ql: a.ql + ((w.parlays || []).filter((q) => q.result === "Loss").length) }), { w: 0, l: 0, pw: 0, pl: 0, pend: 0, qw: 0, ql: 0 });
     const weeks = rw.map((w) => `wk ${w.week}`).join(", ");
+    const rg = {};
+    for (const w of rw) for (const g of (w.by_grade || [])) { rg[g.grade] = rg[g.grade] || { w: 0, l: 0 }; rg[g.grade].w += g.wins; rg[g.grade].l += g.losses; }
+    const byGrade = ["A", "B", "C"].filter((k) => rg[k]).flatMap((k, i) => [i ? ", " : " (", `${k} `, wl(rg[k].w, rg[k].l)]);
     bar.append(el("div", { class: "sub" }, "Projected under the current rules, replayed on ", weeks, " using only what was known before each kickoff: locks ",
-      wl(tot.w, tot.l), tot.pend ? ` (${tot.pend} pending)` : "", ", all plays ", wl(tot.pw, tot.pl), ", parlays ", wl(tot.qw, tot.ql), ". ",
+      wl(tot.w, tot.l), tot.pend ? ` (${tot.pend} pending)` : "", ", all plays ", wl(tot.pw, tot.pl), ...byGrade, byGrade.length ? ")" : "", ", parlays ", wl(tot.qw, tot.ql), ". ",
       "Weeks 1-6 can't be replayed: no lines were collected before week 7, and historical lines need a paid Odds API plan."));
   }
   return bar;
@@ -365,6 +374,17 @@ function renderRecord() {
     el("div", {}, el("b", { class: clvClass(s.beat_close_share) }, s.beat_close_share == null ? "" : pct(s.beat_close_share)), `Beat the closing line${s.close_moved ? ` (${s.close_moved} moved lines of ${s.close_known})` : ""}`),
     el("div", {}, el("b", {}, String(s.pending ?? 0)), "Pending")));
   box.append(el("p", { class: "note" }, `Beating the closing line is the earliest reliable sign of a real edge: over a few hundred moved lines it predicts profit better than the win-loss record does. Cutoffs and the full explanation are in the legend on the Plays tab: ${clvWord(s.beat_close_share)}.`));
+  if (s.by_grade && s.by_grade.length) {
+    box.append(el("h3", {}, "Record by grade"));
+    box.append(el("div", { class: "stat-line" }, ...["A", "B", "C"].map((gr) => { const g = s.by_grade.find((x) => x.grade === gr) || {};
+      return el("div", {}, wl(g.wins, g.losses, g.pushes), el("span", { class: `grade ${gr}` }, gr), ` grade${g.hit == null ? "" : `, ${pct(g.hit)} hit`}${g.pending ? `, ${g.pending} pending` : ""}`); })));
+    box.append(el("div", { class: "scroll" }, table([["Grade"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Units (1 per bet)", "n"], ["Return per bet", "n"], ["Units at suggested stake", "n"], ["Pending", "n"]],
+      s.by_grade.map((g) => [g.grade === "ungraded" ? "No grade yet" : el("span", { class: `grade ${g.grade}` }, g.grade), g.bets, wl(g.wins, g.losses, g.pushes), g.hit == null ? "" : pct(g.hit), units(g.units, 2),
+        el("b", { class: g.roi == null ? "" : g.roi >= 0 ? "pos" : "neg" }, g.roi == null ? "" : signedPct(g.roi)), g.stake ? el("span", {}, units(g.staked, 2), ` at ${g.stake}u`) : "", g.pending || 0]))));
+    box.append(el("p", { class: "note" }, "If the grades mean anything, A should beat B and B should beat C over time; if they don't, the grading formula in config.py is wrong and gets changed. "
+      + (s.by_grade.some((g) => g.grade === "ungraded") ? "\"No grade yet\" are the week 7 picks logged before grades existed (2026-10-26); the replay further down grades every one of them under the current rules. " : "")
+      + "Suggested stakes are A 1 unit, B 0.5, C 0.25 (see the legend on the Plays tab)."));
+  }
   if (s.five && (s.five.bets || (s.five.weeks && s.five.weeks.length))) {
     box.append(el("h3", {}, "The locks (weekly five)"));
     box.append(el("div", { class: "stat-line" },
@@ -401,16 +421,13 @@ function renderRecord() {
         el("div", {}, units(w.five.units), "Locks units"),
         el("div", {}, wl(w.plays.wins, w.plays.losses, w.plays.pushes), `Week ${w.week} all plays (${w.plays.n})`),
         el("div", {}, units(w.plays.units), "Plays units")));
+      if (w.by_grade && w.by_grade.length) {
+        box.append(el("div", { class: "stat-line" }, ...w.by_grade.map((g) => el("div", {}, wl(g.wins, g.losses, g.pushes), el("span", { class: `grade ${g.grade}` }, g.grade), ` grade, week ${w.week} (${g.bets}${g.hit == null ? "" : `, ${pct(g.hit)} hit`}, ${g.units >= 0 ? "+" : ""}${Number(g.units).toFixed(1)}u)`))));
+      }
       box.append(el("div", { class: "scroll" }, table([["Lock"], ["Price", "n"], ["Book"], ["Grade"], ["Score", "n"], ["Actual", "n"], ["Result"]],
         w.picks.map((p) => [`${p.player} ${p.side} ${num(p.line)} ${(MARKET[p.market] || p.market).toLowerCase()}`, odds(p.odds), p.book, p.grade, Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result]))));
       for (const q of (w.parlays || [])) box.append(parlayBox({ ...q, placed: true }, true));
     }
-  }
-  if (s.by_grade && s.by_grade.length) {
-    box.append(el("h3", {}, "By confidence grade"));
-    box.append(el("div", { class: "scroll" }, table([["Grade"], ["Bets", "n"], ["Record"], ["Units", "n"], ["Return per bet", "n"]],
-      s.by_grade.map((g) => [g.grade, g.bets, wl(g.wins, g.losses), units(g.units, 2), el("b", { class: g.roi == null ? "" : g.roi >= 0 ? "pos" : "neg" }, g.roi == null ? "" : signedPct(g.roi))]))));
-    box.append(el("p", { class: "note" }, "If the grades mean anything, A should beat B and B should beat C over time. If they don't, the grading formula in config.py is wrong and gets changed."));
   }
   box.append(el("h3", {}, "Every pick"));
   box.append(el("p", { class: "note" }, "Click a column heading to sort; click again to flip. Sorting by grade or lock score shows whether confidence is tracking results."));

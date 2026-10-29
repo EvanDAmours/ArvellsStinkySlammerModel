@@ -257,17 +257,17 @@ numbers below are what they printed).
 - The replay tool used a cached `model_state.json` for phi and scale and would have had no corrector; it now
   runs the backtest itself so the replay prices with the same model the daily job would have had.
 
-**Week 7 replayed under this model** (`tools/replay_five.py --week 7`, every pull from Saturday to Monday):
-locks 2-3 (-1.49 units: Elliss W, Schwesinger W, Lenoir L, Queen L, Carter L; the same five the round-2 model
-chose), all plays 100-91 (+9.77 units; was 96-92, +5.3), Sunday parlay Elliss/Lenoir/Tranquill (+310) Loss.
-**The Monday slate produced no locks and no parlay under the corrector**: the board had nine lines on three
-players, and Kenny Clark Under 2.5 (the live lock, which won) scored 54 against the 55 floor, down from 64 under
-the factor model, because the corrector projects him at 2.43 instead of 2.34 against a 2.5 line. Only one Monday
-leg cleared the 55% parlay fallback, so no parlay could be built. The live Monday record (lock 1-0, parlay win)
-stands as it was chosen; replays never rewrite live records. Trade-off to watch: the corrector sits closer to the
-line than the factor model, so on a thin single-game board fewer picks clear the lock floor, against the
-owner's target of three locks on Thursday and Monday. Nothing is changed for that here; see the backlog.
-One week is noise; the evidence for the change is the walk-forward backtest, not this replay.
+**Week 7 replayed under this model** (`tools/replay_five.py --week 7`, every pull from Saturday to Monday,
+restated 2026-10-29 after the replay leak fix: calibration and corrector built from weeks 1-6 only): locks 3-3
+(-0.50 units: Elliss W, Schwesinger W, Clark W; Lenoir, Queen, Carter L), all plays 102-95 of 199 (+8.13 units;
+the round-2 model replayed 96-92, +5.3), by grade A 7-7 (-0.9u), B 39-37 (+0.3u), C 56-51 (+8.7u), Sunday parlay
+Elliss/Lenoir/Tranquill (+310) Loss. **The Monday slate came up short**: the board had nine lines on three players
+and only Kenny Clark Under 2.5 reached the 55 lock floor (score 55 exactly, B grade; 64 under the factor model),
+because the corrector projects him nearer the 2.5 line. Only one Monday leg cleared the 55% parlay fallback, so no
+parlay could be built. Trade-off to watch: the corrector sits closer to the line than the factor model, so on a
+thin single-game board fewer picks clear the lock floor, against the owner's target of three locks on Thursday and
+Monday. Nothing is changed for that here; see the backlog. One week is noise; the evidence for the change is the
+walk-forward backtest, not this replay.
 
 ## Weekly post-mortems
 
@@ -305,6 +305,20 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-10-29, morning MDT (record by grade on the site)
+- Owner asked for an area showing the record for A, B and C grade picks. The records bar on both the Plays and
+  Track record tabs now carries the A, B and C records (with hit rate and pending) beside locks, all plays and
+  parlays. Track record has a "Record by grade" block right under "All plays": record, hit rate, units at 1 per
+  bet, return per bet, units at the suggested stake (A 1u, B 0.5u, C 0.25u) and pending, with "No grade yet" for
+  the week 7 picks logged before grades existed. The replayed weeks now carry a by-grade record too
+  (`record_by_grade` in `pipeline/grade.py`, shared by the grader and `tools/replay_five.py`), shown in the
+  replay section and in the records bar's replay line, since the live graded sample is still tiny.
+- The by-grade summary gained `pushes`, `pending`, `hit`, `stake` and `staked`; the smoke test checks them.
+- **Replay leak fixed.** `tools/replay_five.py` built its calibration and corrector from every finished game,
+  including the week being replayed, so the week 7 replay was priced by a corrector that had seen week 7's box
+  scores. It now uses only games before the replayed week. The round 3 replay numbers above are restated from the
+  honest run.
 
 ### 2026-10-28, morning MDT (schedules kept alive without hands on)
 - GitHub switches off every scheduled workflow in a public repository after 60 days without a push (the repo is
@@ -503,7 +517,7 @@ Open, with what would justify them:
 - Role-change signal: 0-3 so far. Keep logging; judge at 30 picks.
 - Second key: fix `PARLAY_API_KEY` so Saturday pulls stay inside the credit budget.
 - Single-game slates can come up short of three locks now that the corrector sits closer to the line (week 7
-  Monday replay: zero locks, best score 54 against the 55 floor). Options, none adopted without evidence: a lower
+  Monday replay: one lock, Kenny Clark at exactly the 55 floor, nothing else above 50). Options, none adopted without evidence: a lower
   floor on single-game slates, or filling the three with the best scores and marking any below 55 as "lean".
   Decide after the Thursday and Monday slates of weeks 8-9 have been graded.
 - Corrector weight 0.7: marginally better in sample (-1.11% vs -1.08%); revisit after 2026 ends with a full
@@ -544,6 +558,8 @@ Open, with what would justify them:
   Tuesday.
 - Never run two pipeline processes at once on one machine: the corrector's thread pools oversubscribe the cores
   and both crawl (a 50 s smoke test and an 80 s replay both hit a 10-minute limit when run together).
+- A replay must build everything (shrink weight, dispersion, level scale, corrector) from games before the
+  replayed week. Training on "all finished games" silently includes the week under test once it is graded.
 - Any second model must be reported walk-forward (trained on earlier seasons, scored on the latest). In-sample
   numbers for a boosted model are 3x the honest ones.
 - `picks.csv` gains columns over time (`uncertain` added 2026-10-27); older rows read back as empty, so every use

@@ -233,6 +233,28 @@ def _no_vig_side(over, under, side):
     return (po if side == "Over" else pu) / (po + pu)
 
 
+def record_by_grade(P):
+    """Record per confidence grade (A, B, C, then any picks logged before grades existed), graded picks only, with
+    pending counted alongside. `staked` is the units won at the suggested stake for the grade (GRADE_UNITS)."""
+    if P is None or len(P) == 0 or "grade" not in P.columns or "result" not in P.columns:
+        return []
+    labels = P.grade.fillna("ungraded").replace("", "ungraded").astype(str)
+    out = []
+    for gr in ["A", "B", "C"] + sorted(set(labels.unique()) - {"A", "B", "C"}):
+        allp = P[labels == gr]
+        if allp.empty:
+            continue
+        part = allp[allp.result.isin(["Win", "Loss", "Push"])]
+        stake = float(C.GRADE_UNITS.get(gr, 0.0))
+        decided = int((part.result != "Push").sum())
+        out.append(dict(grade=gr, bets=int(len(part)), wins=int((part.result == "Win").sum()), losses=int((part.result == "Loss").sum()),
+                        pushes=int((part.result == "Push").sum()), pending=int((allp.result == "Pending").sum()),
+                        units=float(part.units.sum()) if len(part) else 0.0, roi=float(part.units.mean()) if len(part) else None,
+                        hit=float((part.result == "Win").sum() / decided) if decided else None,
+                        stake=stake, staked=float(part.units.sum() * stake) if len(part) else 0.0))
+    return out
+
+
 def grade(pw_comb):
     """pw_comb: player-week rows with name_key, season, week, comb, solo_t (official formula applied)."""
     if not PICKS.exists():
@@ -277,12 +299,7 @@ def grade(pw_comb):
     dec = P.odds.map(lambda a: american_to_decimal(a) if pd.notna(a) else np.nan)
     P["units"] = np.where(P.result == "Win", dec - 1, np.where(P.result == "Loss", -1.0, 0.0))
     g = P[P.result.isin(["Win", "Loss", "Push"])]
-    by_grade = []
-    if "grade" in P.columns:
-        for gr, part in g.groupby(P.grade.fillna("ungraded")):
-            by_grade.append(dict(grade=gr, bets=int(len(part)), wins=int((part.result == "Win").sum()),
-                                 losses=int((part.result == "Loss").sum()), units=float(part.units.sum()),
-                                 roi=float(part.units.mean()) if len(part) else None))
+    by_grade = record_by_grade(P)
     five = g[g.five.fillna(False).astype(bool)] if "five" in g.columns else g.iloc[0:0]
     five_all = P[P.five.fillna(False).astype(bool)] if "five" in P.columns else P.iloc[0:0]
     weeks, cw, cl = [], 0, 0

@@ -41,7 +41,10 @@ def lines_as_of(snaps, t):
 def replay(season, week):
     seasons, pw, sched, snaps_df, inj, H, status, src = R.load_all()
     from pipeline import backtest as B
-    _, phi, _, scale, gbm = B.run_backtest(H, seasons)     # same calibration and corrector the daily job would have built
+    # Calibration and corrector from games finished BEFORE the replayed week only: the daily job that priced this
+    # week could not have seen its box scores, so the replay must not either.
+    prior = H[(H.season < season) | ((H.season == season) & (H.week < week))]
+    _, phi, _, scale, gbm = B.run_backtest(prior, seasons)
     P = M.finalize_projections(M.upcoming_rows(H, sched, inj, season, week, vol=src["vol"], dc=src["dc"], pbp_starters=src["pbp"]["starters"]),
                                phi, scale=scale, gbm=gbm)
     P = R.attach_game_logs(P, H, season, week)
@@ -103,7 +106,7 @@ def replay(season, week):
     PQ = G.grade_parlay_legs(parlays, stats) if len(parlays) else pd.DataFrame()
     entry = dict(season=season, week=week, replayed_at=dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
                  rules=dict(line_weight=C.LINE_WEIGHT, pick_bar=C.PICK_BAR, signal_bar=C.SIGNAL_BAR, lock_weights=C.LOCK_WEIGHTS, grade_bars=C.GRADE_BARS),
-                 five=rec(five), plays=rec(picks),
+                 five=rec(five), plays=rec(picks), by_grade=G.record_by_grade(picks),
                  parlays=[] if PQ.empty else json.loads(PQ.to_json(orient="records")),
                  picks=[dict(player=r.player, team=r.team, opp=r.opp, market=r.market, side=r.side, line=float(r.line), odds=float(r.odds),
                              book=r.book, lock=float(r.lock), grade=r.grade, proj=float(r.proj), actual=None if pd.isna(r.actual) else float(r.actual),
@@ -117,6 +120,7 @@ def replay(season, week):
     f, p = entry["five"], entry["plays"]
     print(f"\nweek {week} replay: five {f['wins']}-{f['losses']} ({f['pending']} pending, {f['units']:+.2f}u); "
           f"all plays {p['wins']}-{p['losses']} of {p['n']} ({p['units']:+.2f}u)")
+    print("  by grade: " + ", ".join(f"{g['grade']} {g['wins']}-{g['losses']} ({g['units']:+.1f}u)" for g in entry["by_grade"]))
     for r in five.itertuples():
         print(f"  {r.grade} {r.lock:4.0f}  {r.player:22}{r.side:6}{r.line:>4} {r.market[7:]:17}{int(r.odds):>5} {r.book:13} actual {r.actual!s:>5} {r.result}")
     for q in entry["parlays"]:

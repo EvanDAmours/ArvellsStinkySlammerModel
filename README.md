@@ -99,8 +99,9 @@ Every priced line gets a lock score (0-100) and a grade: **A** (72+), **B** (55+
 expected return, the model's own probability for the side, how often the player has cleared the line this season,
 and how many games of data he has; a role-change or outlier-fade signal adds a bonus. Nothing in the score comes
 from the market agreeing with the pick: the edge is what the market has not priced. Weights are in `config.py`.
-The Track record tab reports results by grade so the grade itself is tested: if A does not beat C over time, the
-weights are wrong. A player listed questionable is priced 8% under his average and is never a lock or a parlay leg.
+The records bar on both tabs shows the A, B and C records, and the Track record tab has a full "Record by grade"
+block (hit rate, units, return per bet, units at the suggested stake), so the grade itself is tested: if A does
+not beat C over time, the weights are wrong. A player listed questionable is priced 8% under his average and is never a lock or a parlay leg.
 
 ## The model log
 
