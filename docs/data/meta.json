@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-29T17:25+00:00",
+ "generated_at": "2026-10-29T23:37+00:00",
  "season": 2026,
  "week": 8,
  "lines_pulled": "20261029T204822Z",
@@ -68,6 +68,5 @@
  "odds_credits_by_key": {
   "ODDS_API_KEY": 402.0,
   "PARLAY_API_KEY": 0.0
- },
- "lines_count": 43
+ }
 }

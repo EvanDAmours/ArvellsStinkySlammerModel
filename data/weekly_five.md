@@ -1,7 +1,7 @@
 # Locks and parlays: running tally
 
 The locks: the highest-confidence picks of each slate day (3 on a one-game day, 5 on a multi-game day), named before kickoff and tracked here. Target: 70% hits. Then the recommended parlay for each slate day.
-Generated 2026-10-29 17:25 UTC by the daily job. Do not edit by hand.
+Generated 2026-10-29 23:37 UTC by the daily job. Do not edit by hand.
 
 **Locks record: 1-0 (100%), +0.99 units, 3 pending.**
 
@@ -20,9 +20,9 @@ Generated 2026-10-29 17:25 UTC by the daily job. Do not edit by hand.
 
 | Pick | Price | Book | Grade | Lock | Actual | Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| Isaiah McDuffie Under 7.5 tackles + assists | -107 | DraftKings | A | 85 |  | Pending |
+| Isaiah McDuffie Under 7.5 tackles + assists | -107 | DraftKings | A | 83 |  | Pending |
 | Xavier McKinney Under 2.5 solo | +135 | DraftKings | B | 70 |  | Pending |
-| Javon Bullard Under 2.5 solo | +121 | DraftKings | B | 64 |  | Pending |
+| Bobby Okereke Over 6.5 tackles + assists | +112 | DraftKings | B | 65 |  | Pending |
 
 ## Parlays
 
@@ -30,4 +30,4 @@ Generated 2026-10-29 17:25 UTC by the daily job. Do not edit by hand.
 
 | Slate | Legs | Odds | Model chance | Stake | Result | Units |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2026-10-29 (wk 8) | Isaiah McDuffie Under 7.5 (Pending); Javon Bullard Under 2.5 (Pending) | +328 | 36% | 0.1u | Pending | +0.00 |
+| 2026-10-29 (wk 8) | Isaiah McDuffie Under 7.5 (Pending); Brandon Cisse Under 3.5 (Pending) | +268 | 36% | 0.1u | Pending | +0.00 |
