@@ -1,1 +1,48 @@
-[]
+[
+ {
+  "parlay_id": "2026-wk08-2026-10-29",
+  "slate": "2026-10-29",
+  "n_legs": 2,
+  "combined_decimal": 4.2754,
+  "combined_american": 328,
+  "combined_prob": 0.3614,
+  "units": 0.1,
+  "chosen_at": "20261029T154831Z",
+  "placed": false,
+  "first_kickoff": "2026-10-30T00:15:00+00:00",
+  "legs": [
+   {
+    "leg": 1,
+    "player": "Isaiah McDuffie",
+    "team": "GB",
+    "opp": "CAR",
+    "market": "player_tackles_assists",
+    "side": "Under",
+    "line": 7.5,
+    "book": "DraftKings",
+    "odds": -107.0,
+    "p_side": 0.6268,
+    "mkt_side": 0.4856,
+    "lock": 84.8187,
+    "grade": "A",
+    "commence_time": "2026-10-30T00:15:00Z"
+   },
+   {
+    "leg": 2,
+    "player": "Javon Bullard",
+    "team": "GB",
+    "opp": "CAR",
+    "market": "player_solo_tackles",
+    "side": "Under",
+    "line": 2.5,
+    "book": "DraftKings",
+    "odds": 121.0,
+    "p_side": 0.5766,
+    "mkt_side": 0.4255,
+    "lock": 64.0922,
+    "grade": "B",
+    "commence_time": "2026-10-30T00:15:00Z"
+   }
+  ]
+ }
+]
