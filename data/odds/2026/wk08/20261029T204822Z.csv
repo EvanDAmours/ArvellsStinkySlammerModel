@@ -1,0 +1,38 @@
+event_id,commence_time,home_team,away_team,book,book_key,market,player,line,over_odds,under_odds,book_update,pulled_at
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_solo_tackles,Evan Williams,4.5,100,-129.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_solo_tackles,Isaiah McDuffie,3.5,-162,124.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_solo_tackles,Nick Scott,3.5,-139,107.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_solo_tackles,Devin Lloyd,3.5,-133,103.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_solo_tackles,Brandon Cisse,3.5,-110,-118.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_solo_tackles,Bobby Okereke,3.5,-105,-123.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_solo_tackles,Xavier McKinney,2.5,-167,128.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_solo_tackles,Javon Bullard,2.5,-159,122.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_solo_tackles,Tre'von Moehrig,2.5,-151,116.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_solo_tackles,Lukas Van Ness,1.5,-118,-110.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_solo_tackles,Derrick Brown,1.5,101,-131.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_tackles_assists,Isaiah McDuffie,7.5,-129,-101.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_tackles_assists,Evan Williams,6.5,-121,-107.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_tackles_assists,Devin Lloyd,6.5,-103,-126.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_tackles_assists,Bobby Okereke,6.5,112,-146.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_tackles_assists,Nick Scott,5.5,-150,116.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_tackles_assists,Javon Bullard,5.5,114,-148.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_tackles_assists,Tre'von Moehrig,4.5,-147,113.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_tackles_assists,Xavier McKinney,4.5,-138,106.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_tackles_assists,Brandon Cisse,4.5,105,-136.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_tackles_assists,Derrick Brown,2.5,-178,137.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,DraftKings,draftkings,player_tackles_assists,Lukas Van Ness,2.5,-134,104.0,2026-10-29T20:47:14Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,Bally Bet,ballybet,player_tackles_assists,Nick Scott,5.5,-150,,2026-10-29T20:48:07Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,Bally Bet,ballybet,player_tackles_assists,Evan Williams,6.5,-137,,2026-10-29T20:48:07Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,Bally Bet,ballybet,player_tackles_assists,Devin Lloyd,6.5,-105,,2026-10-29T20:48:07Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,Bally Bet,ballybet,player_tackles_assists,Isaiah McDuffie,7.5,-130,,2026-10-29T20:48:07Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,Bally Bet,ballybet,player_tackles_assists,Keisean Nixon,5.5,116,,2026-10-29T20:48:07Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,theScore Bet,espnbet,player_solo_tackles,Bobby Okereke,3.5,-105,-125.0,2026-10-29T20:47:35Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,theScore Bet,espnbet,player_solo_tackles,Nick Scott,3.5,-135,105.0,2026-10-29T20:47:35Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,theScore Bet,espnbet,player_solo_tackles,Javon Bullard,2.5,-155,120.0,2026-10-29T20:47:35Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,theScore Bet,espnbet,player_solo_tackles,Keisean Nixon,3.5,-135,105.0,2026-10-29T20:47:35Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,theScore Bet,espnbet,player_solo_tackles,Xavier McKinney,2.5,-170,130.0,2026-10-29T20:47:35Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,theScore Bet,espnbet,player_tackles_assists,Javon Bullard,5.5,115,-150.0,2026-10-29T20:47:35Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,theScore Bet,espnbet,player_tackles_assists,Xavier McKinney,4.5,-135,105.0,2026-10-29T20:47:35Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,theScore Bet,espnbet,player_tackles_assists,Keisean Nixon,5.5,120,-155.0,2026-10-29T20:47:35Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,theScore Bet,espnbet,player_tackles_assists,Bobby Okereke,7.5,180,-250.0,2026-10-29T20:47:35Z,20261029T204822Z
+ab2865e9f2d4b012de8bc6fb6de11a7c,2026-10-30T00:15:00Z,Green Bay Packers,Carolina Panthers,theScore Bet,espnbet,player_tackles_assists,Nick Scott,5.5,-150,115.0,2026-10-29T20:47:35Z,20261029T204822Z
