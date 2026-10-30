@@ -231,6 +231,22 @@
    "mae_cal": 1.5792,
    "rmse": 2.0963,
    "bias": 0.0236
+  },
+  {
+   "predictor": "Solo tackles: full model (solo share of the projection)",
+   "n": 28861,
+   "mae": 1.1368,
+   "mae_cal": 1.1291,
+   "rmse": 1.5074,
+   "bias": -0.0507
+  },
+  {
+   "predictor": "Solo tackles: season average",
+   "n": 28861,
+   "mae": 1.1802,
+   "mae_cal": 1.1865,
+   "rmse": 1.5818,
+   "bias": 0.0331
   }
  ],
  "by_season": [
@@ -359,6 +375,20 @@
    "used": 1.6627
   },
   {
+   "group": "CB solo",
+   "n": 5314,
+   "raw": 1.3198,
+   "corrected": 1.156,
+   "used": 1.156
+  },
+  {
+   "group": "CB (expected share under 60%) solo",
+   "n": 1627,
+   "raw": 1.5238,
+   "corrected": 1.3344,
+   "used": 1.3344
+  },
+  {
    "group": "DL",
    "n": 9551,
    "raw": 1.1739,
@@ -371,6 +401,20 @@
    "raw": 1.1969,
    "corrected": 1.0368,
    "used": 1.0368
+  },
+  {
+   "group": "DL solo",
+   "n": 9486,
+   "raw": 1.0981,
+   "corrected": 0.9421,
+   "used": 0.9421
+  },
+  {
+   "group": "DL (expected share under 60%) solo",
+   "n": 6718,
+   "raw": 1.1117,
+   "corrected": 0.9516,
+   "used": 0.9516
   },
   {
    "group": "LB",
@@ -387,6 +431,20 @@
    "used": 1.9087
   },
   {
+   "group": "LB solo",
+   "n": 8441,
+   "raw": 1.4155,
+   "corrected": 1.2538,
+   "used": 1.2538
+  },
+  {
+   "group": "LB (expected share under 60%) solo",
+   "n": 4271,
+   "raw": 1.6217,
+   "corrected": 1.4472,
+   "used": 1.4472
+  },
+  {
    "group": "S",
    "n": 5473,
    "raw": 1.6037,
@@ -399,6 +457,20 @@
    "raw": 2.0954,
    "corrected": 1.9108,
    "used": 1.9108
+  },
+  {
+   "group": "S solo",
+   "n": 5474,
+   "raw": 1.3906,
+   "corrected": 1.2278,
+   "used": 1.2278
+  },
+  {
+   "group": "S (expected share under 60%) solo",
+   "n": 1976,
+   "raw": 1.7136,
+   "corrected": 1.5289,
+   "used": 1.5289
   }
  ],
  "calibration": [
@@ -445,6 +517,7 @@
    "observed": 0.5
   }
  ],
+ "scale_solo": 0.9728,
  "regression": [
   {
    "situation": "After a game 4+ above his average",

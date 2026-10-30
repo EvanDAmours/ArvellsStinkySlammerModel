@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-30T17:01+00:00",
+ "generated_at": "2026-10-30T17:22+00:00",
  "season": 2026,
  "week": 8,
  "lines_pulled": null,
@@ -56,7 +56,11 @@
    "sample": 0.1,
    "signal": 0.1
   },
-  "ev_full": 0.15,
+  "ev_full": 0.1,
+  "ev_fade": [
+   0.2,
+   0.4
+  ],
   "model_full": 0.75,
   "locks": {
    "single": 3,
@@ -67,7 +71,10 @@
    "decent": 0.52,
    "good": 0.56,
    "great": 0.6
-  }
+  },
+  "pick_bar": 0.06,
+  "pick_bar_over": 0.1,
+  "claim_shrink": 0.6
  },
  "odds_credits_remaining": 402,
  "odds_credits_by_key": {
