@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-10-29T23:37+00:00",
+ "generated_at": "2026-10-30T11:45+00:00",
  "season": 2026,
  "week": 8,
- "lines_pulled": "20261030T003324Z",
+ "lines_pulled": null,
  "stats_source": "2023: nflreadpy; 2024: nflreadpy; 2025: nflreadpy; 2026: nflreadpy",
  "tackle_formula": "solo+with_ast+ast",
  "formula_check_ok": true,
@@ -23,12 +23,12 @@
    "mean_abs_error": 28.2857
   }
  ],
- "snaps_rows": 86104,
- "injury_rows": 20270,
- "volume_rows": 1846,
- "pbp_rows": 30866,
+ "snaps_rows": 86196,
+ "injury_rows": 20299,
+ "volume_rows": 1848,
+ "pbp_rows": 30899,
  "pfr_rows": 25824,
- "depth_chart_rows": 580931,
+ "depth_chart_rows": 581891,
  "international_games": [],
  "bars": {
   "pick": 0.06,
@@ -68,6 +68,5 @@
  "odds_credits_by_key": {
   "ODDS_API_KEY": 402.0,
   "PARLAY_API_KEY": 0.0
- },
- "lines_count": 0
+ }
 }

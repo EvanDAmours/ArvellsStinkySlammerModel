@@ -3,42 +3,42 @@
   "by_grade": [
    {
     "grade": "A",
-    "bets": 4,
-    "wins": 3,
-    "losses": 1,
+    "bets": 6,
+    "wins": 4,
+    "losses": 2,
     "pushes": 0,
-    "pending": 2,
-    "units": 0.9167,
-    "roi": 0.2292,
-    "hit": 0.75,
+    "pending": 0,
+    "units": 1.1667,
+    "roi": 0.1944,
+    "hit": 0.6667,
     "stake": 1.0,
-    "staked": 0.9167
+    "staked": 1.1667
    },
    {
     "grade": "B",
-    "bets": 8,
-    "wins": 6,
-    "losses": 2,
+    "bets": 18,
+    "wins": 13,
+    "losses": 5,
     "pushes": 0,
-    "pending": 11,
-    "units": 4.2315,
-    "roi": 0.5289,
-    "hit": 0.75,
+    "pending": 1,
+    "units": 9.6215,
+    "roi": 0.5345,
+    "hit": 0.7222,
     "stake": 0.5,
-    "staked": 2.1158
+    "staked": 4.8108
    },
    {
     "grade": "C",
-    "bets": 21,
-    "wins": 11,
-    "losses": 10,
+    "bets": 26,
+    "wins": 13,
+    "losses": 13,
     "pushes": 0,
-    "pending": 5,
-    "units": 3.6724,
-    "roi": 0.1749,
-    "hit": 0.5238,
+    "pending": 0,
+    "units": 2.5898,
+    "roi": 0.0996,
+    "hit": 0.5,
     "stake": 0.25,
-    "staked": 0.9181
+    "staked": 0.6475
    },
    {
     "grade": "ungraded",
@@ -55,13 +55,13 @@
    }
   ],
   "five": {
-   "bets": 1,
-   "wins": 1,
-   "losses": 0,
+   "bets": 4,
+   "wins": 2,
+   "losses": 2,
    "pushes": 0,
-   "units": 0.9901,
-   "hit": 1.0,
-   "pending": 3,
+   "units": 0.3401,
+   "hit": 0.5,
+   "pending": 0,
    "weeks": [
     {
      "season": 2026,
@@ -79,36 +79,36 @@
      "season": 2026,
      "week": 8,
      "picks": 3,
-     "wins": 0,
-     "losses": 0,
+     "wins": 1,
+     "losses": 2,
      "pushes": 0,
-     "pending": 3,
-     "units": 0.0,
-     "running_wins": 1,
-     "running_losses": 0
+     "pending": 0,
+     "units": -0.65,
+     "running_wins": 2,
+     "running_losses": 2
     }
    ]
   },
-  "bets": 227,
-  "wins": 121,
-  "losses": 106,
+  "bets": 244,
+  "wins": 131,
+  "losses": 113,
   "pushes": 0,
-  "units": 7.4148,
-  "roi": 0.0327,
+  "units": 11.9723,
+  "roi": 0.0491,
   "avg_clv_line": -0.0081,
   "avg_clv_prob": 0.0008,
   "beat_close_share": 0.5391,
   "close_moved": 128,
   "close_known": 248,
-  "pending": 21,
+  "pending": 4,
   "parlays": {
    "parlays": 1,
    "wins": 0,
-   "losses": 0,
-   "pending": 1,
-   "units": 0.0,
-   "staked": 0.0,
-   "hit": null
+   "losses": 1,
+   "pending": 0,
+   "units": -0.1,
+   "staked": 0.1,
+   "hit": 0.0
   }
  },
  "picks": [
@@ -9151,14 +9151,14 @@
    "five": true,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 10.0,
+   "solo": 3.0,
+   "actual": 10.0,
    "clv_line": 0.0,
    "clv_prob": 0.0,
    "clv_pos": false,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Loss",
+   "units": -1.0
   },
   {
    "season": 2026,
@@ -9190,14 +9190,14 @@
    "five": false,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 10.0,
+   "solo": 3.0,
+   "actual": 3.0,
    "clv_line": 0.0,
    "clv_prob": 0.0,
    "clv_pos": false,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Win",
+   "units": 1.25
   },
   {
    "season": 2026,
@@ -9229,14 +9229,14 @@
    "five": true,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 3.0,
+   "solo": 2.0,
+   "actual": 2.0,
    "clv_line": 0.0,
    "clv_prob": 0.012,
    "clv_pos": true,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Win",
+   "units": 1.35
   },
   {
    "season": 2026,
@@ -9268,14 +9268,14 @@
    "five": false,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 3.0,
+   "solo": 2.0,
+   "actual": 3.0,
    "clv_line": 0.0,
    "clv_prob": 0.0,
    "clv_pos": false,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Win",
+   "units": 1.11
   },
   {
    "season": 2026,
@@ -9307,14 +9307,14 @@
    "five": false,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 4.0,
+   "solo": 2.0,
+   "actual": 2.0,
    "clv_line": 0.0,
    "clv_prob": -0.0,
    "clv_pos": false,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Win",
+   "units": 1.21
   },
   {
    "season": 2026,
@@ -9346,14 +9346,14 @@
    "five": false,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 2.0,
+   "solo": 2.0,
+   "actual": 2.0,
    "clv_line": 0.0,
    "clv_prob": 0.0225,
    "clv_pos": true,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Win",
+   "units": 1.15
   },
   {
    "season": 2026,
@@ -9385,14 +9385,14 @@
    "five": false,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 5.0,
+   "solo": 3.0,
+   "actual": 5.0,
    "clv_line": 0.0,
    "clv_prob": 0.0,
    "clv_pos": false,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Win",
+   "units": 1.12
   },
   {
    "season": 2026,
@@ -9424,14 +9424,14 @@
    "five": false,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 3.0,
+   "solo": 2.0,
+   "actual": 2.0,
    "clv_line": 0.0,
    "clv_prob": 0.0,
    "clv_pos": false,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Win",
+   "units": 1.3
   },
   {
    "season": 2026,
@@ -9463,14 +9463,14 @@
    "five": true,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 5.0,
+   "solo": 3.0,
+   "actual": 5.0,
    "clv_line": 0.0,
    "clv_prob": 0.0,
    "clv_pos": false,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Loss",
+   "units": -1.0
   },
   {
    "season": 2026,
@@ -9502,14 +9502,14 @@
    "five": false,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 2.0,
+   "solo": 2.0,
+   "actual": 2.0,
    "clv_line": 0.0,
    "clv_prob": 0.0,
    "clv_pos": false,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Win",
+   "units": 1.15
   },
   {
    "season": 2026,
@@ -9541,14 +9541,14 @@
    "five": false,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 5.0,
+   "solo": 4.0,
+   "actual": 5.0,
    "clv_line": 0.0,
    "clv_prob": 0.0,
    "clv_pos": false,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Loss",
+   "units": -1.0
   },
   {
    "season": 2026,
@@ -9580,14 +9580,14 @@
    "five": false,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 5.0,
+   "solo": 4.0,
+   "actual": 4.0,
    "clv_line": 0.0,
    "clv_prob": 0.0,
    "clv_pos": false,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Loss",
+   "units": -1.0
   },
   {
    "season": 2026,
@@ -9619,14 +9619,14 @@
    "five": false,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 5.0,
+   "solo": 3.0,
+   "actual": 5.0,
    "clv_line": 0.0,
    "clv_prob": 0.0,
    "clv_pos": false,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Loss",
+   "units": -1.0
   },
   {
    "season": 2026,
@@ -9658,14 +9658,14 @@
    "five": false,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 5.0,
+   "solo": 3.0,
+   "actual": 3.0,
    "clv_line": 0.0,
    "clv_prob": 0.0,
    "clv_pos": false,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Loss",
+   "units": -1.0
   },
   {
    "season": 2026,
@@ -9697,14 +9697,14 @@
    "five": false,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 2.0,
+   "solo": 0.0,
+   "actual": 0.0,
    "clv_line": 0.0,
    "clv_prob": 0.0,
    "clv_pos": false,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Win",
+   "units": 0.8475
   },
   {
    "season": 2026,
@@ -9736,14 +9736,14 @@
    "five": false,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 3.0,
+   "solo": 1.0,
+   "actual": 3.0,
    "clv_line": 0.0,
    "clv_prob": 0.0,
    "clv_pos": false,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Loss",
+   "units": -1.0
   },
   {
    "season": 2026,
@@ -9775,14 +9775,14 @@
    "five": false,
    "slate": "2026-10-29",
    "uncertain": false,
-   "comb": null,
-   "solo": null,
-   "actual": null,
+   "comb": 5.0,
+   "solo": 3.0,
+   "actual": 3.0,
    "clv_line": 0.0,
    "clv_prob": 0.0,
    "clv_pos": false,
-   "result": "Pending",
-   "units": 0.0
+   "result": "Win",
+   "units": 1.07
   }
  ],
  "parlays": [
@@ -9797,8 +9797,8 @@
    "combined_prob": 0.3592,
    "units": 0.1,
    "chosen_at": "20261029T204822Z",
-   "result": "Pending",
-   "units_won": 0.0,
+   "result": "Loss",
+   "units_won": -0.1,
    "legs": [
     {
      "player": "Isaiah McDuffie",
@@ -9813,8 +9813,8 @@
      "mkt_side": 0.4715,
      "lock": 82.989,
      "grade": "A",
-     "actual": null,
-     "result": "Pending",
+     "actual": 10.0,
+     "result": "Loss",
      "commence_time": "2026-10-30T00:15:00Z"
     },
     {
@@ -9830,8 +9830,8 @@
      "mkt_side": 0.5082,
      "lock": 45.9357,
      "grade": "C",
-     "actual": null,
-     "result": "Pending",
+     "actual": 0.0,
+     "result": "Win",
      "commence_time": "2026-10-30T00:15:00Z"
     }
    ]
