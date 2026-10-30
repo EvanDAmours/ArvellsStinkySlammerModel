@@ -346,8 +346,9 @@ lower the level on a day the model over-projects looks better than it is.
 **McDuffie under the final model**: projection 9.1 (factor model 10.0, corrector 8.5) against the 7.5 line. The
 Under lock is gone: he is not lock-eligible (new role, one game in it) and the Under returns -3%. The Over is not
 a pick either, and that is the honest answer to "he would not have been a pick at all": DraftKings priced Over 7.5
-at -155 and Under at +120. The book had already moved to his new role, so at that price the Over returned -9% even
-with the model at 9.1; the only edge on him was Under 3.5 solo at +130 (+18%, won: 3 solo). The vision says the
+at -129 and Under at -101 (Bally Bet Over -130). The book had already moved to his new role, so at that price the
+Over returned -9% even with the model at 9.1 (the pricing mean is 40% model, 60% line, and his distribution is the
+wide new-role one); the only edge on him was Under 3.5 solo at +124 (+18%, won: 3 solo). The vision says the
 edge is what the market has not priced; here the market had priced it. What the model must never do again is
 back the wrong side of a role change at 83 confidence, and it cannot now.
 
