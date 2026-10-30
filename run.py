@@ -151,7 +151,12 @@ def load_all():
     H = M.add_history_features(M.attach_extras(M.attach_volume(M.prepare(pw, sched, snaps), vol), pbp, pfr, dc))
     H = M.attach_injury_status(H, inj)
     H = M.role_signals_backtest(H)
-    status = dict(stats_source=used, tackle_formula=formula, formula_check_ok=ok, formula_check=report,
+    cur_stats = pw[(pw.season == C.SEASON)]
+    cur_snaps = snaps[(snaps.season == C.SEASON)] if len(snaps) else snaps
+    freshness = dict(stats_through_week=int(cur_stats.week.max()) if len(cur_stats) else None,
+                     snaps_through_week=int(cur_snaps.week.max()) if len(cur_snaps) else None)
+    freshness["snaps_lag"] = bool(freshness["stats_through_week"] and freshness["snaps_through_week"] and freshness["snaps_through_week"] < freshness["stats_through_week"])
+    status = dict(stats_source=used, tackle_formula=formula, formula_check_ok=ok, formula_check=report, freshness=freshness,
                   snaps_rows=int(len(snaps)), injury_rows=int(len(inj)), volume_rows=int(len(vol)),
                   pbp_rows=int(len(pbp["players"])), pfr_rows=int(len(pfr)), depth_chart_rows=int(len(dc)))
     return seasons, pw, sched, snaps, inj, H, status, dict(vol=vol, pbp=pbp, pfr=pfr, dc=dc)
@@ -292,7 +297,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
     cols = ["player", "team", "opp_team", "group", "status", "n_prev", "season_avg", "last", "base", "proj", "proj_solo",
             "fair_line", "fair_line_solo", "crew_comb", "crew_solo", "spread_dog", "role_signal", "venue", "gameday", "gametime", "phi",
             "dc_status", "opp_qb_out", "opp_rb_out", "rest", "pct_last3", "pct_prev", "pct_last", "gap_weeks", "team_changed", "new_role", "reduced_role",
-            "absence", "missed_game", "new_team", "snap_jump", "proj_factor", "proj_gbm"]
+            "absence", "missed_game", "new_team", "snap_jump", "vacancy", "vacancy_rule", "share_pred", "rate_clean", "tsnaps_exp", "allowed_rel", "roof", "proj_factor", "proj_gbm"]
     _json(SITE / "projections.json", records(P, [c for c in cols if c in P.columns]) if len(P) else [])
     _json(SITE / "bets.json", records(bets))
     _json(SITE / "backtest.json", bt)

@@ -198,6 +198,8 @@ def load_schedule(seasons):
         "home_team": _col(df, "home_team").astype(str),
         "away_team": _col(df, "away_team").astype(str),
         "home_score": pd.to_numeric(_col(df, "home_score", default=float("nan")), errors="coerce"),
+        "away_score": pd.to_numeric(_col(df, "away_score", default=float("nan")), errors="coerce"),
+        "roof": _col(df, "roof", default="").fillna("").astype(str),
         "location": _col(df, "location", default="Home").astype(str),
         # nflverse convention: positive spread_line means the home team is favored
         "spread_line": pd.to_numeric(_col(df, "spread_line", default=0), errors="coerce").fillna(0),

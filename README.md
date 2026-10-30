@@ -13,7 +13,7 @@ Everything runs on GitHub's servers on a schedule. You don't run anything by han
 | `run.py` | Entry point: `python run.py daily` and `python run.py odds --auto` |
 | `config.py` | Every setting (seasons, betting thresholds, model knobs) in one place |
 | `pipeline/sources.py` | Loads nflverse data (player stats, snaps, schedule, injuries, team stats, play-by-play, depth charts, PFR advanced defence) with fallbacks and a self-check against official tackle totals |
-| `pipeline/model.py` | Projections (season rate, stat crews, snap-share trend, opportunity volume, role bump, depth chart, PFR, run/pass mix, rest, injury report), a gradient-boosted second model blended in, the tackle distribution, line pricing and grading |
+| `pipeline/model.py` | Projections: a per-game base and a per-snap base (tackles per snap x expected snap share x expected team snaps) blended, the vacancy rule, stat crews, opportunity volume, depth chart, PFR, run/pass mix, rest, injury report, dome corners; a gradient-boosted second model blended in; the tackle distribution (by position and snap share); line pricing and grading |
 | `pipeline/backtest.py` | Walk-forward test of every predictor on every past game |
 | `pipeline/odds.py` | Pulls tackle lines from The Odds API and stores timestamped snapshots |
 | `pipeline/grade.py` | Logs picks and grades them against box scores and the closing line |
@@ -122,6 +122,9 @@ Edit `config.py`. The most useful knobs:
 - `FADE_GAP`: how far off his average a last game must be to count as an outlier.
 - `SEASON` and `HISTORY_SEASONS`: update every year.
 
+- `PERSNAP`: the per-snap base. `weight` is how much of the core projection comes from it (0.4).
+- `VACANCY`: the rule for a backup stepping into a vacated starter's role; `weight` is how far the projection moves
+  to his last-game share (0.5).
 - `GBM`: the second model. `weight` is how much of the final projection comes from the gradient-boosted
   corrector (0.6); the rest is the factor model.
 

@@ -51,7 +51,7 @@ INJURY = dict(questionable=0.92, limited_practice=0.97)
 # landed under the model vs 56% otherwise), and his count is far more spread (variance/mean 1.9 vs 1.4). So: projection
 # x (last-game share / season share)^power, no outlier-fade signal, a wider distribution, consistency counted over
 # in-role games only, and NEVER a lock or a parlay leg until his season share catches up.
-NEW_ROLE = dict(max_prev_share=0.6, min_last_share=0.6, min_ratio=1.5, power=0.25, cap=2.5, phi_bump=0.5, in_role_share=0.7, min_in_role_games=3)
+NEW_ROLE = dict(max_prev_share=0.6, min_last_share=0.6, min_ratio=1.5, power=0.0, cap=2.5, phi_bump=0.5, in_role_share=0.7, min_in_role_games=3)   # power 0 since round 4: the per-snap base carries the role change; the flag still drives the checklist and the wider distribution
 # Role shifts (audit after the week 8 Thursday post-mortem; 28,861 defender-games, fitted 2023-24, checked 2025-26):
 # - last game's snap share under 70% of his season share: ran 5-14% under the model -> x ratio^0.1 (bias -0.25 -> -0.02
 #   train, -0.16 -> +0.07 test; overall error -0.7%)
@@ -64,6 +64,23 @@ ROLE_SHIFT = dict(contraction_ratio=0.7, contraction_power=0.1, absence_weeks=3,
 # Lock eligibility, market-free: a lock must come from where the model is reliable. Never a lock or a parlay leg: new role,
 # reduced role, back from absence, new team, fewer than 3 games in his current role (unless every game he has was), questionable.
 LOCK_RULES = dict(min_in_role_games=3)
+# ---- Research round 4 (2026-10-30, after the McDuffie post-mortem). Per-snap projection and what hangs off it. Evidence in MODEL_LOG.
+# Per-snap base = tackles per defensive snap (games with 10+ defensive snaps only, shrunk toward last season's rate or the
+# position rate over 150 pseudo-snaps) x expected snap share x expected team defensive snaps, calibrated; blended 30% with
+# the per-game base (error -0.5% train, -0.3% test; new-role error -3%).
+PERSNAP = dict(weight=0.4, pseudo_snaps=150, cal=1.097, min_game_snaps=10, min_prior_snaps=150, group_rate={"CB": 0.074, "DL": 0.066, "LB": 0.110, "S": 0.093})
+# Next-game snap share from (last game, last three, season) with weights by situation, fitted 2023-24: a jump backed by a
+# vacancy or a depth-chart listing holds; a jump in a blowout or with nothing behind it regresses; a drop half-holds.
+SHARE_MODEL = dict(vacancy=(1.02, 0.0, -0.29), blowout=(0.55, 0.43, -0.16), up=(0.48, 0.42, 0.02), down=(0.19, 0.41, 0.41), steady=(0.32, 0.22, 0.44),
+                   up_ratio=1.5, down_ratio=0.7, blowout_margin=17)
+# The McDuffie rule: a regular (75%+ share) at his position group is out or gone, his share jumped 1.5x+, and it was not a
+# blowout: project per-snap at his last-game share. The per-game model ran 24% under on these (bias +1.03 -> +0.14 test).
+VACANCY = dict(min_jump=1.5, regular_share=0.75, recent_weeks=3, weight=0.5)   # weight: how far the projection moves to his last-game share (0.5: bias +0.05, full: -0.46)
+# Tackles the opponent allows to this position group vs league (prior games, shrunk to 3 pseudo-games). Measured and NOT used
+# as a factor (round 4: no gain once the per-snap base is in); kept as a feature for the corrector.
+MATCHUP = dict(pseudo_games=3)
+DOME_CB = 1.05            # corners in domes / closed roofs: +4.6% (2023-24) and +7.1% (2025-26) over the model
+PHI_SHARE_SPLIT = 0.6     # dispersion estimated separately for players expected below this snap share (var/mean 1.6-1.7 vs 1.2-1.4)
 # Second model (research round 3): a gradient-boosted corrector on the same features, Poisson loss, trained fresh each
 # morning on every finished game, blended with the factor model. Out of sample it cut error 1.1% (2025-26) and 1.5%
 # (2026 trained through 2025). The backtest reports it walk-forward: trained on earlier seasons, scored on the latest.

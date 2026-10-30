@@ -71,11 +71,15 @@ def american_to_decimal(a):
 
 # ---------------------------------------------------------------- assembling history
 def team_games(sched):
-    base = ["game_id", "season", "week", "gameday", "gametime", "home_score", "location", "spread_line", "total_line"]
+    base = ["game_id", "season", "week", "gameday", "gametime", "home_score", "away_score", "roof", "location", "spread_line", "total_line"]
     sched = sched.copy()
     for c in ("home_rest", "away_rest"):
         if c not in sched.columns:
             sched[c] = 7
+    if "away_score" not in sched.columns:
+        sched["away_score"] = np.nan
+    if "roof" not in sched.columns:
+        sched["roof"] = ""
     h = sched[base + ["home_team", "away_team", "home_rest"]].rename(columns={"home_team": "team", "away_team": "opp_team", "home_rest": "rest"}).assign(is_home=True)
     a = sched[base + ["home_team", "away_team", "away_rest"]].rename(columns={"away_team": "team", "home_team": "opp_team", "away_rest": "rest"}).assign(is_home=False)
     tg = pd.concat([h, a], ignore_index=True)
@@ -84,6 +88,8 @@ def team_games(sched):
     # underdog-positive spread for the DEFENSE's team (nflverse: positive spread_line = home favored)
     tg["spread_dog"] = np.where(tg.is_home, -tg.spread_line, tg.spread_line)
     tg["final"] = tg.home_score.notna()
+    tg["margin"] = (pd.to_numeric(tg.home_score, errors="coerce") - pd.to_numeric(tg.away_score, errors="coerce")).abs()
+    tg["roof"] = tg.roof.fillna("").astype(str).str.lower()
     return tg
 
 
@@ -109,7 +115,7 @@ def prepare(pw, sched, snaps):
         pw.loc[pw.index.isin(dup_names[dup_names].index), ["def_pct", "def_snaps"]] = np.nan
     else:
         pw["def_pct"], pw["def_snaps"] = np.nan, np.nan
-    keep = ["season", "week", "team", "game_id", "venue", "spread_dog", "is_home", "opp_team", "gameday", "gametime", "final", "rest"]
+    keep = ["season", "week", "team", "game_id", "venue", "spread_dog", "is_home", "opp_team", "gameday", "gametime", "final", "rest", "margin", "roof"]
     pw = pw.drop_duplicates(["player_id", "season", "week"], keep="first")
     H = pw.merge(tg[keep].drop_duplicates(["season", "week", "team"]), on=["season", "week", "team"], how="inner")
     H["ast_t"] = H.comb - H.solo_t
@@ -247,10 +253,79 @@ def add_history_features(H):
     H["gap_weeks"] = H.week - H.last_week                      # 1 = played last week; 2 = a bye or a missed game; 3+ = absence
     prev_team = g.team.shift(1)
     H["team_changed"] = (prev_team.notna() & (H.team != prev_team)).astype(bool)
+    # per-snap rate from games with real defensive snaps only (special-teams tackles on 0-9 snaps would inflate it)
+    real = H.def_snaps.fillna(0) >= C.PERSNAP["min_game_snaps"]
+    H["_c_real"] = np.where(real, H.comb, 0.0)
+    H["_s_real"] = np.where(real, H.def_snaps.fillna(0), 0.0)
+    g = H.groupby(["player_id", "season"], sort=False)
+    H["c_real_prev"] = g._c_real.cumsum() - H._c_real
+    H["s_real_prev"] = g._s_real.cumsum() - H._s_real
+    H["last_margin"] = g.margin.shift(1) if "margin" in H.columns else np.nan
+    H = attach_team_snaps(H)
+    H = attach_matchup(H)
     ps = H.groupby(["player_id", "season"]).agg(ps_games=("comb", "size"), ps_avg=("comb_adj", "mean"),
-                                                 ps_avg_raw=("comb", "mean")).reset_index()
+                                                 ps_avg_raw=("comb", "mean"), ps_c=("_c_real", "sum"), ps_s=("_s_real", "sum")).reset_index()
     ps["season"] += 1
-    return H.merge(ps, on=["player_id", "season"], how="left")
+    ps["ps_rate"] = (ps.ps_c / ps.ps_s.clip(lower=1)).where(ps.ps_s >= C.PERSNAP["min_prior_snaps"])
+    return H.merge(ps.drop(columns=["ps_c", "ps_s"]), on=["player_id", "season"], how="left").drop(columns=["_c_real", "_s_real"])
+
+
+def attach_team_snaps(H):
+    """Expected defensive snaps for each team-game: the average of the defence's own prior games and the plays the
+    opponent's offence has run per game (each team's offence plays = the snaps its opponents' defences played)."""
+    if "def_snaps" not in H.columns or H.empty:
+        H["tsnaps_exp"] = np.nan
+        return H
+    tg = H.groupby(["season", "week", "team", "opp_team"]).def_snaps.max().rename("tsnaps").reset_index().sort_values(["season", "week"])
+    tg["d_prev"] = tg.groupby(["season", "team"]).tsnaps.transform(lambda x: x.shift(1).expanding().mean())
+    off = tg.rename(columns={"team": "opp_team", "opp_team": "team", "tsnaps": "off_plays"})[["season", "week", "team", "off_plays"]].sort_values(["season", "week"])
+    off["o_prev"] = off.groupby(["season", "team"]).off_plays.transform(lambda x: x.shift(1).expanding().mean())
+    tg = tg.merge(off.rename(columns={"team": "opp_team"})[["season", "week", "opp_team", "o_prev"]], on=["season", "week", "opp_team"], how="left")
+    lg = float(tg.tsnaps.mean()) if tg.tsnaps.notna().any() else 65.0
+    tg["tsnaps_exp"] = (tg.d_prev.fillna(lg) + tg.o_prev.fillna(lg)) / 2
+    return H.drop(columns=[c for c in ("tsnaps_exp",) if c in H.columns]).merge(tg[["season", "week", "team", "tsnaps_exp"]], on=["season", "week", "team"], how="left")
+
+
+def team_snaps_for(H, season, week):
+    """Expected defensive snaps per team for an upcoming week, from this season's played games."""
+    done = H[(H.season == season) & (H.week < week)]
+    if done.empty or "def_snaps" not in done.columns:
+        return {}, 65.0
+    tg = done.groupby(["week", "team", "opp_team"]).def_snaps.max().rename("tsnaps").reset_index()
+    d = tg.groupby("team").tsnaps.mean()
+    o = tg.groupby("opp_team").tsnaps.mean()      # plays each offence ran = snaps its opponents' defences played
+    lg = float(tg.tsnaps.mean()) if tg.tsnaps.notna().any() else 65.0
+    return dict(defence=d.to_dict(), offence=o.to_dict()), lg
+
+
+def matchup_rel(prev_mean, n, lg):
+    m = C.MATCHUP["pseudo_games"]
+    return (prev_mean.fillna(lg) * n.fillna(0) + m * lg) / ((n.fillna(0) + m) * lg)
+
+
+def attach_matchup(H):
+    """Tackles each opponent's offence has allowed to each position group per game (prior games, shrunk to league): 1 = league."""
+    if H.empty or "opp_team" not in H.columns:
+        H["allowed_rel"] = 1.0
+        return H
+    t = H.groupby(["season", "week", "opp_team", "group"]).comb.sum().reset_index().sort_values(["season", "week"])
+    gg = t.groupby(["season", "opp_team", "group"]).comb
+    t["prev_mean"] = gg.transform(lambda x: x.shift(1).expanding().mean())
+    t["n"] = gg.cumcount()
+    lg = t.groupby("group").comb.mean()
+    t["allowed_rel"] = matchup_rel(t.prev_mean, t.n.astype(float), t.group.map(lg))
+    return H.drop(columns=[c for c in ("allowed_rel",) if c in H.columns]).merge(t[["season", "week", "opp_team", "group", "allowed_rel"]], on=["season", "week", "opp_team", "group"], how="left")
+
+
+def matchup_for(H, season, week):
+    """(opp_team, group) -> tackles allowed relative to league, from this season's games before `week`."""
+    done = H[(H.season == season) & (H.week < week)]
+    lg = H.groupby(["season", "week", "opp_team", "group"]).comb.sum().reset_index().groupby("group").comb.mean()
+    if done.empty:
+        return {}, lg
+    t = done.groupby(["week", "opp_team", "group"]).comb.sum().reset_index().groupby(["opp_team", "group"]).comb.agg(["mean", "size"]).reset_index()
+    t["allowed_rel"] = matchup_rel(t["mean"], t["size"].astype(float), t.group.map(lg))
+    return {(r.opp_team, r.group): float(r.allowed_rel) for r in t.itertuples()}, lg
 
 
 # ---------------------------------------------------------------- stat crews
@@ -305,6 +380,22 @@ def role_signals_backtest(H):
                     vacated.add((s, t, w, group.get(pid)))
     H["role_signal"] = [((s, t, w, g) in vacated) and nz(pp) < 0.75
                         for s, t, w, g, pp in zip(H.season, H.team, H.week, H.group, H.pct_prev)]
+    # vacancy: a regular at the group (75%+ share in his last game for the team) absent this week, within 3 weeks of his
+    # last game: the first weeks of an injury or a trade. Persistent, unlike role_signal which fires once.
+    last_seen = {}
+    for r in H.sort_values(["season", "team", "week"]).itertuples():
+        if nz(r.def_pct) >= C.VACANCY["regular_share"]:
+            last_seen[(r.season, r.team, r.player_id)] = (r.week, group.get(r.player_id))
+    reg_last = {}
+    for (s, t, pid), (w, g) in last_seen.items():
+        reg_last.setdefault((s, t), []).append((pid, w, g))
+    vac = set()
+    for (s, t), weeks in team_weeks.items():
+        for w in weeks:
+            for pid, wl, g in reg_last.get((s, t), []):
+                if wl < w <= wl + C.VACANCY["recent_weeks"] and pid not in present.get((s, t, w), set()):
+                    vac.add((s, t, w, g))
+    H["vacancy"] = [((s, t, w, g) in vac) for s, t, w, g in zip(H.season, H.team, H.week, H.group)]
     return H
 
 
@@ -435,13 +526,67 @@ def role_shift_flags(F):
                              new_team=team.fillna(False).astype(bool)), index=F.index)
 
 
-def role_shift_factor(F):
+def role_shift_factor(F, part="all"):
+    """part: 'share' = the reduced-role piece (belongs with the per-game base), 'availability' = absence / missed game /
+    new team (applies to any base), 'all' = both."""
     c = C.ROLE_SHIFT
     fl = role_shift_flags(F)
-    f = np.where(fl.reduced_role, np.power(snap_jump(F).clip(lower=0.2), c["contraction_power"]), 1.0)
-    f = f * np.where(fl.absence, c["absence_factor"], np.where(fl.missed_game, c["missed_game_factor"], 1.0))
-    f = f * np.where(fl.new_team, c["new_team_factor"], 1.0)
+    f = np.ones(len(F))
+    if part in ("share", "all"):
+        f = f * np.where(fl.reduced_role, np.power(snap_jump(F).clip(lower=0.2), c["contraction_power"]), 1.0)
+    if part in ("availability", "all"):
+        f = f * np.where(fl.absence, c["absence_factor"], np.where(fl.missed_game, c["missed_game_factor"], 1.0))
+        f = f * np.where(fl.new_team, c["new_team_factor"], 1.0)
     return pd.Series(f, index=F.index)
+
+
+def _col_or(F, c, d):
+    return F[c] if c in F else pd.Series(d, index=F.index)
+
+
+def share_pred(F):
+    """Next-game snap share: (last game, last three, season) weighted by situation (SHARE_MODEL)."""
+    c = C.SHARE_MODEL
+    last = _col_or(F, "pct_last", np.nan).fillna(_col_or(F, "pct_prev", np.nan))
+    l3 = _col_or(F, "pct_last3", np.nan).fillna(_col_or(F, "pct_prev", np.nan))
+    season = _col_or(F, "pct_prev", np.nan)
+    ok = last.notna() & season.notna()
+    jump = snap_jump(F)
+    up = jump >= c["up_ratio"]; down = jump < c["down_ratio"]
+    backed = _col_or(F, "vacancy", False).map(_flag) | (pd.to_numeric(_col_or(F, "dc_starter", 0), errors="coerce").fillna(0) >= 1)
+    blow = pd.to_numeric(_col_or(F, "last_margin", np.nan), errors="coerce").fillna(0) >= c["blowout_margin"]
+    seg = np.where(up & backed, "vacancy", np.where(up & blow, "blowout", np.where(up, "up", np.where(down, "down", "steady"))))
+    W = np.array([c[k] for k in seg])
+    pred = W[:, 0] * last.fillna(0).values + W[:, 1] * l3.fillna(0).values + W[:, 2] * season.fillna(0).values
+    return pd.Series(np.where(ok, np.clip(pred, 0.0, 1.0), np.nan), index=F.index)
+
+
+def persnap_rate(F):
+    """Tackles per defensive snap from games with real defensive snaps, shrunk to last season's rate or the position rate."""
+    c = C.PERSNAP
+    prior = _col_or(F, "ps_rate", np.nan)
+    prior = prior.where(prior.notna(), F.group.map(c["group_rate"]).fillna(0.08))
+    cp, sp = _col_or(F, "c_real_prev", 0).fillna(0), _col_or(F, "s_real_prev", 0).fillna(0)
+    return (cp + c["pseudo_snaps"] * prior) / (sp + c["pseudo_snaps"])
+
+
+def persnap_base(F, share):
+    """Per-snap projection: rate x share x expected team defensive snaps, calibrated."""
+    ts = pd.to_numeric(_col_or(F, "tsnaps_exp", np.nan), errors="coerce").fillna(65.0)
+    return persnap_rate(F) * share * ts * C.PERSNAP["cal"]
+
+
+def vacancy_rule(F):
+    """A regular at his group is out or gone, his share jumped, and it was not a blowout: his last game is his new role."""
+    c = C.VACANCY
+    vac = _col_or(F, "vacancy", False).map(_flag)
+    blow = pd.to_numeric(_col_or(F, "last_margin", np.nan), errors="coerce").fillna(0) >= C.SHARE_MODEL["blowout_margin"]
+    return (vac & (snap_jump(F) >= c["min_jump"]) & ~blow & _col_or(F, "pct_last", np.nan).notna()).fillna(False).astype(bool)
+
+
+def dome_factor(F):
+    roof = _col_or(F, "roof", "").fillna("").astype(str).str.lower()
+    return pd.Series(np.where((F.group == "CB") & roof.isin(["dome", "closed"]), C.DOME_CB, 1.0), index=F.index)
 
 
 def rest_factor(F):
@@ -449,7 +594,8 @@ def rest_factor(F):
     return pd.Series(np.where(F.get("rest", pd.Series(7, index=F.index)).fillna(7) >= r["bye_days"], r["bye"], 1.0), index=F.index)
 
 
-def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_snap=True, use_volume=True, use_depth=True, use_pfr=True, use_mix=True, use_rest=True, use_injury=True, use_new_role=True, use_role_shift=True):
+def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_snap=True, use_volume=True, use_depth=True, use_pfr=True, use_mix=True, use_rest=True, use_injury=True, use_new_role=True, use_role_shift=True,
+                  use_persnap=True, use_vacancy=True, use_dome=True):
     k = F.group.map(C.SHRINK_GAMES_BY_GROUP).fillna(C.SHRINK_GAMES) if k is None else k
     if use_crew:
         prev, ps = F.comb_prev, F.ps_avg
@@ -475,13 +621,33 @@ def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_sn
         extra = extra * rest_factor(F).values
     if use_injury:
         extra = extra * injury_factor(F).values
-    if use_new_role:
-        extra = extra * new_role_factor(F).values
     if use_role_shift:
-        extra = extra * role_shift_factor(F).values
+        extra = extra * role_shift_factor(F, "availability").values
+    if use_dome:
+        extra = extra * dome_factor(F).values
+    # the per-game core: season rate x snap trend x role bump x the share-related corrections
+    pg = base * role * snap
+    if use_new_role:
+        pg = pg * new_role_factor(F).values
+    if use_role_shift:
+        pg = pg * role_shift_factor(F, "share").values
+    core = pg
+    if use_persnap:
+        share = share_pred(F)
+        ps = persnap_base(F, share.fillna(_col_or(F, "pct_prev", np.nan)))
+        has_rate = (_col_or(F, "s_real_prev", 0).fillna(0) > 0) | _col_or(F, "ps_rate", np.nan).notna()
+        ok = ps.notna() & has_rate
+        w = C.PERSNAP["weight"]
+        core = np.where(ok, (1 - w) * pg + w * ps.values, pg)
+    if use_vacancy:
+        rule = vacancy_rule(F)
+        if rule.any():
+            ps_last = persnap_base(F, _col_or(F, "pct_last", np.nan).fillna(0))     # his last game's share is his new role
+            wv = C.VACANCY["weight"]
+            core = np.where(rule, wv * ps_last.values + (1 - wv) * core, core)
     solo_share = (F.solo_prev + 8 * F.group.map(C.POS_SOLO_SHARE).fillna(0.6)) / (F.comb_prev + 8)
-    mu = base * tilt * crew_c * role * snap * volume * extra
-    mu_solo = base * tilt * solo_share * crew_s * role * snap * volume * extra
+    mu = core * tilt * crew_c * volume * extra
+    mu_solo = core * tilt * solo_share * crew_s * volume * extra
     return pd.Series(base, index=F.index), pd.Series(mu, index=F.index), pd.Series(mu_solo, index=F.index)
 
 
@@ -514,15 +680,23 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
     agg = agg.rename(columns={c: c + "_prev" for c in sums})
     last_dc = done.sort_values("week").groupby("player_id").dc_starter.last() if "dc_starter" in done.columns else None
     lasts = done.sort_values("week").groupby("player_id").agg(last=("comb", "last"), pct_last=("def_pct", "last"), last_week=("week", "last"),
-                                                              last_gameday=("gameday", "last"))
+                                                              last_gameday=("gameday", "last"), last_margin=("margin", "last") if "margin" in done.columns else ("comb", "size"))
+    if "margin" not in done.columns:
+        lasts["last_margin"] = np.nan
+    real = done.def_snaps.fillna(0) >= C.PERSNAP["min_game_snaps"]
+    persnap = done.assign(_c=np.where(real, done.comb, 0.0), _s=np.where(real, done.def_snaps.fillna(0), 0.0)).groupby("player_id").agg(c_real_prev=("_c", "sum"), s_real_prev=("_s", "sum"))
+    lasts = lasts.join(persnap)
     last2 = done.sort_values("week").groupby("player_id").comb.apply(lambda x: x.tail(2).mean() if len(x) >= 2 else np.nan).rename("last2")
     pct_last3 = done.sort_values("week").groupby("player_id").def_pct.apply(lambda x: x.tail(C.SNAP_TREND["games"]).mean()).rename("pct_last3")
     opps_prev = (done.groupby("player_id").opps.mean().rename("opps_prev_mean") if "opps" in done.columns
                  else pd.Series(dtype=float, name="opps_prev_mean"))
     F = agg.merge(active, on="player_id").join(lasts, on="player_id").join(last2, on="player_id").join(pct_last3, on="player_id").join(opps_prev, on="player_id")
-    ps = H[H.season == season - 1].groupby("player_id").agg(ps_games=("comb", "size"), ps_avg=("comb_adj", "mean"),
-                                                            ps_avg_raw=("comb", "mean"))
-    F = F.join(ps, on="player_id")
+    prev = H[H.season == season - 1]
+    preal = prev.def_snaps.fillna(0) >= C.PERSNAP["min_game_snaps"]
+    ps = prev.assign(_c=np.where(preal, prev.comb, 0.0), _s=np.where(preal, prev.def_snaps.fillna(0), 0.0)).groupby("player_id").agg(
+        ps_games=("comb", "size"), ps_avg=("comb_adj", "mean"), ps_avg_raw=("comb", "mean"), ps_c=("_c", "sum"), ps_s=("_s", "sum"))
+    ps["ps_rate"] = (ps.ps_c / ps.ps_s.clip(lower=1)).where(ps.ps_s >= C.PERSNAP["min_prior_snaps"])
+    F = F.join(ps.drop(columns=["ps_c", "ps_s"]), on="player_id")
     F["gap_weeks"] = week - pd.to_numeric(F.last_week, errors="coerce")
     # a mid-season team change shows on the depth chart before he plays for the new team: move him and flag him
     F["team_changed"] = False
@@ -535,8 +709,12 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
             F.loc[moved, "team"] = F.loc[moved, "dc_team"]
             F.loc[moved, "team_changed"] = True
             F = F.drop(columns=["dc_team", "dc_date"])
-    F = F.merge(games[["team", "game_id", "venue", "spread_dog", "is_home", "opp_team", "gameday", "gametime", "final", "rest"]], on="team", how="inner")
+    F = F.merge(games[["team", "game_id", "venue", "spread_dog", "is_home", "opp_team", "gameday", "gametime", "final", "rest", "margin", "roof"]], on="team", how="inner")
     F["season"], F["week"] = season, week
+    ts, lg_snaps = team_snaps_for(H, season, week)
+    F["tsnaps_exp"] = (F.team.map(ts.get("defence", {})).fillna(lg_snaps) + F.opp_team.map(ts.get("offence", {})).fillna(lg_snaps)) / 2
+    mt, _ = matchup_for(H, season, week)
+    F["allowed_rel"] = [mt.get((o, g), 1.0) for o, g in zip(F.opp_team, F.group)]
     F = attach_crews(F, H)
     V = volume_table(vol) if vol is not None else None
     if V is not None and len(V):
@@ -584,6 +762,20 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
     out_keys = {(t, n) for (t, n), s in status.items() if str(s).lower() in OUT_STATUSES}
     regs = F[(F.pct_prev >= 0.75) & (F.n_prev >= 2)]
     vacated = {(r.team, r.group) for r in regs.itertuples() if (r.team, r.name_key) in out_keys}
+    # vacancy (persistent): a regular by his last game's share who is out, has moved, or missed the team's last game,
+    # within the last three weeks. Regulars include players no longer in F (gone from the roster) via `done`.
+    vc = C.VACANCY
+    last_rows = done.sort_values("week").groupby("player_id").tail(1)
+    team_last_week = done.groupby("team").week.max().to_dict()
+    vac = set()
+    for r in last_rows.itertuples():
+        if (r.def_pct if r.def_pct == r.def_pct else 0) < vc["regular_share"] or week - r.week > vc["recent_weeks"]:
+            continue
+        gone = (r.team, r.name_key) in out_keys or r.week < team_last_week.get(r.team, r.week) or r.player_id in set(F.loc[F.team_changed, "player_id"])
+        if gone:
+            vac.add((r.team, r.group))
+    F["vacancy"] = [(t, g) in vac for t, g in zip(F.team, F.group)]
+    F["dc_starter"] = [1.0 if (t in starters and pid in starters[t]) else 0.0 for t, pid in zip(F.team, F.player_id)] if starters else 0.0
     F["role_signal"] = [((t, g) in vacated) and not (p >= 0.75) and (t, n) not in out_keys
                         for t, g, p, n in zip(F.team, F.group, F.pct_prev.fillna(0), F.name_key)]
     return F
@@ -604,6 +796,12 @@ def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
         mu, mu_solo = blended, mu_solo * ratio
     F = F.assign(base=base.values, proj=mu.values, proj_solo=mu_solo.values)
     F["phi"] = F.group.map(phi_by_group).fillna(1.0)
+    F["share_pred"] = share_pred(F).values
+    F["rate_clean"] = persnap_rate(F).values
+    F["vacancy_rule"] = vacancy_rule(F).values
+    low = F.share_pred.fillna(_col_or(F, "pct_prev", 1.0)).fillna(1.0) < C.PHI_SHARE_SPLIT
+    low_phi = F.group.map({g: phi_by_group.get(f"{g}:low") for g in F.group.unique()})
+    F.loc[low & low_phi.notna(), "phi"] = low_phi[low & low_phi.notna()]
     F.loc[F.venue == "NEUTRAL", "phi"] = F.phi + 0.15
     fl = role_shift_flags(F)
     for c_ in fl.columns:
@@ -694,7 +892,13 @@ def price_lines(lines, P):
         if lp and len(lp) == len(log) and pd.notna(pct_last):
             in_role = [x for x, sh in zip(log, lp) if sh >= C.NEW_ROLE["in_role_share"] * float(pct_last)]
             in_role_n = len(in_role)
-            log = in_role if len(in_role) >= C.NEW_ROLE["min_in_role_games"] else ([] if new_role else log)
+            # every past game rescaled to the share he is expected to play now, so the log reads as his current role
+            exp_share = p.get("share_pred", np.nan)
+            if pd.notna(exp_share) and exp_share > 0.05:
+                scaled = [x * float(np.clip(exp_share / sh, 0.5, 2.5)) for x, sh in zip(log, lp) if sh >= 0.15]
+                log = scaled if len(scaled) >= C.NEW_ROLE["min_in_role_games"] else ([] if new_role else log)
+            else:
+                log = in_role if len(in_role) >= C.NEW_ROLE["min_in_role_games"] else ([] if new_role else log)
         hits = [(x > r.line) if side == "Over" else (x < r.line) for x in log]
         consistency = float(np.mean(hits)) if hits else float("nan")
         mkt_side = mkt if side == "Over" else 1 - mkt
@@ -727,14 +931,17 @@ def price_lines(lines, P):
             if uncertain:
                 why += "; listed questionable: priced 8% under his average, not a lock, voids if he sits"
             if new_role:
+                sp = p.get("share_pred", np.nan)
                 why += (f"; new role: {float(pct_last):.0%} of snaps last game vs {float(p.get('pct_prev', np.nan)):.0%} this season, "
-                        f"priced x{float(new_role_factor(pd.DataFrame([p])).iloc[0]):.2f} with a wider range")
+                        f"projected at {float(sp):.0%} of the snaps with a wider range" if pd.notna(sp) else "; new role, projected with a wider range")
             elif fl["reduced_role"]:
                 why += f"; reduced role: {float(pct_last):.0%} of snaps last game vs {float(p.get('pct_prev', np.nan)):.0%} this season, priced down"
             if fl["absence"] or fl["missed_game"]:
                 why += f"; back from absence ({int(p.get('gap_weeks', 0))} weeks since his last game), priced down"
             if fl["new_team"]:
                 why += "; first game for a new team, priced down"
+            if _flag(p.get("vacancy_rule", False)):
+                why += f"; a regular at his position is out or gone and he played {float(pct_last):.0%} of the snaps: projected at that share"
             if block:
                 why += "; not lock-eligible: " + ", ".join(block)
         rows.append({**base, "team": p.team, "opp": p.opp_team, "group": p.group, "proj": float(mu), "proj_model": float(mu_model),
@@ -747,6 +954,7 @@ def price_lines(lines, P):
                      "new_role": bool(new_role), "snap_jump": None if pd.isna(p.get("snap_jump", np.nan)) else float(p.get("snap_jump")),
                      "reduced_role": fl["reduced_role"], "absence": bool(fl["absence"] or fl["missed_game"]), "new_team": fl["new_team"],
                      "in_role_games": in_role_n, "lock_block": ", ".join(block), "lock_eligible": not block,
+                     "vacancy": _flag(p.get("vacancy_rule", False)), "share_pred": None if pd.isna(p.get("share_pred", np.nan)) else float(p.get("share_pred")),
                      "opp_qb_out": bool(p.get("opp_qb_out", False)), "opp_rb_out": bool(p.get("opp_rb_out", False)),
                      "rest": None if pd.isna(p.get("rest", np.nan)) else int(p.get("rest")),
                      "lock": lock, "grade": grade_of(lock)})
@@ -761,7 +969,8 @@ def price_lines(lines, P):
 
 # ---------------------------------------------------------------- second model: gradient-boosted corrector
 GBM_FEATURES = ["log_mu", "n_prev", "snap", "pct_prev", "vol", "spread", "tgt", "miss", "demoted", "promoted", "starter", "q", "limited",
-                "rest", "week", "last", "avg", "ps_avg", "crew", "grp", "is_home", "exp_runs", "exp_comps", "run_tk_rate", "pass_tk_rate", "jump", "gap", "new_team"]
+                "rest", "week", "last", "avg", "ps_avg", "crew", "grp", "is_home", "exp_runs", "exp_comps", "run_tk_rate", "pass_tk_rate", "jump", "gap", "new_team",
+                "rate_clean", "share_pred", "tsnaps", "blowout_last", "vacancy", "allowed_rel", "dome"]
 
 
 def gbm_features(F, mu):
@@ -776,6 +985,11 @@ def gbm_features(F, mu):
         "jump": snap_jump(F).clip(0.3, 5.0),
         "gap": pd.to_numeric(col("gap_weeks"), errors="coerce").fillna(1).clip(1, 8),
         "new_team": col("team_changed", False).map(_flag).astype(float),
+        "rate_clean": persnap_rate(F).fillna(0.08), "share_pred": share_pred(F).fillna(col("pct_prev").fillna(0.3)),
+        "tsnaps": pd.to_numeric(col("tsnaps_exp"), errors="coerce").fillna(65.0),
+        "blowout_last": (pd.to_numeric(col("last_margin"), errors="coerce").fillna(0) >= C.SHARE_MODEL["blowout_margin"]).astype(float),
+        "vacancy": col("vacancy", False).map(_flag).astype(float), "allowed_rel": pd.to_numeric(col("allowed_rel"), errors="coerce").fillna(1.0),
+        "dome": col("roof", "").fillna("").astype(str).str.lower().isin(["dome", "closed"]).astype(float),
         "pct_prev": col("pct_prev").fillna(0),
         "vol": (col("exp_opps") / col("opps_prev_mean")).fillna(1.0).clip(0.6, 1.6),
         "spread": col("spread_dog").fillna(0),

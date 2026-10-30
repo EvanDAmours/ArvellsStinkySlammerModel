@@ -23,8 +23,11 @@ def build_test_rows(H, seasons, min_prev=2, min_week=3):
 
 def _metrics(actual, pred):
     pred = pd.Series(pred).fillna(pd.Series(actual).mean())   # an undefined prediction is scored, not dropped
-    e = np.asarray(actual) - np.asarray(pred)
-    return dict(n=int(len(e)), mae=float(np.mean(np.abs(e))), rmse=float(np.sqrt(np.mean(e ** 2))), bias=float(np.mean(e)))
+    a, p = np.asarray(actual, dtype=float), np.asarray(pred, dtype=float)
+    e = a - p
+    # level-matched miss: the predictor scaled to zero bias first, so a piece cannot look better by shifting the level
+    scale = a.sum() / p.sum() if p.sum() > 0 else 1.0
+    return dict(n=int(len(e)), mae=float(np.mean(np.abs(e))), mae_cal=float(np.mean(np.abs(a - p * scale))), rmse=float(np.sqrt(np.mean(e ** 2))), bias=float(np.mean(e)))
 
 
 def run_backtest(H, seasons):
@@ -53,8 +56,10 @@ def run_backtest(H, seasons):
     preds["Full model without run/pass mix"] = M.project_frame(T, use_mix=False)[1]
     preds["Full model without rest days"] = M.project_frame(T, use_rest=False)[1]
     preds["Full model without injury report"] = M.project_frame(T, use_injury=False)[1]
-    preds["Full model without new-role factor"] = M.project_frame(T, use_new_role=False)[1]
     preds["Full model without role-shift factors"] = M.project_frame(T, use_role_shift=False)[1]
+    preds["Full model without per-snap base"] = M.project_frame(T, use_persnap=False)[1]
+    preds["Full model without vacancy rule"] = M.project_frame(T, use_vacancy=False)[1]
+    preds["Full model without dome corners"] = M.project_frame(T, use_dome=False)[1]
 
     table = []
     for name, p in preds.items():
@@ -78,15 +83,19 @@ def run_backtest(H, seasons):
     # measured spread by group: (miss^2 - noise of the average) / mean
     full = preds["Full model"]
     phi_by_group, phi_rows = {}, []
-    for g, part in T.assign(mu=full).groupby("group"):
+    Tm = T.assign(mu=full, _share=M.share_pred(T).fillna(T.pct_prev).fillna(1.0))
+    for g, part in Tm.groupby("group"):
         part = part[part.mu > 0.5]
         if len(part) < 60:
             continue
-        noise = part.mu / (part.n_prev + best_k)
-        raw = float(np.mean((part.comb - part.mu) ** 2 / part.mu))
-        corr = float(np.mean(((part.comb - part.mu) ** 2 - noise) / part.mu))
-        phi_by_group[g] = float(np.clip(corr, 0.5, 1.6))
-        phi_rows.append(dict(group=g, n=int(len(part)), raw=raw, corrected=corr, used=phi_by_group[g]))
+        for label, sub in (("", part), (":low", part[part._share < C.PHI_SHARE_SPLIT])):
+            if len(sub) < 60:
+                continue
+            noise = sub.mu / (sub.n_prev + best_k)
+            raw = float(np.mean((sub.comb - sub.mu) ** 2 / sub.mu))
+            corr = float(np.mean(((sub.comb - sub.mu) ** 2 - noise) / sub.mu))
+            phi_by_group[g + label] = float(np.clip(corr, 0.5, 2.2))
+            phi_rows.append(dict(group=g + (" (expected share under 60%)" if label else ""), n=int(len(sub)), raw=raw, corrected=corr, used=phi_by_group[g + label]))
     for g, v in C.DEFAULT_PHI.items():
         phi_by_group.setdefault(g, v)
 
@@ -131,9 +140,16 @@ def run_backtest(H, seasons):
     scale = float(np.clip(T.comb.sum() / max(1e-9, float(np.nansum(full))), 0.9, 1.1))   # level calibration of the full model
     # where the season log stops describing a player: each situation reported on its own, with and without its factor
     fl = M.role_shift_flags(T)
-    no_nr = np.asarray(preds["Full model without new-role factor"], dtype=float)
+    no_nr = np.asarray(preds["Full model without per-snap base"], dtype=float)
     no_rs = np.asarray(preds["Full model without role-shift factors"], dtype=float)
     weak_spots = []
+    vac = M.vacancy_rule(T).values
+    no_vac = np.asarray(preds["Full model without vacancy rule"], dtype=float)
+    if vac.any():
+        weak_spots.append(dict(situation="Vacancy: a regular at his group out or gone, his share jumped", n=int(vac.sum()),
+                               actual_vs_model=float(T.comb[vac].sum() / max(1e-9, np.nansum(full[vac])) - 1),
+                               actual_vs_model_without=float(T.comb[vac].sum() / max(1e-9, np.nansum(no_vac[vac])) - 1),
+                               mae=float(np.nanmean(np.abs(T.comb[vac] - full[vac])))))
     for key, label, without in (("new_role", "New role: part-timer who just played a starter's snaps", no_nr),
                                 ("reduced_role", "Reduced role: last game's snaps well below his season share", no_rs),
                                 ("absence", "Back after 3+ weeks out", no_rs), ("missed_game", "Back after one missed game (no bye)", no_rs),

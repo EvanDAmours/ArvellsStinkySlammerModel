@@ -485,8 +485,9 @@ function renderCheck() {
   if (!b || b.error || !b.predictors) { box.append(el("div", { class: "empty" }, b?.error || "The backtest runs with the daily job.")); return; }
   box.append(el("p", { class: "note" }, `Every game since ${Math.min(...b.seasons)} predicted using only what was known before it: ${b.games.toLocaleString()} defender-games. The model only keeps a piece while it beats the version without it.`));
   box.append(el("h2", {}, "Which predictor is most accurate"));
-  box.append(el("div", { class: "scroll" }, table([["Predictor"], ["Games", "n"], ["Average miss", "n"], ["Actual minus predicted", "n"], ["Beat last game", "n"]],
-    b.predictors.map((r) => [r.predictor, r.n.toLocaleString(), num(r.mae, 3), (r.bias >= 0 ? "+" : "") + num(r.bias, 2), r.beats_last_game?.toLocaleString?.() ?? ""]))));
+  box.append(el("p", { class: "note" }, "\"Level-matched miss\" scores each predictor after scaling it to zero bias, so a piece is judged on what it knows about who makes tackles, not on whether it happens to shift the overall level (the daily calibration handles the level). That is the column the model is judged on."));
+  box.append(el("div", { class: "scroll" }, table([["Predictor"], ["Games", "n"], ["Level-matched miss", "n"], ["Average miss", "n"], ["Actual minus predicted", "n"], ["Beat last game", "n"]],
+    [...b.predictors].sort((x, y) => (x.mae_cal ?? x.mae) - (y.mae_cal ?? y.mae)).map((r) => [r.predictor, r.n.toLocaleString(), num(r.mae_cal ?? r.mae, 3), num(r.mae, 3), (r.bias >= 0 ? "+" : "") + num(r.bias, 2), r.beats_last_game?.toLocaleString?.() ?? ""]))));
   if (b.dispersion?.length) {
     box.append(el("h2", {}, "How spread out tackle counts are"));
     box.append(el("p", { class: "note" }, "Variance divided by mean. Below 1 means games cluster closer to a player’s average than a Poisson count, so long-shot overs are less likely than standard pricing assumes."));

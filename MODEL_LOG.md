@@ -48,8 +48,13 @@ does not describe his current role (a part-timer who just played a starter's sna
 questionable) can be a pick, never a lock or a parlay leg.
 
 
-1. **Projection.** Season-to-date tackles per game shrunk toward last season (or a position prior) with a
-   position-specific weight (LB 0.5 games, S 1, CB 3, DL 3), times: a small point-spread tilt, a stat-crew factor
+1. **Projection (rebuilt 2026-10-30, research round 4).** Two bases blended 60/40: the per-game base (season-to-date
+   tackles per game shrunk toward last season or a position prior with a position-specific weight, LB 0.5 games,
+   S 1, CB 3, DL 3, times the snap-share trend, the role bump and the reduced-role correction) and the **per-snap
+   base** (tackles per defensive snap from games with real snaps, shrunk toward last season's rate, times the
+   expected snap share from a situation-aware share model, times expected team defensive snaps). When a regular at
+   his position is out or gone and his share jumped outside a blowout, the projection moves halfway to his per-snap
+   rate at his last-game share (the vacancy rule). Then the game-context factors: a small point-spread tilt, a stat-crew factor
    for the venue, a role bump when a regular at the position group is out, a **snap-share trend** factor (last 3
    games vs season, damped), a **tackle-opportunity volume** factor (expected opponent carries + completions +
    sacks vs what the player has faced, damped and capped), a **depth-chart** factor (demoted x0.90, promoted
@@ -78,8 +83,9 @@ questionable) can be a pick, never a lock or a parlay leg.
 2. Re-price the most recent graded week offline with the change and compare picks, hit rate, units and
    calibration (model side-probability vs hit rate) against the current rules. The script pattern is in the
    2026-10-26 entry below. One week is noise, so a change needs a reason beyond "it scored better this week".
-3. For projection changes, check the daily backtest table (`docs/data/backtest.json`): the full model must not get
-   worse than the season-average predictor.
+3. For projection changes, check the daily backtest table (`docs/data/backtest.json`): judge on the level-matched
+   miss (`mae_cal`, each predictor scaled to zero bias first; added 2026-10-30), and the full model must beat every
+   "without X" row on it, or that piece goes.
 4. Record the change here: date, what, why, evidence, and what would make us revert it.
 5. Never fit a parameter to the same week used to judge it and call it validated. Mark it provisional.
 
@@ -275,6 +281,111 @@ thin single-game board fewer picks clear the lock floor, against the owner's tar
 Monday. Nothing is changed for that here; see the backlog. One week is noise; the evidence for the change is the
 walk-forward backtest, not this replay.
 
+## Research round 4: the model rebuilt around snaps (2026-10-30, midday MDT)
+
+The McDuffie post-mortem fixed the symptom; the owner's reply ("he wouldn't have been a pick at all is that a joke?")
+was the right diagnosis of the disease. A model whose base is a per-game season average cannot say what a player
+does when his snaps change: it can only shade the average. This round rebuilt the base around snaps and tested
+every other idea that a per-snap view opens up. Same method as always: 28,861 defender-games, fitted on 2023-24,
+scored on 2025-26, every comparison level-calibrated (each predictor scaled to zero bias on the training years, so
+a piece cannot look good by shifting the level). Scripts: scratch `pm8/r1_persnap.py` to `r4_eval.py`.
+
+### Adopted (13 changes)
+
+1. **Per-snap base.** Tackles per defensive snap x expected snap share x expected team defensive snaps, blended
+   40/60 with the per-game base. Old core 1.6532 train / 1.6164 test; new core 1.6324 / 1.5985 (-1.3% / -1.1%),
+   the largest gain in the project's history. Weight 0.4 chosen on train; 0.3-0.5 are within 0.001 of each other.
+2. **A clean per-snap rate.** Only games with 10+ defensive snaps count toward the rate; special-teams tackles
+   made on 0-9 snaps had inflated part-timers' rates by up to 2x. Prior: last season's rate (150+ snaps) or the
+   position rate (CB .074, DL .066, LB .110, S .093 per snap), over 150 pseudo-snaps.
+3. **Expected team defensive snaps** from the defence's own prior games and the plays the opponent's offence has
+   run per game (the mean of both). Error 7.39 snaps vs 7.41 for the league average: the pace signal is small but it
+   is the right unit for the per-snap base.
+4. **A snap-share model by situation.** Next-game share from (last game, last three, season) with weights fitted
+   separately for: a jump backed by a vacancy or a depth-chart listing (1.02 / 0 / -0.29: it holds), a jump in a
+   blowout (0.55 / 0.43 / -0.16: it regresses), any other jump (0.48 / 0.42 / 0.02), a drop (0.19 / 0.41 / 0.41) and
+   steady (0.32 / 0.22 / 0.44). Share error on backed jumps 0.26 -> 0.22; one-size weights had bias +0.15 there.
+5. **The game margin as data** (`away_score` now loaded): a share spike in a 17+ point blowout is garbage time
+   and regresses (next share 0.74x the spike) where a spike with a vacancy behind it grows (1.32x).
+6. **The vacancy rule (the McDuffie rule).** A regular (75%+ share) at his position group is out, gone or missed
+   the team's last game within the last three weeks, his share jumped 1.5x+, and the jump was not in a blowout:
+   the projection moves halfway to his per-snap rate at his last-game share. The per-game model ran 24% under on
+   these (bias +1.03 tackles on 41 test games); at full weight the rule overshoots (-0.46), at half weight +0.05
+   to +0.11 with the lowest error of the three. McDuffie week 8 under the final model: 9.9 (factor 11.9, corrector
+   8.6) against a 7.5 line and an actual 10. He would have been an Over pick, not a lock.
+7. **Vacancy detection reads trades and releases**, not just the injury report: a regular who moved per the latest
+   depth chart, or who missed the team's last game, vacates his group. The Quay Walker trade is exactly this. In
+   the backtest the vacancy is persistent for three weeks (`role_signal` fired once and missed McDuffie's week 8).
+8. **Dispersion by expected snap share.** Part-timers' counts are far more spread than starters' (var/mean LB 1.90
+   vs 1.57, S 1.85 vs 1.43, CB 1.59 vs 1.27, DL 1.04 vs 1.02), so the backtest now estimates phi per position and
+   again for expected share under 60%, and pricing uses the right one. Probabilities on low-snap players were
+   overconfident before.
+9. **Corners in domes** x1.05: +4.6% (2023-24) and +7.1% (2025-26) over the model, consistent in both halves; the
+   only weather or venue effect that was.
+10. **Role-adjusted consistency.** "How often he cleared the line" now rescales each past game to the share he is
+    expected to play (games with 15%+ share, ratio capped 0.5-2.5), so a part-timer's log is read at his new role
+    and a starter's early-season rotation games do not count against him.
+11. **The corrector learns the new view**: per-snap rate, expected share, expected team snaps, blowout last game,
+    vacancy, tackles allowed to his group and dome join its features (32 now). 2026 fold 1.6156 -> 1.5968, blend
+    1.5867 -> 1.5751.
+12. **The new-role multiplier is retired** (power 0): with the per-snap base in the blend it double-counted (new-role
+    bias -0.44 with it, -0.02 without). The flag still drives the lock checklist and the wider distribution.
+13. **Data freshness is reported**: the daily run records the latest week with stats and with snap counts and
+    whether snap counts lag (`meta.freshness`), so a snap-count outage can never again read as "0% of snaps".
+
+### Validation (daily run on 2026-10-30 data, 28,861 games)
+
+Full model 1.6321 -> 1.6234; "without per-snap base" 1.6318 and "without role-shift factors" 1.6330 are the two
+worst ablations in the table. 2026 walk-forward fold 1.6156 -> 1.5970, with the corrector 1.5867 -> 1.5769. Weak
+spots with their factors: vacancy +4.5% (without +22%), new role +1.2% (+14%), reduced role +7.9%, 3+ weeks out
++1.7%, one missed game +5.1%, new team -3.3%. Dispersion now LB 1.57 / 1.90 (starters / under 60% expected share),
+S 1.43 / 1.85, CB 1.27 / 1.59, DL 1.02 / 1.04. The backtest table gained a **level-matched miss** column (each
+predictor scaled to zero bias before scoring) and is judged on it from now on; on raw miss, a piece that happens to
+lower the level on a day the model over-projects looks better than it is.
+
+**McDuffie under the final model**: projection 9.1 (factor model 10.0, corrector 8.5) against the 7.5 line. The
+Under lock is gone: he is not lock-eligible (new role, one game in it) and the Under returns -3%. The Over is not
+a pick either, and that is the honest answer to "he would not have been a pick at all": DraftKings priced Over 7.5
+at -155 and Under at +120. The book had already moved to his new role, so at that price the Over returned -9% even
+with the model at 9.1; the only edge on him was Under 3.5 solo at +130 (+18%, won: 3 solo). The vision says the
+edge is what the market has not priced; here the market had priced it. What the model must never do again is
+back the wrong side of a role change at 83 confidence, and it cannot now.
+
+**Replays under the final model**: Thursday week 8 locks 1-2 (McKinney W, Moehrig L, Okereke L), all plays 8-6
+(+3.1u), parlay Bullard/Cisse win; week 7 locks 4-3 (+0.5u; Sunday 2-3, Monday Bland and Clark 2-0), all plays
+93-93 (+3.5u; fewer and different picks than the previous model's 100-93), parlays 1-1. One week each; the
+evidence for the change is the backtest.
+
+### Measured and not adopted
+
+- **Per-snap base alone** (no per-game blend): 1.7306 train / 1.7258 test. Share prediction is too noisy to carry
+  the whole projection; the blend takes what is reliable from each.
+- **Per-snap at the last-game share for every jump**: bias -1.0 to -1.2 (over-projection). Most one-game spikes
+  regress; only a vacancy or a listing makes one hold. That is why the rule is conditional.
+- **Tackles the opponent allows to the position group** (shrunk, prior games): +0.06% on the per-game model, then
+  slightly worse on both halves once the per-snap base was in. Kept as a corrector feature only.
+- **Opponent pace** (plays per game): slope negative and tiny; nothing beyond the volume factor.
+- **Opponent QB scramble rate**: nothing for any position (within 0.03%).
+- **Opponent sack rate allowed** (DL): buckets inconsistent in the middle, 0.02% gain. Not worth its code.
+- **Wind 15+ mph / freezing / outdoors** by position: DL +1% in 2023-24 but +11% in 2025-26; the halves disagree.
+- **Home / away**: 1.007 vs 1.008.
+- **A per-snap definition of the outlier fade** (big game only if his per-snap rate was 1.5x his norm): identical
+  results to the raw-count definition (0.981 vs 0.979), so the simpler one stays.
+- **Role-shift factor sizes refitted on the new core**: the existing sizes are MAE-optimal; softer absence factors
+  trade a few hundredths of bias for worse error. Unchanged; the weak-spot table watches them.
+
+### Pitfalls found this round
+
+- A per-snap rate must exclude games without real defensive snaps or special-teams tackles make a 2-snap player
+  look like a 2-tackles-per-snap player.
+- Factors fitted on one base double count on another: the new-role multiplier (fitted on the per-game base) had
+  to be retired once the per-snap base carried the same information. Refit everything that touches the same
+  signal when the base changes.
+- Judge ablations on level-calibrated error. Without that, any piece that happens to lower the level looks good on
+  a day the model over-projects, and vice versa.
+- Keep every pipeline process alone on the machine (see the earlier pitfall): this round's evaluations ran one at
+  a time.
+
 ## Weekly post-mortems
 
 ### Week 8 Thursday, 2026 (GB at CAR; graded 2026-10-30, morning MDT)
@@ -398,6 +509,22 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-10-30, midday MDT (research round 4: per-snap projection base and 12 more changes)
+- See research round 4 above. Config: `PERSNAP`, `SHARE_MODEL`, `VACANCY`, `DOME_CB`, `PHI_SHARE_SPLIT`, `MATCHUP`
+  (feature only); `NEW_ROLE["power"]` 0. `pipeline/sources.py`: schedule carries `away_score` and `roof`.
+  `pipeline/model.py`: `team_games` margin and roof; history features `c_real_prev`, `s_real_prev`, `ps_rate`,
+  `last_margin`, `tsnaps_exp` (`attach_team_snaps`), `allowed_rel` (`attach_matchup`); `share_pred`, `persnap_rate`,
+  `persnap_base`, `vacancy_rule`, `dome_factor`; `project_frame` restructured (per-game core x snap x role x share
+  corrections, blended with the per-snap base, vacancy rule, then the game-context factors); persistent `vacancy`
+  in `role_signals_backtest` and in `upcoming_rows` (report, depth-chart move, missed game); `finalize_projections`
+  writes `share_pred`, `rate_clean`, `vacancy_rule` and uses `:low` dispersion keys; pricer rescales the game log to
+  the expected share; corrector features. `pipeline/backtest.py`: rows "without per-snap base", "without vacancy
+  rule", "without dome corners"; dispersion per position and per low expected share; vacancy weak-spot row.
+  `run.py`: freshness status; projections carry the new fields. Smoke test checks the rows, the share, the
+  dispersion split and freshness. Revert conditions: the "without per-snap base" row beating the full model two
+  weeks running (level-calibrated); the vacancy weak-spot row drifting past +/-15% for a season; dome corners'
+  row beating the full model for a season.
 
 ### 2026-10-30, morning MDT (post-mortem week 8 Thursday: new-role rule)
 - See the week 8 Thursday post-mortem below. `NEW_ROLE` config; `snap_jump`, `new_role_flag`, `new_role_factor`
@@ -643,6 +770,8 @@ Open, with what would justify them:
 - Codespaces secrets are invisible to Actions. Only Actions secrets work.
 - An Over "fading" a low game is not a signal. A low game predicts lower (the regression table says so); only the
   Under after a big game in a settled role has evidence behind it.
+- A season average is only evidence about a player's current role, and a per-game base can only shade it. The
+  per-snap base (round 4) is what lets the model say what a player does when his snaps change.
 - A season average is only evidence about a player's current role. When his snap share just jumped (trade, injury
   ahead of him, a benching behind him), every history-based number (average, outlier test, consistency) describes
   someone else. Check the role before trusting the log; the week 8 Thursday post-mortem is the case study.
