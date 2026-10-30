@@ -37,8 +37,8 @@ Everything runs on GitHub's servers on a schedule. You don't run anything by han
 
 ## When things run
 
-Pull slots are in **Edmonton time** (Mountain, daylight or standard as in force; the job converts, so the clock
-change needs no edits). The pull job runs every half hour and does nothing unless it lands on a slot.
+Pull slots are in **Edmonton time** (Alberta Time, UTC-6 all year from November 2026; the job converts from the
+zone data and pins UTC-6 if that data is stale, so nothing needs editing). The pull job runs every half hour and does nothing unless it lands on a slot.
 
 | Job | When (Edmonton) | What it does |
 | --- | --- | --- |

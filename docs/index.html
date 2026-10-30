@@ -152,7 +152,7 @@ const num = (x, d = 1) => (x == null || Number.isNaN(x) ? "" : Number(x).toFixed
 const odds = (a) => (a == null ? "" : (a > 0 ? "+" : "") + Math.round(a));
 const wl = (w, l, p) => el("b", {}, el("span", { class: "w" }, String(w ?? 0)), "-", el("span", { class: "l" }, String(l ?? 0)), p ? `-${p}` : "");
 const units = (u, d = 1) => (u == null ? el("b", {}) : el("b", { class: u >= 0 ? "pos" : "neg" }, (u >= 0 ? "+" : "") + Number(u).toFixed(d)));
-const cell = (v) => (v === "Win" || v === "Loss" ? el("td", { class: v }, v) : null);
+const cell = (v) => (v === "Win" || v === "Loss" ? el("td", { class: v }, v) : v === "Void" ? el("td", { title: "He did not play: the bet is void and counts for nothing" }, "Void") : null);
 function recordsBar(s) {
   // Locks and plays records side by side, plus the replayed record under the current rules
   const r = DATA.results || {}, f = (s || {}).five || {}, bar = el("div", { class: "records" });

@@ -28,6 +28,10 @@ SITE = Path("docs/data")
 CACHE = Path("data/cache")
 EDMONTON = ZoneInfo("America/Edmonton")
 EASTERN = ZoneInfo("America/New_York")
+# Alberta stays on UTC-6 all year from 2026-11-01 ("Alberta Time", tzdata 2026e). A runner with older zone data
+# would fall back to UTC-7 that night and run every fixed slot an hour early in real Alberta time; guard against it.
+if dt.datetime(2026, 11, 2, 12, 0, tzinfo=EDMONTON).utcoffset() != dt.timedelta(hours=-6):
+    EDMONTON = dt.timezone(dt.timedelta(hours=-6), "Alberta")
 
 # Scheduled pull slots, Edmonton local time (minutes after midnight) by weekday (Mon=0), and which games each covers.
 # The job runs every half hour; a run that is not within 14 minutes of a slot does nothing.
@@ -224,7 +228,7 @@ def cmd_daily():
     games = week_games(sched, C.SEASON, week)
     json.dump(games, open(CACHE / "games.json", "w"), indent=1)
     status["international_games"] = [f"{g['away']} at {g['home']}, {g['edmonton']} Edmonton" for g in games if g["international"]]
-    graded, summary = G.grade(pw)
+    graded, summary = G.grade(H[["season", "week", "team", "name_key", "comb", "solo_t"]])   # H has zero-tackle games from snap counts, so "played, no tackles" is not "did not play"
     parlays, psum = G.grade_parlays(pw)
     summary["parlays"] = psum
     G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)

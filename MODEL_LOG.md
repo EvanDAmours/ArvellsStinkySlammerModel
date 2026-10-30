@@ -604,6 +604,18 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-10-30, evening MDT (before Sunday: void bets, off-the-board picks, Alberta Time)
+- **Void bets.** A pick on a player who did not play stayed "Pending" forever and could sit among the locks. Grading
+  now uses the snap-filled history (a player who played and made no tackle has a zero row) and marks a pick "Void"
+  when his game is in the books and he has no row: no units, outside every record. **Off the board:** at a pull, a
+  logged open pick whose player has vanished from a board that still lists his game (ruled out, inactive, line
+  pulled) is marked "off the board", loses lock eligibility and drops out of the locks and parlay.
+- **Alberta Time.** Checked that the province stays on UTC-6 this Sunday (no fall-back) and that the code's zone
+  data agrees; pinned UTC-6 as a guard. The old pitfall ("add one hour to each cron") was wrong and is corrected.
+- Checked before Sunday: week 8 injury listings present for all 27 teams with a game (7 out, 5 questionable as of
+  Friday), depth charts dated 2026-10-30, games.json carries the 14 games with the right Edmonton kickoffs, snap
+  counts and stats through week 8, 402 credits left (about 100 needed this week).
+
 ### 2026-10-30, afternoon MDT (Sunday pull an hour before the first kickoff)
 - Owner's call after the audit: a Sunday pull one hour before the day's first kickoff (Edmonton time), the whole
   Sunday slate, so the early-slate locks and parlay are re-chosen with the inactives known and the afternoon and
@@ -896,8 +908,10 @@ Open, with what would justify them:
   never trigger other workflows, so the bot's commits cannot re-enable anything themselves.
 - GitHub did not register the scheduled workflows on the first push to the empty repo; a second push to the
   workflow files fixed it.
-- Cron times are UTC. Alberta leaves daylight time on 2026-11-01: every cron in `odds.yml` and `daily.yml` then runs
-  an hour early in local terms. Add one hour to each.
+- Cron times are UTC. Alberta does NOT leave daylight time on 2026-11-01: the province moved to permanent UTC-6
+  ("Alberta Time", in tzdata 2026e as "CST"). Pull slots are defined in Edmonton local time through zoneinfo, so no
+  cron changes; `run.py` guards against a runner with stale zone data by pinning UTC-6 if the zone disagrees. The
+  daily job at 11:15 UTC stays 5:15 am all year.
 - The Odds API has no Alberta-specific feeds. Canadian feeds are Ontario-facing; prices at a book's Alberta site
   can differ. Empty responses cost nothing; every 10 named bookmakers cost as much as one region.
 - The events feed lists games two weeks out. Never pull "all upcoming" without a window.

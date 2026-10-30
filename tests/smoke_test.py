@@ -1,6 +1,7 @@
 """End-to-end test on the synthetic league. Run from the repo root:  python tests/smoke_test.py
 Copies the repo to a temp folder, runs the daily job, an odds pull and grading, and checks that the
 backtest recovers the effects planted in the synthetic data."""
+import datetime as dt
 import json, os, shutil, subprocess, sys, tempfile
 from pathlib import Path
 
@@ -113,7 +114,7 @@ week6 = pw[(pw.season == 2026) & (pw.week == 6)].sort_values("comb", ascending=F
 rows, snap = [], []
 for i, r in enumerate(week6.itertuples()):
     side = "Over" if i % 2 == 0 else "Under"
-    rows.append(dict(season=2026, week=6, player=r.player, market="player_tackles_assists", side=side, line=r.comb - 0.5,
+    rows.append(dict(season=2026, week=6, player=r.player, team=r.team, opp="", market="player_tackles_assists", side=side, line=r.comb - 0.5,
                      book="DraftKings", odds=-110, event_id=f"X{i}", commence_time="2026-10-18T17:00:00Z", pulled_at="20261018T120000Z"))
     snap.append(dict(event_id=f"X{i}", commence_time="2026-10-18T17:00:00Z", book="DraftKings", market="player_tackles_assists",
                      player=r.player, line=r.comb + 0.5, over_odds=-110, under_odds=-110, pulled_at="20261018T165500Z"))
@@ -123,6 +124,10 @@ pd.DataFrame(rows).to_csv("data/picks.csv", index=False)
 pd.DataFrame(snap).to_csv("data/odds/2026/wk06/20261018T165500Z.csv", index=False)
 graded, summary = G.grade(pw)
 check(list(graded.result) == ["Win", "Loss", "Win"], f"picks graded correctly ({list(graded.result)})")
+# a pick on a player with no stat row in a game that is in the books is void, not pending; a game not yet played stays pending
+_v = pd.read_csv(G.PICKS); _v = pd.concat([_v, _v.iloc[[0]].assign(player="Nobody Atall", event_id="void_test")], ignore_index=True); _v.to_csv(G.PICKS, index=False)
+_gv, _ = G.grade(pw)
+check("Void" in set(_gv.result) and int((_gv.result == "Void").sum()) == 1, f"a bet on a player who did not play in a finished game is void ({_gv.result.tolist()})")
 check(summary["by_grade"] and summary["by_grade"][0]["grade"] == "A" and all({"hit", "pushes", "pending", "staked", "stake"} <= set(g) for g in summary["by_grade"]),
       f"record by grade carries hit rate, pushes, pending and staked units ({[(g['grade'], g['wins'], g['losses']) for g in summary['by_grade']]})")
 check(abs(summary["units"] - (2 * (100 / 110) - 1)) < 1e-6, f"units computed ({summary['units']:.3f})")
@@ -167,6 +172,8 @@ plan = R.auto_plan(now=_at(2026, 11, 1, 10, 3), games=sun)
 check(plan and plan.get("days") == ["2026-11-01"] and plan.get("key") == "2026-11-01 sunday-1h", f"Sunday: one pull an hour before the day's first kickoff covers the whole slate ({plan and plan.get('reason')})")
 check(R.auto_plan(now=_at(2026, 11, 1, 10, 33), games=sun, served={"2026-11-01 sunday-1h"}) is None, "Sunday: the pre-kickoff pull is served once")
 check(R.auto_plan(now=_at(2026, 11, 1, 9, 0)) is None, "Sunday with no schedule loaded: nothing due")
+check(dt.datetime(2026, 11, 2, 12, 0, tzinfo=R.EDMONTON).utcoffset() == dt.timedelta(hours=-6) and dt.datetime(2026, 10, 30, 12, 0, tzinfo=R.EDMONTON).utcoffset() == dt.timedelta(hours=-6),
+      "Edmonton stays on UTC-6 through the November clock change (Alberta Time)")
 plan = R.auto_plan(now=_at(2026, 11, 7, 18, 2), served={"2026-11-07 09:00"})      # Saturday 6:02 pm, after the clock change
 check(plan and plan.get("days") == ["2026-11-08"], f"Saturday 6 pm slot covers Sunday games in standard time ({plan and plan.get('days')})")
 plan = R.auto_plan(now=_at(2026, 11, 9, 17, 30), served={"2026-11-09 09:00"})     # Monday 5:30 pm

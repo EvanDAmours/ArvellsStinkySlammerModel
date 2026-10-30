@@ -38,6 +38,20 @@ def log_picks(bets, season, week, pulled_at):
             for c in ["lock", "grade", "consistency", "cons_hits", "cons_n", "ev", "proj", "proj_model", "mkt_line", "model_over", "market_over", "why"]:
                 if c in fresh.columns:
                     both.loc[i, c] = fresh.loc[k, c]
+    # a logged pick whose player has vanished from a board that still lists his game (ruled out, inactive, line
+    # pulled) can no longer be a lock or a parlay leg: it will void or it is dead money
+    board = bets[bets.proj.notna()] if "proj" in bets.columns else bets
+    if "event_id" in board.columns and "lock_block" in both.columns:
+        events_on_board = set(board.event_id.dropna().astype(str))
+        players_on_board = set(zip(board.event_id.astype(str), board.player))
+        for i in open_:
+            ev, pl = str(both.loc[i, "event_id"]), both.loc[i, "player"]
+            if ev in events_on_board and (ev, pl) not in players_on_board:
+                lb = "" if pd.isna(both.loc[i, "lock_block"]) else str(both.loc[i, "lock_block"])
+                if "off the board" not in lb:
+                    both.loc[i, "lock_block"] = (lb + ", " if lb else "") + "off the board"
+                    both.loc[i, "lock_eligible"] = False
+                    both.loc[i, "five"] = False
     both = mark_locks(both, season, week)
     PICKS.parent.mkdir(parents=True, exist_ok=True)
     both.to_csv(PICKS, index=False)
@@ -46,6 +60,13 @@ def log_picks(bets, season, week, pulled_at):
 
 FIVE = 5
 EDMONTON = "America/Edmonton"
+try:                                                   # Alberta Time: UTC-6 all year from 2026-11-01; guard against stale zone data
+    import datetime as _dt
+    from zoneinfo import ZoneInfo as _ZI
+    if _dt.datetime(2026, 11, 2, 12, 0, tzinfo=_ZI(EDMONTON)).utcoffset() != _dt.timedelta(hours=-6):
+        EDMONTON = _dt.timezone(_dt.timedelta(hours=-6), "Alberta")
+except Exception:  # noqa: BLE001
+    pass
 
 
 def slate_of(commence_time):
@@ -280,6 +301,13 @@ def grade(pw_comb):
     stats = pw_comb.groupby(["season", "week", "name_key"]).agg(comb=("comb", "sum"), solo=("solo_t", "sum")).reset_index()
     P = P.merge(stats, on=["season", "week", "name_key"], how="left")
     P["actual"] = np.where(P.market.str.contains("solo"), P.solo, P.comb)
+    # a game that is in the books (the team has stat rows) but the player has none: he did not play, the bet is void
+    if "team" in pw_comb.columns and "team" in P.columns:
+        teams_done = set(zip(pw_comb.season, pw_comb.week, pw_comb.team))
+        game_done = [((s, w, t) in teams_done) or ((s, w, o) in teams_done) for s, w, t, o in zip(P.season, P.week, P.team, P.get("opp", P.team))]
+        P["void"] = np.asarray(game_done) & P.actual.isna().values
+    else:
+        P["void"] = False
     # closing line value: compare our price with the last price before kickoff at the same book
     clv = []
     for (s, w), part in P.groupby(["season", "week"]):
@@ -309,7 +337,7 @@ def grade(pw_comb):
     done = P.actual.notna()
     win = np.where(P.side == "Over", P.actual > P.line, P.actual < P.line)
     push = P.actual == P.line
-    P["result"] = np.where(~done, "Pending", np.where(push, "Push", np.where(win, "Win", "Loss")))
+    P["result"] = np.where(~done, np.where(P.void, "Void", "Pending"), np.where(push, "Push", np.where(win, "Win", "Loss")))
     dec = P.odds.map(lambda a: american_to_decimal(a) if pd.notna(a) else np.nan)
     P["units"] = np.where(P.result == "Win", dec - 1, np.where(P.result == "Loss", -1.0, 0.0))
     g = P[P.result.isin(["Win", "Loss", "Push"])]
