@@ -387,6 +387,88 @@ evidence for the change is the backtest.
 - Keep every pipeline process alone on the machine (see the earlier pitfall): this round's evaluations ran one at
   a time.
 
+## Audit of everything so far (2026-10-30, afternoon MDT)
+
+The owner asked for every other hole, after Thursday. Everything between the data and the bet slip was walked
+through again: what the pull jobs know at pull time, the solo-tackle side of the model, pricing calibration under
+the new model, parlay construction, source consistency, the vacancy logic's edge cases, and the schedule.
+
+### Found and fixed
+
+1. **The pull jobs priced with the morning's injury report.** Projections are built at 5:15 am Edmonton; the
+   Thursday 5:30 pm pull, two and a half hours before kickoff, used that morning's statuses. A player ruled out
+   in the afternoon was still priced; a new questionable listing could still be a lock. The odds job now reloads
+   the week's report before pricing and rewrites every projection's status and practice fields (logged as "N
+   statuses changed since the morning run"). Out becomes a pass, questionable leaves the locks, as it should.
+2. **Solo tackles had never been validated.** Half the lines are solo markets, and the solo projection (the
+   combined projection times a shrunk solo share) was priced with the combined-tackle dispersion. Measured on
+   2025-26: solo counts are less spread than combined (variance/mean CB 1.19 vs 1.31, DL 1.05 vs 1.18, LB 1.27 vs
+   1.49, S 1.16 vs 1.35), so solo probabilities were too timid; and the solo projection ran 3-4% high for CBs and
+   safeties. The backtest now estimates a solo dispersion per position (and per low expected share), a solo level
+   calibration, and reports two solo rows (full model vs season average) so the solo side is judged every day.
+   Pricing uses the solo dispersion for solo lines.
+3. **A returning regular read as a vacancy.** A regular who missed the team's last game counted as "gone" even
+   when this week's depth chart lists him as a starter, which would have pushed his backup's projection up the
+   week he came back. The listing now cancels the vacancy.
+4. **No warning when the model and the line disagree a lot.** McDuffie's card showed 6.1 against a 7.5 line with
+   no comment. Lines carry a "Model far from line" tag when the model's own number and the consensus line are 25%
+   or more apart. It changes nothing in the grade, rank or pick (the market never does); it tells the reader that
+   one side knows something and to check the news before betting.
+
+5. **Pricing calibration under the new model** (weeks 7-8, every line at every pull, 1,768 line-pulls, pushes
+   removed; scripts `pm8/calib.py`). Against the outcome, the model's over-probability has log-loss 0.6827 at
+   `LINE_WEIGHT` 0.6 and 0.7, 0.6830 at 0.5, 0.6835 at 0.4 (equal to the market's own no-vig probability, 0.6835)
+   and 0.6844 at 0.3. So 0.6 stays, and the honest size of the edge is now on record: the model beats the market's
+   probability by a hair on all lines. Where it beats it is lopsided: on lines where the model sits 8+ points
+   below the market on the over, overs hit 47.6% against the market's 53.6% (n=103); where the model sits above
+   the market, overs hit 32-46% against the model's 46-57% (n=47). The model's Under leans carry information; its
+   Over leans do not.
+   On the 163 unique picks the replay makes for those two weeks: hit 50.9%, claimed 55.8%. By expected return,
+   6-10% hit 57%, 10-15% 47%, 15-25% 50%, 25%+ 33% (n=15): return beyond the bar is not confidence, it is the
+   winner's curse. By lock score the hit rate is flat at 50-52% while the claim rises with the score. Overs 5-9,
+   Unders 78-71; combined-tackle lines 33-45, solo lines 50-35. Two weeks is a small sample and these are noted
+   as provisional, but every one of them points the same way as the week 7 post-mortem did, so:
+   - **An Over needs 10% expected return** (`PICK_BAR_OVER`), an Under 6%, a signal-backed pick 4%.
+   - **The EV part of the lock score saturates at 10% and falls away above 20%** (`LOCK_EV_FULL`, `LOCK_EV_FADE`),
+     to zero at 40%: a 30% "edge" is a flag, not a lock.
+   - **A pick's claimed chance is shrunk 40% of the way toward even** (`CLAIM_SHRINK` 0.6) for the lock score's
+     model part, the card and parlay legs. Market-free: toward 50%, never toward the book. Claimed 55.8% becomes
+     53.5% against the 50.9% observed. Parlay thresholds move to 56% / 53% claimed (the same raw 60% / 55%).
+   Revert condition: 200+ further picks where the hit rate matches the unshrunk claim within 2 points, or where
+   Over picks at 6-10% return hit above 55%.
+
+**Validation (daily run on 2026-10-30 data).** Solo tackles: full model 1.1368 (level-matched 1.1291) against the
+season-average 1.1802; solo level 0.973 (the solo projection was 2.7% high; now calibrated daily); solo dispersion
+CB 1.16, DL 0.94, LB 1.25, S 1.23 against 1.29 / 1.02 / 1.57 / 1.44 combined. Replays under the audited pricing:
+week 7 locks 6-1 (+3.9u; A grade 4-0), all plays 86-87 of 176 (+0.8u), parlays 1-1; Thursday week 8 locks 1-2
+(McKinney W, Moehrig L, Okereke L), all plays 8-6 (+3.1u), parlay Cisse/Bullard win. Fewer plays than before
+the Over bar and the claim shrink, as intended. One week each; the evidence is the calibration above.
+
+### Checked and sound
+
+- **Team codes** are identical across stats, schedule, depth charts, injuries and snap counts (32 codes, LA for
+  the Rams everywhere), so the depth-chart move detection cannot misfire on a naming mismatch.
+- **Parlay legs from the same game** are priced as independent. Measured: standardised residuals of teammates in
+  the same game correlate +0.018 and of opponents -0.031 (100k+ pairs each). Independence is fine.
+- **The corrector's weight** (0.6): 2026 fold 1.5779 at 0.6, 1.5774 at 0.7, 1.5773 at 0.8, 1.5793 at 1.0. Within
+  noise; unchanged.
+- **Position groups**: nflverse labels almost every linebacker "LB" (1,226 of 1,316 rows in 2026); the few OLB
+  rows have a DL-like rate (0.079 per snap vs 0.123). Too few to split; the per-snap base prices individuals
+  anyway, and the group only sets early-season priors and dispersion.
+- **Backtest and live features agree**: every corrector feature exists on both the history rows and the upcoming
+  rows with the same meaning (vacancy, blowout, team snaps, matchup, dome, gap, team change).
+- **Daylight time ends 2026-11-01**: pull slots are defined in Edmonton local time and convert themselves; the
+  daily job moves from 5:15 to 4:15 am local, still before any game and after Sunday's stats land.
+
+### Recommended, not changed (the owner sets the schedule)
+
+- **No Sunday pull.** The last look at the Sunday slate is Saturday 6 pm, about 17 hours before the early
+  kickoffs. Inactives are published 90 minutes before kickoff and the Friday report's "questionable" players
+  resolve then; lines also move most on Sunday morning. A Sunday 9:30 am Edmonton pull limited to games inside
+  four hours (about 14 credits) would re-choose the early-slate locks and parlay with the inactives known. Same
+  for a Sunday 1:30 pm pull for the afternoon slate. Credits: 406 remain on the first key for the month; the
+  second key is still rejected as invalid.
+
 ## Weekly post-mortems
 
 ### Week 8 Thursday, 2026 (GB at CAR; graded 2026-10-30, morning MDT)
@@ -510,6 +592,14 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-10-30, afternoon MDT (audit: injury refresh at pull time, solo dispersion and level, vacancy return, far-from-line flag)
+- See the audit above. Pricing: `PICK_BAR_OVER`, `LOCK_EV_FULL` 0.15 -> 0.10, `LOCK_EV_FADE`, `CLAIM_SHRINK`
+  (`claimed_prob` in `pipeline/model.py`, used by `lock_score`, the `p_claim` field and `choose_parlay`), parlay
+  thresholds 0.56 / 0.53 claimed; legend rewritten. `run.py`: `refresh_injury_status` before pricing in the odds job. `pipeline/backtest.py`:
+  solo dispersion keys (`G|solo`, `G:low|solo`), `__scale_solo__`, two solo rows. `pipeline/model.py`: `phi_solo`
+  on projections, used for solo lines; `far_from_line` on priced lines; a listed starter cancels a vacancy.
+  Site: "Model far from line" tag. Smoke test checks the solo rows, the solo level and the flag.
 
 ### 2026-10-30, midday MDT (research round 4: per-snap projection base and 12 more changes)
 - See research round 4 above. Config: `PERSNAP`, `SHARE_MODEL`, `VACANCY`, `DOME_CB`, `PHI_SHARE_SPLIT`, `MATCHUP`
@@ -769,6 +859,13 @@ Open, with what would justify them:
 ## Known pitfalls
 
 - Codespaces secrets are invisible to Actions. Only Actions secrets work.
+- A pick's claimed probability is biased upward by the act of picking (the biggest disagreements with the market
+  are chosen, and the biggest disagreements are mostly error). Judge claims on hit rates after selection, and keep
+  "expected return" as a threshold, not a confidence source.
+- Anything priced hours after the morning run must re-read what can change in hours: the injury report (done),
+  and ideally the depth chart. A cached projection is a cached status.
+- A statistic that is priced must be validated on its own. Solo lines were half the picks and the solo side had
+  no backtest row and no dispersion of its own until 2026-10-30.
 - An Over "fading" a low game is not a signal. A low game predicts lower (the regression table says so); only the
   Under after a big game in a settled role has evidence behind it.
 - A season average is only evidence about a player's current role, and a per-game base can only shade it. The

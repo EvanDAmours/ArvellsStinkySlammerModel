@@ -219,6 +219,28 @@ def cmd_daily():
     print(f"daily: week {week}, {len(P)} projections, {len(bets)} priced lines, backtest on {bt.get('games', 0)} games")
 
 
+def refresh_injury_status(P, week):
+    """The projections are built each morning; a pull hours later must price with the report as it stands now.
+    A player ruled out since the morning becomes a pass, a new questionable listing drops out of the locks."""
+    try:
+        inj = S.load_injuries([C.SEASON])
+    except Exception as e:  # noqa: BLE001
+        print(f"odds: injury refresh skipped ({e})")
+        return P
+    inj = inj[(inj.season == C.SEASON) & (inj.week == week)] if len(inj) else inj
+    if inj.empty or "name_key" not in P.columns:
+        return P
+    status = {(r.team, r.name_key): str(r.status) for r in inj.itertuples()}
+    practice = {(r.team, r.name_key): str(getattr(r, "practice", "")) for r in inj.itertuples()}
+    before = P.status.fillna("").astype(str) if "status" in P.columns else pd.Series("", index=P.index)
+    P = P.copy()
+    P["status"] = [status.get((t, n), "") for t, n in zip(P.team, P.name_key)]
+    P["practice"] = [practice.get((t, n), "") for t, n in zip(P.team, P.name_key)]
+    changed = int((before.str.lower() != P.status.fillna("").astype(str).str.lower()).sum())
+    print(f"odds: injury report refreshed for week {week}: {len(inj)} listings, {changed} projection statuses changed since the morning run")
+    return P
+
+
 def cmd_odds(hours=None, auto=False):
     keys = {name: os.environ[name] for name in C.ODDS_KEY_ENV if os.environ.get(name)}
     if not keys and os.environ.get("TACKLE_FAKE_ODDS"):
@@ -230,6 +252,7 @@ def cmd_odds(hours=None, auto=False):
     P = pd.read_csv(CACHE / "projections.csv")
     state = json.load(open(CACHE / "model_state.json"))
     week = int(state["week"])
+    P = refresh_injury_status(P, week)
     pull_kw = dict(hours_ahead=hours)
     if auto:
         games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
@@ -286,8 +309,9 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
     now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes")
     meta = dict(generated_at=now, season=C.SEASON, week=week, lines_pulled=lines_pulled, **status,
                 bars=dict(pick=C.PICK_BAR, signal=C.SIGNAL_BAR),
-                grading=dict(bars=C.GRADE_BARS, units=C.GRADE_UNITS, weights=C.LOCK_WEIGHTS, ev_full=C.LOCK_EV_FULL,
-                             model_full=C.LOCK_MODEL_FULL, locks=C.LOCKS_PER_SLATE, line_weight=C.LINE_WEIGHT, clv=C.CLV_BARS))
+                grading=dict(bars=C.GRADE_BARS, units=C.GRADE_UNITS, weights=C.LOCK_WEIGHTS, ev_full=C.LOCK_EV_FULL, ev_fade=list(C.LOCK_EV_FADE),
+                             model_full=C.LOCK_MODEL_FULL, locks=C.LOCKS_PER_SLATE, line_weight=C.LINE_WEIGHT, clv=C.CLV_BARS,
+                             pick_bar=C.PICK_BAR, pick_bar_over=C.PICK_BAR_OVER, claim_shrink=C.CLAIM_SHRINK))
     old = SITE / "meta.json"
     if old.exists():
         prev = json.loads(old.read_text())
@@ -295,7 +319,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
         meta.setdefault("odds_credits_by_key", prev.get("odds_credits_by_key"))
     _json(SITE / "meta.json", meta)
     cols = ["player", "team", "opp_team", "group", "status", "n_prev", "season_avg", "last", "base", "proj", "proj_solo",
-            "fair_line", "fair_line_solo", "crew_comb", "crew_solo", "spread_dog", "role_signal", "venue", "gameday", "gametime", "phi",
+            "fair_line", "fair_line_solo", "crew_comb", "crew_solo", "spread_dog", "role_signal", "venue", "gameday", "gametime", "phi", "phi_solo",
             "dc_status", "opp_qb_out", "opp_rb_out", "rest", "pct_last3", "pct_prev", "pct_last", "gap_weeks", "team_changed", "new_role", "reduced_role",
             "absence", "missed_game", "new_team", "snap_jump", "vacancy", "vacancy_rule", "share_pred", "rate_clean", "tsnaps_exp", "allowed_rel", "roof", "proj_factor", "proj_gbm"]
     _json(SITE / "projections.json", records(P, [c for c in cols if c in P.columns]) if len(P) else [])

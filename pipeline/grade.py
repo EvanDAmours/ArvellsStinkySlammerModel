@@ -124,7 +124,8 @@ def choose_parlay(bets, slate):
     b = b[~lock_blocked(b)]
     if b.empty:
         return None
-    b["p_side"] = np.where(b.side == "Over", b.model_over, 1 - b.model_over)
+    from pipeline.model import claimed_prob
+    b["p_side"] = [claimed_prob(x) for x in np.where(b.side == "Over", b.model_over, 1 - b.model_over)]   # the claimed, shrunk chance
     b["dec"] = b.payout + 1
     b = b.sort_values(["p_side", "ev"], ascending=False).drop_duplicates("player")
     lo, hi = C.PARLAY_LEGS

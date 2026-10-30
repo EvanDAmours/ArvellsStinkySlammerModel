@@ -771,7 +771,9 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
     for r in last_rows.itertuples():
         if (r.def_pct if r.def_pct == r.def_pct else 0) < vc["regular_share"] or week - r.week > vc["recent_weeks"]:
             continue
-        gone = (r.team, r.name_key) in out_keys or r.week < team_last_week.get(r.team, r.week) or r.player_id in set(F.loc[F.team_changed, "player_id"])
+        listed_now = r.team in starters and r.player_id in starters[r.team]
+        missed = r.week < team_last_week.get(r.team, r.week) and not listed_now      # missed the last game and not listed back as a starter
+        gone = (r.team, r.name_key) in out_keys or missed or r.player_id in set(F.loc[F.team_changed, "player_id"])
         if gone:
             vac.add((r.team, r.group))
     F["vacancy"] = [(t, g) in vac for t, g in zip(F.team, F.group)]
@@ -787,7 +789,8 @@ def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
     if F.empty:
         return F
     base, mu, mu_solo = project_frame(F, k=k)
-    mu, mu_solo = mu * scale, mu_solo * scale
+    scale_solo = phi_by_group.get("__scale_solo__", scale) if isinstance(phi_by_group, dict) else scale
+    mu, mu_solo = mu * scale, mu_solo * scale_solo
     if gbm is not None:
         g = gbm(gbm_features(F, mu))
         blended = pd.Series(blend_gbm(mu, g), index=F.index)
@@ -802,14 +805,20 @@ def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
     low = F.share_pred.fillna(_col_or(F, "pct_prev", 1.0)).fillna(1.0) < C.PHI_SHARE_SPLIT
     low_phi = F.group.map({g: phi_by_group.get(f"{g}:low") for g in F.group.unique()})
     F.loc[low & low_phi.notna(), "phi"] = low_phi[low & low_phi.notna()]
+    # solo tackles are less spread than combined ones (var/mean 1.05-1.27 vs 1.18-1.49): their own dispersion
+    F["phi_solo"] = F.group.map({g: phi_by_group.get(f"{g}|solo") for g in F.group.unique()})
+    low_solo = F.group.map({g: phi_by_group.get(f"{g}:low|solo") for g in F.group.unique()})
+    F.loc[low & low_solo.notna(), "phi_solo"] = low_solo[low & low_solo.notna()]
+    F["phi_solo"] = F.phi_solo.fillna(F.phi)
     F.loc[F.venue == "NEUTRAL", "phi"] = F.phi + 0.15
+    F.loc[F.venue == "NEUTRAL", "phi_solo"] = F.phi_solo + 0.15
     fl = role_shift_flags(F)
     for c_ in fl.columns:
         F[c_] = fl[c_].values
     F["snap_jump"] = snap_jump(F).values
     F.loc[F.new_role, "phi"] = F.phi + C.NEW_ROLE["phi_bump"]     # his count is far more spread than a settled player's
     F["fair_line"] = [fair_line(m, p) for m, p in zip(F.proj, F.phi)]
-    F["fair_line_solo"] = [fair_line(m, p) for m, p in zip(F.proj_solo, F.phi)]
+    F["fair_line_solo"] = [fair_line(m, p) for m, p in zip(F.proj_solo, F.phi_solo)]
     F["season_avg"] = F.comb_prev_raw / F.n_prev.clip(lower=1)
     return F
 
@@ -825,13 +834,21 @@ def _log(row, col):
     return list(v)
 
 
+def claimed_prob(p_side):
+    """A pick's claimed chance, shrunk toward even (never toward the book): selected picks overclaim."""
+    return 0.5 + C.CLAIM_SHRINK * (float(p_side) - 0.5)
+
+
 def lock_score(ev, p_side, consistency, n_games, signal):
     """0-100 confidence in a pick from the model's own evidence only: expected return at the price, the model's
     probability for the side, how often the player cleared the line this season, games of data, and whether a
     role-change or outlier-fade signal backs the pick. Weights in config.LOCK_WEIGHTS; tested on the Track record tab."""
     w = C.LOCK_WEIGHTS
     ev_part = float(np.clip(ev / C.LOCK_EV_FULL, 0, 1))
-    model_part = float(np.clip((p_side - 0.5) / (C.LOCK_MODEL_FULL - 0.5), 0, 1))
+    lo, hi = C.LOCK_EV_FADE
+    if ev > lo:                                   # too good to be true: the biggest disagreements with the market are mostly model error
+        ev_part = float(np.clip((hi - ev) / (hi - lo), 0, 1))
+    model_part = float(np.clip((claimed_prob(p_side) - 0.5) / (C.LOCK_MODEL_FULL - 0.5), 0, 1))
     cons_part = 0.5 if consistency is None or np.isnan(consistency) else float(consistency)
     n_part = float(np.clip(n_games / 6.0, 0, 1))
     score = 100 * (w["ev"] * ev_part + w["model"] * model_part + w["consistency"] * cons_part + w["sample"] * n_part + w["signal"] * (1.0 if signal else 0.0))
@@ -866,8 +883,12 @@ def price_lines(lines, P):
             continue
         p = cand.iloc[0]
         mu_model = p.proj_solo if solo else p.proj
+        phi_use = float(p.get("phi_solo", p.phi)) if solo and pd.notna(p.get("phi_solo", np.nan)) else float(p.phi)
         mu = (1 - C.LINE_WEIGHT) * mu_model + C.LINE_WEIGHT * float(r.mkt_line)
-        po_model = p_over(mu, p.phi, float(r.line))
+        po_model = p_over(mu, phi_use, float(r.line))
+        # informational only, never part of the grade: the model and the consensus line far apart means one of them
+        # knows something; the card says so and the reader checks
+        far_from_line = abs(float(mu_model) - float(r.mkt_line)) / max(1.0, float(r.mkt_line)) >= 0.25
         has_u = pd.notna(r.under_odds)
         d_o = american_to_decimal(r.over_odds) if pd.notna(r.over_odds) else None
         d_u = american_to_decimal(r.under_odds) if has_u else None
@@ -911,7 +932,7 @@ def price_lines(lines, P):
         flagged = str(p.status).lower() in OUT_STATUSES
         uncertain = str(p.status).lower() == "questionable"
         thin = p.n_prev < C.MIN_GAMES_FOR_PICK and not role
-        bar = C.SIGNAL_BAR if (fade or role) else C.PICK_BAR
+        bar = C.SIGNAL_BAR if (fade or role) else (C.PICK_BAR_OVER if side == "Over" else C.PICK_BAR)
         pick = side if (ev >= bar and not flagged and not thin) else "Pass"
         p_side = po if side == "Over" else 1 - po
         # lock eligibility checklist (market-free): the model must be on ground where it is reliable
@@ -945,7 +966,8 @@ def price_lines(lines, P):
             if block:
                 why += "; not lock-eligible: " + ", ".join(block)
         rows.append({**base, "team": p.team, "opp": p.opp_team, "group": p.group, "proj": float(mu), "proj_model": float(mu_model),
-                     "mkt_line": float(r.mkt_line), "phi": float(p.phi), "model_over": po, "market_over": mkt, "ev": ev, "side": side,
+                     "mkt_line": float(r.mkt_line), "phi": phi_use, "model_over": po, "market_over": mkt, "ev": ev, "side": side, "far_from_line": bool(far_from_line),
+                     "p_claim": claimed_prob(p_side),
                      "pick": pick, "why": why, "signal_fade": bool(fade), "signal_role": role, "status": p.status,
                      "season_avg": float(p.season_avg), "last": None if pd.isna(p["last"]) else float(p["last"]),
                      "n_prev": int(p.n_prev), "consistency": consistency, "cons_hits": int(sum(hits)), "cons_n": len(hits),

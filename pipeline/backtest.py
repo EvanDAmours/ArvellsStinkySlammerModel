@@ -82,20 +82,28 @@ def run_backtest(H, seasons):
 
     # measured spread by group: (miss^2 - noise of the average) / mean
     full = preds["Full model"]
+    full_solo = M.project_frame(T)[2]
     phi_by_group, phi_rows = {}, []
-    Tm = T.assign(mu=full, _share=M.share_pred(T).fillna(T.pct_prev).fillna(1.0))
+    Tm = T.assign(mu=full, mu_solo=full_solo, _share=M.share_pred(T).fillna(T.pct_prev).fillna(1.0))
     for g, part in Tm.groupby("group"):
-        part = part[part.mu > 0.5]
-        if len(part) < 60:
-            continue
-        for label, sub in (("", part), (":low", part[part._share < C.PHI_SHARE_SPLIT])):
-            if len(sub) < 60:
+        for stat, col, mucol, floor in (("", "comb", "mu", 0.5), ("|solo", "solo_t", "mu_solo", 0.3)):
+            pt = part[part[mucol] > floor]
+            if len(pt) < 60:
                 continue
-            noise = sub.mu / (sub.n_prev + best_k)
-            raw = float(np.mean((sub.comb - sub.mu) ** 2 / sub.mu))
-            corr = float(np.mean(((sub.comb - sub.mu) ** 2 - noise) / sub.mu))
-            phi_by_group[g + label] = float(np.clip(corr, 0.5, 2.2))
-            phi_rows.append(dict(group=g + (" (expected share under 60%)" if label else ""), n=int(len(sub)), raw=raw, corrected=corr, used=phi_by_group[g + label]))
+            for label, sub in (("", pt), (":low", pt[pt._share < C.PHI_SHARE_SPLIT])):
+                if len(sub) < 60:
+                    continue
+                noise = sub[mucol] / (sub.n_prev + best_k)
+                raw = float(np.mean((sub[col] - sub[mucol]) ** 2 / sub[mucol]))
+                corr = float(np.mean(((sub[col] - sub[mucol]) ** 2 - noise) / sub[mucol]))
+                key = g + label + stat
+                phi_by_group[key] = float(np.clip(corr, 0.5, 2.2))
+                phi_rows.append(dict(group=g + (" (expected share under 60%)" if label else "") + (" solo" if stat else ""), n=int(len(sub)), raw=raw, corrected=corr, used=phi_by_group[key]))
+    # solo tackles: level calibration and an error row of their own (half the lines are solo markets)
+    ok_s = full_solo.notna()
+    phi_by_group["__scale_solo__"] = float(np.clip(T.solo_t[ok_s].sum() / max(1e-9, float(full_solo[ok_s].sum())), 0.9, 1.1))
+    solo_rows = [dict(predictor="Solo tackles: full model (solo share of the projection)", **_metrics(T.solo_t, full_solo)),
+                 dict(predictor="Solo tackles: season average", **_metrics(T.solo_t, T.solo_prev / T.n_prev.clip(lower=1) * T.crew_solo.fillna(1.0)))]
     for g, v in C.DEFAULT_PHI.items():
         phi_by_group.setdefault(g, v)
 
@@ -172,6 +180,6 @@ def run_backtest(H, seasons):
             gbm_rows = [dict(predictor=f"Full model, {last} fold", **fm), dict(predictor=f"{int(C.GBM['weight'] * 100)}% boosted corrector blend, {last} fold (trained on earlier seasons)", **gm)]
     gbm_live = M.fit_gbm(X, T.comb)
     result = dict(seasons=[int(s) for s in seasons], games=int(len(T)), best_shrink_games=int(best_k), scale=scale,
-                  predictors=table + gbm_rows, by_season=by_season, dispersion=phi_rows, calibration=cal_rows,
+                  predictors=table + gbm_rows + solo_rows, by_season=by_season, dispersion=phi_rows, calibration=cal_rows, scale_solo=phi_by_group["__scale_solo__"],
                   regression=reg, role=role, new_role=new_role, weak_spots=weak_spots)
     return result, phi_by_group, best_k, scale, gbm_live

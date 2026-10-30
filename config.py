@@ -101,7 +101,12 @@ PROB_SHRINK = 1.0                  # 1 = use the blended model probability as is
 
 # --- betting rules ---
 PICK_BAR = 0.06                    # minimum expected return without a supporting signal
+PICK_BAR_OVER = 0.10               # an Over needs more: the model's Over leans hit 32-46% on weeks 7-8 lines where it was above the market (audit 2026-10-30)
 SIGNAL_BAR = 0.04                  # minimum with a role-change or outlier-fade signal
+# Selected picks claim more than they hit (weeks 7-8 replay: claimed 55.8%, hit 50.9% on 163 picks; the winner's curse of
+# picking the biggest disagreements). The claimed chance of a pick is shrunk toward even by this factor for the lock score,
+# the card and parlays. Market-free: it shrinks toward 50%, not toward the book.
+CLAIM_SHRINK = 0.6
 FADE_GAP = 3.0                     # last game this many tackles from his average counts as an outlier
 MIN_GAMES_FOR_PICK = 3
 
@@ -111,7 +116,8 @@ MIN_GAMES_FOR_PICK = 3
 # this line in his games this season, how many games of data he has, and whether a role-change or outlier-fade
 # signal is behind the pick. Owner's decision 2026-10-26, replacing a version that rewarded market agreement.
 LOCK_WEIGHTS = dict(ev=0.35, model=0.25, consistency=0.20, sample=0.10, signal=0.10)
-LOCK_EV_FULL = 0.15                # an expected return this high scores full marks on the EV component
+LOCK_EV_FULL = 0.10                # an expected return this high scores full marks on the EV component (was 0.15)
+LOCK_EV_FADE = (0.20, 0.40)        # above 20% the EV component falls off, to zero at 40%: picks with 25%+ claimed return hit 33% (n=15), 15-25% hit 50%, 6-10% hit 57%
 LOCK_MODEL_FULL = 0.75             # a model probability this high for our side scores full marks (50% scores zero)
 GRADE_BARS = dict(A=72, B=55)      # lock score at or above these is an A or a B; the rest are C
 GRADE_UNITS = dict(A=1.0, B=0.5, C=0.25)   # suggested stake per grade, in units (shown in the site legend)
@@ -124,7 +130,7 @@ CLV_BARS = dict(decent=0.52, good=0.56, great=0.60)
 LOCKS_PER_SLATE = dict(single=3, multi=5)   # one game kicking off that day -> 3 locks; more games -> 5
 LOCK_MIN_SCORE = 55                         # a pick needs at least a B to be a lock; fewer locks beats fake ones
 PARLAY_LEGS = (2, 3)                        # fewest and most legs in the recommended parlay (fewer legs = better chance of hitting)
-PARLAY_MIN_PROB = 0.60                      # a leg needs at least this blended chance of hitting
-PARLAY_FALLBACK_PROB = 0.55                 # if too few legs clear that, legs down to this chance are allowed; below it, no parlay
+PARLAY_MIN_PROB = 0.56                      # a leg needs at least this claimed (shrunk) chance of hitting: 0.60 before the claim shrink
+PARLAY_FALLBACK_PROB = 0.53                 # if too few legs clear that, legs down to this chance are allowed; below it, no parlay
 PARLAY_KELLY_FRACTION = 0.25                # stake = this fraction of the Kelly stake for the parlay
 PARLAY_UNITS = (0.1, 1.0)                   # stake bounds, in units
