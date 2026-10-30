@@ -22,7 +22,8 @@ def log_picks(bets, season, week, pulled_at):
     new = new.assign(season=season, week=week, pulled_at=pulled_at, side=new.pick,
                      odds=np.where(new.pick == "Over", new.over_odds, new.under_odds))
     cols = KEY + ["team", "opp", "odds", "proj", "proj_model", "mkt_line", "model_over", "market_over", "ev", "why",
-                  "lock", "grade", "consistency", "cons_hits", "cons_n", "payout", "uncertain", "event_id", "commence_time", "pulled_at"]
+                  "lock", "grade", "consistency", "cons_hits", "cons_n", "payout", "uncertain", "new_role", "reduced_role", "absence", "new_team",
+                  "in_role_games", "lock_block", "lock_eligible", "event_id", "commence_time", "pulled_at"]
     new = new[[c for c in cols if c in new.columns]]
     old = pd.read_csv(PICKS) if PICKS.exists() else pd.DataFrame(columns=cols)
     both = pd.concat([old, new], ignore_index=True).drop_duplicates(KEY, keep="first")  # keep the first price we took
@@ -95,8 +96,7 @@ def mark_locks(P, season, week, now=None):
         if slots and "lock" in P.columns:
             cand = P[open_ & ~P.player.isin(set(kept.player))].sort_values("lock", ascending=False)
             cand = cand[cand.lock.notna() & (cand.lock >= C.LOCK_MIN_SCORE)]
-            if "uncertain" in cand.columns:
-                cand = cand[~cand.uncertain.fillna(False).astype(bool)]
+            cand = cand[~lock_blocked(cand)]
             cand = cand.drop_duplicates("player").head(slots)
             P.loc[cand.index, "five"] = True
     return P
@@ -121,8 +121,7 @@ def choose_parlay(bets, slate):
     if bets is None or len(bets) == 0 or "ev" not in bets:
         return None
     b = bets[(bets.slate == slate) & bets.proj.notna() & bets.ev.notna() & (bets.ev >= 0)].copy()
-    if "uncertain" in b.columns:
-        b = b[~b.uncertain.fillna(False).astype(bool)]
+    b = b[~lock_blocked(b)]
     if b.empty:
         return None
     b["p_side"] = np.where(b.side == "Over", b.model_over, 1 - b.model_over)
@@ -231,6 +230,20 @@ def _no_vig_side(over, under, side):
         return np.nan
     po, pu = 1 / american_to_decimal(over), 1 / american_to_decimal(under)
     return (po if side == "Over" else pu) / (po + pu)
+
+
+def lock_blocked(df):
+    """Rows that can never be a lock or a parlay leg: the pricer's checklist (`lock_block`), or, for rows priced before
+    it existed, the questionable and new-role flags."""
+    if df is None or len(df) == 0:
+        return pd.Series(False, index=getattr(df, "index", None))
+    if "lock_block" in df.columns:
+        return df.lock_block.fillna("").astype(str).str.strip().str.len() > 0
+    out = pd.Series(False, index=df.index)
+    for col in ("uncertain", "new_role"):
+        if col in df.columns:
+            out |= df[col].map(lambda v: str(v).lower() == "true")
+    return out
 
 
 def record_by_grade(P):

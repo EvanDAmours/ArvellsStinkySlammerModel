@@ -60,6 +60,7 @@ check(bt["role"] and bt["role"]["actual_vs_avg_pct"] > 0.2, f"backups with a vac
 sys.path.insert(0, str(tmp)); os.chdir(tmp)
 os.environ["TACKLE_FAKE_DATA"] = "1"
 import run as R
+from pipeline import grade as G
 from pipeline import model as M
 from tests.fake_data import planted_crews
 seasons, pw, sched, snaps, inj, H, status, vol = R.load_all()
@@ -76,6 +77,12 @@ bets = json.loads((tmp / "docs/data/bets.json").read_text())
 check(len(bets) > 50 and all(b["model_over"] is None or 0 <= b["model_over"] <= 1 for b in bets), f"lines priced ({len(bets)})")
 priced = [b for b in bets if b.get("proj") is not None]
 check(all(b.get("grade") in ("A", "B", "C") and 0 <= b.get("lock", -1) <= 100 for b in priced), "every priced line has a confidence grade and lock score")
+check(all("lock_block" in b and "lock_eligible" in b and "in_role_games" in b for b in priced) and not any(b.get("lock_block") and b.get("five") for b in priced),
+      f"priced lines carry the lock-eligibility checklist and no blocked line is a lock ({sum(1 for b in priced if b.get('lock_block'))} blocked of {len(priced)})")
+check(all(not (b.get("lock_block") and "Over" == b.get("side") and "fading" in str(b.get("why"))) for b in priced) and not any("Over" == b.get("side") and "fading an outlier" in str(b.get("why")) for b in priced),
+      "no Over is sold as fading an outlier")
+check(any("new-role factor" in r["predictor"] for r in bt["predictors"]) and any("role-shift" in r["predictor"] for r in bt["predictors"]) and isinstance(bt.get("weak_spots"), list),
+      "backtest reports the new-role and role-shift factors and the weak-spot table")
 check(all(b.get("mkt_line") is not None and abs(b["proj"] - b["proj_model"]) <= abs(b["mkt_line"] - b["proj_model"]) + 1e-9 for b in priced), "pricing mean sits between the model and the market line")
 check(any(b.get("cons_n", 0) > 0 for b in priced), "consistency (games cleared) computed from game logs")
 picks = pd.read_csv(tmp / "data/picks.csv") if (tmp / "data/picks.csv").exists() else pd.DataFrame()
@@ -83,7 +90,8 @@ check(len(picks) >= 1, f"picks logged ({len(picks)})")
 check(picks.drop_duplicates(["player", "market", "side", "line"]).shape[0] == len(picks), "one logged pick per player/line (best price only)")
 check({"lock", "grade", "consistency", "payout"} <= set(picks.columns) and picks.grade.isin(["A", "B", "C"]).all(), "logged picks carry their grade, lock score, consistency and payout")
 five = picks[picks.five.fillna(False).astype(bool)] if "five" in picks.columns else pd.DataFrame()
-others = picks[~picks.player.isin(five.player)] if len(five) else picks
+flagged = G.lock_blocked(picks)               # never locks, whatever their score
+others = picks[~picks.player.isin(five.player) & ~flagged] if len(five) else picks
 check(1 <= len(five) <= 5 and five.player.nunique() == len(five) and (others.empty or five.lock.min() >= others.lock.max() - 1e-9), f"weekly five flagged: top lock scores, one per player ({len(five)})")
 check(sum(1 for b in bets if b.get("five")) == len(five), "locks marked on the board")
 parlays = pd.read_csv(tmp / "data/parlays.csv") if (tmp / "data/parlays.csv").exists() else pd.DataFrame()

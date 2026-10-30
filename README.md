@@ -101,7 +101,11 @@ and how many games of data he has; a role-change or outlier-fade signal adds a b
 from the market agreeing with the pick: the edge is what the market has not priced. Weights are in `config.py`.
 The records bar on both tabs shows the A, B and C records, and the Track record tab has a full "Record by grade"
 block (hit rate, units, return per bet, units at the suggested stake), so the grade itself is tested: if A does
-not beat C over time, the weights are wrong. A player listed questionable is priced 8% under his average and is never a lock or a parlay leg.
+not beat C over time, the weights are wrong. A lock-eligibility checklist, computed without any reference to the market, keeps locks and
+parlay legs to players the model is reliable on: never a lock when he is in a new role (a part-timer who just
+played a starter's snaps), a reduced role, back from an absence, in his first game for a new team, has fewer than
+three games in his current role, or is listed questionable. Each reason is tagged on the card; the pick can still be
+played at its grade. The Model check tab's "Where the model is weakest" table watches these situations daily.
 
 ## The model log
 

@@ -46,6 +46,24 @@ REST = dict(bye=0.96, bye_days=10)                    # a defence coming off a b
 # Own injury report (research round 3): listed questionable and played, -6% over 1,191 games; limited practice -4%.
 # Questionable players are priced (not passed) but never locks or parlay legs, since they may not play.
 INJURY = dict(questionable=0.92, limited_practice=0.97)
+# New role (post-mortem, week 8 Thursday 2026): a part-timer who just played a starter's snaps. His season history does
+# not describe him: actual ran 18-23% over the model on 1,050 such games, the outlier-fade signal failed on him (45%
+# landed under the model vs 56% otherwise), and his count is far more spread (variance/mean 1.9 vs 1.4). So: projection
+# x (last-game share / season share)^power, no outlier-fade signal, a wider distribution, consistency counted over
+# in-role games only, and NEVER a lock or a parlay leg until his season share catches up.
+NEW_ROLE = dict(max_prev_share=0.6, min_last_share=0.6, min_ratio=1.5, power=0.25, cap=2.5, phi_bump=0.5, in_role_share=0.7, min_in_role_games=3)
+# Role shifts (audit after the week 8 Thursday post-mortem; 28,861 defender-games, fitted 2023-24, checked 2025-26):
+# - last game's snap share under 70% of his season share: ran 5-14% under the model -> x ratio^0.1 (bias -0.25 -> -0.02
+#   train, -0.16 -> +0.07 test; overall error -0.7%)
+# - 3+ weeks since his last game: 10-12% under -> x0.95 (conservative: the two halves disagree on the size)
+# - one missed game without a bye: 11% under -> x0.92
+# - first game after a mid-season team change: 20% under on 124 games -> x0.90
+# - an Over "fading" a low last game is wrong on average (actual 4.5% under the model even for settled players, 18% under
+#   when he had simply played less), so the outlier-fade signal now fires only for Unders after a big game in a settled role.
+ROLE_SHIFT = dict(contraction_ratio=0.7, contraction_power=0.1, absence_weeks=3, absence_factor=0.95, missed_game_factor=0.92, new_team_factor=0.90)
+# Lock eligibility, market-free: a lock must come from where the model is reliable. Never a lock or a parlay leg: new role,
+# reduced role, back from absence, new team, fewer than 3 games in his current role (unless every game he has was), questionable.
+LOCK_RULES = dict(min_in_role_games=3)
 # Second model (research round 3): a gradient-boosted corrector on the same features, Poisson loss, trained fresh each
 # morning on every finished game, blended with the factor model. Out of sample it cut error 1.1% (2025-26) and 1.5%
 # (2026 trained through 2025). The backtest reports it walk-forward: trained on earlier seasons, scored on the latest.

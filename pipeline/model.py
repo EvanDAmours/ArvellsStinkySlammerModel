@@ -243,6 +243,10 @@ def add_history_features(H):
     H["last2"] = g.comb.transform(lambda x: x.shift(1).rolling(2).mean())
     H["pct_prev"] = g.def_pct.transform(lambda x: x.shift(1).expanding().mean())
     H["pct_last"] = g.def_pct.shift(1)
+    H["last_week"] = g.week.shift(1)
+    H["gap_weeks"] = H.week - H.last_week                      # 1 = played last week; 2 = a bye or a missed game; 3+ = absence
+    prev_team = g.team.shift(1)
+    H["team_changed"] = (prev_team.notna() & (H.team != prev_team)).astype(bool)
     ps = H.groupby(["player_id", "season"]).agg(ps_games=("comb", "size"), ps_avg=("comb_adj", "mean"),
                                                  ps_avg_raw=("comb", "mean")).reset_index()
     ps["season"] += 1
@@ -388,12 +392,64 @@ def attach_injury_status(H, inj):
     return H
 
 
+def _flag(v):
+    """A boolean that may arrive as a string from projections.csv or as NaN from an older row."""
+    return v is True or (isinstance(v, (bool, np.bool_)) and bool(v)) or str(v).lower() == "true"
+
+
+def snap_jump(F):
+    """Last game's snap share over the season share before it (1.0 when unknown)."""
+    pl = F["pct_last"] if "pct_last" in F else pd.Series(np.nan, index=F.index)
+    pp = F["pct_prev"] if "pct_prev" in F else pd.Series(np.nan, index=F.index)
+    return (pl / pp.clip(lower=0.05)).where(pl.notna() & pp.notna(), 1.0)
+
+
+def new_role_flag(F):
+    """A part-timer who just played a starter's snaps: his season history does not describe his current role."""
+    c = C.NEW_ROLE
+    pl = F["pct_last"] if "pct_last" in F else pd.Series(np.nan, index=F.index)
+    pp = F["pct_prev"] if "pct_prev" in F else pd.Series(np.nan, index=F.index)
+    f = pl.notna() & pp.notna() & (pp < c["max_prev_share"]) & (pl >= c["min_last_share"]) & (snap_jump(F) >= c["min_ratio"])
+    return f.fillna(False).astype(bool)
+
+
+def new_role_factor(F):
+    c = C.NEW_ROLE
+    return pd.Series(np.where(new_role_flag(F), np.power(snap_jump(F).clip(upper=c["cap"]), c["power"]), 1.0), index=F.index)
+
+
+def role_shift_flags(F):
+    """Situations where the season log stops describing a player, all market-free: a part-timer who just played a
+    starter's snaps (new role), a player whose last game's share fell well below his season share (reduced role), a
+    player back after missing games (absence / missed game), and a player who changed team mid-season (new team)."""
+    c = C.ROLE_SHIFT
+    jump = snap_jump(F)
+    pl = F["pct_last"] if "pct_last" in F else pd.Series(np.nan, index=F.index)
+    gap = pd.to_numeric(F["gap_weeks"], errors="coerce") if "gap_weeks" in F else pd.Series(np.nan, index=F.index)
+    rest = pd.to_numeric(F["rest"], errors="coerce") if "rest" in F else pd.Series(np.nan, index=F.index)
+    team = F["team_changed"].map(_flag) if "team_changed" in F else pd.Series(False, index=F.index)
+    return pd.DataFrame(dict(new_role=new_role_flag(F),
+                             reduced_role=(pl.notna() & (jump < c["contraction_ratio"])).fillna(False).astype(bool),
+                             absence=(gap.notna() & (gap >= c["absence_weeks"])).fillna(False).astype(bool),
+                             missed_game=(gap.notna() & (gap == 2) & (rest.fillna(7) < C.REST["bye_days"])).fillna(False).astype(bool),
+                             new_team=team.fillna(False).astype(bool)), index=F.index)
+
+
+def role_shift_factor(F):
+    c = C.ROLE_SHIFT
+    fl = role_shift_flags(F)
+    f = np.where(fl.reduced_role, np.power(snap_jump(F).clip(lower=0.2), c["contraction_power"]), 1.0)
+    f = f * np.where(fl.absence, c["absence_factor"], np.where(fl.missed_game, c["missed_game_factor"], 1.0))
+    f = f * np.where(fl.new_team, c["new_team_factor"], 1.0)
+    return pd.Series(f, index=F.index)
+
+
 def rest_factor(F):
     r = C.REST
     return pd.Series(np.where(F.get("rest", pd.Series(7, index=F.index)).fillna(7) >= r["bye_days"], r["bye"], 1.0), index=F.index)
 
 
-def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_snap=True, use_volume=True, use_depth=True, use_pfr=True, use_mix=True, use_rest=True, use_injury=True):
+def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_snap=True, use_volume=True, use_depth=True, use_pfr=True, use_mix=True, use_rest=True, use_injury=True, use_new_role=True, use_role_shift=True):
     k = F.group.map(C.SHRINK_GAMES_BY_GROUP).fillna(C.SHRINK_GAMES) if k is None else k
     if use_crew:
         prev, ps = F.comb_prev, F.ps_avg
@@ -419,6 +475,10 @@ def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_sn
         extra = extra * rest_factor(F).values
     if use_injury:
         extra = extra * injury_factor(F).values
+    if use_new_role:
+        extra = extra * new_role_factor(F).values
+    if use_role_shift:
+        extra = extra * role_shift_factor(F).values
     solo_share = (F.solo_prev + 8 * F.group.map(C.POS_SOLO_SHARE).fillna(0.6)) / (F.comb_prev + 8)
     mu = base * tilt * crew_c * role * snap * volume * extra
     mu_solo = base * tilt * solo_share * crew_s * role * snap * volume * extra
@@ -453,7 +513,8 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
         solo_prev=("solo_adj", "sum"), pct_prev=("def_pct", "mean"), **sums).reset_index()
     agg = agg.rename(columns={c: c + "_prev" for c in sums})
     last_dc = done.sort_values("week").groupby("player_id").dc_starter.last() if "dc_starter" in done.columns else None
-    lasts = done.sort_values("week").groupby("player_id").agg(last=("comb", "last"), pct_last=("def_pct", "last"))
+    lasts = done.sort_values("week").groupby("player_id").agg(last=("comb", "last"), pct_last=("def_pct", "last"), last_week=("week", "last"),
+                                                              last_gameday=("gameday", "last"))
     last2 = done.sort_values("week").groupby("player_id").comb.apply(lambda x: x.tail(2).mean() if len(x) >= 2 else np.nan).rename("last2")
     pct_last3 = done.sort_values("week").groupby("player_id").def_pct.apply(lambda x: x.tail(C.SNAP_TREND["games"]).mean()).rename("pct_last3")
     opps_prev = (done.groupby("player_id").opps.mean().rename("opps_prev_mean") if "opps" in done.columns
@@ -462,6 +523,18 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
     ps = H[H.season == season - 1].groupby("player_id").agg(ps_games=("comb", "size"), ps_avg=("comb_adj", "mean"),
                                                             ps_avg_raw=("comb", "mean"))
     F = F.join(ps, on="player_id")
+    F["gap_weeks"] = week - pd.to_numeric(F.last_week, errors="coerce")
+    # a mid-season team change shows on the depth chart before he plays for the new team: move him and flag him
+    F["team_changed"] = False
+    if dc is not None and len(dc) and "date" in dc.columns:
+        cur = dc[(dc.season == season) & dc["date"].notna()]
+        if len(cur):
+            latest = cur.sort_values("date").groupby("player_id").agg(dc_team=("team", "last"), dc_date=("date", "last"))
+            F = F.join(latest, on="player_id")
+            moved = F.dc_team.notna() & (F.dc_team != F.team) & (F.dc_date.astype(str) > F.last_gameday.astype(str)) & F.dc_team.isin(set(games.team))
+            F.loc[moved, "team"] = F.loc[moved, "dc_team"]
+            F.loc[moved, "team_changed"] = True
+            F = F.drop(columns=["dc_team", "dc_date"])
     F = F.merge(games[["team", "game_id", "venue", "spread_dog", "is_home", "opp_team", "gameday", "gametime", "final", "rest"]], on="team", how="inner")
     F["season"], F["week"] = season, week
     F = attach_crews(F, H)
@@ -532,6 +605,11 @@ def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
     F = F.assign(base=base.values, proj=mu.values, proj_solo=mu_solo.values)
     F["phi"] = F.group.map(phi_by_group).fillna(1.0)
     F.loc[F.venue == "NEUTRAL", "phi"] = F.phi + 0.15
+    fl = role_shift_flags(F)
+    for c_ in fl.columns:
+        F[c_] = fl[c_].values
+    F["snap_jump"] = snap_jump(F).values
+    F.loc[F.new_role, "phi"] = F.phi + C.NEW_ROLE["phi_bump"]     # his count is far more spread than a settled player's
     F["fair_line"] = [fair_line(m, p) for m, p in zip(F.proj, F.phi)]
     F["fair_line_solo"] = [fair_line(m, p) for m, p in zip(F.proj_solo, F.phi)]
     F["season_avg"] = F.comb_prev_raw / F.n_prev.clip(lower=1)
@@ -605,13 +683,26 @@ def price_lines(lines, P):
         ev_o = po * (d_o - 1) - (1 - po) if d_o else -9
         ev_u = (1 - po) * (d_u - 1) - po if d_u else -9
         side, ev = ("Over", ev_o) if ev_o >= ev_u else ("Under", ev_u)
+        fl = {k: _flag(p.get(k, False)) for k in ("new_role", "reduced_role", "absence", "missed_game", "new_team")}
+        new_role = fl["new_role"]
+        shifted = any(fl.values())
         log = _log(p, "log_solo" if solo else "log_comb")
+        # consistency counts in-role games only: games where he played at least 70% of the snap share he played last game
+        lp = _log(p, "log_pct")
+        pct_last = p.get("pct_last", np.nan)
+        in_role_n = int(p.n_prev)
+        if lp and len(lp) == len(log) and pd.notna(pct_last):
+            in_role = [x for x, sh in zip(log, lp) if sh >= C.NEW_ROLE["in_role_share"] * float(pct_last)]
+            in_role_n = len(in_role)
+            log = in_role if len(in_role) >= C.NEW_ROLE["min_in_role_games"] else ([] if new_role else log)
         hits = [(x > r.line) if side == "Over" else (x < r.line) for x in log]
         consistency = float(np.mean(hits)) if hits else float("nan")
         mkt_side = mkt if side == "Over" else 1 - mkt
         dec = d_o if side == "Over" else d_u
         gap = (p["last"] - p.base) if pd.notna(p["last"]) else 0.0
-        fade = abs(gap) >= C.FADE_GAP and ((side == "Under" and gap > 0) or (side == "Over" and gap < 0))
+        # the outlier fade: Under after a big game, only when that game came in his usual role. (An Over after a low game
+        # is not a signal: the backtest says a low game predicts lower, not a bounce.)
+        fade = side == "Under" and gap >= C.FADE_GAP and not shifted
         role = bool(p.role_signal) and side == "Over"
         flagged = str(p.status).lower() in OUT_STATUSES
         uncertain = str(p.status).lower() == "questionable"
@@ -619,7 +710,12 @@ def price_lines(lines, P):
         bar = C.SIGNAL_BAR if (fade or role) else C.PICK_BAR
         pick = side if (ev >= bar and not flagged and not thin) else "Pass"
         p_side = po if side == "Over" else 1 - po
-        lock = lock_score(ev, p_side, consistency, int(p.n_prev), fade or role)
+        # lock eligibility checklist (market-free): the model must be on ground where it is reliable
+        settled = in_role_n >= C.LOCK_RULES["min_in_role_games"] or in_role_n >= int(p.n_prev)
+        block = [name for ok, name in ((new_role, "new role"), (fl["reduced_role"], "reduced role"), (fl["absence"] or fl["missed_game"], "back from absence"),
+                                       (fl["new_team"], "new team"), (not settled, f"only {in_role_n} game{'s' if in_role_n != 1 else ''} in this role"),
+                                       (uncertain, "questionable")) if ok]
+        lock = lock_score(ev, p_side, consistency, in_role_n, fade or role)
         if flagged:
             why = f"His own status is {p.status or 'uncertain'}: wait for the final report"
         elif thin:
@@ -630,6 +726,17 @@ def price_lines(lines, P):
             why = f"{side} returns {ev:+.0%}" + (", backed by a role change" if role else ", fading an outlier last game" if fade else ", price gap only")
             if uncertain:
                 why += "; listed questionable: priced 8% under his average, not a lock, voids if he sits"
+            if new_role:
+                why += (f"; new role: {float(pct_last):.0%} of snaps last game vs {float(p.get('pct_prev', np.nan)):.0%} this season, "
+                        f"priced x{float(new_role_factor(pd.DataFrame([p])).iloc[0]):.2f} with a wider range")
+            elif fl["reduced_role"]:
+                why += f"; reduced role: {float(pct_last):.0%} of snaps last game vs {float(p.get('pct_prev', np.nan)):.0%} this season, priced down"
+            if fl["absence"] or fl["missed_game"]:
+                why += f"; back from absence ({int(p.get('gap_weeks', 0))} weeks since his last game), priced down"
+            if fl["new_team"]:
+                why += "; first game for a new team, priced down"
+            if block:
+                why += "; not lock-eligible: " + ", ".join(block)
         rows.append({**base, "team": p.team, "opp": p.opp_team, "group": p.group, "proj": float(mu), "proj_model": float(mu_model),
                      "mkt_line": float(r.mkt_line), "phi": float(p.phi), "model_over": po, "market_over": mkt, "ev": ev, "side": side,
                      "pick": pick, "why": why, "signal_fade": bool(fade), "signal_role": role, "status": p.status,
@@ -637,6 +744,9 @@ def price_lines(lines, P):
                      "n_prev": int(p.n_prev), "consistency": consistency, "cons_hits": int(sum(hits)), "cons_n": len(hits),
                      "mkt_side": float(mkt_side), "payout": None if dec is None else float(dec - 1),
                      "international": str(p.get("venue", "")) == "NEUTRAL", "depth": p.get("dc_status", ""), "uncertain": bool(uncertain),
+                     "new_role": bool(new_role), "snap_jump": None if pd.isna(p.get("snap_jump", np.nan)) else float(p.get("snap_jump")),
+                     "reduced_role": fl["reduced_role"], "absence": bool(fl["absence"] or fl["missed_game"]), "new_team": fl["new_team"],
+                     "in_role_games": in_role_n, "lock_block": ", ".join(block), "lock_eligible": not block,
                      "opp_qb_out": bool(p.get("opp_qb_out", False)), "opp_rb_out": bool(p.get("opp_rb_out", False)),
                      "rest": None if pd.isna(p.get("rest", np.nan)) else int(p.get("rest")),
                      "lock": lock, "grade": grade_of(lock)})
@@ -651,7 +761,7 @@ def price_lines(lines, P):
 
 # ---------------------------------------------------------------- second model: gradient-boosted corrector
 GBM_FEATURES = ["log_mu", "n_prev", "snap", "pct_prev", "vol", "spread", "tgt", "miss", "demoted", "promoted", "starter", "q", "limited",
-                "rest", "week", "last", "avg", "ps_avg", "crew", "grp", "is_home", "exp_runs", "exp_comps", "run_tk_rate", "pass_tk_rate"]
+                "rest", "week", "last", "avg", "ps_avg", "crew", "grp", "is_home", "exp_runs", "exp_comps", "run_tk_rate", "pass_tk_rate", "jump", "gap", "new_team"]
 
 
 def gbm_features(F, mu):
@@ -663,6 +773,9 @@ def gbm_features(F, mu):
         "log_mu": np.log(pd.Series(np.asarray(mu, dtype=float), index=F.index).clip(lower=0.05)),
         "n_prev": F.n_prev.astype(float),
         "snap": (col("pct_last3") / col("pct_prev").clip(lower=0.05)).fillna(1.0).clip(0.3, 3.0),
+        "jump": snap_jump(F).clip(0.3, 5.0),
+        "gap": pd.to_numeric(col("gap_weeks"), errors="coerce").fillna(1).clip(1, 8),
+        "new_team": col("team_changed", False).map(_flag).astype(float),
         "pct_prev": col("pct_prev").fillna(0),
         "vol": (col("exp_opps") / col("opps_prev_mean")).fillna(1.0).clip(0.6, 1.6),
         "spread": col("spread_dog").fillna(0),

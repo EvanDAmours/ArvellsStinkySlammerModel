@@ -181,8 +181,10 @@ def attach_game_logs(P, H, season, week):
     comb = done.groupby("player_id").comb.apply(lambda x: "|".join(str(int(v)) for v in x))
     solo = done.groupby("player_id").solo_t.apply(lambda x: "|".join(str(int(v)) for v in x))
     P = P.copy()
+    pct = done.groupby("player_id").def_pct.apply(lambda x: "|".join(f"{v:.2f}" for v in x.fillna(0)))
     P["log_comb"] = P.player_id.map(comb).fillna("")
     P["log_solo"] = P.player_id.map(solo).fillna("")
+    P["log_pct"] = P.player_id.map(pct).fillna("")      # snap share per game, so consistency can count in-role games only
     return P
 
 
@@ -289,7 +291,8 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
     _json(SITE / "meta.json", meta)
     cols = ["player", "team", "opp_team", "group", "status", "n_prev", "season_avg", "last", "base", "proj", "proj_solo",
             "fair_line", "fair_line_solo", "crew_comb", "crew_solo", "spread_dog", "role_signal", "venue", "gameday", "gametime", "phi",
-            "dc_status", "opp_qb_out", "opp_rb_out", "rest", "pct_last3", "pct_prev", "proj_factor", "proj_gbm"]
+            "dc_status", "opp_qb_out", "opp_rb_out", "rest", "pct_last3", "pct_prev", "pct_last", "gap_weeks", "team_changed", "new_role", "reduced_role",
+            "absence", "missed_game", "new_team", "snap_jump", "proj_factor", "proj_gbm"]
     _json(SITE / "projections.json", records(P, [c for c in cols if c in P.columns]) if len(P) else [])
     _json(SITE / "bets.json", records(bets))
     _json(SITE / "backtest.json", bt)

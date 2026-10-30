@@ -43,6 +43,11 @@ to prevent those.
 
 ## How the model works (current)
 
+Standing rule (2026-10-30): **a lock must come from where the model is reliable.** A player whose season history
+does not describe his current role (a part-timer who just played a starter's snaps) or who may not play (listed
+questionable) can be a pick, never a lock or a parlay leg.
+
+
 1. **Projection.** Season-to-date tackles per game shrunk toward last season (or a position prior) with a
    position-specific weight (LB 0.5 games, S 1, CB 3, DL 3), times: a small point-spread tilt, a stat-crew factor
    for the venue, a role bump when a regular at the position group is out, a **snap-share trend** factor (last 3
@@ -258,7 +263,8 @@ numbers below are what they printed).
   runs the backtest itself so the replay prices with the same model the daily job would have had.
 
 **Week 7 replayed under this model** (`tools/replay_five.py --week 7`, every pull from Saturday to Monday,
-restated 2026-10-29 after the replay leak fix: calibration and corrector built from weeks 1-6 only): locks 3-3
+restated 2026-10-29 after the replay leak fix: calibration and corrector built from weeks 1-6 only; superseded by
+the week 8 Thursday post-mortem's replay under the lock-eligibility checklist, locks 3-2): locks 3-3
 (-0.50 units: Elliss W, Schwesinger W, Clark W; Lenoir, Queen, Carter L), all plays 102-95 of 199 (+8.13 units;
 the round-2 model replayed 96-92, +5.3), by grade A 7-7 (-0.9u), B 39-37 (+0.3u), C 56-51 (+8.7u), Sunday parlay
 Elliss/Lenoir/Tranquill (+310) Loss. **The Monday slate came up short**: the board had nine lines on three players
@@ -270,6 +276,93 @@ Monday. Nothing is changed for that here; see the backlog. One week is noise; th
 walk-forward backtest, not this replay.
 
 ## Weekly post-mortems
+
+### Week 8 Thursday, 2026 (GB at CAR; graded 2026-10-30, morning MDT)
+
+**Record:** 10-7, +4.56 units. **Locks 1-2:** Xavier McKinney Under 2.5 solo won (2); Isaiah McDuffie Under 7.5
+tackles+assists lost (10), score 83, grade A; Bobby Okereke Over 6.5 lost (5), score 65. The McDuffie lock is the
+worst miss the model has produced and the owner's question was the right one: where did it go wrong?
+
+**What happened.** McDuffie was a 2% part-timer in week 1 and worked up to 55% of snaps by week 6. Green Bay then
+traded Quay Walker, and in week 7 McDuffie played 100% of the snaps for the first time and made 11 tackles. The
+model looked at a season average of 4.7 built on part-time games, applied its damped snap-share trend (last three
+games 67% vs 38% season: x1.29), and projected 6.1. It then called the 11 an **outlier** (3+ above his base) and
+fired the outlier-fade signal: lower pick bar, a signal bonus in the lock score, and "fading an outlier last game"
+on the card. His consistency read 6 of 7 under 7.5, all from part-time games. The book had him at 7.5, a starter's
+number, because the book knew his role had changed. He played 100% again and made 10.
+
+So three things went wrong at once, all the same root cause: **his season history did not describe his current
+role**, and every piece of the lock score (projection, fade signal, consistency) was computed from that history.
+
+**Evidence across the backtest** (28,861 defender-games; "new role" = season share under 60%, last game 60% or
+more, at least 1.5x his season share: 850 games in 2023-24, 508 in 2025-26):
+- Actual ran 19-23% over the full model on new-role games in both halves of the data, and 30-34% over it when the
+  jump was 2x or more. Everywhere else the model is unbiased.
+- The outlier-fade signal, which works on settled players (actual under the model 56% of the time, under the last
+  game 93%), fails on new-role players: under the model only 45%, actual 18% over the model on average.
+- New-role games are far more spread: variance/mean 1.9 against 1.4 for everyone else (LB 2.4 vs 1.5). The model's
+  probabilities for them were overconfident.
+- A mean correction fixes the direction without fixing the spread: x ratio^0.25 (cap 2.5) brings the bias on
+  new-role rows from +0.63 to -0.02 tackles (train +0.79 to +0.14) at a cost of 0.05% overall MAE, because a
+  right-skewed count is best scored at its median but must be priced at its mean. Stronger corrections overshoot.
+
+**What changed because of it** (`NEW_ROLE` in config.py):
+1. Projection x (last-game share / season share)^0.25, capped at 2.5x, for new-role players. McDuffie would have
+   been priced from 7.4 rather than 5.9 before the line blend.
+2. No outlier-fade signal when the big game came on a starter's snaps: that game is the new normal, not noise.
+3. A wider count distribution for new-role players (phi +0.5), so their side probabilities are not overconfident.
+4. Consistency counts in-role games only (games at 70%+ of the snap share he played last game); fewer than three
+   such games and it counts for nothing, instead of counting part-time games as evidence.
+5. **A new-role player is never a lock and never a parlay leg**, whatever his score, until his season share catches
+   up (the flag clears on its own as his average share rises). Tagged "New role" on the card with the numbers.
+6. The corrector gets the snap jump as a feature; the backtest carries a "without new-role factor" row and a
+   new-role subset diagnostic (count, actual vs model with and without the factor).
+
+**The audit that followed (same morning).** The owner's next question was the right one too: what else falls
+through the same crack? Every situation where a season log stops describing a player was measured the same way
+(actual against the full model, 28,861 games). Four more showed up, all market-free, all now handled:
+
+| Situation | Games | Actual vs model | Spread (var/mean) |
+| --- | --- | --- | --- |
+| Settled starters (reference) | 11,254 | +0.4% | 1.27 |
+| New role: part-timer who just played a starter's snaps | 1,050 | +19 to +23% | 1.9 (LB 2.4) |
+| Reduced role: last game's snaps under 70% of his season share | 4,538 | -5 to -14% | 1.4-1.8 |
+| Back after 3+ weeks out | 1,549 | -10 to -12% (starters -13%) | 1.6 |
+| Back after one missed game, no bye | 1,193 | -11% | 1.5 |
+| First game for a new team | 124 | -20% | 1.7 |
+| Only 1 game at his current snap share | 1,666 | +12% | 2.3 |
+
+And the outlier-fade signal is only half right: an **Under after a big game** works for settled players (actual
+2% under the model, 93% under the big game); an **Over after a low game** does not (actual 4.5% under the model
+for settled players, 18% under when he had simply played fewer snaps, 13% under after an absence). A low game
+predicts lower, not a bounce, which the "what follows an outlier" table had been saying all along.
+
+Fitted on 2023-24 and checked on 2025-26 (`ROLE_SHIFT`): reduced role x ratio^0.1 (bias -0.25 -> -0.02 train,
+-0.16 -> +0.07 test, and overall error -0.7%), 3+ weeks out x0.95 (kept conservative: the halves disagree on size),
+one missed game x0.92, new team x0.90 (small sample, conservative). The Over-fade signal is removed; the Under-fade
+fires only in a settled role. The corrector gets the snap jump, the weeks since his last game and the team change
+as features.
+
+**The lock-eligibility checklist** (`LOCK_RULES`, computed by the pricer, market-free, shown on every card as
+"Not lock-eligible: ..."): never a lock or a parlay leg when he is in a new role, a reduced role, back from an
+absence, in his first game for a new team, has fewer than three games in his current role (unless every game he
+has played was in it), or is listed questionable. The lock score's sample part now counts in-role games, and
+consistency counts in-role games only. A mid-season team change is read off the latest depth chart before he
+plays for the new team, so he is projected for the right game. The Model check tab has a "Where the model is
+weakest" table so these subsets are watched every day.
+
+**Validation (daily run on 2026-10-30 data, 28,861 games).** Full model error 1.6472 -> 1.6321 (-0.9%), the
+largest single gain since the project started, almost all from the reduced-role and absence factors; the row
+without the role-shift factors is the worst ablation in the table. Every weak spot now sits within 5% of
+unbiased (new role +2.5%, reduced role +2.8%, 3+ weeks out -1.6%, one missed game +1.2%, new team -5.2%; without
+their factors +22%, -9%, -11%, -11%, -21%). 2026 walk-forward fold 1.6156, with the corrector 1.5867. Replays under
+the final rules: **Thursday week 8** locks 2-1 (+1.56u: McKinney W, Bullard W, Okereke L; McDuffie is priced at 7.5
+against a 7.5 line and is not a pick at all), all plays 10-7 (+4.56u), the Thursday parlay a 2-leg win; **week 7**
+locks 3-2 (+0.22u), all plays 100-93 (+8.06u), A grade 8-5. Live, the McDuffie loss stands: locks 2-2.
+
+**What this does not do.** It does not make a lock a sure thing: a lock is the model's most confident pick, and
+the live record of locks is now 2-2. What it guarantees is that a lock is never again built on a game log that
+belongs to a different role. The honest target stays 70% on locks over the season, judged on hundreds, not three.
 
 ### Week 7, 2026 (first live week; graded 2026-10-26)
 
@@ -305,6 +398,24 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-10-30, morning MDT (post-mortem week 8 Thursday: new-role rule)
+- See the week 8 Thursday post-mortem below. `NEW_ROLE` config; `snap_jump`, `new_role_flag`, `new_role_factor`
+  in `pipeline/model.py`; the flag and jump written to projections and priced lines; fade signal off and
+  consistency in-role only for flagged players; `mark_locks` and `choose_parlay` skip them; `log_pct` game log
+  from `attach_game_logs`; backtest row "Full model without new-role factor" plus a `new_role` subset block;
+  "New role" tag and a legend line on the site; smoke test checks the flag, the lock exclusion and the backtest
+  row. Revert condition: the new-role subset's actual-vs-model drifting past +10% or below -10% over a season, or
+  the flagged players' live record (tagged picks) beating the locks' record over 50+ picks, which would mean the
+  exclusion costs more than it saves.
+- **Audit, same morning: the lock-eligibility checklist.** `ROLE_SHIFT` factors (reduced role, absence, missed
+  game, new team) and `LOCK_RULES`; `role_shift_flags`, `role_shift_factor`, `gap_weeks`, `team_changed` in
+  `pipeline/model.py` (history and upcoming rows; team change read from the latest dated depth chart, player
+  re-teamed); the pricer writes `lock_block`, `lock_eligible`, `in_role_games` and every flag; `lock_blocked` in
+  `pipeline/grade.py` is the one gate for locks and parlays; Over-fade signal removed; backtest row "Full model
+  without role-shift factors" and a `weak_spots` table (also on the Model check tab); tags and legend on the site;
+  smoke test checks the checklist, the gate and that no Over is sold as fading an outlier. Revert condition for each
+  factor: its weak-spot row drifting past +/-10% for a season; for the checklist, as above.
 
 ### 2026-10-29, morning MDT (record by grade on the site)
 - Owner asked for an area showing the record for A, B and C grade picks. The records bar on both the Plays and
@@ -530,6 +641,11 @@ Open, with what would justify them:
 ## Known pitfalls
 
 - Codespaces secrets are invisible to Actions. Only Actions secrets work.
+- An Over "fading" a low game is not a signal. A low game predicts lower (the regression table says so); only the
+  Under after a big game in a settled role has evidence behind it.
+- A season average is only evidence about a player's current role. When his snap share just jumped (trade, injury
+  ahead of him, a benching behind him), every history-based number (average, outlier test, consistency) describes
+  someone else. Check the role before trusting the log; the week 8 Thursday post-mortem is the case study.
 - GitHub disables scheduled workflows in a public repo after 60 days without a push, and a plain push does not
   re-enable them (only the Actions tab, the API, or a commit that edits the cron line does). The daily run log
   commit and `keepalive.yml` exist for this; do not remove them as "noise". Pushes made with the job's own token

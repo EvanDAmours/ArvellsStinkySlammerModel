@@ -53,6 +53,8 @@ def run_backtest(H, seasons):
     preds["Full model without run/pass mix"] = M.project_frame(T, use_mix=False)[1]
     preds["Full model without rest days"] = M.project_frame(T, use_rest=False)[1]
     preds["Full model without injury report"] = M.project_frame(T, use_injury=False)[1]
+    preds["Full model without new-role factor"] = M.project_frame(T, use_new_role=False)[1]
+    preds["Full model without role-shift factors"] = M.project_frame(T, use_role_shift=False)[1]
 
     table = []
     for name, p in preds.items():
@@ -127,6 +129,21 @@ def run_backtest(H, seasons):
                     actual_vs_avg_pct=float((rs.comb.sum() / avg.sum()) - 1))
 
     scale = float(np.clip(T.comb.sum() / max(1e-9, float(np.nansum(full))), 0.9, 1.1))   # level calibration of the full model
+    # where the season log stops describing a player: each situation reported on its own, with and without its factor
+    fl = M.role_shift_flags(T)
+    no_nr = np.asarray(preds["Full model without new-role factor"], dtype=float)
+    no_rs = np.asarray(preds["Full model without role-shift factors"], dtype=float)
+    weak_spots = []
+    for key, label, without in (("new_role", "New role: part-timer who just played a starter's snaps", no_nr),
+                                ("reduced_role", "Reduced role: last game's snaps well below his season share", no_rs),
+                                ("absence", "Back after 3+ weeks out", no_rs), ("missed_game", "Back after one missed game (no bye)", no_rs),
+                                ("new_team", "First game for a new team", no_rs)):
+        sel = fl[key].values
+        if sel.any():
+            weak_spots.append(dict(situation=label, n=int(sel.sum()), actual_vs_model=float(T.comb[sel].sum() / max(1e-9, np.nansum(full[sel])) - 1),
+                                   actual_vs_model_without=float(T.comb[sel].sum() / max(1e-9, np.nansum(without[sel])) - 1),
+                                   mae=float(np.nanmean(np.abs(T.comb[sel] - full[sel])))))
+    new_role = next((w for w in weak_spots if w["situation"].startswith("New role")), None)
     # second model, reported honestly: trained on all seasons but the latest, scored on the latest; then trained on everything for live use
     gbm_rows, gbm_live = [], None
     last = max(seasons)
@@ -140,5 +157,5 @@ def run_backtest(H, seasons):
     gbm_live = M.fit_gbm(X, T.comb)
     result = dict(seasons=[int(s) for s in seasons], games=int(len(T)), best_shrink_games=int(best_k), scale=scale,
                   predictors=table + gbm_rows, by_season=by_season, dispersion=phi_rows, calibration=cal_rows,
-                  regression=reg, role=role)
+                  regression=reg, role=role, new_role=new_role, weak_spots=weak_spots)
     return result, phi_by_group, best_k, scale, gbm_live

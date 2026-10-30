@@ -261,6 +261,7 @@ function legend() {
         row("B", `${bars.B} to ${bars.A - 1}`, `${u.B} unit`, "A real edge with one weak spot: a thinner game log, a smaller gap, or no signal behind it."),
         row("C", `below ${bars.B}`, `${u.C} unit or pass`, "Clears the bar on price alone. Play only if you like the matchup."))),
     el("p", {}, `The lock score is out of 100 and uses the model's own evidence only, never the book's opinion: ${pct(w.ev)} expected return at the posted price (full marks at ${signedPct(g.ev_full ?? 0.15)}), ${pct(w.model)} the model's own chance for the side (full marks at ${pct(g.model_full ?? 0.75)}), ${pct(w.consistency)} how often he cleared this line in his games this season, ${pct(w.sample)} games of data this season, and ${pct(w.signal)} for a role-change or outlier-fade signal behind the pick. The projection it prices from is ${pct(1 - (g.line_weight ?? 0.6))} model and ${pct(g.line_weight ?? 0.6)} the posted line, which keeps the model's claimed edges honest.`),
+    el("p", {}, "Never a lock or a parlay leg, whatever the score (the lock-eligibility checklist, added after the week 8 Thursday post-mortem): a player in a new role (a part-timer who just played a starter's snaps), in a reduced role (his last game's snaps fell well below his season share), back from absence (a missed game that was not a bye), in his first game for a new team, with fewer than three games in his current role, or listed questionable. In every one of these his season log describes someone else, and the backtest shows the model is biased and far less accurate there. Each is tagged on the card, with the reason, and the pick can still be played at its grade."),
     el("p", {}, "Stakes are a guide, not a promise: the grades are being tested on the Track record tab, and if A does not beat B and C over time the formula changes."),
     el("h4", {}, "Beating the closing line"),
     el("p", {}, "A line moves between the time we bet it and kickoff as money comes in and the book sharpens its number. The last number before kickoff, the closing line, is the market's best estimate with everything priced in. If we took Under 3.5 and it closed at Under 2.5, we got a number a point better than the market's considered view: we beat the close. If it closed at 4.5, the market moved against us. One bet's result is mostly luck, but the direction the line moves is the whole market's judgement on whether we were right, and over a few hundred bets the share of picks that beat the close predicts profit better than the win-loss record does."),
@@ -314,7 +315,12 @@ function card(b) {
         b.depth === "promoted" ? el("span", { class: "tag ok", title: "Listed as a starter on the latest depth chart; was not before his last game" }, "Promoted") : b.depth === "demoted" ? el("span", { class: "tag warn", title: "No longer listed as a starter on the latest depth chart" }, "Demoted") : "",
         b.opp_qb_out ? el("span", { class: "tag", title: "The opponent's starting quarterback is listed out or doubtful" }, "Opp QB out") : "", b.opp_rb_out ? el("span", { class: "tag", title: "The opponent's lead rusher is listed out or doubtful" }, "Opp RB out") : "",
         b.rest != null && b.rest >= 10 ? el("span", { class: "tag", title: "Defence coming off a bye week" }, "Off a bye") : b.rest != null && b.rest <= 4 ? el("span", { class: "tag", title: "Short week" }, "Short week") : "",
-        b.uncertain ? el("span", { class: "tag warn", title: "Listed questionable: priced 8% under his average; never a lock or parlay leg; the bet voids if he sits" }, "Questionable") : "", el("small", {}, [b.team, b.opp ? `vs ${b.opp}` : "", kickoffLocal(betKick(b)) ? `· ${kickoffLocal(betKick(b))}` : ""].filter(Boolean).join(" ")),
+        b.uncertain ? el("span", { class: "tag warn", title: "Listed questionable: priced 8% under his average; never a lock or parlay leg; the bet voids if he sits" }, "Questionable") : "",
+        b.new_role ? el("span", { class: "tag warn", title: `New role: a part-timer who just played a starter's snaps${b.snap_jump ? ` (${b.snap_jump.toFixed(1)}x his season share)` : ""}. His season history does not describe him, so he is priced up with a wider range and is never a lock or parlay leg until it catches up.` }, "New role") : "",
+        b.reduced_role ? el("span", { class: "tag warn", title: "Reduced role: his last game's snap share was well below his season share. Priced down; never a lock or parlay leg." }, "Reduced role") : "",
+        b.absence ? el("span", { class: "tag warn", title: "Back from absence: he missed at least one game that was not a bye. Priced down; never a lock or parlay leg." }, "Back from absence") : "",
+        b.new_team ? el("span", { class: "tag warn", title: "First game for a new team after a mid-season move. Priced down; never a lock or parlay leg." }, "New team") : "",
+        b.lock_block && !b.five ? el("span", { class: "tag", title: "Why this pick can never be a lock or a parlay leg, whatever its score" }, `Not lock-eligible: ${b.lock_block}`) : "", el("small", {}, [b.team, b.opp ? `vs ${b.opp}` : "", kickoffLocal(betKick(b)) ? `· ${kickoffLocal(betKick(b))}` : ""].filter(Boolean).join(" ")),
         b.lock == null ? "" : el("div", { class: "lock" }, `Lock score ${Math.round(b.lock)}/100`)),
       el("div", { class: "ev" }, el("b", {}, b.ev == null ? "" : signedPct(b.ev)), el("span", {}, "expected return")),
       el("div", { class: "bet" }, el("span", { class: side === "Under" ? "under" : "over" }, `${side || ""} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market).toLowerCase()}`),
@@ -494,6 +500,12 @@ function renderCheck() {
   if (b.regression?.length) {
     box.append(el("h2", {}, "What follows an outlier game"));
     box.append(el("div", { class: "scroll" }, table([["Situation"], ["Games", "n"], ["Next game vs season avg", "n"], ["Next game vs that game", "n"]], b.regression.map((r) => [r.situation, r.n.toLocaleString(), num(r.vs_avg), num(r.vs_last)]))));
+  }
+  if (b.weak_spots?.length) {
+    box.append(el("h2", {}, "Where the model is weakest"));
+    box.append(el("p", { class: "note" }, "Situations where a player's season log stops describing him. Each is priced with its own factor and is never a lock; this table checks the factor keeps the bias near zero. Positive means the player beat the model."));
+    box.append(el("div", { class: "scroll" }, table([["Situation"], ["Games", "n"], ["Actual vs model", "n"], ["Without its factor", "n"], ["Average miss", "n"]],
+      b.weak_spots.map((w) => [w.situation, w.n.toLocaleString(), signedPct(w.actual_vs_model), signedPct(w.actual_vs_model_without), num(w.mae, 2)]))));
   }
   if (b.role) {
     box.append(el("h2", {}, "Backups when a regular sits"));
