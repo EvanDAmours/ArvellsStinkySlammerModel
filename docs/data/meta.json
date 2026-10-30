@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-30T12:07+00:00",
+ "generated_at": "2026-10-30T12:56+00:00",
  "season": 2026,
  "week": 8,
  "lines_pulled": null,
@@ -23,6 +23,11 @@
    "mean_abs_error": 28.2857
   }
  ],
+ "freshness": {
+  "stats_through_week": 8,
+  "snaps_through_week": 8,
+  "snaps_lag": false
+ },
  "snaps_rows": 86196,
  "injury_rows": 20299,
  "volume_rows": 1848,
