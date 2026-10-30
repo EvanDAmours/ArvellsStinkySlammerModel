@@ -159,7 +159,14 @@ check(R.auto_plan(now=_at(2026, 10, 29, 9, 27), served={"2026-10-29 09:00"}) is 
 check(R.auto_plan(now=_at(2026, 10, 29, 8, 50)) is None, "nothing is due before the first slot of the day")
 two = R.auto_plan(now=_at(2026, 10, 29, 17, 40), served={"2026-10-29 09:00"})   # 2 pm and 5:30 pm both unserved
 check(two and two["key"] == "2026-10-29 17:30" and two["also_served"] == ["2026-10-29 14:00"], "with two slots due, the latest is served and the stale one marked")
-check(R.auto_plan(now=_at(2026, 11, 1, 9, 0)) is None, "Sunday has no pull slot (none specified)")
+sun = [dict(game_id="2026_09_A_B", home="B", away="A", kickoff=_at(2026, 11, 1, 11, 0).isoformat(), international=False),
+       dict(game_id="2026_09_C_D", home="D", away="C", kickoff=_at(2026, 11, 1, 14, 25).isoformat(), international=False),
+       dict(game_id="2026_09_E_F", home="F", away="E", kickoff=_at(2026, 11, 2, 18, 15).isoformat(), international=False)]
+check(R.auto_plan(now=_at(2026, 11, 1, 9, 0), games=sun) is None, "Sunday: nothing due more than an hour before the first kickoff")
+plan = R.auto_plan(now=_at(2026, 11, 1, 10, 3), games=sun)
+check(plan and plan.get("days") == ["2026-11-01"] and plan.get("key") == "2026-11-01 sunday-1h", f"Sunday: one pull an hour before the day's first kickoff covers the whole slate ({plan and plan.get('reason')})")
+check(R.auto_plan(now=_at(2026, 11, 1, 10, 33), games=sun, served={"2026-11-01 sunday-1h"}) is None, "Sunday: the pre-kickoff pull is served once")
+check(R.auto_plan(now=_at(2026, 11, 1, 9, 0)) is None, "Sunday with no schedule loaded: nothing due")
 plan = R.auto_plan(now=_at(2026, 11, 7, 18, 2), served={"2026-11-07 09:00"})      # Saturday 6:02 pm, after the clock change
 check(plan and plan.get("days") == ["2026-11-08"], f"Saturday 6 pm slot covers Sunday games in standard time ({plan and plan.get('days')})")
 plan = R.auto_plan(now=_at(2026, 11, 9, 17, 30), served={"2026-11-09 09:00"})     # Monday 5:30 pm

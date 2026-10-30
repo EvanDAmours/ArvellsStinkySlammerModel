@@ -47,6 +47,7 @@ change needs no edits). The pull job runs every half hour and does nothing unles
 | | Fri 6:00 pm | Saturday games, if any (late season, playoffs) |
 | | Sat 9:00 am | Saturday and Sunday games |
 | | Sat 6:00 pm | Sunday games |
+| | Sun, 1 h before the first kickoff | The whole Sunday slate, with the inactives known for the early games |
 | | Mon 9:00 am, 5:30 pm | Monday game |
 | | 12 h and 1 h before kickoff | Any international game (neutral-site game overseas), that game only |
 
@@ -71,7 +72,7 @@ Schedules only run on the default branch, so keep the branch the site deploys fr
 ## Odds credits
 
 Each pull costs 2 credits per game (two tackle markets, one region). The Friday and early-Sunday pulls
-cover the whole slate (about 28 credits); later pulls only cover games starting within four hours.
+cover the whole slate (about 28 credits), as does the Sunday pre-kickoff pull; later pulls only cover games starting within four hours.
 With the three Saturday pulls that's roughly 175 credits a week, about 700 a month, so it needs a second key
 (see below) or fewer Saturday pulls to stay inside one free 500-credit key. The site shows the balance after each pull,
 and pulling stops automatically below 25. More pulls, or historical lines, need a paid plan.

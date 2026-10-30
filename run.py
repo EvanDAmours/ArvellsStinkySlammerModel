@@ -38,6 +38,7 @@ PULL_SLOTS = {
     0: [(9 * 60, "mon"), (17 * 60 + 30, "mon")],                                  # Monday: the Monday game
 }
 INTL_WINDOWS_H = (12, 1)           # international games are pulled this many hours before kickoff
+SUNDAY_PRE_KICK_MIN = 60           # Sunday: one pull this many minutes before the day's first kickoff (Edmonton time), the whole Sunday slate
 SERVED = CACHE / "pull_slots.json"  # slots already served, so a late run still pulls once and an on-time run doesn't pull twice
 
 
@@ -94,6 +95,22 @@ def auto_plan(now=None, games=None, served=None):
         if local.hour * 60 + local.minute >= slot and key not in served:
             days = {"thu_fri": [d(0), d(1)], "sat": [d(1)], "sat_sun": [d(0), d(1)], "sun": [d(1)], "mon": [d(0)]}[what]
             due.append((slot, dict(days=days, key=key, reason=f"{local.strftime('%A')} {slot // 60:02d}:{slot % 60:02d} slot (run at {local.strftime('%H:%M')}): games on {days}")))
+    # Sunday: one pull an hour before the day's first kickoff, from the schedule, covering every game that day
+    if local.weekday() == 6 and games:
+        kicks = []
+        for g in games:
+            try:
+                k = dt.datetime.fromisoformat(g["kickoff"]).astimezone(EDMONTON)
+            except (KeyError, ValueError):
+                continue
+            if k.date() == today:
+                kicks.append(k)
+        if kicks:
+            first = min(kicks)
+            slot = first.hour * 60 + first.minute - SUNDAY_PRE_KICK_MIN
+            key = f"{today} sunday-1h"
+            if local.hour * 60 + local.minute >= slot and key not in served:
+                due.append((slot, dict(days=[d(0)], key=key, reason=f"Sunday slot an hour before the first kickoff ({first.strftime('%H:%M')}; run at {local.strftime('%H:%M')}): games on {d(0)}")))
     if due:
         due.sort()
         plan = due[-1][1]                       # the latest slot that is due; earlier unserved ones today are stale

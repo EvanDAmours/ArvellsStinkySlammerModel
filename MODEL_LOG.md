@@ -460,9 +460,9 @@ the Over bar and the claim shrink, as intended. One week each; the evidence is t
 - **Daylight time ends 2026-11-01**: pull slots are defined in Edmonton local time and convert themselves; the
   daily job moves from 5:15 to 4:15 am local, still before any game and after Sunday's stats land.
 
-### Recommended, not changed (the owner sets the schedule)
+### Recommended, then adopted the same afternoon (the owner's call)
 
-- **No Sunday pull.** The last look at the Sunday slate is Saturday 6 pm, about 17 hours before the early
+- **No Sunday pull.** (Adopted: a Sunday pull one hour before the day's first kickoff, the whole slate.) The last look at the Sunday slate is Saturday 6 pm, about 17 hours before the early
   kickoffs. Inactives are published 90 minutes before kickoff and the Friday report's "questionable" players
   resolve then; lines also move most on Sunday morning. A Sunday 9:30 am Edmonton pull limited to games inside
   four hours (about 14 credits) would re-choose the early-slate locks and parlay with the inactives known. Same
@@ -592,6 +592,12 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-10-30, afternoon MDT (Sunday pull an hour before the first kickoff)
+- Owner's call after the audit: a Sunday pull one hour before the day's first kickoff (Edmonton time), the whole
+  Sunday slate, so the early-slate locks and parlay are re-chosen with the inactives known and the afternoon and
+  prime-time lines refreshed. The slot time comes from the schedule each week (`SUNDAY_PRE_KICK_MIN` in `run.py`;
+  a London game at 7:30 am makes it 6:30 am), served once like every slot. About 28 credits a week more.
 
 ### 2026-10-30, afternoon MDT (audit: injury refresh at pull time, solo dispersion and level, vacancy return, far-from-line flag)
 - See the audit above. Pricing: `PICK_BAR_OVER`, `LOCK_EV_FULL` 0.15 -> 0.10, `LOCK_EV_FADE`, `CLAIM_SHRINK`
