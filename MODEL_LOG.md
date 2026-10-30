@@ -469,6 +469,17 @@ the Over bar and the claim shrink, as intended. One week each; the evidence is t
   for a Sunday 1:30 pm pull for the afternoon slate. Credits: 406 remain on the first key for the month; the
   second key is still rejected as invalid.
 
+## Standing watch: grade order (opened 2026-10-30, evening MDT, at the owner's request)
+
+Live record by grade as of 2026-10-30: A 4-2 (67%), B 13-5 (72%), C 13-13 (50%). A below B on six A picks is not
+yet evidence of anything, but the grade order is the one thing the grading formula must get right, so it is
+watched after every slate (the Track record tab prints "Grade order check" in red while A trails B) and reviewed
+after Sunday's games are graded (week 8). Decision rule: at 30 graded A picks, if A's hit rate is still below B's,
+`LOCK_WEIGHTS` is re-fitted on the graded picks (which parts of the score actually predict a hit), and until then
+the suggested stakes stay as they are. Under the 2026-10-30 pricing audit the lock score already changed (EV part
+saturates at 10%, claimed chance shrunk), so A picks from here on are a different population from the first six;
+the review keeps the two apart.
+
 ## Weekly post-mortems
 
 ### Week 8 Thursday, 2026 (GB at CAR; graded 2026-10-30, morning MDT)

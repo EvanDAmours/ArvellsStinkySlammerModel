@@ -388,6 +388,13 @@ function renderRecord() {
     box.append(el("div", { class: "scroll" }, table([["Grade"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Units (1 per bet)", "n"], ["Return per bet", "n"], ["Units at suggested stake", "n"], ["Pending", "n"]],
       s.by_grade.map((g) => [g.grade === "ungraded" ? "No grade yet" : el("span", { class: `grade ${g.grade}` }, g.grade), g.bets, wl(g.wins, g.losses, g.pushes), g.hit == null ? "" : pct(g.hit), units(g.units, 2),
         el("b", { class: g.roi == null ? "" : g.roi >= 0 ? "pos" : "neg" }, g.roi == null ? "" : signedPct(g.roi)), g.stake ? el("span", {}, units(g.staked, 2), ` at ${g.stake}u`) : "", g.pending || 0]))));
+    { const A = s.by_grade.find((x) => x.grade === "A") || {}, Bg = s.by_grade.find((x) => x.grade === "B") || {};
+      const nA = (A.wins || 0) + (A.losses || 0), nB = (Bg.wins || 0) + (Bg.losses || 0);
+      if (nA && nB) {
+        const bad = A.hit != null && Bg.hit != null && A.hit < Bg.hit;
+        box.append(el("p", { class: "note", style: bad ? "color:#c0392b;font-weight:600" : "" },
+          `Grade order check: A ${pct(A.hit)} on ${nA} graded picks against B ${pct(Bg.hit)} on ${nB}. ${bad ? "A is below B: watched after every slate; the grading weights are re-fitted if it holds at 30 graded A picks." : "In order. Judged again at 30 graded A picks."}`));
+      } }
     box.append(el("p", { class: "note" }, "If the grades mean anything, A should beat B and B should beat C over time; if they don't, the grading formula in config.py is wrong and gets changed. "
       + (s.by_grade.some((g) => g.grade === "ungraded") ? "\"No grade yet\" are the week 7 picks logged before grades existed (2026-10-26); the replay further down grades every one of them under the current rules. " : "")
       + "Suggested stakes are A 1 unit, B 0.5, C 0.25 (see the legend on the Plays tab)."));
