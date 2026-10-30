@@ -937,9 +937,11 @@ def price_lines(lines, P):
         p_side = po if side == "Over" else 1 - po
         # lock eligibility checklist (market-free): the model must be on ground where it is reliable
         settled = in_role_n >= C.LOCK_RULES["min_in_role_games"] or in_role_n >= int(p.n_prev)
+        snaps_missing = pd.isna(pct_last) and int(p.n_prev) > 0      # he has games but no snap count for his last one: the role checks are blind
         block = [name for ok, name in ((new_role, "new role"), (fl["reduced_role"], "reduced role"), (fl["absence"] or fl["missed_game"], "back from absence"),
                                        (fl["new_team"], "new team"), (not settled, f"only {in_role_n} game{'s' if in_role_n != 1 else ''} in this role"),
-                                       (uncertain, "questionable")) if ok]
+                                       (uncertain, "questionable"), (snaps_missing, "snap counts missing for his last game"),
+                                       (side == "Over" and not C.LOCK_RULES.get("overs_eligible", True), "Over side")) if ok]
         lock = lock_score(ev, p_side, consistency, in_role_n, fade or role)
         if flagged:
             why = f"His own status is {p.status or 'uncertain'}: wait for the final report"

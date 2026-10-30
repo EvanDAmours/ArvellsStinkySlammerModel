@@ -63,7 +63,7 @@ NEW_ROLE = dict(max_prev_share=0.6, min_last_share=0.6, min_ratio=1.5, power=0.0
 ROLE_SHIFT = dict(contraction_ratio=0.7, contraction_power=0.1, absence_weeks=3, absence_factor=0.95, missed_game_factor=0.92, new_team_factor=0.90)
 # Lock eligibility, market-free: a lock must come from where the model is reliable. Never a lock or a parlay leg: new role,
 # reduced role, back from absence, new team, fewer than 3 games in his current role (unless every game he has was), questionable.
-LOCK_RULES = dict(min_in_role_games=3)
+LOCK_RULES = dict(min_in_role_games=3, overs_eligible=False)   # Overs: 28-40 live (41%) and 32-46% on all lines where the model sat above the market; never a lock or a parlay leg until 40 further Over picks hit 55%+
 # ---- Research round 4 (2026-10-30, after the McDuffie post-mortem). Per-snap projection and what hangs off it. Evidence in MODEL_LOG.
 # Per-snap base = tackles per defensive snap (games with 10+ defensive snaps only, shrunk toward last season's rate or the
 # position rate over 150 pseudo-snaps) x expected snap share x expected team defensive snaps, calibrated; blended 30% with

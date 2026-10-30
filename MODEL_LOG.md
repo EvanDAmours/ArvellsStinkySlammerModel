@@ -469,6 +469,45 @@ the Over bar and the claim shrink, as intended. One week each; the evidence is t
   for a Sunday 1:30 pm pull for the afternoon slate. Credits: 406 remain on the first key for the month; the
   second key is still rejected as invalid.
 
+## Risk pass on the algorithm (2026-10-30, evening MDT)
+
+Asked for after the audit: what in the algorithm itself could hurt us. Each item has a status.
+
+**Acted on**
+1. **Overs.** Live Over picks 28-40 (41%); on every line where the model sat above the market, overs hit 32-46%.
+   Overs are not lock-eligible and not parlay legs (`LOCK_RULES["overs_eligible"]`), on our own record, not the
+   market's. They stay picks at the 10% bar. Revert: forty further Over picks at 55%+.
+2. **A silent blind spot.** If snap counts for a player's last game have not landed, every role check (new role,
+   reduced role, vacancy, in-role games) reads as "nothing happened". Such a player is now not lock-eligible
+   ("snap counts missing for his last game"), so a data lag cannot recreate the McDuffie failure quietly.
+3. **Injury-report name matching** checked for week 8: every defender with a game status matches a projection
+   (the unmatched listings are offensive players). Noted; a per-pull count of unmatched defensive listings is
+   on the backlog.
+
+**Accepted, with the reason**
+4. **The corrector's vacancy feature means slightly different things in training and live.** In the history
+   rows a vacancy is "a regular absent this week" (which includes surprise inactives); live it is "out on the
+   report, moved, or missed the last game and not listed back". The live signal is a subset, so the corrector
+   will under-use it rather than over-use it. Acceptable; the per-game rule carries the case.
+5. **Test-set iteration.** Rounds 1-4 chose among variants partly on 2025-26 results, so the 2025-26 numbers are
+   optimistic. The 2026 walk-forward fold row in the daily backtest (trained before 2026) is the clean number and
+   is the one to quote: 1.5970 factor model, 1.5769 with the corrector.
+6. **The lock score was rebuilt on 2026-10-30 and has no live record of its own.** The first picks under it come
+   Saturday. The grade-order watch and the Sunday-night review cover it; nothing more can be done before then.
+7. **Parlay stakes are quarter-Kelly on claimed probabilities.** The claim shrink makes the claims honest on the
+   two weeks measured; stakes are capped at one unit and have run at 0.1. Acceptable.
+8. **The line blend (60% posted line) is a dependence on the market for the number, not for the grade.** It is what
+   keeps the probabilities calibrated (log-loss 0.6827 at 0.6, 0.6844 at 0.3). The vision's rule is about grading,
+   ranking and choosing, which never use it.
+9. **Off-market books.** Only 7 of 247 live picks were taken at a line that differed from the consensus; no
+   systematic exposure.
+10. **Share-model and factor sizes are fitted constants** (2023-24) that will drift. The weak-spot table and the
+    "without X" rows are checked every day; the revert conditions are in each changelog entry.
+11. **Locks are chosen on score alone, not spread across games.** Measured same-game residual correlation is
+    +0.02 for teammates, so five Unders from one game are not materially correlated. Acceptable.
+12. **Pass rushers labelled "LB"** get the linebacker prior for their first game or two of a season. Shrink is half
+    a game for LB, so it washes out immediately. Acceptable.
+
 ## Standing watch: grade order (opened 2026-10-30, evening MDT, at the owner's request)
 
 Live record by grade as of 2026-10-30: A 4-2 (67%), B 13-5 (72%), C 13-13 (50%). A below B on six A picks is not
@@ -603,6 +642,10 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-10-30, evening MDT (risk pass: Overs ineligible for locks, snap-count blind spot)
+- See the risk pass above. `LOCK_RULES["overs_eligible"]` false; "snap counts missing for his last game" and
+  "Over side" join the lock checklist; legend and smoke test updated.
 
 ### 2026-10-30, evening MDT (before Sunday: void bets, off-the-board picks, Alberta Time)
 - **Void bets.** A pick on a player who did not play stayed "Pending" forever and could sit among the locks. Grading
