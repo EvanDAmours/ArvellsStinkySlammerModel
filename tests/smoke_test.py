@@ -61,6 +61,7 @@ check(bt["role"] and bt["role"]["actual_vs_avg_pct"] > 0.2, f"backups with a vac
 sys.path.insert(0, str(tmp)); os.chdir(tmp)
 os.environ["TACKLE_FAKE_DATA"] = "1"
 import run as R
+import config as C
 from pipeline import grade as G
 from pipeline import model as M
 from tests.fake_data import planted_crews
@@ -102,7 +103,11 @@ check({"lock", "grade", "consistency", "payout"} <= set(picks.columns) and picks
 five = picks[picks.five.fillna(False).astype(bool)] if "five" in picks.columns else pd.DataFrame()
 flagged = G.lock_blocked(picks)               # never locks, whatever their score
 others = picks[~picks.player.isin(five.player) & ~flagged] if len(five) else picks
-check(1 <= len(five) <= 5 and five.player.nunique() == len(five) and (others.empty or five.lock.min() >= others.lock.max() - 1e-9), f"weekly five flagged: top lock scores, one per player ({len(five)})")
+_segs = G.segment_key(five) if len(five) else pd.Series([], dtype=str)
+_full = {k for k, v in _segs.value_counts().items() if v >= C.LOCKS_PER_SEGMENT}
+_better = others[(others.lock > five.lock.min() + 1e-9) & ~G.segment_key(others).isin(_full)] if len(five) and len(others) else others.iloc[0:0]
+check(1 <= len(five) <= 5 and five.player.nunique() == len(five) and _better.empty and (_segs.value_counts() <= C.LOCKS_PER_SEGMENT).all(),
+      f"weekly five flagged: top lock scores, one per player, at most {C.LOCKS_PER_SEGMENT} of a kind ({len(five)}; kinds {dict(_segs.value_counts())})")
 check(sum(1 for b in bets if b.get("five")) == len(five), "locks marked on the board")
 parlays = pd.read_csv(tmp / "data/parlays.csv") if (tmp / "data/parlays.csv").exists() else pd.DataFrame()
 check(len(parlays) >= 2 and parlays.parlay_id.nunique() >= 1 and parlays.groupby("parlay_id").size().between(2, 4).all(), f"recommended parlay built ({parlays.parlay_id.nunique() if len(parlays) else 0} parlay, {len(parlays)} legs)")

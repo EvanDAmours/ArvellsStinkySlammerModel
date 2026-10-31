@@ -119,9 +119,33 @@ def mark_locks(P, season, week, now=None):
             cand = P[open_ & ~P.player.isin(set(kept.player))].sort_values("lock", ascending=False)
             cand = cand[cand.lock.notna() & (cand.lock >= C.LOCK_MIN_SCORE)]
             cand = cand[~lock_blocked(cand)]
-            cand = cand.drop_duplicates("player").head(slots)
-            P.loc[cand.index, "five"] = True
+            cand = cand.drop_duplicates("player")
+            # no more than LOCKS_PER_SEGMENT of the same kind of pick a day, counting the ones already kept
+            seg_count = {}
+            for k_ in segment_key(kept).tolist():
+                seg_count[k_] = seg_count.get(k_, 0) + 1
+            chosen = []
+            for i, k_ in zip(cand.index, segment_key(cand).tolist()):
+                if len(chosen) >= slots:
+                    break
+                if seg_count.get(k_, 0) >= C.LOCKS_PER_SEGMENT:
+                    continue
+                seg_count[k_] = seg_count.get(k_, 0) + 1
+                chosen.append(i)
+            P.loc[chosen, "five"] = True
     return P
+
+
+def segment_key(df):
+    """The kind of pick, for the per-kind caps: the pricer's segment when it has one, else side x market."""
+    if df is None or len(df) == 0:
+        return pd.Series([], dtype=str)
+    mk = np.where(df.market.astype(str).str.contains("solo"), "solo", "combined")
+    base = df.side.astype(str) + " " + mk
+    if "segment" in df.columns:
+        seg = df.segment.fillna("").astype(str)
+        return pd.Series(np.where(seg.str.strip() != "", seg, base), index=df.index)
+    return pd.Series(base, index=df.index)
 
 
 mark_weekly_five = mark_locks   # old name
@@ -147,20 +171,32 @@ def choose_parlay(bets, slate):
     if b.empty:
         return None
     from pipeline.model import claimed_prob
-    b["p_side"] = [claimed_prob(x) for x in np.where(b.side == "Over", b.model_over, 1 - b.model_over)]   # the claimed, shrunk chance
+    raw = pd.Series(np.where(b.side == "Over", b.model_over, 1 - b.model_over), index=b.index)
+    b["p_side"] = pd.to_numeric(b["p_claim"], errors="coerce").fillna(raw.map(claimed_prob)) if "p_claim" in b.columns else raw.map(claimed_prob)   # the claimed chance, segment-corrected
     b["dec"] = b.payout + 1
     b = b.sort_values(["p_side", "ev"], ascending=False).drop_duplicates("player")
+    b["_seg"] = segment_key(b)
     lo, hi = C.PARLAY_LEGS
-    legs = b[b.p_side >= C.PARLAY_MIN_PROB].head(hi)
+
+    def take(pool, n):          # best legs, at most PARLAY_LEGS_PER_SEGMENT of a kind
+        out, cnt = [], {}
+        for i, k_ in zip(pool.index, pool._seg.tolist()):
+            if len(out) >= n:
+                break
+            if cnt.get(k_, 0) >= C.PARLAY_LEGS_PER_SEGMENT:
+                continue
+            cnt[k_] = cnt.get(k_, 0) + 1; out.append(i)
+        return pool.loc[out]
+    legs = take(b[b.p_side >= C.PARLAY_MIN_PROB], hi)
     if len(legs) < lo:
-        legs = b[b.p_side >= C.PARLAY_FALLBACK_PROB].head(lo)
+        legs = take(b[b.p_side >= C.PARLAY_FALLBACK_PROB], lo)
     if len(legs) < lo:
         return None   # not enough confident legs on this slate yet: no parlay rather than a bad one
     dec, prob = float(legs.dec.prod()), float(legs.p_side.prod())
     edge = dec - 1
     kelly = (prob * edge - (1 - prob)) / edge if edge > 0 else 0.0
     units = float(np.clip(round(C.PARLAY_KELLY_FRACTION * kelly, 1), *C.PARLAY_UNITS)) if kelly > 0 else C.PARLAY_UNITS[0]
-    out = legs.assign(leg=range(1, len(legs) + 1), n_legs=len(legs), combined_decimal=dec, combined_prob=prob, units=units)
+    out = legs.drop(columns=["_seg"]).assign(leg=range(1, len(legs) + 1), n_legs=len(legs), combined_decimal=dec, combined_prob=prob, units=units)
     return out
 
 

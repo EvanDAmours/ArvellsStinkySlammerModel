@@ -711,6 +711,21 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-10-31, night MDT (final pre-Sunday sweep: concentration limits, tighter segment correction)
+- Rehearsed Sunday's pull on a synthetic board built from the real week 8 projections and the real segment file:
+  no exceptions, no undefined scores, the checklist and the segment corrections work, 10 players blocked for
+  missing snap counts. The rehearsal showed one unforced error in waiting: every top lock was a corner's solo
+  Under, because 15 graded picks (13-2) had moved that kind's claim by the full 10-point cap. If the solo market
+  corrects on Sunday, five locks of one kind fall together.
+- `SEGMENT_CAL` tightened: k 30 -> 40, cap 0.15 -> 0.08 (a 15-pick segment now moves a claim at most 8 points).
+- `LOCKS_PER_SEGMENT` 2 and `PARLAY_LEGS_PER_SEGMENT` 2: no more than two locks a day, or two parlay legs, of the
+  same kind of pick (side x market x position). Market-free diversification across the kinds the model likes.
+- Parlay legs now use the segment-corrected claim (they were using the uncorrected one).
+- Checked and sound: 709 projections for exactly the 28 teams playing, none undefined or absurd; 3 Out and 4
+  Questionable defenders attached; the two mid-season movers (Simmons, Laulu) on their new teams; Saturday's two
+  slots unserved and due; the last six pull runs green; 402 credits against about 85 needed; Sunday kickoffs at
+  noon Alberta Time, so the Sunday pull serves at 11:00.
+
 ### 2026-10-31, late evening MDT (before Sunday: outlier damping, segment correction steers picks)
 - **Outlier damping** (`OUTLIER_DAMP`): in a settled role, after a game 3+ above his base the player ran 5.5% under
   the model in both halves of the data (n 706 / 461), and 4-9% under after a game 3+ below (373 / 236). Half a game
