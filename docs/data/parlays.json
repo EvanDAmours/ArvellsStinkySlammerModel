@@ -45,5 +45,68 @@
     "commence_time": "2026-10-30T00:15:00Z"
    }
   ]
+ },
+ {
+  "parlay_id": "2026-wk08-2026-11-01",
+  "slate": "2026-11-01",
+  "n_legs": 3,
+  "combined_decimal": 4.2711,
+  "combined_american": 327,
+  "combined_prob": 0.2584,
+  "units": 0.1,
+  "chosen_at": "20261031T190101Z",
+  "placed": false,
+  "finished": false,
+  "first_kickoff": "2026-11-01T18:00:00+00:00",
+  "legs": [
+   {
+    "leg": 1,
+    "player": "Christian Benford",
+    "team": "BUF",
+    "opp": "BAL",
+    "market": "player_solo_tackles",
+    "side": "Under",
+    "line": 3.5,
+    "book": "DraftKings",
+    "odds": -174.0,
+    "p_side": 0.6475,
+    "mkt_side": 0.5977,
+    "lock": 44.7374,
+    "grade": "C",
+    "commence_time": "2026-11-01T18:00:00Z"
+   },
+   {
+    "leg": 2,
+    "player": "Cole Bishop",
+    "team": "BUF",
+    "opp": "BAL",
+    "market": "player_solo_tackles",
+    "side": "Under",
+    "line": 4.5,
+    "book": "DraftKings",
+    "odds": -164.0,
+    "p_side": 0.6419,
+    "mkt_side": 0.584,
+    "lock": 54.4525,
+    "grade": "C",
+    "commence_time": "2026-11-01T18:00:00Z"
+   },
+   {
+    "leg": 3,
+    "player": "Cooper DeJean",
+    "team": "PHI",
+    "opp": "WAS",
+    "market": "player_solo_tackles",
+    "side": "Under",
+    "line": 3.5,
+    "book": "DraftKings",
+    "odds": -146.0,
+    "p_side": 0.6217,
+    "mkt_side": 0.5572,
+    "lock": 43.0337,
+    "grade": "C",
+    "commence_time": "2026-11-02T01:20:00Z"
+   }
+  ]
  }
 ]
