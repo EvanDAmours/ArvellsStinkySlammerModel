@@ -54,6 +54,76 @@
     "staked": -0.0
    }
   ],
+  "by_side": [
+   {
+    "key": "Over",
+    "bets": 68,
+    "wins": 28,
+    "losses": 40,
+    "pushes": 0,
+    "pending": 0,
+    "units": -13.1751,
+    "roi": -0.1938,
+    "hit": 0.4118
+   },
+   {
+    "key": "Under",
+    "bets": 179,
+    "wins": 103,
+    "losses": 76,
+    "pushes": 0,
+    "pending": 0,
+    "units": 22.1474,
+    "roi": 0.1237,
+    "hit": 0.5754
+   }
+  ],
+  "by_side_market": [
+   {
+    "key": "Over combined",
+    "bets": 43,
+    "wins": 20,
+    "losses": 23,
+    "pushes": 0,
+    "pending": 0,
+    "units": -4.0258,
+    "roi": -0.0936,
+    "hit": 0.4651
+   },
+   {
+    "key": "Over solo",
+    "bets": 25,
+    "wins": 8,
+    "losses": 17,
+    "pushes": 0,
+    "pending": 0,
+    "units": -9.1493,
+    "roi": -0.366,
+    "hit": 0.32
+   },
+   {
+    "key": "Under combined",
+    "bets": 73,
+    "wins": 33,
+    "losses": 40,
+    "pushes": 0,
+    "pending": 0,
+    "units": -7.8753,
+    "roi": -0.1079,
+    "hit": 0.4521
+   },
+   {
+    "key": "Under solo",
+    "bets": 106,
+    "wins": 70,
+    "losses": 36,
+    "pushes": 0,
+    "pending": 0,
+    "units": 30.0226,
+    "roi": 0.2832,
+    "hit": 0.6604
+   }
+  ],
   "five": {
    "bets": 4,
    "wins": 2,
@@ -150,7 +220,8 @@
    "clv_prob": 0.0902,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -190,7 +261,8 @@
    "clv_prob": -0.001,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -230,7 +302,8 @@
    "clv_prob": -0.007,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -270,7 +343,8 @@
    "clv_prob": 0.0044,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.28
+   "units": 1.28,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -310,7 +384,8 @@
    "clv_prob": null,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -350,7 +425,8 @@
    "clv_prob": 0.0853,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -390,7 +466,8 @@
    "clv_prob": null,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.6579
+   "units": 0.6579,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -430,7 +507,8 @@
    "clv_prob": 0.021,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -470,7 +548,8 @@
    "clv_prob": -0.0061,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.23
+   "units": 1.23,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -510,7 +589,8 @@
    "clv_prob": 0.0241,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.33
+   "units": 1.33,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -550,7 +630,8 @@
    "clv_prob": 0.0057,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.11
+   "units": 1.11,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -590,7 +671,8 @@
    "clv_prob": 0.0085,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.32
+   "units": 1.32,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -630,7 +712,8 @@
    "clv_prob": null,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -670,7 +753,8 @@
    "clv_prob": -0.052,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -710,7 +794,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -750,7 +835,8 @@
    "clv_prob": 0.0144,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.9174
+   "units": 0.9174,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -790,7 +876,8 @@
    "clv_prob": -0.0916,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -830,7 +917,8 @@
    "clv_prob": null,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.7246
+   "units": 0.7246,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -870,7 +958,8 @@
    "clv_prob": -0.0078,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -910,7 +999,8 @@
    "clv_prob": -0.0081,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.18
+   "units": 1.18,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -950,7 +1040,8 @@
    "clv_prob": null,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -990,7 +1081,8 @@
    "clv_prob": 0.0159,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.18
+   "units": 1.18,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -1030,7 +1122,8 @@
    "clv_prob": 0.0257,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.13
+   "units": 1.13,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -1070,7 +1163,8 @@
    "clv_prob": 0.0096,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.6803
+   "units": 0.6803,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -1110,7 +1204,8 @@
    "clv_prob": -0.0056,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.6849
+   "units": 0.6849,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -1150,7 +1245,8 @@
    "clv_prob": -0.0195,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -1190,7 +1286,8 @@
    "clv_prob": -0.0089,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.6803
+   "units": 0.6803,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -1230,7 +1327,8 @@
    "clv_prob": 0.0133,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -1270,7 +1368,8 @@
    "clv_prob": 0.005,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.8
+   "units": 0.8,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -1310,7 +1409,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -1350,7 +1450,8 @@
    "clv_prob": -0.0062,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -1390,7 +1491,8 @@
    "clv_prob": 0.0135,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.08
+   "units": 1.08,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -1430,7 +1532,8 @@
    "clv_prob": 0.0253,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.6897
+   "units": 0.6897,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -1470,7 +1573,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.7246
+   "units": 0.7246,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -1510,7 +1614,8 @@
    "clv_prob": 0.0086,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -1550,7 +1655,8 @@
    "clv_prob": -0.0025,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -1590,7 +1696,8 @@
    "clv_prob": 0.0027,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.5155
+   "units": 0.5155,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -1630,7 +1737,8 @@
    "clv_prob": -0.0082,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -1670,7 +1778,8 @@
    "clv_prob": null,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.5952
+   "units": 0.5952,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -1710,7 +1819,8 @@
    "clv_prob": 0.0244,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.5848
+   "units": 0.5848,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -1750,7 +1860,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.6757
+   "units": 0.6757,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -1790,7 +1901,8 @@
    "clv_prob": 0.0581,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.9615
+   "units": 0.9615,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -1830,7 +1942,8 @@
    "clv_prob": 0.0384,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -1870,7 +1983,8 @@
    "clv_prob": 0.023,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.06
+   "units": 1.06,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -1910,7 +2024,8 @@
    "clv_prob": 0.0237,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -1950,7 +2065,8 @@
    "clv_prob": 0.004,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.7407
+   "units": 0.7407,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -1990,7 +2106,8 @@
    "clv_prob": -0.0139,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.29
+   "units": 1.29,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -2030,7 +2147,8 @@
    "clv_prob": 0.0392,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.7812
+   "units": 0.7812,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -2070,7 +2188,8 @@
    "clv_prob": 0.0136,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.7042
+   "units": 0.7042,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -2110,7 +2229,8 @@
    "clv_prob": -0.0339,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.9259
+   "units": 0.9259,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -2150,7 +2270,8 @@
    "clv_prob": -0.024,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.6452
+   "units": 0.6452,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -2190,7 +2311,8 @@
    "clv_prob": null,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -2230,7 +2352,8 @@
    "clv_prob": -0.0471,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -2270,7 +2393,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.25
+   "units": 1.25,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -2310,7 +2434,8 @@
    "clv_prob": -0.0113,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -2350,7 +2475,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -2390,7 +2516,8 @@
    "clv_prob": null,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -2430,7 +2557,8 @@
    "clv_prob": -0.0714,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -2470,7 +2598,8 @@
    "clv_prob": 0.0144,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.9091
+   "units": 0.9091,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -2510,7 +2639,8 @@
    "clv_prob": -0.0089,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -2550,7 +2680,8 @@
    "clv_prob": 0.0103,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -2590,7 +2721,8 @@
    "clv_prob": null,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -2630,7 +2762,8 @@
    "clv_prob": -0.0085,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.2
+   "units": 1.2,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -2670,7 +2803,8 @@
    "clv_prob": -0.0098,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -2710,7 +2844,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -2750,7 +2885,8 @@
    "clv_prob": -0.0036,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.14
+   "units": 1.14,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -2790,7 +2926,8 @@
    "clv_prob": 0.0014,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -2830,7 +2967,8 @@
    "clv_prob": -0.0806,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -2870,7 +3008,8 @@
    "clv_prob": -0.0162,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.9615
+   "units": 0.9615,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -2910,7 +3049,8 @@
    "clv_prob": null,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -2950,7 +3090,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.7463
+   "units": 0.7463,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -2990,7 +3131,8 @@
    "clv_prob": 0.0072,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -3030,7 +3172,8 @@
    "clv_prob": -0.0173,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -3070,7 +3213,8 @@
    "clv_prob": -0.0077,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -3110,7 +3254,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.0
+   "units": 1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -3150,7 +3295,8 @@
    "clv_prob": -0.0128,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.6667
+   "units": 0.6667,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -3190,7 +3336,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -3230,7 +3377,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -3270,7 +3418,8 @@
    "clv_prob": -0.0233,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.7092
+   "units": 0.7092,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -3310,7 +3459,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.2
+   "units": 1.2,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -3350,7 +3500,8 @@
    "clv_prob": -0.0184,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -3390,7 +3541,8 @@
    "clv_prob": 0.0101,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.8696
+   "units": 0.8696,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -3430,7 +3582,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.7407
+   "units": 0.7407,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -3470,7 +3623,8 @@
    "clv_prob": 0.0165,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -3510,7 +3664,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -3550,7 +3705,8 @@
    "clv_prob": 0.0623,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.15
+   "units": 1.15,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -3590,7 +3746,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.02
+   "units": 1.02,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -3630,7 +3787,8 @@
    "clv_prob": null,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.1
+   "units": 1.1,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -3670,7 +3828,8 @@
    "clv_prob": 0.0082,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -3710,7 +3869,8 @@
    "clv_prob": -0.0481,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.5714
+   "units": 0.5714,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -3750,7 +3910,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -3790,7 +3951,8 @@
    "clv_prob": -0.0102,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.14
+   "units": 1.14,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -3830,7 +3992,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.05
+   "units": 1.05,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -3870,7 +4033,8 @@
    "clv_prob": 0.0035,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -3910,7 +4074,8 @@
    "clv_prob": 0.0558,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.23
+   "units": 1.23,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -3950,7 +4115,8 @@
    "clv_prob": 0.0301,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.7143
+   "units": 0.7143,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -3990,7 +4156,8 @@
    "clv_prob": -0.0128,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -4030,7 +4197,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -4070,7 +4238,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.1
+   "units": 1.1,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -4110,7 +4279,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -4150,7 +4320,8 @@
    "clv_prob": -0.003,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -4190,7 +4361,8 @@
    "clv_prob": 0.0098,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -4230,7 +4402,8 @@
    "clv_prob": -0.0021,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.8333
+   "units": 0.8333,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -4270,7 +4443,8 @@
    "clv_prob": null,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.5587
+   "units": 0.5587,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -4310,7 +4484,8 @@
    "clv_prob": 0.0058,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.21
+   "units": 1.21,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -4350,7 +4525,8 @@
    "clv_prob": 0.0021,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.8475
+   "units": 0.8475,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -4390,7 +4566,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.7692
+   "units": 0.7692,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -4430,7 +4607,8 @@
    "clv_prob": 0.0099,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -4470,7 +4648,8 @@
    "clv_prob": 0.0102,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.05
+   "units": 1.05,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -4510,7 +4689,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.6536
+   "units": 0.6536,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -4550,7 +4730,8 @@
    "clv_prob": 0.0251,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.8197
+   "units": 0.8197,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -4590,7 +4771,8 @@
    "clv_prob": 0.0085,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -4630,7 +4812,8 @@
    "clv_prob": 0.0102,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -4670,7 +4853,8 @@
    "clv_prob": 0.0407,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -4710,7 +4894,8 @@
    "clv_prob": -0.0015,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -4750,7 +4935,8 @@
    "clv_prob": 0.0071,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.8197
+   "units": 0.8197,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -4790,7 +4976,8 @@
    "clv_prob": -0.0714,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -4830,7 +5017,8 @@
    "clv_prob": -0.0102,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -4870,7 +5058,8 @@
    "clv_prob": -0.0142,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.9615
+   "units": 0.9615,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -4910,7 +5099,8 @@
    "clv_prob": 0.025,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -4950,7 +5140,8 @@
    "clv_prob": -0.0064,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -4990,7 +5181,8 @@
    "clv_prob": -0.0346,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -5030,7 +5222,8 @@
    "clv_prob": 0.0088,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -5070,7 +5263,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.9524
+   "units": 0.9524,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -5110,7 +5304,8 @@
    "clv_prob": 0.0225,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -5150,7 +5345,8 @@
    "clv_prob": 0.0133,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -5190,7 +5386,8 @@
    "clv_prob": -0.003,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -5230,7 +5427,8 @@
    "clv_prob": 0.0102,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -5270,7 +5468,8 @@
    "clv_prob": -0.0754,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.8
+   "units": 0.8,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -5310,7 +5509,8 @@
    "clv_prob": 0.0304,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -5350,7 +5550,8 @@
    "clv_prob": 0.0097,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.05
+   "units": 1.05,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -5390,7 +5591,8 @@
    "clv_prob": -0.0102,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.9091
+   "units": 0.9091,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -5430,7 +5632,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.8197
+   "units": 0.8197,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -5470,7 +5673,8 @@
    "clv_prob": -0.0075,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.6289
+   "units": 0.6289,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -5510,7 +5714,8 @@
    "clv_prob": -0.0205,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -5550,7 +5755,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.9259
+   "units": 0.9259,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -5590,7 +5796,8 @@
    "clv_prob": 0.0133,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -5630,7 +5837,8 @@
    "clv_prob": -0.0252,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.9804
+   "units": 0.9804,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -5670,7 +5878,8 @@
    "clv_prob": 0.0316,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.8929
+   "units": 0.8929,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -5710,7 +5919,8 @@
    "clv_prob": 0.0091,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -5750,7 +5960,8 @@
    "clv_prob": 0.0623,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -5790,7 +6001,8 @@
    "clv_prob": -0.0205,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.9524
+   "units": 0.9524,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -5830,7 +6042,8 @@
    "clv_prob": 0.0113,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -5870,7 +6083,8 @@
    "clv_prob": null,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -5910,7 +6124,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.21
+   "units": 1.21,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -5950,7 +6165,8 @@
    "clv_prob": -0.0173,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -5990,7 +6206,8 @@
    "clv_prob": 0.0202,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.9091
+   "units": 0.9091,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -6030,7 +6247,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -6070,7 +6288,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.7692
+   "units": 0.7692,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -6110,7 +6329,8 @@
    "clv_prob": 0.0077,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.28
+   "units": 1.28,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -6150,7 +6370,8 @@
    "clv_prob": -0.0088,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -6190,7 +6411,8 @@
    "clv_prob": null,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.52
+   "units": 1.52,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -6230,7 +6452,8 @@
    "clv_prob": null,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -6270,7 +6493,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -6310,7 +6534,8 @@
    "clv_prob": -0.0132,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -6350,7 +6575,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.7407
+   "units": 0.7407,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -6390,7 +6616,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.5988
+   "units": 0.5988,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -6430,7 +6657,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.7143
+   "units": 0.7143,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -6470,7 +6698,8 @@
    "clv_prob": 0.0102,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.05
+   "units": 1.05,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -6510,7 +6739,8 @@
    "clv_prob": null,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.6289
+   "units": 0.6289,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -6550,7 +6780,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.565
+   "units": 0.565,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -6590,7 +6821,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.7407
+   "units": 0.7407,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -6630,7 +6862,8 @@
    "clv_prob": -0.0102,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -6670,7 +6903,8 @@
    "clv_prob": -0.0102,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.5556
+   "units": 0.5556,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -6710,7 +6944,8 @@
    "clv_prob": 0.0205,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -6750,7 +6985,8 @@
    "clv_prob": 0.0128,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.15
+   "units": 1.15,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -6790,7 +7026,8 @@
    "clv_prob": null,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -6830,7 +7067,8 @@
    "clv_prob": 0.0102,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.05
+   "units": 1.05,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -6870,7 +7108,8 @@
    "clv_prob": null,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -6910,7 +7149,8 @@
    "clv_prob": -0.0712,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -6950,7 +7190,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.6757
+   "units": 0.6757,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -6990,7 +7231,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.36
+   "units": 1.36,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -7030,7 +7272,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.7143
+   "units": 0.7143,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -7070,7 +7313,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -7110,7 +7354,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -7150,7 +7395,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -7190,7 +7436,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -7230,7 +7477,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.7407
+   "units": 0.7407,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -7270,7 +7518,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -7310,7 +7559,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -7350,7 +7600,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.2
+   "units": 1.2,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -7390,7 +7641,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.8333
+   "units": 0.8333,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -7430,7 +7682,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.01
+   "units": 1.01,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -7470,7 +7723,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -7510,7 +7764,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.5263
+   "units": 0.5263,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -7550,7 +7805,8 @@
    "clv_prob": null,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -7590,7 +7846,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -7630,7 +7887,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.3
+   "units": 1.3,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -7670,7 +7928,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.2
+   "units": 1.2,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -7710,7 +7969,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -7750,7 +8010,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.1
+   "units": 1.1,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -7790,7 +8051,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.6494
+   "units": 0.6494,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -7830,7 +8092,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -7870,7 +8133,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.6757
+   "units": 0.6757,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -7910,7 +8174,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.7407
+   "units": 0.7407,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -7950,7 +8215,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.6024
+   "units": 0.6024,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -7990,7 +8256,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -8030,7 +8297,8 @@
    "clv_prob": null,
    "clv_pos": true,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -8070,7 +8338,8 @@
    "clv_prob": null,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.6173
+   "units": 0.6173,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8110,7 +8379,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.7407
+   "units": 0.7407,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8150,7 +8420,8 @@
    "clv_prob": null,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.5587
+   "units": 0.5587,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8190,7 +8461,8 @@
    "clv_prob": null,
    "clv_pos": true,
    "result": "Win",
-   "units": 0.5714
+   "units": 0.5714,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8230,7 +8502,8 @@
    "clv_prob": null,
    "clv_pos": true,
    "result": "Void",
-   "units": 0.0
+   "units": 0.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -8270,7 +8543,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.15
+   "units": 1.15,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8310,7 +8584,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.15
+   "units": 1.15,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8350,7 +8625,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.12
+   "units": 1.12,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -8390,7 +8666,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.25
+   "units": 1.25,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8430,7 +8707,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8470,7 +8748,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -8510,7 +8789,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.9524
+   "units": 0.9524,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8550,7 +8830,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8590,7 +8871,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -8630,7 +8912,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8670,7 +8953,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8710,7 +8994,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.36
+   "units": 1.36,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -8750,7 +9035,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.3
+   "units": 1.3,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8790,7 +9076,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.1
+   "units": 1.1,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8830,7 +9117,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.2
+   "units": 1.2,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8870,7 +9158,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -8910,7 +9199,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8950,7 +9240,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -8990,7 +9281,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -9030,7 +9322,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.35
+   "units": 1.35,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -9070,7 +9363,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -9110,7 +9404,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.36
+   "units": 1.36,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -9150,7 +9445,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.14
+   "units": 1.14,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -9190,7 +9486,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -9230,7 +9527,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.03
+   "units": 1.03,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -9270,7 +9568,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.12
+   "units": 1.12,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -9310,7 +9609,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.9901
+   "units": 0.9901,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -9350,7 +9650,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.76
+   "units": 1.76,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -9390,7 +9691,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -9430,7 +9732,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.25
+   "units": 1.25,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -9470,7 +9773,8 @@
    "clv_prob": 0.012,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.35
+   "units": 1.35,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -9510,7 +9814,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.11
+   "units": 1.11,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -9550,7 +9855,8 @@
    "clv_prob": -0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.21
+   "units": 1.21,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -9590,7 +9896,8 @@
    "clv_prob": 0.0225,
    "clv_pos": true,
    "result": "Win",
-   "units": 1.15
+   "units": 1.15,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -9630,7 +9937,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.12
+   "units": 1.12,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -9670,7 +9978,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.3
+   "units": 1.3,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -9710,7 +10019,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -9750,7 +10060,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.15
+   "units": 1.15,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -9790,7 +10101,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -9830,7 +10142,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -9870,7 +10183,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over combined"
   },
   {
    "season": 2026,
@@ -9910,7 +10224,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Over solo"
   },
   {
    "season": 2026,
@@ -9950,7 +10265,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 0.8475
+   "units": 0.8475,
+   "side_market": "Under solo"
   },
   {
    "season": 2026,
@@ -9990,7 +10306,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Loss",
-   "units": -1.0
+   "units": -1.0,
+   "side_market": "Under combined"
   },
   {
    "season": 2026,
@@ -10030,7 +10347,8 @@
    "clv_prob": 0.0,
    "clv_pos": false,
    "result": "Win",
-   "units": 1.07
+   "units": 1.07,
+   "side_market": "Under solo"
   }
  ],
  "parlays": [

@@ -235,6 +235,14 @@
   {
    "predictor": "Solo tackles: full model (solo share of the projection)",
    "n": 28861,
+   "mae": 1.1359,
+   "mae_cal": 1.1292,
+   "rmse": 1.5069,
+   "bias": -0.0443
+  },
+  {
+   "predictor": "Solo tackles: full model without league solo drift",
+   "n": 28861,
    "mae": 1.1368,
    "mae_cal": 1.1291,
    "rmse": 1.5074,
@@ -376,17 +384,17 @@
   },
   {
    "group": "CB solo",
-   "n": 5314,
-   "raw": 1.3198,
-   "corrected": 1.156,
-   "used": 1.156
+   "n": 5316,
+   "raw": 1.3237,
+   "corrected": 1.16,
+   "used": 1.16
   },
   {
    "group": "CB (expected share under 60%) solo",
-   "n": 1627,
-   "raw": 1.5238,
-   "corrected": 1.3344,
-   "used": 1.3344
+   "n": 1629,
+   "raw": 1.5315,
+   "corrected": 1.3423,
+   "used": 1.3423
   },
   {
    "group": "DL",
@@ -404,17 +412,17 @@
   },
   {
    "group": "DL solo",
-   "n": 9486,
-   "raw": 1.0981,
-   "corrected": 0.9421,
-   "used": 0.9421
+   "n": 9483,
+   "raw": 1.1021,
+   "corrected": 0.9461,
+   "used": 0.9461
   },
   {
    "group": "DL (expected share under 60%) solo",
-   "n": 6718,
-   "raw": 1.1117,
-   "corrected": 0.9516,
-   "used": 0.9516
+   "n": 6716,
+   "raw": 1.1151,
+   "corrected": 0.9549,
+   "used": 0.9549
   },
   {
    "group": "LB",
@@ -432,17 +440,17 @@
   },
   {
    "group": "LB solo",
-   "n": 8441,
-   "raw": 1.4155,
-   "corrected": 1.2538,
-   "used": 1.2538
+   "n": 8438,
+   "raw": 1.4196,
+   "corrected": 1.2579,
+   "used": 1.2579
   },
   {
    "group": "LB (expected share under 60%) solo",
-   "n": 4271,
-   "raw": 1.6217,
-   "corrected": 1.4472,
-   "used": 1.4472
+   "n": 4268,
+   "raw": 1.6274,
+   "corrected": 1.4529,
+   "used": 1.4529
   },
   {
    "group": "S",
@@ -461,16 +469,16 @@
   {
    "group": "S solo",
    "n": 5474,
-   "raw": 1.3906,
-   "corrected": 1.2278,
-   "used": 1.2278
+   "raw": 1.3956,
+   "corrected": 1.2329,
+   "used": 1.2329
   },
   {
    "group": "S (expected share under 60%) solo",
    "n": 1976,
-   "raw": 1.7136,
-   "corrected": 1.5289,
-   "used": 1.5289
+   "raw": 1.7194,
+   "corrected": 1.5346,
+   "used": 1.5346
   }
  ],
  "calibration": [
@@ -517,7 +525,7 @@
    "observed": 0.5
   }
  ],
- "scale_solo": 0.9728,
+ "scale_solo": 0.9762,
  "regression": [
   {
    "situation": "After a game 4+ above his average",
