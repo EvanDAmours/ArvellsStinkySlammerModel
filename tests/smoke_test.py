@@ -132,6 +132,13 @@ check(len(parlays) >= 2 and parlays.parlay_id.nunique() >= 1 and parlays.groupby
 check(len(parlays) and parlays.player.nunique() == len(parlays) and parlays.units.between(0.1, 1.0).all(), "parlay legs are distinct players with a stake between 0.1 and 1 unit")
 pj = json.loads((tmp / "docs/data/parlays.json").read_text())
 check(len(pj) >= 1 and pj[0]["n_legs"] == len(pj[0]["legs"]) and sum(1 for b in bets if b.get("parlay")) == len(parlays), "parlay written for the site and marked on the board")
+check(all(q.get("finished") is False for q in pj) and json.loads((tmp / "docs/data/meta.json").read_text()).get("next_pull"), "open parlays flagged as not finished and the next pull time published")
+sys.path.insert(0, str(tmp))
+import run as _R
+_sat = dt.datetime(2026, 10, 31, 20, 0, tzinfo=dt.timezone.utc)      # Saturday 2 pm Edmonton
+_g = [dict(kickoff="2026-11-01T18:00:00+00:00")]                      # Sunday noon Edmonton
+check(_R.next_pull(_sat, _g) == "2026-11-01T00:00+00:00" and _R.next_pull(_sat + dt.timedelta(hours=5), _g) == "2026-11-01T14:00+00:00"
+      and _R.next_pull(dt.datetime(2026, 11, 1, 15, 0, tzinfo=dt.timezone.utc), _g) == "2026-11-01T17:00+00:00", "next pull: Saturday 6 pm, then Sunday 8 am, then an hour before Sunday's first kickoff")
 
 # grading: fake picks on finished week-6 games with a closing snapshot
 from pipeline import grade as G

@@ -215,7 +215,7 @@ const betKick = (b) => (b.commence_time ? new Date(b.commence_time) : null);
 // projections carry the nflverse gameday + Eastern gametime (two hours ahead of Edmonton; UTC-4 in daylight time, UTC-5 from November to mid-March)
 const etOffset = (gameday) => { const m = Number(gameday.slice(5, 7)); return m >= 11 || m <= 3 ? "-05:00" : "-04:00"; };
 const projKick = (p) => (p.gameday && p.gametime ? new Date(`${p.gameday}T${p.gametime}:00${etOffset(p.gameday)}`) : null);
-const when = (iso) => { if (!iso) return ""; const d = new Date(iso.length === 16 && iso.includes("T") && !iso.includes("-") ? iso.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2}).*/, "$1-$2-$3T$4:$5Z") : iso); return isNaN(d) ? iso : d.toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }); };
+const when = (iso) => { if (!iso) return ""; const d = new Date(iso.length === 16 && iso.includes("T") && !iso.includes("-") ? iso.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2}).*/, "$1-$2-$3T$4:$5Z") : iso); return isNaN(d) ? iso : d.toLocaleString([], { timeZone: TZ, weekday: "short", hour: "numeric", minute: "2-digit" }); };
 
 async function load(name) {
   try { const r = await fetch(`data/${name}.json`, { cache: "no-store" }); return r.ok ? await r.json() : null; } catch { return null; }
@@ -241,6 +241,7 @@ function renderMeta() {
   if (m.international_games && m.international_games.length) $("#meta").append(el("span", { class: "intl" }, `International: ${m.international_games.join("; ")}`));
   $("#meta").append(el("span", {}, `Model updated ${when(m.generated_at)}`),
                     el("span", {}, m.lines_pulled ? `Lines pulled ${when(m.lines_pulled)}` : "No lines pulled yet this week"),
+                    m.next_pull ? el("span", {}, `Next pull ${when(m.next_pull)}`) : "",
                     el("span", {}, m.odds_credits_remaining != null ? `${m.odds_credits_remaining} odds credits left this month` : ""));
   if (m.formula_check_ok === false)
     $("#warnings").append(el("div", { class: "warn" }, "Tackle totals didn’t match the official numbers this run. Picks may be off until the data source is fixed; check the Actions log."));
@@ -270,7 +271,14 @@ function renderPlays() {
       const g = DATA.meta?.grading?.bars || { B: 55 };
       box.append(el("div", { class: "five-box" }, el("h3", {}, "Locks"), el("p", { class: "note" }, `No lock-eligible pick scores ${g.B} or better yet. Locks are re-chosen at every line pull until kickoff.`)));
     }
-    for (const q of (DATA.parlays || [])) box.append(parlayBox(q));
+    // only open parlays belong on the board; a settled one lives on the Track record tab
+    const over = (q) => q.finished || (q.first_kickoff && Date.now() > new Date(q.first_kickoff).getTime() + 4.5 * 3600 * 1000);
+    const open = (DATA.parlays || []).filter((q) => !over(q));
+    for (const q of open) box.append(parlayBox(q));
+    if (!open.length && all.length) {
+      const m = DATA.meta || {}, nxt = m.next_pull ? when(m.next_pull) : "";
+      box.append(el("div", { class: "parlay-box" }, el("h3", {}, "Parlay"), el("p", { class: "note" }, `No open parlay yet. ${all.length} line${all.length === 1 ? "" : "s"} on the board${all.length < 40 ? " (the books post most Sunday tackle lines Saturday evening and Sunday morning)" : ""}; a parlay needs two lock-eligible picks with a 53%+ claimed chance on one slate day, chosen at every line pull until that day's first kickoff.${nxt ? ` Next pull ${nxt}.` : ""}`)));
+    }
   }
   let rows = all.filter((b) => (!picksOnly || b.pick === "Over" || b.pick === "Under") && (!market || b.market === market) && (!best || b.best_price !== false) && (!slate || slateOf(betKick(b)) === slate) && (!pos || b.group === pos) && (!sideF || (b.side || b.pick) === sideF));
   const key = { lock: (b) => -(b.lock ?? -1), ev: (b) => -(b.ev ?? -9), kick: (b) => +(betKick(b) || 0), player: (b) => b.player, line: (b) => +(b.line ?? 0) }[sortBy] || ((b) => -(b.lock ?? -1));

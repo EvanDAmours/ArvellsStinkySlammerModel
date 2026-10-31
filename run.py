@@ -134,6 +134,30 @@ def auto_plan(now=None, games=None, served=None):
     return None
 
 
+def next_pull(now=None, games=None):
+    """When the next scheduled line pull is due (UTC ISO), from the fixed slots and Sunday's pre-kickoff slot."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    local = now.astimezone(EDMONTON)
+    kicks = {}
+    for g in games or []:
+        try:
+            k = dt.datetime.fromisoformat(g["kickoff"]).astimezone(EDMONTON)
+        except (KeyError, ValueError, TypeError):
+            continue
+        kicks.setdefault(k.date(), []).append(k)
+    for n in range(8):
+        day = local.date() + dt.timedelta(days=n)
+        slots = [m for m, _ in PULL_SLOTS.get(day.weekday(), [])]
+        if day.weekday() == 6 and kicks.get(day):
+            first = min(kicks[day])
+            slots.append(first.hour * 60 + first.minute - SUNDAY_PRE_KICK_MIN)
+        for m in sorted(slots):
+            t = dt.datetime.combine(day, dt.time(m // 60, m % 60), tzinfo=EDMONTON)
+            if t > local:
+                return t.astimezone(dt.timezone.utc).isoformat(timespec="minutes")
+    return None
+
+
 def load_served():
     try:
         return set(json.loads(SERVED.read_text()))
@@ -344,7 +368,8 @@ def cmd_odds(hours=None, auto=False):
     write_parlays(C.SEASON, week)
     meta_path = SITE / "meta.json"
     meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
-    meta.update(odds_credits_remaining=remaining, odds_credits_by_key=credits, lines_pulled=stamp, lines_count=int(len(lines)))
+    games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
+    meta.update(odds_credits_remaining=remaining, odds_credits_by_key=credits, lines_pulled=stamp, lines_count=int(len(lines)), next_pull=next_pull(games=games))
     _json(meta_path, meta)
     _json(SITE / "bets.json", records(bets))
     print(f"odds: {len(rows)} prices pulled, {len(lines)} current lines, {n_new} new picks logged, credits left {remaining}")
@@ -363,6 +388,7 @@ def write_parlays(season, week):
             out.append(dict(parlay_id=pid, slate=first.slate, n_legs=int(len(legs)), combined_decimal=float(first.combined_decimal),
                             combined_american=G.american(float(first.combined_decimal)), combined_prob=float(first.combined_prob),
                             units=float(first.units), chosen_at=first.chosen_at, placed=bool((start <= now).any()),
+                            finished=bool(start.notna().all() and (start + dt.timedelta(hours=4, minutes=30) <= now).all()),   # every leg's game is over: it belongs to the Track record tab, not the board
                             first_kickoff=None if start.isna().all() else start.min().isoformat(),
                             legs=records(legs[[c for c in ["leg", "player", "team", "opp", "market", "side", "line", "book", "odds", "p_side", "mkt_side", "lock", "grade", "commence_time"] if c in legs.columns]])))
     _json(SITE / "parlays.json", out)
@@ -370,7 +396,8 @@ def write_parlays(season, week):
 
 def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays=None):
     now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes")
-    meta = dict(generated_at=now, season=C.SEASON, week=week, lines_pulled=lines_pulled, **status,
+    games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
+    meta = dict(generated_at=now, season=C.SEASON, week=week, lines_pulled=lines_pulled, next_pull=next_pull(games=games), **status,
                 bars=dict(pick=C.PICK_BAR, signal=C.SIGNAL_BAR),
                 grading=dict(bars=C.GRADE_BARS, units=C.GRADE_UNITS, weights=C.LOCK_WEIGHTS, ev_full=C.LOCK_EV_FULL, ev_fade=list(C.LOCK_EV_FADE),
                              model_full=C.LOCK_MODEL_FULL, locks=C.LOCKS_PER_SLATE, line_weight=C.LINE_WEIGHT, clv=C.CLV_BARS,

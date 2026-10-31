@@ -798,6 +798,20 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-10-31, afternoon MDT (settled parlays off the board, next pull shown)
+- Owner: "the homepage still shows the Thursday parlay". The Plays tab rendered every parlay of the week from
+  `parlays.json`, so Thursday's (settled Friday, a loss on the Track record tab) sat on the board until the week
+  rolled over. Now `write_parlays` flags a parlay `finished` once every leg's game is 4.5 h past kickoff, the
+  board shows open parlays only (and also hides by clock, so a parlay drops off between pulls), and when no
+  parlay is open the box says why: how many lines are on the board, the two-leg 53% rule, and the next pull. On
+  Saturday at 11:30 am the board held 5 Sunday lines (Bally Bet, all Cardinals): the books post most Sunday
+  tackle lines Saturday evening and Sunday morning, which the 6 pm, 8 am and pre-kickoff pulls cover.
+- `next_pull` (`run.py`) computes the next scheduled slot (fixed slots plus Sunday's pre-kickoff slot) and is
+  published in the site meta by the daily run and every pull; the header shows "Next pull". Header stamps are
+  rendered in Edmonton time whatever the browser's zone, like kickoffs already were.
+- Smoke checks: open parlays carry `finished: false`, meta carries `next_pull`, and `next_pull` walks Saturday
+  6 pm -> Sunday 8 am -> an hour before Sunday's first kickoff.
+
 ### 2026-10-31, midday MDT (research round 5: pressure profile, ESPN injuries, outside consensus; Plays tab rebuilt)
 - See "Research round 5" above. `press` from `load_pfr_def` (and `fake_pfr_def`), `press_prev` through
   `attach_extras`, `add_history_features`, `upcoming_rows`; `press_pg` on each lineman's projection for the card's
@@ -1186,6 +1200,8 @@ Open, with what would justify them:
 ## Known pitfalls
 
 - Codespaces secrets are invisible to Actions. Only Actions secrets work.
+- The Plays tab is the current board. Anything settled (a parlay whose games are over, a graded pick) belongs to
+  the Track record tab only; a weekly file rendered whole will show last Thursday's bet on Saturday.
 - A side table that only has a row when the player recorded something (PFR advanced defence, any "box score of
   events" table) conditions on the outcome. Merge it onto the full list of games played before computing any
   ratio from it, and treat a missing row as unknown, not zero. Research round 5's pressure factor was born of
