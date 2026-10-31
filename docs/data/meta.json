@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-31T01:05+00:00",
+ "generated_at": "2026-10-31T01:29+00:00",
  "season": 2026,
  "week": 8,
  "lines_pulled": null,
@@ -74,7 +74,9 @@
   },
   "pick_bar": 0.06,
   "pick_bar_over": 0.1,
-  "claim_shrink": 0.6
+  "claim_shrink": 0.6,
+  "segment_k": 30,
+  "segment_min_n": 10
  },
  "odds_credits_remaining": 402,
  "odds_credits_by_key": {

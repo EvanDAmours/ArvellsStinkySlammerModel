@@ -78,6 +78,306 @@
     "hit": 0.5754
    }
   ],
+  "segments": [
+   {
+    "segment": "Under",
+    "level": 1,
+    "n": 179,
+    "hit": 0.5754,
+    "claimed": 0.5662,
+    "delta": 0.0092,
+    "adj": 0.0079,
+    "wins": 103,
+    "losses": 76,
+    "units": 22.1474
+   },
+   {
+    "segment": "Over",
+    "level": 1,
+    "n": 68,
+    "hit": 0.4118,
+    "claimed": 0.5598,
+    "delta": -0.1481,
+    "adj": -0.1027,
+    "wins": 28,
+    "losses": 40,
+    "units": -13.1751
+   },
+   {
+    "segment": "Under solo",
+    "level": 2,
+    "n": 106,
+    "hit": 0.6604,
+    "claimed": 0.5739,
+    "delta": 0.0865,
+    "adj": 0.0674,
+    "wins": 70,
+    "losses": 36,
+    "units": 30.0226
+   },
+   {
+    "segment": "Under combined",
+    "level": 2,
+    "n": 73,
+    "hit": 0.4521,
+    "claimed": 0.555,
+    "delta": -0.103,
+    "adj": -0.073,
+    "wins": 33,
+    "losses": 40,
+    "units": -7.8753
+   },
+   {
+    "segment": "Over combined",
+    "level": 2,
+    "n": 43,
+    "hit": 0.4651,
+    "claimed": 0.567,
+    "delta": -0.1019,
+    "adj": -0.06,
+    "wins": 20,
+    "losses": 23,
+    "units": -4.0258
+   },
+   {
+    "segment": "Over solo",
+    "level": 2,
+    "n": 25,
+    "hit": 0.32,
+    "claimed": 0.5475,
+    "delta": -0.2275,
+    "adj": -0.1034,
+    "wins": 8,
+    "losses": 17,
+    "units": -9.1493
+   },
+   {
+    "segment": "Under solo LB",
+    "level": 3,
+    "n": 35,
+    "hit": 0.5429,
+    "claimed": 0.5872,
+    "delta": -0.0443,
+    "adj": -0.0239,
+    "wins": 19,
+    "losses": 16,
+    "units": 0.4771
+   },
+   {
+    "segment": "Under solo S",
+    "level": 3,
+    "n": 30,
+    "hit": 0.7333,
+    "claimed": 0.563,
+    "delta": 0.1703,
+    "adj": 0.0852,
+    "wins": 22,
+    "losses": 8,
+    "units": 14.2044
+   },
+   {
+    "segment": "Under combined S",
+    "level": 3,
+    "n": 21,
+    "hit": 0.3333,
+    "claimed": 0.5668,
+    "delta": -0.2335,
+    "adj": -0.0961,
+    "wins": 7,
+    "losses": 14,
+    "units": -7.3748
+   },
+   {
+    "segment": "Under combined CB",
+    "level": 3,
+    "n": 17,
+    "hit": 0.8235,
+    "claimed": 0.5449,
+    "delta": 0.2786,
+    "adj": 0.1008,
+    "wins": 14,
+    "losses": 3,
+    "units": 11.1092
+   },
+   {
+    "segment": "Under combined LB",
+    "level": 3,
+    "n": 17,
+    "hit": 0.2941,
+    "claimed": 0.5535,
+    "delta": -0.2594,
+    "adj": -0.0938,
+    "wins": 5,
+    "losses": 12,
+    "units": -7.6111
+   },
+   {
+    "segment": "Over combined S",
+    "level": 3,
+    "n": 16,
+    "hit": 0.5,
+    "claimed": 0.571,
+    "delta": -0.071,
+    "adj": -0.0247,
+    "wins": 8,
+    "losses": 8,
+    "units": -0.4423
+   },
+   {
+    "segment": "Under solo CB",
+    "level": 3,
+    "n": 15,
+    "hit": 0.8667,
+    "claimed": 0.5583,
+    "delta": 0.3084,
+    "adj": 0.1028,
+    "wins": 13,
+    "losses": 2,
+    "units": 11.3927
+   },
+   {
+    "segment": "Over combined LB",
+    "level": 3,
+    "n": 11,
+    "hit": 0.4545,
+    "claimed": 0.5463,
+    "delta": -0.0918,
+    "adj": -0.0246,
+    "wins": 5,
+    "losses": 6,
+    "units": -1.0527
+   },
+   {
+    "segment": "Over solo S",
+    "level": 3,
+    "n": 9,
+    "hit": 0.2222,
+    "claimed": 0.5301,
+    "delta": -0.3078,
+    "adj": -0.071,
+    "wins": 2,
+    "losses": 7,
+    "units": -4.62
+   },
+   {
+    "segment": "Under solo DL",
+    "level": 3,
+    "n": 9,
+    "hit": 0.5556,
+    "claimed": 0.5822,
+    "delta": -0.0266,
+    "adj": -0.0061,
+    "wins": 5,
+    "losses": 4,
+    "units": 1.0073
+   },
+   {
+    "segment": "Over solo LB",
+    "level": 3,
+    "n": 7,
+    "hit": 0.4286,
+    "claimed": 0.5553,
+    "delta": -0.1267,
+    "adj": -0.024,
+    "wins": 3,
+    "losses": 4,
+    "units": -0.9388
+   },
+   {
+    "segment": "Under combined DL",
+    "level": 3,
+    "n": 6,
+    "hit": 0.5,
+    "claimed": 0.5245,
+    "delta": -0.0245,
+    "adj": -0.0041,
+    "wins": 3,
+    "losses": 3,
+    "units": 0.1976
+   },
+   {
+    "segment": "Over combined CB",
+    "level": 3,
+    "n": 4,
+    "hit": 0.5,
+    "claimed": 0.5882,
+    "delta": -0.0882,
+    "adj": -0.0104,
+    "wins": 2,
+    "losses": 2,
+    "units": 0.1
+   },
+   {
+    "segment": "Over combined DL",
+    "level": 3,
+    "n": 4,
+    "hit": 0.0,
+    "claimed": 0.6005,
+    "delta": -0.6005,
+    "adj": -0.0706,
+    "wins": 0,
+    "losses": 4,
+    "units": -4.0
+   },
+   {
+    "segment": "Over solo CB",
+    "level": 3,
+    "n": 2,
+    "hit": 0.0,
+    "claimed": 0.5822,
+    "delta": -0.5822,
+    "adj": -0.0364,
+    "wins": 0,
+    "losses": 2,
+    "units": -2.0
+   },
+   {
+    "segment": "Over solo DL",
+    "level": 3,
+    "n": 2,
+    "hit": 0.0,
+    "claimed": 0.541,
+    "delta": -0.541,
+    "adj": -0.0338,
+    "wins": 0,
+    "losses": 2,
+    "units": -2.0
+   }
+  ],
+  "market_watch": [
+   {
+    "season": 2026,
+    "week": 7,
+    "market": "combined",
+    "lines": 122,
+    "over_rate": 0.5164,
+    "market_p_over": 0.4881
+   },
+   {
+    "season": 2026,
+    "week": 7,
+    "market": "solo",
+    "lines": 123,
+    "over_rate": 0.3333,
+    "market_p_over": 0.4876
+   },
+   {
+    "season": 2026,
+    "week": 8,
+    "market": "combined",
+    "lines": 12,
+    "over_rate": 0.5,
+    "market_p_over": 0.5038
+   },
+   {
+    "season": 2026,
+    "week": 8,
+    "market": "solo",
+    "lines": 12,
+    "over_rate": 0.25,
+    "market_p_over": 0.53
+   }
+  ],
   "by_side_market": [
    {
     "key": "Over combined",
