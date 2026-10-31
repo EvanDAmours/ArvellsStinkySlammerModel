@@ -723,7 +723,10 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
   more often and combined Unders on linebackers less often, until the record says otherwise.
 - Solo drift window 1-4 weeks tested: no difference; stays 3.
 - **Replay tool bug**: it dropped the lock-eligibility columns when logging picks, so replayed locks ignored the
-  checklist (an Over and a new-role player could be replayed locks). Fixed; replays below are re-run.
+  checklist (an Over and a new-role player could be replayed locks). Fixed and re-run: week 7 locks 5-2 (+2.7u),
+  all plays 83-87 of 173 (-1.7u), parlays 1-1; Thursday week 8 locks 2-1 (McKinney W, Moehrig L, Nixon W; +1.3u),
+  all plays 10-5 (+6.4u), parlay win. Daily backtest with damping: full model 1.6195 level-matched against 1.6197
+  without; 2026 fold 1.6019, with the corrector 1.5778.
 - Revert conditions: the damping row beating the full model for a season; the segment-steered picks' hit rate
   below the unsteered picks' over 100 picks (both are logged: `segment_adj` on each pick).
 
