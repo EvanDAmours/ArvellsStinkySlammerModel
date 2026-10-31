@@ -1,0 +1,6 @@
+event_id,commence_time,home_team,away_team,book,book_key,market,player,line,over_odds,under_odds,book_update,pulled_at
+9255ca8f32aea590d00aa57de79f6bb6,2026-11-01T18:00:00Z,Dallas Cowboys,Arizona Cardinals,Bally Bet,ballybet,player_tackles_assists,Jack Gibbens,7.5,-148,,2026-10-31T16:33:29Z,20261031T163434Z
+9255ca8f32aea590d00aa57de79f6bb6,2026-11-01T18:00:00Z,Dallas Cowboys,Arizona Cardinals,Bally Bet,ballybet,player_tackles_assists,Denzel Burke,3.5,-109,,2026-10-31T16:33:29Z,20261031T163434Z
+9255ca8f32aea590d00aa57de79f6bb6,2026-11-01T18:00:00Z,Dallas Cowboys,Arizona Cardinals,Bally Bet,ballybet,player_tackles_assists,Baron Browning,6.5,-108,,2026-10-31T16:33:29Z,20261031T163434Z
+9255ca8f32aea590d00aa57de79f6bb6,2026-11-01T18:00:00Z,Dallas Cowboys,Arizona Cardinals,Bally Bet,ballybet,player_tackles_assists,Josh Sweat,5.5,110,,2026-10-31T16:33:29Z,20261031T163434Z
+9255ca8f32aea590d00aa57de79f6bb6,2026-11-01T18:00:00Z,Dallas Cowboys,Arizona Cardinals,Bally Bet,ballybet,player_tackles_assists,Mack Wilson Sr.,9.5,102,,2026-10-31T16:33:29Z,20261031T163434Z
