@@ -192,7 +192,7 @@ def attach_extras(H, pbp=None, pfr=None, dc=None):
             H[c] = np.nan
     if pfr is not None and len(pfr):
         H = H.merge(pfr, on=["season", "week", "team", "name_key"], how="left")
-    for c in ("targets", "missed", "pfr_comb"):
+    for c in ("targets", "missed", "pfr_comb", "press"):
         if c not in H.columns:
             H[c] = np.nan
     H["dc_starter"] = np.nan
@@ -234,7 +234,7 @@ def add_history_features(H):
         H["opps_prev_mean"] = g.opps.transform(lambda x: x.shift(1).expanding().mean())
     else:
         H["opps_prev_mean"] = np.nan
-    for c in ("run_tk", "pass_tk", "runs_faced", "comps_faced", "targets", "missed", "pfr_comb"):
+    for c in ("run_tk", "pass_tk", "runs_faced", "comps_faced", "targets", "missed", "pfr_comb", "press"):
         H[c + "_prev"] = g[c].transform(lambda x: x.shift(1).expanding().sum()) if c in H.columns else np.nan
     if "dc_starter" in H.columns:
         prev = g.dc_starter.shift(1)
@@ -723,7 +723,7 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
         listed = {pid for ids in starters.values() for pid in ids}
         back = done[done.player_id.isin(listed) & ~done.player_id.isin(active.player_id)].drop_duplicates("player_id")[["player_id"]]
         active = pd.concat([active, back], ignore_index=True)
-    sums = {c: (c, "sum") for c in ("run_tk", "pass_tk", "runs_faced", "comps_faced", "targets", "missed", "pfr_comb") if c in done.columns}
+    sums = {c: (c, "sum") for c in ("run_tk", "pass_tk", "runs_faced", "comps_faced", "targets", "missed", "pfr_comb", "press") if c in done.columns}
     agg = done.groupby("player_id").agg(
         player=("player", "last"), name_key=("name_key", "last"), team=("team", "last"), group=("group", "last"),
         n_prev=("comb", "size"), comb_prev=("comb_adj", "sum"), comb_prev_raw=("comb", "sum"),
@@ -799,7 +799,7 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
     F["demoted"] = (F.dc_starter == 0) & (prev_dc == 1)
     F["dc_status"] = np.where(F.promoted, "promoted", np.where(F.demoted, "demoted", np.where(F.dc_starter == 1, "starter", "")))
     inj_w = injuries[(injuries.season == season) & (injuries.week == week)] if len(injuries) else injuries
-    out_ids = set(inj_w[inj_w.status.str.lower().isin(["out", "doubtful"])].player_id.astype(str)) if len(inj_w) and "player_id" in inj_w else set()
+    out_ids = set(inj_w[inj_w.status.str.lower().isin(["out", "doubtful"])].player_id.astype(str)) - {"", "nan", "None"} if len(inj_w) and "player_id" in inj_w else set()
     F["opp_qb_out"], F["opp_rb_out"] = False, False
     if pbp_starters is not None and len(pbp_starters):
         latest = pbp_starters[pbp_starters.season == season].sort_values("week").groupby("team").last()
@@ -855,6 +855,8 @@ def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
     F["share_pred"] = share_pred(F).values
     F["rate_clean"] = persnap_rate(F).values
     F["vacancy_rule"] = vacancy_rule(F).values
+    # a lineman's profile for the card (PFR pressures per game, prior games): no model effect (research round 5 rejected it)
+    F["press_pg"] = (pd.to_numeric(_col_or(F, "press_prev", np.nan), errors="coerce") / F.n_prev.astype(float).clip(lower=1)).where(F.group == "DL").values
     low = F.share_pred.fillna(_col_or(F, "pct_prev", 1.0)).fillna(1.0) < C.PHI_SHARE_SPLIT
     low_phi = F.group.map({g: phi_by_group.get(f"{g}:low") for g in F.group.unique()})
     F.loc[low & low_phi.notna(), "phi"] = low_phi[low & low_phi.notna()]
@@ -1057,6 +1059,10 @@ def price_lines(lines, P, segments=None):
                      "vacancy": _flag(p.get("vacancy_rule", False)), "share_pred": None if pd.isna(p.get("share_pred", np.nan)) else float(p.get("share_pred")),
                      "opp_qb_out": bool(p.get("opp_qb_out", False)), "opp_rb_out": bool(p.get("opp_rb_out", False)),
                      "rest": None if pd.isna(p.get("rest", np.nan)) else int(p.get("rest")),
+                     "press_pg": None if pd.isna(p.get("press_pg", np.nan)) else float(p.get("press_pg")),
+                     "fp_comb": None if pd.isna(p.get("fp_comb", np.nan)) else float(p.get("fp_comb")),
+                     "fp_solo": None if pd.isna(p.get("fp_solo", np.nan)) else float(p.get("fp_solo")),
+                     "fp_rel": None if pd.isna(p.get("fp_rel_solo" if solo else "fp_rel_comb", np.nan)) else float(p.get("fp_rel_solo" if solo else "fp_rel_comb")),
                      "lock": lock, "grade": grade_of(lock)})
     out = pd.DataFrame(rows)
     if "ev" in out:

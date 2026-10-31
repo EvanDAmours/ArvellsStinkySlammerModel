@@ -51,6 +51,18 @@ select, input[type="search"] { font: inherit; padding: 6px 8px; border: 1px soli
 .lock { color: var(--muted); font-size: 0.85rem; }
 .w { color: #1f8a4c; } .l { color: #c0392b; } .pos { color: #1f8a4c; } .neg { color: #c0392b; }
 td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weight: 600; }
+.toolbar { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; gap: 8px 18px; position: sticky; top: 0; z-index: 2; }
+.toolbar select { font: inherit; padding: 2px 6px; }
+.count { color: var(--muted); font-size: 0.88rem; margin: 6px 0 10px; }
+.play { grid-template-columns: 1fr auto; }
+.play .tags { grid-column: 1; }
+.play .why-box { grid-column: 1 / span 2; margin-top: 4px; font-size: 0.9rem; color: var(--muted); }
+.play .why-box summary { cursor: pointer; color: var(--ink); font-weight: 600; font-size: 0.9rem; }
+.play > * { min-width: 0; } .play .why-box table { margin: 6px 0; font-size: 0.86rem; } .play .why-box td, .play .why-box th { padding: 2px 10px 2px 0; white-space: normal; position: static; } .play .why-box p { margin: 6px 0; }
+.play .why-box ul { margin: 4px 0 4px 18px; padding: 0; } .play .why-box li { margin: 2px 0; }
+.play .log { font-variant-numeric: tabular-nums; }
+.legend:not([open]) { padding: 6px 12px; }
+@media (max-width: 640px) { .play { grid-template-columns: 1fr; } .play .ev { grid-row: auto; grid-column: 1; text-align: left; } .play .ev b { display: inline; font-size: 1.3rem; margin-right: 6px; } .play .why-box { grid-column: 1; } .toolbar { position: static; } }
 .section { margin: 26px 0 0; } .section h3 { margin: 0 0 4px; font: 700 1.15rem/1.3 var(--cond); }
 .lead { color: var(--muted); font-size: 0.9rem; max-width: 80ch; margin: 0 0 10px; }
 .more { margin: 8px 0 0; font-size: 0.9rem; color: var(--muted); max-width: 80ch; } .more summary { cursor: pointer; color: var(--ink); font-weight: 600; } .more p { margin: 6px 0; }
@@ -117,11 +129,15 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
   </nav>
 
   <section id="plays">
-    <div class="controls">
+    <div id="plays-top"></div>
+    <div class="controls toolbar" id="plays-controls">
+      <label>Position <select id="pos"><option value="">All</option><option value="LB">Linebackers</option><option value="S">Safeties</option><option value="CB">Corners</option><option value="DL">Defensive line</option></select></label>
+      <label>Side <select id="side"><option value="">Both</option><option value="Under">Unders</option><option value="Over">Overs</option></select></label>
+      <label>Market <select id="market"><option value="">Both</option><option value="player_tackles_assists">Tackles + assists</option><option value="player_solo_tackles">Solo tackles</option></select></label>
+      <label>Slate <select id="slate"><option value="">All games</option><option value="early">Early (noon)</option><option value="late">Afternoon</option><option value="prime">Prime time</option></select></label>
+      <label>Sort <select id="sort"><option value="lock">Lock score</option><option value="ev">Expected return</option><option value="kick">Kickoff</option><option value="player">Player</option><option value="line">Line</option></select></label>
       <label><input type="checkbox" id="picks-only" checked> Picks only</label>
-      <label>Market <select id="market"><option value="">All</option><option value="player_tackles_assists">Tackles + assists</option><option value="player_solo_tackles">Solo tackles</option></select></label>
       <label><input type="checkbox" id="best-only" checked> Best price per line</label>
-      <label>Slate <select id="slate"><option value="">All games</option><option value="early">Early (11 am)</option><option value="late">Afternoon (2 pm)</option><option value="prime">Prime time</option></select></label>
     </div>
     <div id="plays-list"></div>
   </section>
@@ -147,7 +163,7 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
 const $ = (s) => document.querySelector(s);
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) k === "class" ? (e.className = v) : e.setAttribute(k, v);
+  for (const [k, v] of Object.entries(attrs)) { if (v === undefined || v === null || v === false) continue; k === "class" ? (e.className = v) : e.setAttribute(k, v); }
   for (const kid of kids) e.append(kid instanceof Node ? kid : document.createTextNode(kid ?? ""));
   return e;
 };
@@ -231,29 +247,38 @@ function renderMeta() {
 }
 
 function renderPlays() {
-  const box = $("#plays-list"); box.replaceChildren();
+  const top = $("#plays-top"), box = $("#plays-list"); top.replaceChildren(); box.replaceChildren();
   const all = DATA.bets || [];
-  box.append(recordsBar(DATA.results?.summary));
-  if (!all.length) { box.append(el("div", { class: "empty" }, "No tackle lines yet this week. Books usually post them Thursday to Saturday; the odds job pulls them automatically and this list fills in.")); return; }
-  const picksOnly = $("#picks-only").checked, market = $("#market").value, best = $("#best-only").checked, slate = $("#slate").value;
-  const rows = all.filter((b) => (!picksOnly || b.pick === "Over" || b.pick === "Under") && (!market || b.market === market) && (!best || b.best_price !== false) && (!slate || slateOf(betKick(b)) === slate));
-  if (!slate && !market) box.append(legend());
+  top.append(recordsBar(DATA.results?.summary));
+  top.append(legend());
+  const haveLines = all.length > 0;
+  $("#plays-controls").hidden = !haveLines;
+  if (!haveLines) { box.append(el("div", { class: "empty" }, "No tackle lines yet this week. Books usually post them Thursday to Saturday; the odds job pulls them automatically and this list fills in.")); return; }
+  const picksOnly = $("#picks-only").checked, market = $("#market").value, best = $("#best-only").checked, slate = $("#slate").value, pos = $("#pos").value, sideF = $("#side").value, sortBy = $("#sort").value;
+  const unfiltered = !slate && !market && !pos && !sideF;
+  // locks and the parlay stay on top whenever no filter is set
   const five = all.filter((b) => b.five);
-  if (!five.length && !slate && !market && all.some((b) => b.pick === "Over" || b.pick === "Under")) {
-    const g = DATA.meta?.grading?.bars || { B: 55 };
-    box.append(el("div", { class: "five-box" }, el("h3", {}, "Locks"), el("p", { class: "note" }, `No pick on the board scores ${g.B} or better yet, so no lock is named. Locks are re-chosen at every line pull until kickoff.`)));
+  if (unfiltered) {
+    if (five.length) {
+      const f = DATA.results?.summary?.five, g = DATA.meta?.grading?.locks || { single: 3, multi: 5 };
+      const tally = f && f.bets ? ` · season ${f.wins}-${f.losses}${f.pushes ? "-" + f.pushes : ""}${f.hit == null ? "" : ` (${pct(f.hit)})`}` : "";
+      const days = [...new Set(five.map((b) => slateName(slateDate(b))))].join(", ");
+      const fb = el("div", { class: "five-box" }, el("h3", {}, `Locks${days ? ` · ${days}` : ""}${tally}`), el("p", { class: "note" }, `The most confident picks of each slate day on the model's own evidence: ${g.single} on a one-game day, ${g.multi} on a multi-game day, at most two of a kind. Re-chosen at every line pull until kickoff. Open "Why this is a lock" on each.`));
+      five.sort((a, b) => (b.lock ?? 0) - (a.lock ?? 0)).forEach((b) => fb.append(card(b, true)));
+      box.append(fb);
+    } else if (all.some((b) => b.pick === "Over" || b.pick === "Under")) {
+      const g = DATA.meta?.grading?.bars || { B: 55 };
+      box.append(el("div", { class: "five-box" }, el("h3", {}, "Locks"), el("p", { class: "note" }, `No lock-eligible pick scores ${g.B} or better yet. Locks are re-chosen at every line pull until kickoff.`)));
+    }
+    for (const q of (DATA.parlays || [])) box.append(parlayBox(q));
   }
-  if (five.length && !slate && !market) {
-    const f = DATA.results?.summary?.five, g = DATA.meta?.grading?.locks || { single: 3, multi: 5 };
-    const tally = f && f.bets ? ` · season to date ${f.wins}-${f.losses}${f.pushes ? "-" + f.pushes : ""}${f.hit == null ? "" : ` (${pct(f.hit)})`}` : "";
-    const days = [...new Set(five.map((b) => slateName(slateDate(b))))].join(", ");
-    const fb = el("div", { class: "five-box" }, el("h3", {}, `Locks${days ? ` · ${days}` : ""}${tally}`), el("p", { class: "note" }, `The highest-confidence picks of each slate day, one per player: ${g.single} on a one-game day, ${g.multi} on a multi-game day. Named before kickoff, re-chosen at every pull until the game starts, and tracked on their own in the Track record tab.`));
-    five.sort((a, b) => (b.lock ?? 0) - (a.lock ?? 0)).forEach((b) => fb.append(card(b)));
-    box.append(fb);
-  }
-  if (!slate && !market) for (const q of (DATA.parlays || [])) box.append(parlayBox(q));
-  if (!rows.length) { box.append(el("div", { class: "empty" }, picksOnly ? "No line clears the bar right now. Untick Picks only to see every priced line." : "Nothing matches these filters.")); return; }
-  for (const b of rows) box.append(card(b));
+  let rows = all.filter((b) => (!picksOnly || b.pick === "Over" || b.pick === "Under") && (!market || b.market === market) && (!best || b.best_price !== false) && (!slate || slateOf(betKick(b)) === slate) && (!pos || b.group === pos) && (!sideF || (b.side || b.pick) === sideF));
+  const key = { lock: (b) => -(b.lock ?? -1), ev: (b) => -(b.ev ?? -9), kick: (b) => +(betKick(b) || 0), player: (b) => b.player, line: (b) => +(b.line ?? 0) }[sortBy] || ((b) => -(b.lock ?? -1));
+  rows.sort((x, y) => { const a = key(x), c = key(y); return typeof a === "string" ? a.localeCompare(c) : a - c; });
+  const nPicks = all.filter((b) => b.pick === "Over" || b.pick === "Under").length;
+  box.append(el("div", { class: "count" }, `${rows.length} shown of ${nPicks} picks on ${all.length} priced lines` + (unfiltered ? "" : " (filtered)") + `. Sorted by ${$("#sort").selectedOptions[0].textContent.toLowerCase()}.`));
+  if (!rows.length) { box.append(el("div", { class: "empty" }, picksOnly ? "No line clears the bar with these filters. Untick Picks only to see every priced line." : "Nothing matches these filters.")); return; }
+  for (const b of rows) box.append(card(b, false));
 }
 
 const slateDate = (b) => { const d = betKick(b); return !d || isNaN(d) ? "" : new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d); };
@@ -261,8 +286,8 @@ function legend() {
   const g = DATA.meta?.grading || {};
   const bars = g.bars || { A: 72, B: 55 }, u = g.units || { A: 1, B: 0.5, C: 0.25 }, w = g.weights || { ev: 0.35, model: 0.25, consistency: 0.2, sample: 0.1, signal: 0.1 }, cl = g.clv || { decent: 0.52, good: 0.56, great: 0.6 };
   const row = (grade, cut, stake, what) => el("tr", {}, el("td", {}, el("span", { class: `grade ${grade}` }, grade)), el("td", {}, cut), el("td", {}, stake), el("td", {}, what));
-  return el("details", { class: "legend", open: "" },
-    el("summary", {}, "How picks are graded and how much to bet"),
+  return el("details", { class: "legend" },
+    el("summary", {}, "How to read this board: grades, stakes, what can be a lock, beating the close"),
     el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Grade"), el("th", {}, "Lock score"), el("th", {}, "Suggested stake"), el("th", {}, "Read it as"))),
       el("tbody", {},
         row("A", `${bars.A} and up`, `${u.A} unit`, "The model is confident and the price is wrong by a lot, backed by his game log. The locks come from here."),
@@ -270,6 +295,7 @@ function legend() {
         row("C", `below ${bars.B}`, `${u.C} unit or pass`, "Clears the bar on price alone. Play only if you like the matchup."))),
     el("p", {}, `The lock score is out of 100 and uses the model's own evidence only, never the book's opinion: ${pct(w.ev)} expected return at the posted price (full marks at ${signedPct(g.ev_full ?? 0.10)}; above ${signedPct((g.ev_fade ?? [0.2, 0.4])[0])} it falls away again, because the biggest disagreements with the market are mostly model error), ${pct(w.model)} the model's claimed chance for the side (full marks at ${pct(g.model_full ?? 0.75)}; a pick's claimed chance is shrunk ${pct(1 - (g.claim_shrink ?? 0.6))} of the way toward even first, since selected picks overclaim), ${pct(w.consistency)} how often he cleared this line in his games this season, read at the snap share he is expected to play, ${pct(w.sample)} games of data in his current role, and ${pct(w.signal)} for a role-change or outlier-fade signal behind the pick. A pick needs ${signedPct(g.pick_bar ?? 0.06)} expected return (${signedPct(g.pick_bar_over ?? 0.10)} for an Over, which the model gets wrong more often). The claimed chance is then corrected by how claims for picks of the same kind (side, market, position) have actually resolved, shrunk by n/(n+${g.segment_k ?? 30}); the Track record tab shows those corrections. The projection it prices from is ${pct(1 - (g.line_weight ?? 0.6))} model and ${pct(g.line_weight ?? 0.6)} the posted line, which keeps the model's claimed edges honest.`),
     el("p", {}, "Never a lock or a parlay leg, whatever the score (the lock-eligibility checklist, added after the week 8 Thursday post-mortem): a player in a new role (a part-timer who just played a starter's snaps), in a reduced role (his last game's snaps fell well below his season share), back from absence (a missed game that was not a bye), in his first game for a new team, with fewer than three games in his current role, listed questionable, without snap counts for his last game, or an Over (the model's Over picks have hit 41%; Overs stay plays, never locks, until forty more of them say otherwise). In every one of these the model is on ground where it is biased or blind. Each is tagged on the card, with the reason, and the pick can still be played at its grade."),
+    el("p", {}, "Tags on a card say what the model sees behind the number (hover one for the rule): a role change (New role, Reduced role, Promoted, Demoted, Back from absence, New team), the injury report (Questionable, Opp QB out), the lineman's pressure profile (Run-stuffer, Interior, Pass rusher), and Model far from line. The 'Why' box under each pick shows the lock score piece by piece, the checklist, how picks of its kind have resolved, his game log, and an outside expert consensus (FantasyPros, the top players at each position) read relative to its usual relation to this model, for comparison only: it never prices, grades or chooses a pick."),
     el("p", {}, "Stakes are a guide, not a promise: the grades are being tested on the Track record tab, and if A does not beat B and C over time the formula changes."),
     el("h4", {}, "Beating the closing line"),
     el("p", {}, "A line moves between the time we bet it and kickoff as money comes in and the book sharpens its number. The last number before kickoff, the closing line, is the market's best estimate with everything priced in. If we took Under 3.5 and it closed at Under 2.5, we got a number a point better than the market's considered view: we beat the close. If it closed at 4.5, the market moved against us. One bet's result is mostly luck, but the direction the line moves is the whole market's judgement on whether we were right, and over a few hundred bets the share of picks that beat the close predicts profit better than the win-loss record does."),
@@ -313,32 +339,68 @@ function parlayBox(q, graded) {
     q.placed ? el("div", { class: "placed" }, "First game has kicked off: this is the parlay as placed before kickoff.") : el("div", { class: "placed" }, "Re-chosen at every line pull until the first game of the day kicks off."));
 }
 
-function card(b) {
-  {
-    const isPick = b.pick === "Over" || b.pick === "Under";
-    const side = b.side || b.pick;
-    const price = side === "Under" ? b.under_odds : b.over_odds;
-    const card = el("div", { class: "play" + (isPick ? " pick" : "") + (b.five ? " five" : "") },
-      el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}`, title: "Confidence grade" }, b.grade) : "", b.five ? el("span", { class: "star", title: "Lock" }, "★") : "", b.player, b.international ? el("span", { class: "intl", title: "Neutral-site game overseas: stat crew unknown, lines pulled 12 h and 1 h before kickoff" }, "International") : "",
-        b.depth === "promoted" ? el("span", { class: "tag ok", title: "Listed as a starter on the latest depth chart; was not before his last game" }, "Promoted") : b.depth === "demoted" ? el("span", { class: "tag warn", title: "No longer listed as a starter on the latest depth chart" }, "Demoted") : "",
-        b.opp_qb_out ? el("span", { class: "tag", title: "The opponent's starting quarterback is listed out or doubtful" }, "Opp QB out") : "", b.opp_rb_out ? el("span", { class: "tag", title: "The opponent's lead rusher is listed out or doubtful" }, "Opp RB out") : "",
-        b.rest != null && b.rest >= 10 ? el("span", { class: "tag", title: "Defence coming off a bye week" }, "Off a bye") : b.rest != null && b.rest <= 4 ? el("span", { class: "tag", title: "Short week" }, "Short week") : "",
-        b.uncertain ? el("span", { class: "tag warn", title: "Listed questionable: priced 8% under his average; never a lock or parlay leg; the bet voids if he sits" }, "Questionable") : "",
-        b.new_role ? el("span", { class: "tag warn", title: `New role: a part-timer who just played a starter's snaps${b.snap_jump ? ` (${b.snap_jump.toFixed(1)}x his season share)` : ""}. His season history does not describe him, so he is priced up with a wider range and is never a lock or parlay leg until it catches up.` }, "New role") : "",
-        b.reduced_role ? el("span", { class: "tag warn", title: "Reduced role: his last game's snap share was well below his season share. Priced down; never a lock or parlay leg." }, "Reduced role") : "",
-        b.absence ? el("span", { class: "tag warn", title: "Back from absence: he missed at least one game that was not a bye. Priced down; never a lock or parlay leg." }, "Back from absence") : "",
-        b.new_team ? el("span", { class: "tag warn", title: "First game for a new team after a mid-season move. Priced down; never a lock or parlay leg." }, "New team") : "",
-        b.lock_block && !b.five ? el("span", { class: "tag", title: "Why this pick can never be a lock or a parlay leg, whatever its score" }, `Not lock-eligible: ${b.lock_block}`) : "",
-        b.far_from_line ? el("span", { class: "tag", title: "The model's own number and the consensus line are 25%+ apart. This changes nothing in the grade; it is a flag that one of them knows something, so check the news before betting." }, "Model far from line") : "", el("small", {}, [b.team, b.opp ? `vs ${b.opp}` : "", kickoffLocal(betKick(b)) ? `· ${kickoffLocal(betKick(b))}` : ""].filter(Boolean).join(" ")),
-        b.lock == null ? "" : el("div", { class: "lock" }, `Lock score ${Math.round(b.lock)}/100`)),
-      el("div", { class: "ev" }, el("b", {}, b.ev == null ? "" : signedPct(b.ev)), el("span", {}, "expected return")),
-      el("div", { class: "bet" }, el("span", { class: side === "Under" ? "under" : "over" }, `${side || ""} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market).toLowerCase()}`),
-      el("div", { class: "price" }, `${odds(price)} at ${b.book}`, b.payout == null ? "" : el("small", {}, ` · pays ${num(b.payout, 2)} per unit`)),
-      el("div", { class: "nums" }, ...(b.proj == null ? [] : [el("span", {}, `Projection ${num(b.proj)}`), b.proj_model == null ? "" : el("span", {}, `Model alone ${num(b.proj_model)}`), el("span", {}, `Model over ${pct(b.model_over)}`), el("span", {}, `Market over ${pct(b.market_over)}`),
-        b.cons_n ? el("span", {}, `Cleared this line in ${b.cons_hits} of ${b.cons_n} games`) : ""])),
-      el("div", { class: "why" }, b.why || ""));
-    return card;
-  }
+const SIGNAL_TEXT = { fade: "fading an outlier last game", role: "backed by a role change" };
+function whyBox(b, isLock) {
+  // the lock score, piece by piece, from the same numbers the pricer used; plus the checklist and the segment record
+  const g = DATA.meta?.grading || {}, w = g.weights || { ev: 0.35, model: 0.25, consistency: 0.2, sample: 0.1, signal: 0.1 };
+  const evFull = g.ev_full ?? 0.10, [fadeLo, fadeHi] = g.ev_fade || [0.2, 0.4], modelFull = g.model_full ?? 0.75;
+  let evPart = Math.max(0, Math.min(1, (b.ev ?? 0) / evFull)); if ((b.ev ?? 0) > fadeLo) evPart = Math.max(0, Math.min(1, (fadeHi - b.ev) / (fadeHi - fadeLo)));
+  const claim = b.p_claim ?? null, modelPart = claim == null ? 0 : Math.max(0, Math.min(1, (claim - 0.5) / (modelFull - 0.5)));
+  const consPart = b.consistency == null ? 0.5 : b.consistency, nPart = Math.max(0, Math.min(1, (b.in_role_games ?? b.n_prev ?? 0) / 6));
+  const signal = b.signal_fade || b.signal_role;
+  const rows = [
+    ["Expected return at this price", `${signedPct(b.ev)}${(b.ev ?? 0) > fadeLo ? " (so high it counts against: big gaps with the market are usually model error)" : ""}`, Math.round(100 * w.ev * evPart)],
+    ["Claimed chance for this side", claim == null ? "" : `${pct(claim)} after shrinking toward even${b.segment_adj ? ` and ${b.segment_adj >= 0 ? "+" : ""}${(b.segment_adj * 100).toFixed(1)} pts from the ${b.segment} record` : ""}`, Math.round(100 * w.model * modelPart)],
+    ["Cleared this line in his games", b.cons_n ? `${b.cons_hits} of ${b.cons_n}, read at the snap share he is expected to play` : "no usable game log", Math.round(100 * w.consistency * consPart)],
+    ["Games in his current role", `${b.in_role_games ?? b.n_prev ?? 0} (full marks at 6)`, Math.round(100 * w.sample * nPart)],
+    ["Signal behind the pick", signal ? (b.signal_fade ? "an outlier last game to fade" : "a role change") : "none", signal ? Math.round(100 * w.signal) : 0],
+  ];
+  const seg = (DATA.results?.summary?.segments || []).find((x) => x.segment === b.segment);
+  const proj = (DATA.proj || []).find((p) => p.player === b.player && p.team === b.team) || {};
+  const log = (b.market || "").includes("solo") ? proj.log_solo : proj.log_comb;
+  const checklist = b.lock_block ? `Not lock-eligible: ${b.lock_block}.` : "Lock checklist clear: settled role, played last game, same team, snap counts in, not on the injury report, an Under.";
+  const fpVal = (b.market || "").includes("solo") ? b.fp_solo : b.fp_comb;
+  return el("details", { class: "why-box" }, el("summary", {}, isLock ? "Why this is a lock" : "Why this pick"),
+    el("p", {}, `The model projects ${num(b.proj_model)} ${(MARKET[b.market] || b.market).toLowerCase()}; blended 40/60 with the posted line it prices from ${num(b.proj)}, against a line of ${num(b.line)}. The model gives the ${(b.side || "").toLowerCase()} ${pct(b.side === "Over" ? b.model_over : 1 - b.model_over)} and the book's price implies ${pct(b.side === "Over" ? b.market_over : 1 - b.market_over)}.`),
+    el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Piece of the score"), el("th", {}, "What the model sees"), el("th", { class: "n" }, "Points"))), el("tbody", {}, ...rows.map((r) => el("tr", {}, el("td", {}, r[0]), el("td", {}, r[1]), el("td", { class: "n" }, String(r[2])))), el("tr", {}, el("td", {}, el("b", {}, "Lock score")), el("td", {}, ""), el("td", { class: "n" }, el("b", {}, String(Math.round(b.lock ?? 0))))))),
+    el("ul", {},
+      el("li", {}, checklist),
+      seg ? el("li", {}, `Picks of this kind (${b.segment}) have gone ${seg.wins}-${seg.losses} against a claimed ${pct(seg.claimed)}; that record feeds the correction above.`) : "",
+      log ? el("li", { class: "log" }, `His games this season (${(b.market || "").includes("solo") ? "solo" : "tackles + assists"}): ${String(log).split("|").join(", ")}.`) : "",
+      b.fp_rel != null ? el("li", {}, `Outside cross-check: the FantasyPros expert consensus sits ${Math.abs(b.fp_rel) < 0.03 ? "where it usually does" : `${signedPct(b.fp_rel)} from where it usually sits`} against this model for him${Math.abs(b.fp_rel) >= 0.03 ? ((b.fp_rel > 0) === (b.side === "Over") ? ", leaning the same way as this pick" : ", leaning the other way from this pick") : ""}. Their raw figure (${num(fpVal)}) is not a box-score number (their tackles run about a quarter above season averages across the board), so only the relative reading means anything. It is shown to compare, never used to price or choose.`) : "",
+      b.why ? el("li", {}, b.why) : ""));
+}
+function card(b, isLock) {
+  const isPick = b.pick === "Over" || b.pick === "Under";
+  const side = b.side || b.pick;
+  const price = side === "Under" ? b.under_odds : b.over_odds;
+  const tag = (cls, title, text) => el("span", { class: cls, title }, text);
+  const tags = [
+    b.international ? tag("intl", "Neutral-site game overseas: stat crew unknown, lines pulled 12 h and 1 h before kickoff", "International") : "",
+    b.depth === "promoted" ? tag("tag ok", "Listed as a starter on the latest depth chart; was not before his last game", "Promoted") : b.depth === "demoted" ? tag("tag warn", "No longer listed as a starter on the latest depth chart", "Demoted") : "",
+    b.opp_qb_out ? tag("tag", "The opponent's starting quarterback is listed out or doubtful", "Opp QB out") : "", b.opp_rb_out ? tag("tag", "The opponent's lead rusher is listed out or doubtful", "Opp RB out") : "",
+    b.rest != null && b.rest >= 10 ? tag("tag", "Defence coming off a bye week", "Off a bye") : b.rest != null && b.rest <= 4 ? tag("tag", "Short week", "Short week") : "",
+    b.uncertain ? tag("tag warn", "Listed questionable: priced 8% under his average; never a lock or parlay leg; the bet voids if he sits", "Questionable") : "",
+    b.new_role ? tag("tag warn", `New role: a part-timer who just played a starter's snaps${b.snap_jump ? ` (${b.snap_jump.toFixed(1)}x his season share)` : ""}. Priced at that role with a wider range; never a lock until his history catches up.`, "New role") : "",
+    b.reduced_role ? tag("tag warn", "Reduced role: his last game's snap share was well below his season share. Priced down; never a lock or parlay leg.", "Reduced role") : "",
+    b.absence ? tag("tag warn", "Back from absence: he missed at least one game that was not a bye. Priced down; never a lock or parlay leg.", "Back from absence") : "",
+    b.new_team ? tag("tag warn", "First game for a new team after a mid-season move. Priced down; never a lock or parlay leg.", "New team") : "",
+    b.lock_block && !b.five ? tag("tag", "Why this pick can never be a lock or a parlay leg, whatever its score", `Not lock-eligible: ${b.lock_block}`) : "",
+    b.far_from_line ? tag("tag", "The model's own number and the consensus line are 25%+ apart. It changes nothing in the grade; one of them knows something, so check the news before betting.", "Model far from line") : "",
+    b.group === "DL" && b.press_pg != null ? tag("tag", `${b.press_pg.toFixed(1)} pressures a game over his prior games (Pro Football Reference). A profile to read the line by, not a model adjustment: linemen of each profile land on the model's number.`, b.press_pg <= 1 ? "Run-stuffer" : b.press_pg <= 2 ? "Interior" : "Pass rusher") : "",
+  ].filter(Boolean);
+  const card = el("div", { class: "play" + (isPick ? " pick" : "") + (b.five ? " five" : "") },
+    el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}`, title: "Confidence grade" }, b.grade) : "", b.five ? el("span", { class: "star", title: "Lock" }, "★") : "", b.player,
+      el("small", {}, [b.group, b.team, b.opp ? `vs ${b.opp}` : "", kickoffLocal(betKick(b)) ? `· ${kickoffLocal(betKick(b))}` : ""].filter(Boolean).join(" ")),
+      b.lock == null ? "" : el("div", { class: "lock" }, `Lock score ${Math.round(b.lock)}/100`)),
+    el("div", { class: "ev" }, el("b", {}, b.ev == null ? "" : signedPct(b.ev)), el("span", {}, "expected return")),
+    el("div", { class: "bet" }, el("span", { class: side === "Under" ? "under" : "over" }, `${side || ""} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market).toLowerCase()}`, el("small", {}, ` · ${odds(price)} at ${b.book}`, b.payout == null ? "" : ` · pays ${num(b.payout, 2)} per unit`)),
+    tags.length ? el("div", { class: "tags" }, ...tags) : "",
+    el("div", { class: "nums" }, ...(b.proj == null ? [] : [el("span", {}, `Projection ${num(b.proj)}`), b.proj_model == null ? "" : el("span", {}, `Model alone ${num(b.proj_model)}`), el("span", {}, `Model ${(side || "over").toLowerCase()} ${pct(side === "Under" ? 1 - b.model_over : b.model_over)}`), el("span", {}, `Book ${pct(side === "Under" ? 1 - b.market_over : b.market_over)}`),
+      b.cons_n ? el("span", {}, `Cleared this line in ${b.cons_hits} of ${b.cons_n} games`) : ""])));
+  if (isPick && b.proj != null) card.append(whyBox(b, !!isLock));
+  else card.append(el("div", { class: "why" }, b.why || ""));
+  return card;
 }
 
 let projSort = { key: "proj", dir: -1 };
@@ -361,7 +423,7 @@ function renderProj() {
   const t = $("#proj-table"); t.replaceChildren();
   const q = $("#q").value.trim().toLowerCase();
   const cols = [["Player", "player"], ["Team", "team"], ["Opp", "opp_team"], ["Pos", "group"], ["Status", "status"], ["Games", "n_prev", "n"],
-                ["Season avg", "season_avg", "n"], ["Last game", "last", "n"], ["Projection", "proj", "n"], ["Solo proj", "proj_solo", "n"],
+                ["Season avg", "season_avg", "n"], ["Last game", "last", "n"], ["Projection", "proj", "n"], ["Solo proj", "proj_solo", "n"], ["Outside vs model", "fp_rel_comb", "n"],
                 ["Fair line", "fair_line", "n"], ["Stat crew", "crew_comb", "n"], ["Role up", "role_signal"]];
   const slate = projDay === "Sun" ? $("#proj-slate").value : "";
   let rows = (DATA.proj || []).filter((p) => (!q || `${p.player} ${p.team} ${p.opp_team}`.toLowerCase().includes(q)) && (!projDay || dayOf(projKick(p)) === projDay) && (!slate || slateOf(projKick(p)) === slate));
@@ -370,7 +432,7 @@ function renderProj() {
   cols.forEach(([label, key, cls]) => { const btn = el("button", {}, label + (projSort.key === key ? (projSort.dir < 0 ? " ↓" : " ↑") : "")); btn.onclick = () => { projSort = { key, dir: projSort.key === key ? -projSort.dir : (typeof rows[0]?.[key] === "number" ? -1 : 1) }; renderProj(); }; head.append(el("th", { class: cls || "" }, btn)); });
   t.append(el("thead", {}, head));
   const tb = el("tbody");
-  for (const p of rows) tb.append(el("tr", {}, ...[p.player, p.team, p.opp_team, p.group, p.status || "", p.n_prev, num(p.season_avg), p.last == null ? "" : num(p.last, 0), num(p.proj), num(p.proj_solo), num(p.fair_line),
+  for (const p of rows) tb.append(el("tr", {}, ...[p.player, p.team, p.opp_team, p.group, p.status || "", p.n_prev, num(p.season_avg), p.last == null ? "" : num(p.last, 0), num(p.proj), num(p.proj_solo), p.fp_rel_comb == null ? "" : signedPct(p.fp_rel_comb), num(p.fair_line),
     p.crew_comb == null || Math.abs(p.crew_comb - 1) < 0.005 ? "" : signedPct(p.crew_comb - 1), p.role_signal ? "Yes" : ""].map((c, i) => el("td", { class: cols[i][2] || "" }, String(c ?? "")))));
   t.append(tb);
 }
@@ -615,7 +677,7 @@ function show(id) {
 (async () => {
   [DATA.meta, DATA.bets, DATA.proj, DATA.results, DATA.backtest, DATA.parlays] = await Promise.all(["meta", "bets", "projections", "results", "backtest", "parlays"].map(load));
   renderMeta(); renderPlays(); renderDaybar(); renderProj(); renderRecord(); renderCheck();
-  ["#picks-only", "#market", "#best-only", "#slate"].forEach((s) => $(s).addEventListener("change", renderPlays));
+  ["#picks-only", "#market", "#best-only", "#slate", "#pos", "#side", "#sort"].forEach((s) => $(s).addEventListener("change", renderPlays));
   $("#q").addEventListener("input", renderProj);
   $("#proj-slate").addEventListener("change", renderProj);
   document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => show(b.dataset.tab)));

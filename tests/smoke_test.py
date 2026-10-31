@@ -85,6 +85,24 @@ check(all(not (b.get("lock_block") and "Over" == b.get("side") and "fading" in s
       "no Over is sold as fading an outlier")
 check(any("role-shift" in r["predictor"] for r in bt["predictors"]) and isinstance(bt.get("weak_spots"), list), "backtest reports the role-shift factors and the weak-spot table")
 check(all(any(k in r["predictor"] for r in bt["predictors"]) for k in ("per-snap base", "vacancy rule", "dome corners", "outlier damping")), "backtest reports the per-snap, vacancy, dome and outlier-damping pieces")
+check(any(p.get("group") == "DL" and p.get("press_pg") is not None for p in proj) and all(p.get("press_pg") is None for p in proj if p.get("group") != "DL")
+      and not any("pressure" in r["predictor"] for r in bt["predictors"]), "lineman pressure profile carried for the card, DL only, with no model row (rejected in round 5)")
+check(all("fp_comb" in p and "fp_rel_comb" in p for p in proj) and meta.get("fantasypros_rows") == 0 and "espn_injury_rows" in meta, "outside consensus and outside injury feed wired through (empty on synthetic data)")
+sys.path.insert(0, str(tmp))
+from pipeline import sources as _S
+_payload = {"injuries": [{"injuries": [
+    {"status": "Suspension", "athlete": {"displayName": "C.J. Gardner-Johnson", "team": {"abbreviation": "BUF"}, "position": {"abbreviation": "S"}}, "details": {"returnDate": "2026-11-09"}},
+    {"status": "Injured Reserve", "athlete": {"displayName": "Some Player Jr.", "team": {"abbreviation": "WSH"}}},
+    {"status": "Active", "athlete": {"displayName": "Mack Wilson Sr.", "team": {"abbreviation": "ARI"}}},
+    {"status": "Questionable", "athlete": {"displayName": "Max Melton", "team": {"abbreviation": "LAR"}}}]}]}
+_e = _S.parse_espn_injuries(_payload, 2026, 8)
+check(list(_e.status) == ["suspended", "injured reserve", "questionable"] and list(_e.team) == ["BUF", "WAS", "LA"], "ESPN injury feed parsed: statuses mapped, Active dropped, team codes translated")
+_lg = pd.DataFrame(dict(season=[2026, 2026], week=[8, 8], team=["LA", "BUF"], name_key=["maxmelton", "cjgardnerjohnson"], player_id=["00-1", "00-2"], status=["Out", ""], practice=["DNP", "Full"]))
+_m = _S.merge_injury_sources(_lg, _e).set_index(["team", "name_key"])
+check(_m.loc[("LA", "maxmelton"), "status"] == "Out" and _m.loc[("BUF", "cjgardnerjohnson"), "status"] == "suspended" and _m.loc[("BUF", "cjgardnerjohnson"), "practice"] == "Full"
+      and _m.loc[("BUF", "cjgardnerjohnson"), "player_id"] == "00-2" and ("WAS", "someplayer") in _m.index, "injury sources merged: more severe status wins, league practice status and ids kept, outside-only listings added")
+_fp = _S.parse_fantasypros('x "rows":[{"id":1,"player":{"name":"Jack Campbell","team":"DET"},"def_tackle":7.3,"def_assist":4.1},{"id":2,"player":{"name":"Devin Lloyd","team":"JAC"},"def_tackle":6.0,"def_assist":3.0}] y')
+check(len(_fp) == 2 and abs(float(_fp.fp_comb.iloc[0]) - 11.4) < 1e-9 and _fp.team.iloc[1] == "JAX", "FantasyPros consensus rows parsed with team codes translated")
 check(any(p.get("share_pred") is not None and p.get("tsnaps_exp") for p in proj) and all(0 <= (p.get("share_pred") or 0) <= 1 for p in proj), "projections carry an expected snap share and team snaps")
 check(any(":low" in k or "under 60%" in str(d.get("group", "")) for d in bt["dispersion"] for k in [d.get("group", "")]), "dispersion estimated separately for low expected snap share")
 check(meta.get("freshness", {}).get("stats_through_week") is not None, "data freshness (stats and snaps through week) reported")

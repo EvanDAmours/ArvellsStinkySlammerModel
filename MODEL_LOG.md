@@ -576,6 +576,93 @@ on 106 picks has a standard error of about 5 points, the week 7 crediting dip ex
 rule cannot tell when the market adjusts; the segment calibration can, and the Over record already shows what
 happens when a side goes cold.
 
+## Research round 5: beyond nflverse, and the minutiae (2026-10-31, midday MDT)
+
+The owner's brief: find five to ten more sources, "expand to other sites", "sneaky little datasets... that we can
+cross verify against our own model", "minutiae instead of the big details", because "an amalgamation of the big
+books and big sites is just going to set us up to fall victim to the big books". Sixteen sources were examined.
+Model factors were tested the usual way: fitted on 2023-24, checked on 2025-26 (11,648 held-out games), reported
+as the change in held-out miss and the bias on the subset the factor touches. Outside feeds were tested for
+reachability from a script, for what they carry that nflverse does not, and for whether they could be validated.
+
+### Adopted
+
+1. **ESPN's injury feed**, **FantasyPros as a cross-check** (items 2 and 3 below) and, for the card only, **a lineman's
+   pressure profile** (item 4: rejected as a model factor, kept as a tag). The round's model-moving candidate did not
+   survive the pipeline's own backtest; see item 4 for what happened, because it is the lesson of the round.
+2. **ESPN's injury feed (`site.api.espn.com/.../nfl/injuries`), merged with the league report.** The league report
+   carries only the week's designations. ESPN's feed carries **suspensions and injured-reserve stays** as listings
+   (on 2026-10-31: 55 Out, 3 Doubtful, 96 Questionable, 49 Injured Reserve, 1 Suspension, 596 "Active" notes), with
+   a return date. C.J. Gardner-Johnson (S, BUF) sat on it as a suspension through 2026-11-09 and on no league
+   report: a regular the model would have projected and priced, and who was not going to play. Rule: one listing
+   per player-week, the more severe status wins (out / IR / suspended > doubtful > questionable), the league
+   report's practice status and player id are kept, an "Active" note never downgrades anyone. Loaded at the
+   morning run and again at every line pull (`load_espn_injuries`, `merge_injury_sources`; team codes WSH, LAR,
+   JAC translated). On synthetic data the feed is empty, so the smoke test checks the parser and the merge rule on
+   a planted payload instead.
+3. **FantasyPros expert-consensus IDP projections, as a cross-check only.** The projections pages for DL, LB and
+   DB embed the consensus solo tackles and assists for the top ten players at each position (the ones with lines);
+   the full table sits behind their API key, which this project does not use. Loaded each morning for the week,
+   kept under `data/consensus/fantasypros_<season>_w<week>.csv`, shown on the Projections tab ("Outside consensus")
+   and in each pick's "Why" box (above or below the line, same side as the pick or not), and logged with every
+   pick (`fp_comb`, `fp_solo`, `fp_rel`) so that in a month the picks log can say whether agreement with the
+   consensus predicts hits. It prices nothing and chooses nothing: the owner's rule is that the edge is what the
+   market has not priced, and a consensus is the market's cousin. One thing learned on the first load: their
+   numbers are not box-score tackles. Across the 30 matched players the consensus "tackles + assists" ran 24% above
+   the players' own season averages (Roquan Smith: 11.0 against a 7.9 average; Jack Campbell 11.4 against 9.2),
+   a mix of sites' tackle definitions. Shown raw it would read as "the model is low on everyone", which is false.
+   So the site reads it relatively: how far the consensus sits above or below its usual relation to this model
+   for that player (`fp_rel`, median-normalised each morning), and says so.
+
+### Examined and rejected (no new evidence needed to re-open; new data would be)
+
+4. **A lineman's pressure profile as a model factor (PFR via nflverse, `def_pressures`).** The research script said
+   run-stuffers (1 or fewer pressures a game, own prior games) ran +9.7% / +7.9% over the model (1,983 games) and
+   1-2 a game +3.2% / +4.0%; it was built as two buckets (+6%, +3%) and sent through the validation protocol. The
+   pipeline's backtest (28,861 games) rejected it: miss 1.6217 without, 1.6260 with; DL bias -0.033 without,
+   -0.122 with (the model priced linemen 5% too high). The diagnosis: PFR's advanced table only has a row for a
+   player-game in which he recorded something, and the research script computed the profile and the ratio on
+   those rows only, so a low-pressure lineman entered the table mostly in games where he made tackles. That is
+   conditioning on the outcome. On the full game list (every game he played, a missing PFR row counted as a
+   missing value, not as zero pressures), the buckets sit on the model: 0.996 / 1.005 (1 or fewer), 0.970 / 1.016
+   (1-2), 0.964 / 0.970 (2-3). Nothing to fix. Kept: `press` loaded from PFR, `press_pg` on each lineman's
+   projection, and a Run-stuffer / Interior / Pass rusher tag on the card that says what kind of lineman he is and
+   claims no model effect. Pitfall recorded below.
+5. Game total (nflverse schedules): slope -0.006 per 10 points, held-out miss -0.009%. Nothing.
+6. Opponent implied points (total and spread): slope +0.004 per 5 points, -0.027%. Nothing; the spread tilt
+   already carries what there is.
+7. Playing surface (grass / turf): actual over model 0.997 / 1.004 on grass, 0.988 / 0.994 on turf. Nothing.
+8. Opponent pass rate over expected (play-by-play, prior games): by position, held-out miss +0.045% (LB) to
+   -0.013% (DL), biases unmoved. The run/pass mix factor already uses the opponent's actual mix.
+9. Opponent shotgun rate: -0.011% to +0.014%. Nothing.
+10. Opponent plays per drive, third-down rate, share of plays gaining 3 yards or fewer: -0.039% / -0.042% /
+   -0.016%, biases unmoved. Below the bar (a piece earns its place at about -0.1% or a bias it fixes).
+11. Next Gen Stats rushing of the opponent (rush yards over expected per attempt, efficiency): -0.009% to
+    +0.002%. Nothing.
+12. Next Gen Stats passing of the opponent's QB (time to throw, completion over expected): -0.029% to +0.016%,
+    CB bias moved the wrong way. Nothing.
+13. ESPN QBR: no loader in nflreadpy; not reachable as a table. Skipped.
+14. Special-teams tackles in the player stats: there is no separate column (`def_tackles_solo`,
+    `def_tackle_assists`, `def_tackles_with_assist`, `def_tackles_for_loss` only), and the books settle on the
+    same box-score total, so there is nothing to separate.
+15. nflverse weekly rosters (status ACT / RES / INA / CUT / RET / DEV / EXE / TRT): usable to drop a regular who is
+    gone (cut, retired, reserve) from the vacancy logic. Not adopted this round because the ESPN feed covers the
+    live hole (IR and suspension); a candidate for the next round as a second check on "gone".
+16. ESPN scoreboard: reachable; carries nothing the nflverse schedule lacks (kickoffs, venues).
+17. PrizePicks (HTTP 403) and Underdog (HTTP 426) projection APIs: refused to scripts. Their lines cannot be
+    read; no pick-'em cross-check this round.
+
+### What the owner should read into it
+
+- Of ten more "big" game-context sources (totals, implied points, surface, tendencies, NGS), none moved the
+  held-out miss by a tenth of a percent. The model's own history, snaps and role already carry them. The find
+  is in the minutiae: who is suspended or on reserve and not on the league report.
+- The validation protocol caught a factor that a research script had "proven" in both halves of the data. A
+  side-script result is a hypothesis until the pipeline's own backtest, on the full game list, agrees.
+- The outside feeds are there to catch what the league report and the model cannot see (a suspension, an IR stay)
+  and to show the owner an outside number next to ours, not to steer picks. The cross-check is logged so it can
+  be judged later, the way everything else here is.
+
 ## Standing watch: grade order (opened 2026-10-30, evening MDT, at the owner's request)
 
 Live record by grade as of 2026-10-30: A 4-2 (67%), B 13-5 (72%), C 13-13 (50%). A below B on six A picks is not
@@ -710,6 +797,32 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-10-31, midday MDT (research round 5: pressure profile, ESPN injuries, outside consensus; Plays tab rebuilt)
+- See "Research round 5" above. `press` from `load_pfr_def` (and `fake_pfr_def`), `press_prev` through
+  `attach_extras`, `add_history_features`, `upcoming_rows`; `press_pg` on each lineman's projection for the card's
+  profile tag (the model factor built on it was rejected by the backtest: miss 1.6217 -> 1.6260, DL bias -0.03 ->
+  -0.12; removed before the push). `parse_espn_injuries`, `load_espn_injuries`, `merge_injury_sources` in `pipeline/sources.py`,
+  merged in `load_all` (morning) and `refresh_injury_status` (every pull); `espn_injury_rows` in the site meta.
+  `parse_fantasypros`, `load_fantasypros`; `attach_consensus` in `run.py` (snapshot under `data/consensus/`,
+  `fp_comb`/`fp_solo`/`fp_ast` on projections, logged with each pick). Smoke checks for all three.
+- Site, at the owner's request: the Plays tab has a toolbar (position, side, market, slate, sort by lock score /
+  return / kickoff / player / line, picks only, best price per line) so the board can be read by position (the CB
+  Unders); the legend is collapsed by default; the locks box sits first with each lock carrying a "Why this is a
+  lock" dropdown (the score piece by piece, the checklist, the record of picks of its kind, his game log, the
+  outside consensus); every other pick has the same box as "Why this pick"; cards carry tags (new role, reduced
+  role, questionable, promoted, run-stuffer, far from line) with hover explanations; the Projections tab shows
+  the outside consensus. Fixed while checking it on a phone: the helper that builds elements wrote the string
+  "undefined" into attributes (every dropdown opened by default), and the why-box tables overflowed the card.
+- Also fixed: an empty player id on an outside-feed listing could match a team whose starting QB or RB is unknown
+  and flag "Opp QB out" on every defender facing it; empty ids are now dropped from that set.
+- Validation: smoke test; real-data daily run in a scratch copy (backtest on 28,861 games, 204 ESPN listings
+  merged: 6 injured-reserve and 1 suspended regular now carry a status the league report did not have, 10 more
+  questionable listings than the league report; 30 consensus rows matched); the live site after the pushed daily
+  job.
+- Revert conditions: the ESPN merge if it ever marks a player out who then plays (then
+  the feed's "date" is checked against the league report's week before it may override); the consensus column if
+  it is found to have steered a pick (it must never enter a price, a grade or a lock score).
 
 ### 2026-10-31, late morning MDT (Sunday 8 am pull)
 - The Saturday 9 am pull (fired by hand after the cron stall) found tackle lines for one of twelve Sunday games:
@@ -1071,6 +1184,18 @@ Open, with what would justify them:
 ## Known pitfalls
 
 - Codespaces secrets are invisible to Actions. Only Actions secrets work.
+- A side table that only has a row when the player recorded something (PFR advanced defence, any "box score of
+  events" table) conditions on the outcome. Merge it onto the full list of games played before computing any
+  ratio from it, and treat a missing row as unknown, not zero. Research round 5's pressure factor was born of
+  this and died in the backtest.
+- Outside feeds carry their own vocabulary: ESPN's team codes (WSH, LAR, JAC) and statuses ("Injured Reserve",
+  "Suspension", and "Active" for a player with a note who plays) must be translated before a merge, and an
+  outside status may only raise severity, never lower it, because the two reports are not written at the same time.
+- FantasyPros' projection pages embed only the top ten players per position; the full table needs their API key.
+  The cross-check covers the high-volume names (the ones with lines) and no one else; do not read a blank as
+  "the consensus disagrees".
+- `el()` on the site must skip `undefined`/`null`/`false` attribute values: `setAttribute("open", undefined)` writes
+  the string "undefined", which is truthy for a boolean attribute.
 - A pick's claimed probability is biased upward by the act of picking (the biggest disagreements with the market
   are chosen, and the biggest disagreements are mostly error). Judge claims on hit rates after selection, and keep
   "expected return" as a threshold, not a confidence source.

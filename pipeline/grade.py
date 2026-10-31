@@ -24,7 +24,7 @@ def log_picks(bets, season, week, pulled_at):
                      odds=np.where(new.pick == "Over", new.over_odds, new.under_odds))
     cols = KEY + ["team", "opp", "group", "odds", "proj", "proj_model", "mkt_line", "model_over", "market_over", "ev", "why", "p_claim", "segment", "segment_adj",
                   "lock", "grade", "consistency", "cons_hits", "cons_n", "payout", "uncertain", "new_role", "reduced_role", "absence", "new_team",
-                  "in_role_games", "lock_block", "lock_eligible", "event_id", "commence_time", "pulled_at"]
+                  "in_role_games", "lock_block", "lock_eligible", "press_pg", "fp_comb", "fp_solo", "fp_rel", "event_id", "commence_time", "pulled_at"]
     new = new[[c for c in cols if c in new.columns]]
     old = pd.read_csv(PICKS) if PICKS.exists() else pd.DataFrame(columns=cols)
     both = pd.concat([old, new], ignore_index=True).drop_duplicates(KEY, keep="first")  # keep the first price we took

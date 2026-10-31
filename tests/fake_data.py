@@ -170,7 +170,8 @@ def fake_pfr_def(seasons):
     pw = fake_player_week(seasons)
     comb = pw.solo + pw.ast + pw.with_ast
     return pd.DataFrame(dict(season=pw.season, week=pw.week, team=pw.team, name_key=pw.player.map(__import__("pipeline.sources", fromlist=["norm_name"]).norm_name),
-                             targets=np.where(pw.group.isin(["CB", "S"]), (comb * 0.8).round(), 0.0), missed=(comb * 0.1).round(), pfr_comb=comb))
+                             targets=np.where(pw.group.isin(["CB", "S"]), (comb * 0.8).round(), 0.0), missed=(comb * 0.1).round(), pfr_comb=comb,
+                             press=np.where(pw.group == "DL", np.where(comb >= 4, 0.5, 2.5), 0.0)))      # a nose tackle's pressures are few; an edge's are many
 
 
 def fake_pbp_tackles(seasons):

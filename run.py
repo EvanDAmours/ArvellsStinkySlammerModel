@@ -164,6 +164,9 @@ def load_all():
     sched = S.load_schedule(seasons)
     snaps = S.load_snaps(seasons)
     inj = S.load_injuries(seasons)
+    week_ahead = upcoming_week(sched, C.SEASON)
+    espn = S.load_espn_injuries(C.SEASON, week_ahead)        # suspensions and IR stays the league report never carries
+    inj = S.merge_injury_sources(inj, espn)
     vol = S.load_team_volume(seasons)
     pbp, pfr, dc = S.load_pbp_tackles(seasons), S.load_pfr_def(seasons), S.load_depth_charts(seasons)
     if len(pbp["teams"]):
@@ -179,7 +182,7 @@ def load_all():
                      snaps_through_week=int(cur_snaps.week.max()) if len(cur_snaps) else None)
     freshness["snaps_lag"] = bool(freshness["stats_through_week"] and freshness["snaps_through_week"] and freshness["snaps_through_week"] < freshness["stats_through_week"])
     status = dict(stats_source=used, tackle_formula=formula, formula_check_ok=ok, formula_check=report, freshness=freshness,
-                  snaps_rows=int(len(snaps)), injury_rows=int(len(inj)), volume_rows=int(len(vol)),
+                  snaps_rows=int(len(snaps)), injury_rows=int(len(inj)), espn_injury_rows=int(len(espn)), volume_rows=int(len(vol)),
                   pbp_rows=int(len(pbp["players"])), pfr_rows=int(len(pfr)), depth_chart_rows=int(len(dc)))
     return seasons, pw, sched, snaps, inj, H, status, dict(vol=vol, pbp=pbp, pfr=pfr, dc=dc)
 
@@ -215,6 +218,34 @@ def attach_game_logs(P, H, season, week):
     return P
 
 
+def attach_consensus(P, season, week):
+    """Outside expert-consensus tackle projections (FantasyPros, the top players at each position) beside the model's
+    number: shown as a cross-check, logged with each pick, never used to price or choose. The week's rows are kept
+    under data/consensus so the cross-check can be validated against results later."""
+    if P is None or len(P) == 0:
+        return P, 0
+    fp = S.load_fantasypros(week)
+    P = P.copy()
+    for c in ("fp_comb", "fp_solo", "fp_ast", "fp_rel_comb", "fp_rel_solo"):
+        P[c] = np.nan
+    if fp.empty:
+        return P, 0
+    out = Path("data/consensus")
+    out.mkdir(parents=True, exist_ok=True)
+    fp.assign(season=season, week=week, pulled_at=dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes")).to_csv(out / f"fantasypros_{season}_w{int(week):02d}.csv", index=False)
+    m = P[["team", "name_key"]].merge(fp, on=["team", "name_key"], how="left")
+    for c in ("fp_comb", "fp_solo", "fp_ast"):
+        P[c] = m[c].values
+    # their numbers are not box-score tackles (on 2026-10-31 they ran 24% above the matched players' season averages,
+    # a mix of sites' tackle definitions), so the usable signal is relative: how far the consensus sits above or
+    # below its usual relation to this model for a player
+    for c, base in (("fp_comb", "proj"), ("fp_solo", "proj_solo")):
+        ratio = P[c] / P[base].where(P[base] > 0)
+        typical = float(ratio.median()) if ratio.notna().sum() >= 5 else np.nan
+        P[c.replace("fp_", "fp_rel_")] = (ratio / typical - 1) if typical and typical > 0 else np.nan
+    return P, int(len(fp))
+
+
 def cmd_daily():
     seasons, pw, sched, snaps, inj, H, status, src = load_all()
     week = upcoming_week(sched, C.SEASON)
@@ -222,6 +253,7 @@ def cmd_daily():
     F = M.upcoming_rows(H, sched, inj, C.SEASON, week, vol=src["vol"], dc=src["dc"], pbp_starters=src["pbp"]["starters"])
     P = M.finalize_projections(F, phi, scale=scale, gbm=gbm)
     P = attach_game_logs(P, H, C.SEASON, week)
+    P, status["fantasypros_rows"] = attach_consensus(P, C.SEASON, week)
     CACHE.mkdir(parents=True, exist_ok=True)
     if len(P):
         P.to_csv(CACHE / "projections.csv", index=False)
@@ -258,6 +290,7 @@ def refresh_injury_status(P, week):
         print(f"odds: injury refresh skipped ({e})")
         return P
     inj = inj[(inj.season == C.SEASON) & (inj.week == week)] if len(inj) else inj
+    inj = S.merge_injury_sources(inj, S.load_espn_injuries(C.SEASON, week))
     if inj.empty or "name_key" not in P.columns:
         return P
     status = {(r.team, r.name_key): str(r.status) for r in inj.itertuples()}
@@ -351,7 +384,8 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
     cols = ["player", "team", "opp_team", "group", "status", "n_prev", "season_avg", "last", "base", "proj", "proj_solo",
             "fair_line", "fair_line_solo", "crew_comb", "crew_solo", "spread_dog", "role_signal", "venue", "gameday", "gametime", "phi", "phi_solo",
             "dc_status", "opp_qb_out", "opp_rb_out", "rest", "pct_last3", "pct_prev", "pct_last", "gap_weeks", "team_changed", "new_role", "reduced_role",
-            "absence", "missed_game", "new_team", "snap_jump", "vacancy", "vacancy_rule", "share_pred", "rate_clean", "tsnaps_exp", "allowed_rel", "roof", "solo_drift", "proj_factor", "proj_gbm"]
+            "absence", "missed_game", "new_team", "snap_jump", "vacancy", "vacancy_rule", "share_pred", "rate_clean", "tsnaps_exp", "allowed_rel", "roof", "solo_drift", "proj_factor", "proj_gbm",
+            "log_comb", "log_solo", "press_pg", "fp_comb", "fp_solo", "fp_rel_comb", "fp_rel_solo"]
     _json(SITE / "projections.json", records(P, [c for c in cols if c in P.columns]) if len(P) else [])
     _json(SITE / "bets.json", records(bets))
     _json(SITE / "backtest.json", bt)

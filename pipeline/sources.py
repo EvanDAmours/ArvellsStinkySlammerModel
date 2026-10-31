@@ -8,6 +8,7 @@ import io
 import os
 import re
 
+import numpy as np
 import pandas as pd
 import requests
 
@@ -239,6 +240,124 @@ def load_injuries(seasons):
     return pd.concat(frames, ignore_index=True)
 
 
+# ---------------------------------------------------------------- outside injury feed (ESPN)
+ESPN_INJURIES = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/injuries"
+ESPN_TEAM = {"WSH": "WAS", "LAR": "LA", "JAC": "JAX"}     # ESPN codes that differ from nflverse's
+ESPN_STATUS = {"out": "out", "doubtful": "doubtful", "questionable": "questionable", "injured reserve": "injured reserve",
+               "suspension": "suspended", "physically unable to perform": "pup"}
+SEVERITY = {"out": 3, "injured reserve": 3, "ir": 3, "pup": 3, "suspended": 3, "doubtful": 2, "questionable": 1}
+
+
+def parse_espn_injuries(payload, season, week):
+    """The ESPN injury feed as rows like load_injuries(): one per listed player, current week. 'Active' listings
+    (a note but no designation) are dropped. Suspensions and injured-reserve stays are listings here and not on the
+    league report, which only carries the week's designations."""
+    rows = []
+    for team in (payload or {}).get("injuries", []) or []:
+        for i in team.get("injuries", []) or []:
+            a = i.get("athlete") or {}
+            raw = str(i.get("status") or "").strip().lower()
+            status = ESPN_STATUS.get(raw, "")
+            if not status:
+                if "reserve" in raw:
+                    status = "injured reserve"
+                elif "suspen" in raw:
+                    status = "suspended"
+                else:
+                    continue
+            code = str(((a.get("team") or {}).get("abbreviation")) or "").upper()
+            rows.append(dict(season=int(season), week=int(week), team=ESPN_TEAM.get(code, code), name_key=norm_name(a.get("displayName", "")),
+                             player_id="", status=status, practice="", pos=str((a.get("position") or {}).get("abbreviation") or ""),
+                             return_date=str((i.get("details") or {}).get("returnDate") or ""), listed_at=str(i.get("date") or "")))
+    cols = ["season", "week", "team", "name_key", "player_id", "status", "practice", "pos", "return_date", "listed_at"]
+    return pd.DataFrame(rows, columns=cols)
+
+
+def load_espn_injuries(season, week):
+    """Current listings from ESPN (empty on synthetic data or when the feed is down: the league report still applies)."""
+    if os.environ.get("TACKLE_FAKE_DATA"):
+        return parse_espn_injuries({}, season, week)
+    try:
+        r = requests.get(ESPN_INJURIES, timeout=60, headers={"User-Agent": "Mozilla/5.0"})
+        r.raise_for_status()
+        return parse_espn_injuries(r.json(), season, week)
+    except Exception as e:  # noqa: BLE001
+        print(f"  ESPN injuries: {type(e).__name__}: {e}")
+        return parse_espn_injuries({}, season, week)
+
+
+def merge_injury_sources(league, outside):
+    """One listing per player-week: the more severe status wins (out/IR/suspended > doubtful > questionable), so a
+    suspension or an IR stay that the league report never carries still rules a player out; the league report's
+    practice status is kept. A player the outside feed calls 'Active' is not downgraded (it is not listed there)."""
+    if outside is None or len(outside) == 0:
+        return league
+    cols = ["season", "week", "team", "name_key", "player_id", "status", "practice"]
+    L = league[[c for c in cols if c in league.columns]].copy() if league is not None and len(league) else pd.DataFrame(columns=cols)
+    for c in cols:
+        if c not in L.columns:
+            L[c] = ""
+    O = outside[cols].copy()
+    key = ["season", "week", "team", "name_key"]
+    both = pd.concat([L.assign(_src=0), O.assign(_src=1)], ignore_index=True)
+    both["_sev"] = both.status.fillna("").astype(str).str.lower().map(SEVERITY).fillna(0)
+    both = both.sort_values(key + ["_sev", "_src"], ascending=[True] * len(key) + [False, True])
+    first = both.drop_duplicates(key, keep="first")
+    # keep the league report's practice status and player id even when the outside status wins
+    lg = L.drop_duplicates(key).set_index(key)
+    first = first.set_index(key)
+    for c in ("practice", "player_id"):
+        have = lg[c].reindex(first.index)
+        first[c] = np.where(have.fillna("").astype(str) != "", have, first[c])
+    return first.reset_index()[cols]
+
+
+# ---------------------------------------------------------------- outside projections (FantasyPros expert consensus)
+FP_URL = "https://www.fantasypros.com/nfl/projections/{pos}.php?week={week}"
+FP_TEAM = {"JAC": "JAX", "LAR": "LA", "WSH": "WAS"}
+
+
+def parse_fantasypros(html):
+    """The rows FantasyPros embeds in its projection page (the top players at the position): expert-consensus solo
+    tackles and assists per player. Returns name_key, team, fp_solo, fp_ast, fp_comb."""
+    import json
+    rows = []
+    for m in re.finditer(r'"rows":\[', html or ""):
+        try:
+            arr, _ = json.JSONDecoder().raw_decode(html[m.end() - 1:])
+        except ValueError:
+            continue
+        for r in arr:
+            if not isinstance(r, dict) or "def_tackle" not in r:
+                continue
+            pl = r.get("player") or {}
+            code = str(pl.get("team") or "").upper()
+            solo, ast = float(r.get("def_tackle") or 0), float(r.get("def_assist") or 0)
+            rows.append(dict(name_key=norm_name(pl.get("name", "")), team=FP_TEAM.get(code, code), fp_solo=solo, fp_ast=ast, fp_comb=solo + ast))
+    return pd.DataFrame(rows, columns=["name_key", "team", "fp_solo", "fp_ast", "fp_comb"]).drop_duplicates(["name_key", "team"])
+
+
+def load_fantasypros(week):
+    """Expert-consensus tackle projections for the week's top defenders (DL, LB, DB pages). Never prices a line: a
+    cross-check shown beside the model's number and kept for later validation."""
+    if os.environ.get("TACKLE_FAKE_DATA"):
+        return parse_fantasypros("")
+    frames = []
+    for pos in ("dl", "lb", "db"):
+        try:
+            r = requests.get(FP_URL.format(pos=pos, week=int(week)), timeout=60, headers={"User-Agent": "Mozilla/5.0"})
+            r.raise_for_status()
+            if f"Week {int(week)}" not in r.text:
+                print(f"  FantasyPros {pos}: page is not for week {week}, skipped")
+                continue
+            frames.append(parse_fantasypros(r.text))
+        except Exception as e:  # noqa: BLE001
+            print(f"  FantasyPros {pos}: {type(e).__name__}: {e}")
+    if not frames:
+        return parse_fantasypros("")
+    return pd.concat(frames, ignore_index=True).drop_duplicates(["name_key", "team"])
+
+
 # ---------------------------------------------------------------- team volume (plays that end in a tackle)
 def load_team_volume(seasons):
     """Per team-game: opportunities the offense generated (carries + completions + sacks taken) and, from the
@@ -337,9 +456,10 @@ def load_pfr_def(seasons):
                                     "team": d.team.astype(str), "name_key": d.pfr_player_name.map(norm_name),
                                     "targets": pd.to_numeric(d.def_targets, errors="coerce").fillna(0),
                                     "missed": pd.to_numeric(d.def_missed_tackles, errors="coerce").fillna(0),
-                                    "pfr_comb": pd.to_numeric(d.def_tackles_combined, errors="coerce").fillna(0)}))
+                                    "pfr_comb": pd.to_numeric(d.def_tackles_combined, errors="coerce").fillna(0),
+                                    "press": pd.to_numeric(_col(d, "def_pressures", default=0), errors="coerce").fillna(0)}))
     if not frames:
-        return pd.DataFrame(columns=["season", "week", "team", "name_key", "targets", "missed", "pfr_comb"])
+        return pd.DataFrame(columns=["season", "week", "team", "name_key", "targets", "missed", "pfr_comb", "press"])
     return pd.concat(frames, ignore_index=True).groupby(["season", "week", "team", "name_key"], as_index=False).sum()
 
 
