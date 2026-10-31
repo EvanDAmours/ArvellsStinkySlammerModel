@@ -40,6 +40,7 @@ PULL_SLOTS = {
     4: [(18 * 60, "sat")],                                                        # Friday evening: Saturday games, if any
     5: [(9 * 60, "sat_sun"), (18 * 60, "sun")],                                   # Saturday: Saturday and Sunday games, then Sunday
     0: [(9 * 60, "mon"), (17 * 60 + 30, "mon")],                                  # Monday: the Monday game
+    6: [(8 * 60, "today")],                                                       # Sunday 8 am: first full look at the Sunday slate (books post late); the pre-kickoff pull follows
 }
 INTL_WINDOWS_H = (12, 1)           # international games are pulled this many hours before kickoff
 SUNDAY_PRE_KICK_MIN = 60           # Sunday: one pull this many minutes before the day's first kickoff (Edmonton time), the whole Sunday slate
@@ -97,7 +98,7 @@ def auto_plan(now=None, games=None, served=None):
     for slot, what in PULL_SLOTS.get(local.weekday(), []):
         key = f"{today} {slot // 60:02d}:{slot % 60:02d}"
         if local.hour * 60 + local.minute >= slot and key not in served:
-            days = {"thu_fri": [d(0), d(1)], "sat": [d(1)], "sat_sun": [d(0), d(1)], "sun": [d(1)], "mon": [d(0)]}[what]
+            days = {"thu_fri": [d(0), d(1)], "sat": [d(1)], "sat_sun": [d(0), d(1)], "sun": [d(1)], "mon": [d(0)], "today": [d(0)]}[what]
             due.append((slot, dict(days=days, key=key, reason=f"{local.strftime('%A')} {slot // 60:02d}:{slot % 60:02d} slot (run at {local.strftime('%H:%M')}): games on {days}")))
     # Sunday: one pull an hour before the day's first kickoff, from the schedule, covering every game that day
     if local.weekday() == 6 and games:

@@ -177,11 +177,14 @@ check(two and two["key"] == "2026-10-29 17:30" and two["also_served"] == ["2026-
 sun = [dict(game_id="2026_09_A_B", home="B", away="A", kickoff=_at(2026, 11, 1, 11, 0).isoformat(), international=False),
        dict(game_id="2026_09_C_D", home="D", away="C", kickoff=_at(2026, 11, 1, 14, 25).isoformat(), international=False),
        dict(game_id="2026_09_E_F", home="F", away="E", kickoff=_at(2026, 11, 2, 18, 15).isoformat(), international=False)]
-check(R.auto_plan(now=_at(2026, 11, 1, 9, 0), games=sun) is None, "Sunday: nothing due more than an hour before the first kickoff")
-plan = R.auto_plan(now=_at(2026, 11, 1, 10, 3), games=sun)
+check(R.auto_plan(now=_at(2026, 11, 1, 7, 30), games=sun) is None, "Sunday: nothing due before the 8 am look")
+plan = R.auto_plan(now=_at(2026, 11, 1, 8, 4), games=sun)
+check(plan and plan.get("days") == ["2026-11-01"] and plan.get("key") == "2026-11-01 08:00", f"Sunday: the 8 am look covers the whole Sunday slate ({plan and plan.get('reason')})")
+check(R.auto_plan(now=_at(2026, 11, 1, 9, 0), games=sun, served={"2026-11-01 08:00"}) is None, "Sunday: nothing due between the 8 am look and the pre-kickoff pull")
+plan = R.auto_plan(now=_at(2026, 11, 1, 10, 3), games=sun, served={"2026-11-01 08:00"})
 check(plan and plan.get("days") == ["2026-11-01"] and plan.get("key") == "2026-11-01 sunday-1h", f"Sunday: one pull an hour before the day's first kickoff covers the whole slate ({plan and plan.get('reason')})")
-check(R.auto_plan(now=_at(2026, 11, 1, 10, 33), games=sun, served={"2026-11-01 sunday-1h"}) is None, "Sunday: the pre-kickoff pull is served once")
-check(R.auto_plan(now=_at(2026, 11, 1, 9, 0)) is None, "Sunday with no schedule loaded: nothing due")
+check(R.auto_plan(now=_at(2026, 11, 1, 10, 33), games=sun, served={"2026-11-01 08:00", "2026-11-01 sunday-1h"}) is None, "Sunday: both Sunday pulls are served once")
+check(R.auto_plan(now=_at(2026, 11, 1, 7, 0)) is None and R.auto_plan(now=_at(2026, 11, 1, 9, 0), served={"2026-11-01 08:00"}) is None, "Sunday with no schedule loaded: only the fixed 8 am look is due")
 check(dt.datetime(2026, 11, 2, 12, 0, tzinfo=R.EDMONTON).utcoffset() == dt.timedelta(hours=-6) and dt.datetime(2026, 10, 30, 12, 0, tzinfo=R.EDMONTON).utcoffset() == dt.timedelta(hours=-6),
       "Edmonton stays on UTC-6 through the November clock change (Alberta Time)")
 plan = R.auto_plan(now=_at(2026, 11, 7, 18, 2), served={"2026-11-07 09:00"})      # Saturday 6:02 pm, after the clock change

@@ -711,6 +711,13 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-10-31, late morning MDT (Sunday 8 am pull)
+- The Saturday 9 am pull (fired by hand after the cron stall) found tackle lines for one of twelve Sunday games:
+  the books post Sunday tackle props late Saturday or Sunday morning. Had that held through the 6 pm pull, the
+  11 am pre-kickoff pull would have been the only full look, with no time for a second. Added a Sunday 8 am pull
+  (`PULL_SLOTS[6]`, the whole Sunday slate, about 26 credits when the board is full; empty games cost nothing).
+  Reversible in one line if the owner prefers the two-pull Sunday.
+
 ### 2026-10-31, morning MDT (second pull schedule)
 - The half-hourly pull cron stalled for two hours on Saturday morning; the 9 am pull was triggered by hand and a
   second cron on the quarter hours added to `odds.yml`. Serve-once keys prevent double pulls.

@@ -47,7 +47,8 @@ zone data and pins UTC-6 if that data is stale, so nothing needs editing). The p
 | | Fri 6:00 pm | Saturday games, if any (late season, playoffs) |
 | | Sat 9:00 am | Saturday and Sunday games |
 | | Sat 6:00 pm | Sunday games |
-| | Sun, 1 h before the first kickoff | The whole Sunday slate, with the inactives known for the early games |
+| | Sun 8:00 am | First full look at the Sunday slate (books often post tackle lines late Saturday or Sunday morning) |
+| | Sun, 1 h before the first kickoff | The whole Sunday slate again, with the inactives known for the early games |
 | | Mon 9:00 am, 5:30 pm | Monday game |
 | | 12 h and 1 h before kickoff | Any international game (neutral-site game overseas), that game only |
 
