@@ -80,6 +80,7 @@ VACANCY = dict(min_jump=1.5, regular_share=0.75, recent_weeks=3, weight=0.5)   #
 # as a factor (round 4: no gain once the per-snap base is in); kept as a feature for the corrector.
 MATCHUP = dict(pseudo_games=3)
 DOME_CB = 1.05            # corners in domes / closed roofs: +4.6% (2023-24) and +7.1% (2025-26) over the model
+SOLO_DRIFT = dict(weeks=3, cap=(0.85, 1.15))   # league solo share, last 3 weeks / season to date: solo crediting drifts down through a season (2025: 0.55 -> 0.51)
 PHI_SHARE_SPLIT = 0.6     # dispersion estimated separately for players expected below this snap share (var/mean 1.6-1.7 vs 1.2-1.4)
 # Second model (research round 3): a gradient-boosted corrector on the same features, Poisson loss, trained fresh each
 # morning on every finished game, blended with the factor model. Out of sample it cut error 1.1% (2025-26) and 1.5%

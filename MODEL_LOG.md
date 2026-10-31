@@ -508,6 +508,36 @@ Asked for after the audit: what in the algorithm itself could hurt us. Each item
 12. **Pass rushers labelled "LB"** get the linebacker prior for their first game or two of a season. Shrink is half
     a game for LB, so it washes out immediately. Acceptable.
 
+## Why the Overs miss (2026-10-31, morning MDT, at the owner's question)
+
+Measured on the live picks (68 Overs, 179 Unders) and on every priced line of weeks 7-8 (315 unique lines; scripts
+`pm8/calib.py`). Three causes, in order of size.
+
+1. **The market's over side is where the public money is, and the model's Over picks are its biggest upward
+   disagreements with that market.** On the Over picks the model claimed 60%, the market's no-vig price said 48%,
+   and reality was 41%. On all lines where the model sat above the market, overs hit 32-46%; where it sat well
+   below, they hit 47.6% against the market's 53.6%. The market's price already leans toward the over, so a
+   model-found Over edge means the model is far above a number that was set high to begin with. Those are the
+   model's errors, not the market's. The Under side has the opposite property: the market's over-lean leaves real
+   value on Unders, which is where the live record comes from (Unders 103-76, +22 units; Overs 28-40, -13 units).
+   Fix in place: an Over needs 10% return, is never a lock or a parlay leg, and the lock score's return part fades
+   above 20%.
+2. **Solo lines ran cold, and the solo projection lagged a league-wide drift.** Overs on solo lines hit 32.5% in
+   weeks 7-8 (the model said 44%, the market 49%); on combined lines overs hit 55% (model 46%, market 50%). The
+   league's solo share of tackles fell from 0.55 in weeks 1-6 to 0.50 in week 7 (2025 drifted the same way across
+   the season, 0.55 to 0.51), and a player's season-to-date solo share lags that. Fix: the solo share now carries a
+   league drift factor (last three weeks over the season to date, `SOLO_DRIFT`): test-years solo bias -0.044 ->
+   -0.003 tackles, error -0.5%, plus the solo level calibration from the audit. It cannot catch a one-week swing
+   like week 7 in time; it catches a season-long drift, which 2025 had.
+3. **Low lines.** On lines of 2.5 or less, overs hit 34-36% against a model 45% and a market 51%: for low-volume
+   players the whole market sets the number too high and the blend imports that. The Over bar and lock rule
+   cover it; a line-level calibration is on the backlog pending more weeks.
+
+What it is **not**: the backtest shows the model's upward adjustments do not overshoot a player's own history
+(when it projects 25%+ above his average, he delivers 4-6% more than projected), and the count distribution's
+over-probabilities are honest at lines just above and below the projection (0.438 vs 0.456 observed, 0.641 vs
+0.673). The Over problem is relative to the market, not to the player.
+
 ## Standing watch: grade order (opened 2026-10-30, evening MDT, at the owner's request)
 
 Live record by grade as of 2026-10-30: A 4-2 (67%), B 13-5 (72%), C 13-13 (50%). A below B on six A picks is not
@@ -642,6 +672,11 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-10-31, morning MDT (league solo drift)
+- `SOLO_DRIFT`, `solo_drift_table` / `solo_drift_for` in `pipeline/model.py`, applied to the solo share; backtest row
+  "Solo tackles: full model without league solo drift"; smoke check. See "Why the Overs miss" above. Revert: the
+  without-drift solo row beating the with-drift row for a season.
 
 ### 2026-10-30, evening MDT (risk pass: Overs ineligible for locks, snap-count blind spot)
 - See the risk pass above. `LOCK_RULES["overs_eligible"]` false; "snap counts missing for his last game" and

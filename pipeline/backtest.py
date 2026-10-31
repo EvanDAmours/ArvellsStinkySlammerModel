@@ -103,6 +103,7 @@ def run_backtest(H, seasons):
     ok_s = full_solo.notna()
     phi_by_group["__scale_solo__"] = float(np.clip(T.solo_t[ok_s].sum() / max(1e-9, float(full_solo[ok_s].sum())), 0.9, 1.1))
     solo_rows = [dict(predictor="Solo tackles: full model (solo share of the projection)", **_metrics(T.solo_t, full_solo)),
+                 dict(predictor="Solo tackles: full model without league solo drift", **_metrics(T.solo_t, M.project_frame(T, use_solo_drift=False)[2])),
                  dict(predictor="Solo tackles: season average", **_metrics(T.solo_t, T.solo_prev / T.n_prev.clip(lower=1) * T.crew_solo.fillna(1.0)))]
     for g, v in C.DEFAULT_PHI.items():
         phi_by_group.setdefault(g, v)

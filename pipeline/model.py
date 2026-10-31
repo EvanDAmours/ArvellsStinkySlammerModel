@@ -263,11 +263,39 @@ def add_history_features(H):
     H["last_margin"] = g.margin.shift(1) if "margin" in H.columns else np.nan
     H = attach_team_snaps(H)
     H = attach_matchup(H)
+    H = H.drop(columns=[c for c in ("solo_drift",) if c in H.columns]).merge(solo_drift_table(H), on=["season", "week"], how="left")
     ps = H.groupby(["player_id", "season"]).agg(ps_games=("comb", "size"), ps_avg=("comb_adj", "mean"),
                                                  ps_avg_raw=("comb", "mean"), ps_c=("_c_real", "sum"), ps_s=("_s_real", "sum")).reset_index()
     ps["season"] += 1
     ps["ps_rate"] = (ps.ps_c / ps.ps_s.clip(lower=1)).where(ps.ps_s >= C.PERSNAP["min_prior_snaps"])
     return H.merge(ps.drop(columns=["ps_c", "ps_s"]), on=["player_id", "season"], how="left").drop(columns=["_c_real", "_s_real"])
+
+
+def solo_drift_table(H):
+    """League solo share over the last few weeks relative to the season to date, known before each week: the stat
+    crews' solo/assist split drifts within a season, and a player's season-to-date solo share lags it."""
+    c = C.SOLO_DRIFT
+    if H.empty or "solo_t" not in H.columns:
+        return pd.DataFrame(columns=["season", "week", "solo_drift"])
+    lw = H.groupby(["season", "week"]).agg(solo=("solo_t", "sum"), comb=("comb", "sum")).reset_index().sort_values(["season", "week"])
+    g = lw.groupby("season")
+    std = (g.solo.cumsum() - lw.solo) / (g.comb.cumsum() - lw.comb).clip(lower=1)
+    rec_s = g.solo.transform(lambda x: x.shift(1).rolling(c["weeks"], min_periods=1).sum())
+    rec_c = g.comb.transform(lambda x: x.shift(1).rolling(c["weeks"], min_periods=1).sum())
+    lw["solo_drift"] = (rec_s / rec_c.clip(lower=1) / std.replace(0, np.nan)).clip(*c["cap"]).fillna(1.0)
+    return lw[["season", "week", "solo_drift"]]
+
+
+def solo_drift_for(H, season, week):
+    """The drift that applies to an upcoming week: last few played weeks of the season over its season to date."""
+    c = C.SOLO_DRIFT
+    done = H[(H.season == season) & (H.week < week)]
+    if done.empty or done.comb.sum() <= 0:
+        return 1.0
+    lw = done.groupby("week").agg(solo=("solo_t", "sum"), comb=("comb", "sum")).sort_index()
+    rec = lw.tail(c["weeks"])
+    std = lw.solo.sum() / max(1.0, lw.comb.sum()); recent = rec.solo.sum() / max(1.0, rec.comb.sum())
+    return float(np.clip(recent / std if std > 0 else 1.0, *c["cap"]))
 
 
 def attach_team_snaps(H):
@@ -595,7 +623,7 @@ def rest_factor(F):
 
 
 def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_snap=True, use_volume=True, use_depth=True, use_pfr=True, use_mix=True, use_rest=True, use_injury=True, use_new_role=True, use_role_shift=True,
-                  use_persnap=True, use_vacancy=True, use_dome=True):
+                  use_persnap=True, use_vacancy=True, use_dome=True, use_solo_drift=True):
     k = F.group.map(C.SHRINK_GAMES_BY_GROUP).fillna(C.SHRINK_GAMES) if k is None else k
     if use_crew:
         prev, ps = F.comb_prev, F.ps_avg
@@ -646,6 +674,8 @@ def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_sn
             wv = C.VACANCY["weight"]
             core = np.where(rule, wv * ps_last.values + (1 - wv) * core, core)
     solo_share = (F.solo_prev + 8 * F.group.map(C.POS_SOLO_SHARE).fillna(0.6)) / (F.comb_prev + 8)
+    if use_solo_drift:
+        solo_share = solo_share * pd.to_numeric(_col_or(F, "solo_drift", 1.0), errors="coerce").fillna(1.0)
     mu = core * tilt * crew_c * volume * extra
     mu_solo = core * tilt * solo_share * crew_s * volume * extra
     return pd.Series(base, index=F.index), pd.Series(mu, index=F.index), pd.Series(mu_solo, index=F.index)
@@ -712,6 +742,7 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
     F = F.merge(games[["team", "game_id", "venue", "spread_dog", "is_home", "opp_team", "gameday", "gametime", "final", "rest", "margin", "roof"]], on="team", how="inner")
     F["season"], F["week"] = season, week
     ts, lg_snaps = team_snaps_for(H, season, week)
+    F["solo_drift"] = solo_drift_for(H, season, week)
     F["tsnaps_exp"] = (F.team.map(ts.get("defence", {})).fillna(lg_snaps) + F.opp_team.map(ts.get("offence", {})).fillna(lg_snaps)) / 2
     mt, _ = matchup_for(H, season, week)
     F["allowed_rel"] = [mt.get((o, g), 1.0) for o, g in zip(F.opp_team, F.group)]

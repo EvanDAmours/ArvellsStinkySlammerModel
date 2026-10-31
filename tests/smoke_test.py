@@ -89,6 +89,7 @@ check(any(":low" in k or "under 60%" in str(d.get("group", "")) for d in bt["dis
 check(meta.get("freshness", {}).get("stats_through_week") is not None, "data freshness (stats and snaps through week) reported")
 check(any(r["predictor"].startswith("Solo tackles: full model") for r in bt["predictors"]) and any("solo" in d["group"] for d in bt["dispersion"]) and 0.9 <= bt.get("scale_solo", 0) <= 1.1,
       "solo tackles scored in the backtest with their own dispersion and level")
+check(any("without league solo drift" in r["predictor"] for r in bt["predictors"]) and all(0.85 <= (p.get("solo_drift") or 1.0) <= 1.15 for p in proj), "league solo drift applied and reported")
 check(all("far_from_line" in b and "p_claim" in b for b in priced), "priced lines carry the far-from-line flag and the claimed chance")
 check(not any(b.get("five") and b.get("side") == "Over" for b in priced) and all("Over side" in str(b.get("lock_block")) for b in priced if b.get("side") == "Over"), "no Over is a lock while Overs are ineligible")
 check(all(b.get("ev", 0) >= 0.10 - 1e-9 or "fading" in str(b.get("why")) or "role" in str(b.get("why")) for b in priced if b.get("pick") == "Over"), "an Over pick clears the higher Over bar unless a signal backs it")

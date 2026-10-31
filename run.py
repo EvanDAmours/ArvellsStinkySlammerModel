@@ -342,7 +342,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
     cols = ["player", "team", "opp_team", "group", "status", "n_prev", "season_avg", "last", "base", "proj", "proj_solo",
             "fair_line", "fair_line_solo", "crew_comb", "crew_solo", "spread_dog", "role_signal", "venue", "gameday", "gametime", "phi", "phi_solo",
             "dc_status", "opp_qb_out", "opp_rb_out", "rest", "pct_last3", "pct_prev", "pct_last", "gap_weeks", "team_changed", "new_role", "reduced_role",
-            "absence", "missed_game", "new_team", "snap_jump", "vacancy", "vacancy_rule", "share_pred", "rate_clean", "tsnaps_exp", "allowed_rel", "roof", "proj_factor", "proj_gbm"]
+            "absence", "missed_game", "new_team", "snap_jump", "vacancy", "vacancy_rule", "share_pred", "rate_clean", "tsnaps_exp", "allowed_rel", "roof", "solo_drift", "proj_factor", "proj_gbm"]
     _json(SITE / "projections.json", records(P, [c for c in cols if c in P.columns]) if len(P) else [])
     _json(SITE / "bets.json", records(bets))
     _json(SITE / "backtest.json", bt)
