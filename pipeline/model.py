@@ -673,7 +673,8 @@ def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_sn
             ps_last = persnap_base(F, _col_or(F, "pct_last", np.nan).fillna(0))     # his last game's share is his new role
             wv = C.VACANCY["weight"]
             core = np.where(rule, wv * ps_last.values + (1 - wv) * core, core)
-    solo_share = (F.solo_prev + 8 * F.group.map(C.POS_SOLO_SHARE).fillna(0.6)) / (F.comb_prev + 8)
+    m_s = C.SOLO_SHARE_PSEUDO
+    solo_share = (F.solo_prev + m_s * F.group.map(C.POS_SOLO_SHARE).fillna(0.6)) / (F.comb_prev + m_s)
     if use_solo_drift:
         solo_share = solo_share * pd.to_numeric(_col_or(F, "solo_drift", 1.0), errors="coerce").fillna(1.0)
     mu = core * tilt * crew_c * volume * extra
@@ -821,7 +822,8 @@ def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
         return F
     base, mu, mu_solo = project_frame(F, k=k)
     scale_solo = phi_by_group.get("__scale_solo__", scale) if isinstance(phi_by_group, dict) else scale
-    mu, mu_solo = mu * scale, mu_solo * scale_solo
+    by_grp = F.group.map({g: phi_by_group.get(f"{g}|solo_scale") for g in F.group.unique()}) if isinstance(phi_by_group, dict) else pd.Series(np.nan, index=F.index)
+    mu, mu_solo = mu * scale, mu_solo * by_grp.fillna(scale_solo).values     # solo level per position (CB and S run highest)
     if gbm is not None:
         g = gbm(gbm_features(F, mu))
         blended = pd.Series(blend_gbm(mu, g), index=F.index)
@@ -865,12 +867,28 @@ def _log(row, col):
     return list(v)
 
 
-def claimed_prob(p_side):
-    """A pick's claimed chance, shrunk toward even (never toward the book): selected picks overclaim."""
-    return 0.5 + C.CLAIM_SHRINK * (float(p_side) - 0.5)
+def claimed_prob(p_side, adj=0.0):
+    """A pick's claimed chance: shrunk toward even (never toward the book), then corrected by how claims like it have
+    resolved (segment calibration, our own graded picks)."""
+    return float(np.clip(0.5 + C.CLAIM_SHRINK * (float(p_side) - 0.5) + float(adj), 0.05, 0.95))
 
 
-def lock_score(ev, p_side, consistency, n_games, signal):
+def segment_adjust(segments, side, solo, group):
+    """Correction to a pick's claimed chance from the graded record of picks like it: finest segment with enough
+    picks (side x market x position, then side x market, then side). Returns (adjustment, segment name)."""
+    if not segments:
+        return 0.0, ""
+    c = C.SEGMENT_CAL
+    mk = "solo" if solo else "combined"
+    for key in (f"{side} {mk} {group}", f"{side} {mk}", f"{side}"):
+        seg = segments.get(key)
+        if seg and seg.get("n", 0) >= c["min_n"]:
+            w = seg["n"] / (seg["n"] + c["k"])
+            return float(np.clip(w * (seg["hit"] - seg["claimed"]), -c["cap"], c["cap"])), key
+    return 0.0, ""
+
+
+def lock_score(ev, p_side, consistency, n_games, signal, adj=0.0):
     """0-100 confidence in a pick from the model's own evidence only: expected return at the price, the model's
     probability for the side, how often the player cleared the line this season, games of data, and whether a
     role-change or outlier-fade signal backs the pick. Weights in config.LOCK_WEIGHTS; tested on the Track record tab."""
@@ -879,7 +897,7 @@ def lock_score(ev, p_side, consistency, n_games, signal):
     lo, hi = C.LOCK_EV_FADE
     if ev > lo:                                   # too good to be true: the biggest disagreements with the market are mostly model error
         ev_part = float(np.clip((hi - ev) / (hi - lo), 0, 1))
-    model_part = float(np.clip((claimed_prob(p_side) - 0.5) / (C.LOCK_MODEL_FULL - 0.5), 0, 1))
+    model_part = float(np.clip((claimed_prob(p_side, adj) - 0.5) / (C.LOCK_MODEL_FULL - 0.5), 0, 1))
     cons_part = 0.5 if consistency is None or np.isnan(consistency) else float(consistency)
     n_part = float(np.clip(n_games / 6.0, 0, 1))
     score = 100 * (w["ev"] * ev_part + w["model"] * model_part + w["consistency"] * cons_part + w["sample"] * n_part + w["signal"] * (1.0 if signal else 0.0))
@@ -890,7 +908,7 @@ def grade_of(score):
     return "A" if score >= C.GRADE_BARS["A"] else "B" if score >= C.GRADE_BARS["B"] else "C"
 
 
-def price_lines(lines, P):
+def price_lines(lines, P, segments=None):
     """Evaluate every posted line against the projection; return one row per line with EV, pick and confidence grade."""
     if lines is None or len(lines) == 0 or P is None or len(P) == 0:
         return pd.DataFrame()
@@ -973,7 +991,8 @@ def price_lines(lines, P):
                                        (fl["new_team"], "new team"), (not settled, f"only {in_role_n} game{'s' if in_role_n != 1 else ''} in this role"),
                                        (uncertain, "questionable"), (snaps_missing, "snap counts missing for his last game"),
                                        (side == "Over" and not C.LOCK_RULES.get("overs_eligible", True), "Over side")) if ok]
-        lock = lock_score(ev, p_side, consistency, in_role_n, fade or role)
+        seg_adj, seg_key = segment_adjust(segments, side, solo, p.group)
+        lock = lock_score(ev, p_side, consistency, in_role_n, fade or role, seg_adj)
         if flagged:
             why = f"His own status is {p.status or 'uncertain'}: wait for the final report"
         elif thin:
@@ -1000,7 +1019,7 @@ def price_lines(lines, P):
                 why += "; not lock-eligible: " + ", ".join(block)
         rows.append({**base, "team": p.team, "opp": p.opp_team, "group": p.group, "proj": float(mu), "proj_model": float(mu_model),
                      "mkt_line": float(r.mkt_line), "phi": phi_use, "model_over": po, "market_over": mkt, "ev": ev, "side": side, "far_from_line": bool(far_from_line),
-                     "p_claim": claimed_prob(p_side),
+                     "p_claim": claimed_prob(p_side, seg_adj), "segment": seg_key, "segment_adj": float(seg_adj),
                      "pick": pick, "why": why, "signal_fade": bool(fade), "signal_role": role, "status": p.status,
                      "season_avg": float(p.season_avg), "last": None if pd.isna(p["last"]) else float(p["last"]),
                      "n_prev": int(p.n_prev), "consistency": consistency, "cons_hits": int(sum(hits)), "cons_n": len(hits),

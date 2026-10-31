@@ -538,6 +538,44 @@ What it is **not**: the backtest shows the model's upward adjustments do not ove
 over-probabilities are honest at lines just above and below the projection (0.438 vs 0.456 observed, 0.641 vs
 0.673). The Over problem is relative to the market, not to the player.
 
+## Is the solo Under our play? (2026-10-31, midday MDT, at the owner's question)
+
+Live: Under solo 70-36 (66%, +30 units), the best segment by far. Measured properly before building on it:
+
+- **The edge was the market's, not our selection's.** On every solo line on the board in weeks 7-8 (154 unique
+  closing lines), the over hit 32.5% while the market's own price said 49%. Our solo-Under picks hit 66%; betting
+  every solo Under blind would have hit 67%. The model added nothing within the solo market those two weeks; it
+  was right to lean Under, and that lean is what earned the units.
+- **Part of it was week 7's crediting.** The league's solo share of tackles fell to 0.50 in week 7 from 0.53-0.55
+  before. Across seasons the share is flat in 2023 and 2024 and declined through 2025, so the drift is not a law;
+  the league drift factor (2026-10-31) catches a season-long drift and cannot catch a one-week dip in time.
+- **Where the Under works and where it does not**, live: on defensive backs it is excellent (CB combined 14-3, CB
+  solo 13-2, S solo 22-8); on linebackers it is bad (LB combined 5-12, LB solo 19-16), and Under combined on lines
+  of 4.5 or more is 10-25. The Under after a big game (the fade) on solo lines is 14-0. LB combined totals are the
+  headline tackle props and the sharpest market on the board; DB solo lines are the thinnest. That is a plausible
+  structural reason, not just two weeks' noise.
+
+**What changed (the model's own math, not a rule to bet solo Unders blind):**
+1. **Segment calibration of claims.** Every graded pick now teaches the pricer: for each kind of pick (side x
+   market x position, then coarser), the grader records the hit rate against the claimed chance; the pricer corrects
+   the next pick's claimed chance by that gap, shrunk by n/(n+30) and capped at 15 points (`SEGMENT_CAL`,
+   `segment_calibration` in the grader, `segment_adjust` in the pricer, `data/cache/segments.json` between them).
+   Today that lifts Under solo claims by about 8 points and cuts Under combined LB claims by about 4, so the locks
+   lean where the record says the claims have been honest, and it self-corrects as the record moves. Our own
+   results only; the book's opinion never enters. Replays do not use it (that would be hindsight).
+2. **Solo share shrinkage 8 -> 25 pseudo-tackles** (`SOLO_SHARE_PSEUDO`): solo error -1.0% on 2025-26, -0.7% on
+   2023-24, bias unchanged.
+3. **Solo level per position** from the backtest (CB and S run 2.5-3.5% high, LB 1.7%): applied in pricing.
+4. **Market watch on the site**: every closing line on the board, by week and market, over rate against the
+   market's own price. It is the gauge for the owner's question: while the solo market keeps resolving under its
+   own price, the solo Under stays the lead play, and the day that gap closes it stops being one.
+
+**Should the solo Under be the ongoing play?** Yes as the lead, no as a blind rule. Lead, because the market watch
+and the live record both say so and the model now weights its claims that way. Not blind, because a 66% hit rate
+on 106 picks has a standard error of about 5 points, the week 7 crediting dip explains part of it, and a blanket
+rule cannot tell when the market adjusts; the segment calibration can, and the Over record already shows what
+happens when a side goes cold.
+
 ## Standing watch: grade order (opened 2026-10-30, evening MDT, at the owner's request)
 
 Live record by grade as of 2026-10-30: A 4-2 (67%), B 13-5 (72%), C 13-13 (50%). A below B on six A picks is not
@@ -672,6 +710,14 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-10-31, midday MDT (segment calibration, stronger solo prior, solo level by position, market watch)
+- See "Is the solo Under our play?" above. `SEGMENT_CAL`, `SOLO_SHARE_PSEUDO`; `segment_calibration`, `market_watch`,
+  `SEGMENTS` in `pipeline/grade.py`; `segment_adjust`, `claimed_prob(adj)`, `price_lines(segments=)` in
+  `pipeline/model.py`; per-position `G|solo_scale` from the backtest; `load_segments` in `run.py`; picks log `group`,
+  `p_claim`, `segment`, `segment_adj`; two new Track record sections; legend line; smoke checks. Revert conditions:
+  the segment correction making the by-grade order worse over 100 picks (then k rises), the solo rows in the
+  backtest getting worse than the 8-pseudo version.
 
 ### 2026-10-31, morning MDT (Track record and Model check tabs reorganised)
 - Track record: sections with a one-line lead each (all plays, by grade, by side, locks, parlays, replays, every

@@ -1,5 +1,6 @@
 """Log picks when they are made, then grade them against official box scores and the closing line."""
 from pathlib import Path
+import json
 
 import numpy as np
 import pandas as pd
@@ -21,7 +22,7 @@ def log_picks(bets, season, week, pulled_at):
         return 0
     new = new.assign(season=season, week=week, pulled_at=pulled_at, side=new.pick,
                      odds=np.where(new.pick == "Over", new.over_odds, new.under_odds))
-    cols = KEY + ["team", "opp", "odds", "proj", "proj_model", "mkt_line", "model_over", "market_over", "ev", "why",
+    cols = KEY + ["team", "opp", "group", "odds", "proj", "proj_model", "mkt_line", "model_over", "market_over", "ev", "why", "p_claim", "segment", "segment_adj",
                   "lock", "grade", "consistency", "cons_hits", "cons_n", "payout", "uncertain", "new_role", "reduced_role", "absence", "new_team",
                   "in_role_games", "lock_block", "lock_eligible", "event_id", "commence_time", "pulled_at"]
     new = new[[c for c in cols if c in new.columns]]
@@ -268,6 +269,70 @@ def lock_blocked(df):
     return out
 
 
+SEGMENTS = Path("data/cache/segments.json")
+
+
+def segment_calibration(P):
+    """How the model's claims have resolved for picks like each other: side x market x position, then coarser.
+    delta = hit rate minus claimed chance; the pricer applies n/(n+k) of it to the next pick in the segment."""
+    c = C.SEGMENT_CAL
+    if P is None or len(P) == 0 or "result" not in P.columns:
+        return {}, []
+    g = P[P.result.isin(["Win", "Loss"])].copy()
+    if g.empty:
+        return {}, []
+    if "group" not in g.columns or g.group.isna().all():
+        try:
+            pr = pd.read_csv(Path("data/cache/projections.csv"))[["player", "group"]].drop_duplicates("player")
+            g = g.drop(columns=[c_ for c_ in ("group",) if c_ in g.columns]).merge(pr, on="player", how="left")
+        except (OSError, ValueError):
+            g["group"] = ""
+    g["group"] = g.group.fillna("").astype(str)
+    g["mk"] = np.where(g.market.str.contains("solo"), "solo", "combined")
+    mo = pd.to_numeric(g["model_over"], errors="coerce") if "model_over" in g.columns else pd.Series(np.nan, index=g.index)
+    p_side = pd.Series(np.where(g.side == "Over", mo, 1 - mo), index=g.index)
+    claimed = pd.to_numeric(g["p_claim"], errors="coerce") if "p_claim" in g.columns else pd.Series(np.nan, index=g.index)
+    g["claimed"] = claimed.fillna(0.5 + C.CLAIM_SHRINK * (p_side - 0.5)).fillna(0.5)
+    g["hit"] = (g.result == "Win").astype(float)
+    segs, rows = {}, []
+    for keys in (["side", "mk", "group"], ["side", "mk"], ["side"]):
+        for vals, part in g.groupby(keys):
+            vals = (vals,) if not isinstance(vals, tuple) else vals
+            if "group" in keys and vals[-1] == "":        # position unknown: counts in the coarser segments only
+                continue
+            key = " ".join(str(v) for v in vals if v != "")
+            n = int(len(part)); hit = float(part.hit.mean()); cl = float(part.claimed.mean())
+            w = n / (n + c["k"]); adj = float(np.clip(w * (hit - cl), -c["cap"], c["cap"]))
+            segs[key] = dict(n=n, hit=hit, claimed=cl, delta=hit - cl, adj=adj, wins=int(part.hit.sum()), losses=int(n - part.hit.sum()), units=float(part.units.sum()))
+            rows.append(dict(segment=key, level=len(keys), **segs[key]))
+    rows.sort(key=lambda r: (r["level"], -r["n"]))
+    return segs, rows
+
+
+def market_watch(pw_comb):
+    """How the whole board resolved, week by week and market by market: every closing line (consensus across books)
+    against the box score, with the market's own no-vig chance of the over. Shows where the market itself is off."""
+    out = []
+    weeks = sorted({(int(s), int(w)) for s, w in zip(pw_comb.season, pw_comb.week)}) if len(pw_comb) else []
+    for s_, w_ in weeks:
+        cl = O.closing_lines(s_, w_)
+        if cl is None or len(cl) == 0:
+            continue
+        cl = cl.copy(); cl["name_key"] = cl.player.map(norm_name)
+        dec_o = cl.over_odds.map(lambda a: american_to_decimal(a) if pd.notna(a) else np.nan); dec_u = cl.under_odds.map(lambda a: american_to_decimal(a) if pd.notna(a) else np.nan)
+        cl["p_over"] = np.where(dec_o.notna() & dec_u.notna(), (1 / dec_o) / (1 / dec_o + 1 / dec_u), np.nan)
+        agg = cl.groupby(["event_id", "name_key", "market"]).agg(line=("line", "median"), p_over=("p_over", "mean")).reset_index()
+        st = pw_comb[(pw_comb.season == s_) & (pw_comb.week == w_)].groupby("name_key").agg(comb=("comb", "sum"), solo=("solo_t", "sum"))
+        agg = agg.join(st, on="name_key"); agg["actual"] = np.where(agg.market.str.contains("solo"), agg.solo, agg.comb)
+        agg = agg[agg.actual.notna() & (agg.actual != agg.line)]
+        if agg.empty:
+            continue
+        agg["mk"] = np.where(agg.market.str.contains("solo"), "solo", "combined"); agg["over"] = (agg.actual > agg.line).astype(float)
+        for mk, part in agg.groupby("mk"):
+            out.append(dict(season=s_, week=w_, market=mk, lines=int(len(part)), over_rate=float(part.over.mean()), market_p_over=float(part.p_over.mean()) if part.p_over.notna().any() else None))
+    return out
+
+
 def record_by(P, col, order=None):
     """Record per value of `col` (side, market): graded picks, with pending counted alongside."""
     if P is None or len(P) == 0 or col not in P.columns or "result" not in P.columns:
@@ -371,7 +436,17 @@ def grade(pw_comb):
                           pending=int((part.result == "Pending").sum()), units=float(part.units.sum()),
                           running_wins=cw, running_losses=cl))
     P["side_market"] = P.side.fillna("") + " " + np.where(P.market.str.contains("solo"), "solo", "combined")
-    summary = dict(by_grade=by_grade, by_side=record_by(P, "side", ["Over", "Under"]),
+    segs, seg_rows = segment_calibration(P)
+    try:
+        SEGMENTS.parent.mkdir(parents=True, exist_ok=True)
+        SEGMENTS.write_text(json.dumps(segs, indent=1))
+    except OSError:
+        pass
+    try:
+        watch = market_watch(pw_comb)
+    except Exception:  # noqa: BLE001
+        watch = []
+    summary = dict(by_grade=by_grade, by_side=record_by(P, "side", ["Over", "Under"]), segments=seg_rows, market_watch=watch,
                    by_side_market=record_by(P, "side_market", ["Over combined", "Over solo", "Under combined", "Under solo"]),
                    five=dict(bets=int(len(five)), wins=int((five.result == "Win").sum()), losses=int((five.result == "Loss").sum()),
                              pushes=int((five.result == "Push").sum()), units=float(five.units.sum()) if len(five) else 0.0,

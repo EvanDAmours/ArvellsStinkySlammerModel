@@ -88,6 +88,11 @@ PHI_SHARE_SPLIT = 0.6     # dispersion estimated separately for players expected
 GBM = dict(weight=0.6, max_iter=800, learning_rate=0.02, max_leaf_nodes=31, min_samples_leaf=40, l2=0.5, seeds=(0, 1, 2))
 POS_PRIOR = {"LB": 6.0, "S": 4.5, "CB": 3.5, "DL": 2.5}       # tackles per game, used only with no history
 POS_SOLO_SHARE = {"LB": 0.52, "S": 0.62, "CB": 0.72, "DL": 0.45}
+SOLO_SHARE_PSEUDO = 25             # tackles of position prior mixed into a player's solo share (was 8): solo error -1.0% on 2025-26, -0.7% on 2023-24
+# Segment calibration (2026-10-31): a pick's claimed chance is corrected by how the model's claims have actually
+# resolved for picks like it (side x market x position), shrunk by n/(n+k) toward no correction. Our own results only,
+# never the book's. Finest segment with min_n graded picks wins; the correction is capped.
+SEGMENT_CAL = dict(k=30, min_n=10, cap=0.15)
 SPREAD_TILT = 0.005                # +0.5% tackles per point a defense is an underdog (capped)
 SPREAD_TILT_CAP = 0.05
 CREW_PSEUDO_TACKLES = 250          # how hard each stadium's crew rate is pulled toward league average

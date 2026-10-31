@@ -233,11 +233,19 @@ def cmd_daily():
     summary["parlays"] = psum
     G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)
     lines = O.upcoming_only(O.latest_lines(C.SEASON, week))
-    bets = M.price_lines(lines, P) if len(lines) else pd.DataFrame()
+    bets = M.price_lines(lines, P, segments=load_segments()) if len(lines) else pd.DataFrame()
     bets = mark_five(bets, C.SEASON, week)
     write_site(P, bets, bt, graded, summary, week, status, lines_pulled=None if lines.empty else str(lines.pulled_at.max()), parlays=parlays)
     write_parlays(C.SEASON, week)
     print(f"daily: week {week}, {len(P)} projections, {len(bets)} priced lines, backtest on {bt.get('games', 0)} games")
+
+
+def load_segments():
+    """Segment calibration written by the grader (how claims resolved for picks like each other)."""
+    try:
+        return json.load(open(CACHE / "segments.json"))
+    except (OSError, ValueError):
+        return None
 
 
 def refresh_injury_status(P, week):
@@ -294,7 +302,7 @@ def cmd_odds(hours=None, auto=False):
     remaining = int(sum(numeric)) if numeric else next(iter(credits.values()), None)
     O.save_snapshot(rows, C.SEASON, week)
     lines = O.upcoming_only(O.latest_lines(C.SEASON, week))
-    bets = M.price_lines(lines, P)
+    bets = M.price_lines(lines, P, segments=load_segments())
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     n_new = G.log_picks(bets, C.SEASON, week, stamp)
     G.build_parlays(bets, C.SEASON, week, stamp)
@@ -332,7 +340,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
                 bars=dict(pick=C.PICK_BAR, signal=C.SIGNAL_BAR),
                 grading=dict(bars=C.GRADE_BARS, units=C.GRADE_UNITS, weights=C.LOCK_WEIGHTS, ev_full=C.LOCK_EV_FULL, ev_fade=list(C.LOCK_EV_FADE),
                              model_full=C.LOCK_MODEL_FULL, locks=C.LOCKS_PER_SLATE, line_weight=C.LINE_WEIGHT, clv=C.CLV_BARS,
-                             pick_bar=C.PICK_BAR, pick_bar_over=C.PICK_BAR_OVER, claim_shrink=C.CLAIM_SHRINK))
+                             pick_bar=C.PICK_BAR, pick_bar_over=C.PICK_BAR_OVER, claim_shrink=C.CLAIM_SHRINK, segment_k=C.SEGMENT_CAL["k"], segment_min_n=C.SEGMENT_CAL["min_n"]))
     old = SITE / "meta.json"
     if old.exists():
         prev = json.loads(old.read_text())

@@ -102,6 +102,9 @@ def run_backtest(H, seasons):
     # solo tackles: level calibration and an error row of their own (half the lines are solo markets)
     ok_s = full_solo.notna()
     phi_by_group["__scale_solo__"] = float(np.clip(T.solo_t[ok_s].sum() / max(1e-9, float(full_solo[ok_s].sum())), 0.9, 1.1))
+    for g, part in T[ok_s].assign(_ms=full_solo[ok_s]).groupby("group"):
+        if len(part) >= 300:
+            phi_by_group[f"{g}|solo_scale"] = float(np.clip(part.solo_t.sum() / max(1e-9, float(part._ms.sum())), 0.9, 1.1))
     solo_rows = [dict(predictor="Solo tackles: full model (solo share of the projection)", **_metrics(T.solo_t, full_solo)),
                  dict(predictor="Solo tackles: full model without league solo drift", **_metrics(T.solo_t, M.project_frame(T, use_solo_drift=False)[2])),
                  dict(predictor="Solo tackles: season average", **_metrics(T.solo_t, T.solo_prev / T.n_prev.clip(lower=1) * T.crew_solo.fillna(1.0)))]
@@ -182,5 +185,6 @@ def run_backtest(H, seasons):
     gbm_live = M.fit_gbm(X, T.comb)
     result = dict(seasons=[int(s) for s in seasons], games=int(len(T)), best_shrink_games=int(best_k), scale=scale,
                   predictors=table + gbm_rows + solo_rows, by_season=by_season, dispersion=phi_rows, calibration=cal_rows, scale_solo=phi_by_group["__scale_solo__"],
+                  scale_solo_by_group={k.split("|")[0]: v for k, v in phi_by_group.items() if k.endswith("|solo_scale")},
                   regression=reg, role=role, new_role=new_role, weak_spots=weak_spots)
     return result, phi_by_group, best_k, scale, gbm_live
