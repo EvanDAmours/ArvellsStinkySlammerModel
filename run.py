@@ -34,13 +34,16 @@ if dt.datetime(2026, 11, 2, 12, 0, tzinfo=EDMONTON).utcoffset() != dt.timedelta(
     EDMONTON = dt.timezone(dt.timedelta(hours=-6), "Alberta")
 
 # Scheduled pull slots, Edmonton local time (minutes after midnight) by weekday (Mon=0), and which games each covers.
-# The job runs every half hour; a run that is not within 14 minutes of a slot does nothing.
+# The job runs every quarter hour; each slot is served once by the first run after its time. A pull costs 1-2 credits
+# (0 when no line is up), so the windows in which books post and move tackle lines are covered hourly.
+def _hourly(start, end, what, step=60):
+    return [(m, what) for m in range(start * 60, end * 60 + 1, step)]
 PULL_SLOTS = {
-    3: [(9 * 60, "thu_fri"), (14 * 60, "thu_fri"), (17 * 60 + 30, "thu_fri")],   # Thursday: Thursday and Friday games
-    4: [(18 * 60, "sat")],                                                        # Friday evening: Saturday games, if any
-    5: [(9 * 60, "sat_sun"), (18 * 60, "sun")],                                   # Saturday: Saturday and Sunday games, then Sunday
-    0: [(9 * 60, "mon"), (17 * 60 + 30, "mon")],                                  # Monday: the Monday game
-    6: [(8 * 60, "today")],                                                       # Sunday 8 am: first full look at the Sunday slate (books post late); the pre-kickoff pull follows
+    3: _hourly(9, 17, "thu_fri") + [(17 * 60 + 30, "thu_fri")],      # Thursday, hourly 9 am-5 pm and 5:30: Thursday and Friday games
+    4: _hourly(12, 18, "fri_weekend", step=120),                      # Friday, every two hours noon-6 pm: Saturday and Sunday games as they post
+    5: _hourly(9, 21, "sat_sun"),                                     # Saturday, hourly 9 am-9 pm: Saturday and Sunday games
+    6: _hourly(7, 11, "today"),                                       # Sunday, hourly 7-11 am: the Sunday slate; the pre-kickoff pull follows
+    0: _hourly(9, 17, "mon", step=120) + [(17 * 60 + 30, "mon")],     # Monday, every two hours 9 am-5 pm and 5:30: the Monday game
 }
 INTL_WINDOWS_H = (12, 1)           # international games are pulled this many hours before kickoff
 SUNDAY_PRE_KICK_MIN = 60           # Sunday: one pull this many minutes before the day's first kickoff (Edmonton time), the whole Sunday slate
@@ -98,7 +101,7 @@ def auto_plan(now=None, games=None, served=None):
     for slot, what in PULL_SLOTS.get(local.weekday(), []):
         key = f"{today} {slot // 60:02d}:{slot % 60:02d}"
         if local.hour * 60 + local.minute >= slot and key not in served:
-            days = {"thu_fri": [d(0), d(1)], "sat": [d(1)], "sat_sun": [d(0), d(1)], "sun": [d(1)], "mon": [d(0)], "today": [d(0)]}[what]
+            days = {"thu_fri": [d(0), d(1)], "sat": [d(1)], "sat_sun": [d(0), d(1)], "fri_weekend": [d(1), d(2)], "sun": [d(1)], "mon": [d(0)], "today": [d(0)]}[what]
             due.append((slot, dict(days=days, key=key, reason=f"{local.strftime('%A')} {slot // 60:02d}:{slot % 60:02d} slot (run at {local.strftime('%H:%M')}): games on {days}")))
     # Sunday: one pull an hour before the day's first kickoff, from the schedule, covering every game that day
     if local.weekday() == 6 and games:
@@ -117,7 +120,7 @@ def auto_plan(now=None, games=None, served=None):
             if local.hour * 60 + local.minute >= slot and key not in served:
                 due.append((slot, dict(days=[d(0)], key=key, reason=f"Sunday slot an hour before the first kickoff ({first.strftime('%H:%M')}; run at {local.strftime('%H:%M')}): games on {d(0)}")))
     if due:
-        due.sort()
+        due.sort(key=lambda x: x[0])            # by slot time only (two plans can share a time: the fixed 10 am and a pre-kickoff slot)
         plan = due[-1][1]                       # the latest slot that is due; earlier unserved ones today are stale
         plan["also_served"] = [p["key"] for _, p in due[:-1]]
         return plan

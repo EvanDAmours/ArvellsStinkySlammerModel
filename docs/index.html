@@ -169,6 +169,7 @@ const el = (tag, attrs = {}, ...kids) => {
 };
 const pct = (x, d = 0) => (x == null ? "" : (x * 100).toFixed(d) + "%");
 const signedPct = (x) => (x == null ? "" : (x >= 0 ? "+" : "") + (x * 100).toFixed(0) + "%");
+const toDec = (a) => (a == null ? null : a > 0 ? 1 + a / 100 : 1 + 100 / Math.abs(a));
 const num = (x, d = 1) => (x == null || Number.isNaN(x) ? "" : Number(x).toFixed(d));
 const odds = (a) => (a == null ? "" : (a > 0 ? "+" : "") + Math.round(a));
 const wl = (w, l, p) => el("b", {}, el("span", { class: "w" }, String(w ?? 0)), "-", el("span", { class: "l" }, String(l ?? 0)), p ? `-${p}` : "");
@@ -207,7 +208,7 @@ function recordsBar(s) {
 }
 const MARKET = { player_tackles_assists: "Tackles + assists", player_solo_tackles: "Solo tackles" };
 // Slates in Edmonton time: early = kickoffs before noon (11 am, plus London games), afternoon = noon to 5 pm, prime time = 5 pm onward (incl. Thu/Mon night).
-const TZ = "America/Edmonton";
+const TZ = "Etc/GMT+6";   // Edmonton: Alberta Time is UTC-6 all year from 2026-11-01, and was UTC-6 (MDT) before it; a fixed offset so a browser with stale zone data cannot show kickoffs an hour early
 const localHour = (d) => Number(new Intl.DateTimeFormat("en-CA", { timeZone: TZ, hour: "numeric", hour12: false }).format(d));
 const slateOf = (d) => { if (!d || isNaN(d)) return ""; const h = localHour(d); return h < 12 ? "early" : h < 17 ? "late" : "prime"; };
 const kickoffLocal = (d) => (!d || isNaN(d)) ? "" : d.toLocaleString("en-CA", { timeZone: TZ, weekday: "short", hour: "numeric", minute: "2-digit" });
@@ -280,12 +281,14 @@ function renderPlays() {
       box.append(el("div", { class: "parlay-box" }, el("h3", {}, "Parlay"), el("p", { class: "note" }, `No open parlay yet. ${all.length} line${all.length === 1 ? "" : "s"} on the board${all.length < 40 ? " (the books post most Sunday tackle lines Saturday evening and Sunday morning)" : ""}; a parlay needs two lock-eligible picks with a 53%+ claimed chance on one slate day, chosen at every line pull until that day's first kickoff.${nxt ? ` Next pull ${nxt}.` : ""}`)));
     }
   }
-  let rows = all.filter((b) => (!picksOnly || b.pick === "Over" || b.pick === "Under") && (!market || b.market === market) && (!best || b.best_price !== false) && (!slate || slateOf(betKick(b)) === slate) && (!pos || b.group === pos) && (!sideF || (b.side || b.pick) === sideF));
+  const anyPick = all.some((b) => b.pick === "Over" || b.pick === "Under"), showAll = picksOnly && !anyPick;   // nothing clears the bar: show every live line with the model's read rather than an empty board
+  let rows = all.filter((b) => (!picksOnly || showAll || b.pick === "Over" || b.pick === "Under") && (!market || b.market === market) && (!best || b.best_price !== false) && (!slate || slateOf(betKick(b)) === slate) && (!pos || b.group === pos) && (!sideF || (b.side || b.pick) === sideF));
   const key = { lock: (b) => -(b.lock ?? -1), ev: (b) => -(b.ev ?? -9), kick: (b) => +(betKick(b) || 0), player: (b) => b.player, line: (b) => +(b.line ?? 0) }[sortBy] || ((b) => -(b.lock ?? -1));
   rows.sort((x, y) => { const a = key(x), c = key(y); return typeof a === "string" ? a.localeCompare(c) : a - c; });
   const nPicks = all.filter((b) => b.pick === "Over" || b.pick === "Under").length;
   box.append(el("div", { class: "count" }, `${rows.length} shown of ${nPicks} picks on ${all.length} priced lines` + (unfiltered ? "" : " (filtered)") + `. Sorted by ${$("#sort").selectedOptions[0].textContent.toLowerCase()}.`));
-  if (!rows.length) { box.append(el("div", { class: "empty" }, picksOnly ? "No line clears the bar with these filters. Untick Picks only to see every priced line." : "Nothing matches these filters.")); return; }
+  if (showAll) box.append(el("div", { class: "count" }, "No line clears the bar yet, so every live line is shown with the model's read of both sides."));
+  if (!rows.length) { box.append(el("div", { class: "empty" }, picksOnly ? "No line matches these filters." : "Nothing matches these filters.")); return; }
   for (const b of rows) box.append(card(b, false));
 }
 
@@ -382,6 +385,8 @@ function card(b, isLock) {
   const isPick = b.pick === "Over" || b.pick === "Under";
   const side = b.side || b.pick;
   const price = side === "Under" ? b.under_odds : b.over_odds;
+  // the chance the pricer used for the best side, read back from its return and price, so both sides agree with the card
+  const pBest = b.ev != null && toDec(price) ? (1 + b.ev) / toDec(price) : null, pOver = pBest == null ? null : side === "Under" ? 1 - pBest : pBest;
   const tag = (cls, title, text) => el("span", { class: cls, title }, text);
   const tags = [
     b.international ? tag("intl", "Neutral-site game overseas: stat crew unknown, lines pulled 12 h and 1 h before kickoff", "International") : "",
@@ -405,7 +410,8 @@ function card(b, isLock) {
     el("div", { class: "bet" }, el("span", { class: side === "Under" ? "under" : "over" }, `${side || ""} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market).toLowerCase()}`, el("small", {}, ` · ${odds(price)} at ${b.book}`, b.payout == null ? "" : ` · pays ${num(b.payout, 2)} per unit`)),
     tags.length ? el("div", { class: "tags" }, ...tags) : "",
     el("div", { class: "nums" }, ...(b.proj == null ? [] : [el("span", {}, `Projection ${num(b.proj)}`), b.proj_model == null ? "" : el("span", {}, `Model alone ${num(b.proj_model)}`), el("span", {}, `Model ${(side || "over").toLowerCase()} ${pct(side === "Under" ? 1 - b.model_over : b.model_over)}`), el("span", {}, `Book ${pct(side === "Under" ? 1 - b.market_over : b.market_over)}`),
-      b.cons_n ? el("span", {}, `Cleared this line in ${b.cons_hits} of ${b.cons_n} games`) : ""])));
+      b.cons_n ? el("span", {}, `Cleared this line in ${b.cons_hits} of ${b.cons_n} games`) : ""])),
+    pOver == null ? "" : el("div", { class: "nums sides" }, el("span", { title: "Expected return of each side at this book's price, from the chance the pricer used (segment correction included)" }, `Over ${b.over_odds == null ? "not offered" : `${signedPct(pOver * toDec(b.over_odds) - 1)} at ${odds(b.over_odds)}`} · Under ${b.under_odds == null ? "not offered" : `${signedPct((1 - pOver) * toDec(b.under_odds) - 1)} at ${odds(b.under_odds)}`}`)));
   if (isPick && b.proj != null) card.append(whyBox(b, !!isLock));
   else card.append(el("div", { class: "why" }, b.why || ""));
   return card;

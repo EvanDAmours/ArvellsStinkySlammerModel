@@ -137,8 +137,8 @@ sys.path.insert(0, str(tmp))
 import run as _R
 _sat = dt.datetime(2026, 10, 31, 20, 0, tzinfo=dt.timezone.utc)      # Saturday 2 pm Edmonton
 _g = [dict(kickoff="2026-11-01T18:00:00+00:00")]                      # Sunday noon Edmonton
-check(_R.next_pull(_sat, _g) == "2026-11-01T00:00+00:00" and _R.next_pull(_sat + dt.timedelta(hours=5), _g) == "2026-11-01T14:00+00:00"
-      and _R.next_pull(dt.datetime(2026, 11, 1, 15, 0, tzinfo=dt.timezone.utc), _g) == "2026-11-01T17:00+00:00", "next pull: Saturday 6 pm, then Sunday 8 am, then an hour before Sunday's first kickoff")
+check(_R.next_pull(_sat, _g) == "2026-10-31T21:00+00:00" and _R.next_pull(_sat + dt.timedelta(hours=8), _g) == "2026-11-01T13:00+00:00"
+      and _R.next_pull(dt.datetime(2026, 11, 1, 16, 30, tzinfo=dt.timezone.utc), _g) == "2026-11-01T17:00+00:00", "next pull: Saturday 3 pm, then Sunday 7 am after the last Saturday pull, then an hour before Sunday's first kickoff")
 
 # grading: fake picks on finished week-6 games with a closing snapshot
 from pipeline import grade as G
@@ -197,30 +197,34 @@ late = R.auto_plan(now=_at(2026, 10, 29, 9, 27))     # a run 27 minutes late sti
 check(late and late["key"] == "2026-10-29 09:00", "a late run still serves an unserved slot")
 check(R.auto_plan(now=_at(2026, 10, 29, 9, 27), served={"2026-10-29 09:00"}) is None, "a served slot is not pulled twice")
 check(R.auto_plan(now=_at(2026, 10, 29, 8, 50)) is None, "nothing is due before the first slot of the day")
-two = R.auto_plan(now=_at(2026, 10, 29, 17, 40), served={"2026-10-29 09:00"})   # 2 pm and 5:30 pm both unserved
-check(two and two["key"] == "2026-10-29 17:30" and two["also_served"] == ["2026-10-29 14:00"], "with two slots due, the latest is served and the stale one marked")
+two = R.auto_plan(now=_at(2026, 10, 29, 17, 40), served={"2026-10-29 09:00"})   # 10 am through 5:30 pm all unserved
+check(two and two["key"] == "2026-10-29 17:30" and "2026-10-29 14:00" in two["also_served"] and len(two["also_served"]) == 8, "with several slots due, the latest is served and the stale ones marked")
 sun = [dict(game_id="2026_09_A_B", home="B", away="A", kickoff=_at(2026, 11, 1, 11, 0).isoformat(), international=False),
        dict(game_id="2026_09_C_D", home="D", away="C", kickoff=_at(2026, 11, 1, 14, 25).isoformat(), international=False),
        dict(game_id="2026_09_E_F", home="F", away="E", kickoff=_at(2026, 11, 2, 18, 15).isoformat(), international=False)]
-check(R.auto_plan(now=_at(2026, 11, 1, 7, 30), games=sun) is None, "Sunday: nothing due before the 8 am look")
-plan = R.auto_plan(now=_at(2026, 11, 1, 8, 4), games=sun)
+check(R.auto_plan(now=_at(2026, 11, 1, 6, 30), games=sun) is None, "Sunday: nothing due before the 7 am look")
+plan = R.auto_plan(now=_at(2026, 11, 1, 8, 4), games=sun, served={"2026-11-01 07:00"})
 check(plan and plan.get("days") == ["2026-11-01"] and plan.get("key") == "2026-11-01 08:00", f"Sunday: the 8 am look covers the whole Sunday slate ({plan and plan.get('reason')})")
-check(R.auto_plan(now=_at(2026, 11, 1, 9, 0), games=sun, served={"2026-11-01 08:00"}) is None, "Sunday: nothing due between the 8 am look and the pre-kickoff pull")
-plan = R.auto_plan(now=_at(2026, 11, 1, 10, 3), games=sun, served={"2026-11-01 08:00"})
-check(plan and plan.get("days") == ["2026-11-01"] and plan.get("key") == "2026-11-01 sunday-1h", f"Sunday: one pull an hour before the day's first kickoff covers the whole slate ({plan and plan.get('reason')})")
-check(R.auto_plan(now=_at(2026, 11, 1, 10, 33), games=sun, served={"2026-11-01 08:00", "2026-11-01 sunday-1h"}) is None, "Sunday: both Sunday pulls are served once")
-check(R.auto_plan(now=_at(2026, 11, 1, 7, 0)) is None and R.auto_plan(now=_at(2026, 11, 1, 9, 0), served={"2026-11-01 08:00"}) is None, "Sunday with no schedule loaded: only the fixed 8 am look is due")
+plan = R.auto_plan(now=_at(2026, 11, 1, 9, 2), games=sun, served={"2026-11-01 07:00", "2026-11-01 08:00"})
+check(plan and plan.get("key") == "2026-11-01 09:00" and plan.get("days") == ["2026-11-01"], "Sunday: hourly looks between the 8 am look and the pre-kickoff pull")
+plan = R.auto_plan(now=_at(2026, 11, 1, 10, 3), games=sun, served={"2026-11-01 07:00", "2026-11-01 08:00", "2026-11-01 09:00"})
+check(plan and plan.get("days") == ["2026-11-01"] and plan.get("key") == "2026-11-01 sunday-1h" and plan.get("also_served") == ["2026-11-01 10:00"], f"Sunday: the pull an hour before the first kickoff wins a tie with the fixed 10 am look ({plan and plan.get('reason')})")
+check(R.auto_plan(now=_at(2026, 11, 1, 10, 33), games=sun, served={"2026-11-01 07:00", "2026-11-01 08:00", "2026-11-01 09:00", "2026-11-01 10:00", "2026-11-01 sunday-1h"}) is None, "Sunday: every Sunday pull is served once")
+check(R.auto_plan(now=_at(2026, 11, 1, 6, 30)) is None and R.auto_plan(now=_at(2026, 11, 1, 11, 40), served={f"2026-11-01 {h:02d}:00" for h in range(7, 12)}) is None, "Sunday with no schedule loaded: only the fixed hourly looks are due")
 check(dt.datetime(2026, 11, 2, 12, 0, tzinfo=R.EDMONTON).utcoffset() == dt.timedelta(hours=-6) and dt.datetime(2026, 10, 30, 12, 0, tzinfo=R.EDMONTON).utcoffset() == dt.timedelta(hours=-6),
       "Edmonton stays on UTC-6 through the November clock change (Alberta Time)")
 plan = R.auto_plan(now=_at(2026, 11, 7, 18, 2), served={"2026-11-07 09:00"})      # Saturday 6:02 pm, after the clock change
-check(plan and plan.get("days") == ["2026-11-08"], f"Saturday 6 pm slot covers Sunday games in standard time ({plan and plan.get('days')})")
+check(plan and plan.get("days") == ["2026-11-07", "2026-11-08"] and plan["key"] == "2026-11-07 18:00", f"Saturday 6 pm slot covers Saturday and Sunday games in standard time ({plan and plan.get('days')})")
+plan = R.auto_plan(now=_at(2026, 11, 6, 14, 5), served={"2026-11-06 12:00"})      # Friday 2:05 pm
+check(plan and plan.get("days") == ["2026-11-07", "2026-11-08"] and plan["key"] == "2026-11-06 14:00", "Friday afternoon pulls cover the weekend's games as they post")
 plan = R.auto_plan(now=_at(2026, 11, 9, 17, 30), served={"2026-11-09 09:00"})     # Monday 5:30 pm
 check(plan and plan.get("days") == ["2026-11-09"], "Monday 5:30 pm slot covers the Monday game")
 intl = [dict(game_id="2026_07_NO_PIT", home="PIT", away="NO", kickoff=_at(2026, 10, 25, 7, 30).isoformat(), international=True)]
-p12 = R.auto_plan(now=_at(2026, 10, 24, 19, 50), games=intl, served={"2026-10-24 09:00", "2026-10-24 18:00"})   # Saturday slots already served
+_satslots = {f"2026-10-24 {h:02d}:00" for h in range(9, 22)}
+p12 = R.auto_plan(now=_at(2026, 10, 24, 19, 50), games=intl, served=_satslots)   # Saturday slots already served
 check(p12 and p12.get("teams") == ("PIT", "NO") and p12["key"].endswith("12h"), "international game pulled in the 12 h window even when the run is late")
-sat = R.auto_plan(now=_at(2026, 10, 24, 19, 50), games=intl, served={"2026-10-24 09:00"})
-check(sat and sat["key"] == "2026-10-24 18:00", "a due regular slot takes priority over an international window")
+sat = R.auto_plan(now=_at(2026, 10, 24, 19, 50), games=intl, served=_satslots - {"2026-10-24 19:00"})
+check(sat and sat["key"] == "2026-10-24 19:00", "a due regular slot takes priority over an international window")
 check(R.auto_plan(now=_at(2026, 10, 25, 5, 0), games=intl, served={"2026_07_NO_PIT 12h"}) is None, "no pull between the international windows once the 12 h one is served")
 p1 = R.auto_plan(now=_at(2026, 10, 25, 6, 40), games=intl, served={"2026_07_NO_PIT 12h"})
 check(p1 and p1["key"].endswith("1h"), "international game pulled in the 1 h window")

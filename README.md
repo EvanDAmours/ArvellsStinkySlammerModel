@@ -38,22 +38,21 @@ Everything runs on GitHub's servers on a schedule. You don't run anything by han
 ## When things run
 
 Pull slots are in **Edmonton time** (Alberta Time, UTC-6 all year from November 2026; the job converts from the
-zone data and pins UTC-6 if that data is stale, so nothing needs editing). The pull job runs every half hour and does nothing unless it lands on a slot.
+zone data and pins UTC-6 if that data is stale, so nothing needs editing). The pull job runs every quarter hour and serves each slot once; a pull costs 1-2 odds credits (0 when no line is up).
 
 | Job | When (Edmonton) | What it does |
 | --- | --- | --- |
 | Daily model update | Every day, early morning | New stats, backtest, projections, grading, parlay grading |
-| Pull tackle lines | Thu 9:00 am, 2:00 pm, 5:30 pm | Thursday game, and Friday games on holiday weeks |
-| | Fri 6:00 pm | Saturday games, if any (late season, playoffs) |
-| | Sat 9:00 am | Saturday and Sunday games |
-| | Sat 6:00 pm | Sunday games |
-| | Sun 8:00 am | First full look at the Sunday slate (books often post tackle lines late Saturday or Sunday morning) |
+| Pull tackle lines | Thu, hourly 9:00 am-5:00 pm and 5:30 pm | Thursday game, and Friday games on holiday weeks |
+| | Fri, every two hours noon-6:00 pm | Saturday and Sunday games as the books post them |
+| | Sat, hourly 9:00 am-9:00 pm | Saturday and Sunday games |
+| | Sun, hourly 7:00-11:00 am | The Sunday slate (books post many tackle lines late Saturday and Sunday morning) |
 | | Sun, 1 h before the first kickoff | The whole Sunday slate again, with the inactives known for the early games |
-| | Mon 9:00 am, 5:30 pm | Monday game |
+| | Mon, every two hours 9:00 am-5:00 pm and 5:30 pm | Monday game |
 | | 12 h and 1 h before kickoff | Any international game (neutral-site game overseas), that game only |
 
 Locks and the recommended parlay for a slate day are re-chosen at every pull until the day's first kickoff.
-GitHub can start scheduled jobs a few minutes late at busy times; a slot tolerates 14 minutes.
+GitHub can start scheduled jobs late at busy times; a slot is served by the first run after its time, so a late run still pulls once.
 
 ## Keeping it running with no hands on
 

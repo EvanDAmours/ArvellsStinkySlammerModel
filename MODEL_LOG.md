@@ -798,6 +798,34 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-10-31, early afternoon MDT (hourly pulls, every live line on the board)
+- Owner: "you should be grading picks as soon as they come in, not waiting; I wanna see the lines that are live
+  and know if it's worth getting in early." Two things were in the way. (1) Pulls ran at three fixed slots a
+  weekend, so a line posted at 1 pm Saturday was not priced until 6 pm. The credit log says a pull costs 1-2
+  credits with lines up and 0 without (416 -> 401 over the last two weeks of pulls), so the windows in which
+  books post and move tackle lines are now hourly: Thursday 9-5:30, Friday noon-6 every two hours, Saturday
+  9 am-9 pm, Sunday 7-11 am plus the pre-kickoff pull, Monday 9-5:30 every two hours (`PULL_SLOTS`, `_hourly`).
+  About 40 pulls a week, roughly 60 credits, against the ~500 a month the key has. Slots are still served once;
+  a tie between the fixed 10 am Sunday look and the pre-kickoff pull goes to the pre-kickoff pull (the sort on
+  due slots now keys on time only; sorting tuples with dicts inside would have raised on a tie). (2) "Picks only"
+  was the board's default, so with nothing clearing the bar the owner saw an empty board. Now, when no line is a
+  pick, every live line is shown with the model's read, and each card carries both sides' expected return at the
+  book's price ("Over -13% at -109 · Under not offered"). Every line was already priced at every pull; the
+  grading of results waits on the box score, which nflverse posts the morning after, so that part cannot move.
+- The five lines that were live at 10:34 am (Bally Bet, Cardinals at Dallas) were Over-only postings: no Under
+  price at all. The model is against all five Overs (-13% to -54%); the sides it would like (Browning Under 6.5,
+  Sweat Under 5.5, Wilson Under 9.5) were not offered. Nothing to get in early on. A pull was run by hand at
+  noon to refresh the board.
+- Smoke checks rewritten for the hourly table (several stale slots marked at once, the Sunday tie, Friday
+  afternoon weekend pulls, next-pull walk, international windows behind the hourly slots). README table updated.
+- Seen while checking the render: a browser with stale zone data shows Sunday's noon kickoffs as 11 am, since it
+  still believes Alberta falls back on 2026-11-01. The site's clock is now a fixed UTC-6 (`Etc/GMT+6`), which is
+  Edmonton all year from here on, so no viewer's device can shift a kickoff. The both-sides line on a card reads
+  the pricer's chance back from the card's own return and price, so it includes the segment correction and
+  agrees with the headline number.
+- Revert condition: credits. If a month's pulls approach the key's quota, the Friday and Monday every-two-hours
+  slots go first, then Saturday before noon.
+
 ### 2026-10-31, afternoon MDT (settled parlays off the board, next pull shown)
 - Owner: "the homepage still shows the Thursday parlay". The Plays tab rendered every parlay of the week from
   `parlays.json`, so Thursday's (settled Friday, a loss on the Track record tab) sat on the board until the week
