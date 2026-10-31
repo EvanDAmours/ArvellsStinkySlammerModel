@@ -711,6 +711,10 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-10-31, morning MDT (second pull schedule)
+- The half-hourly pull cron stalled for two hours on Saturday morning; the 9 am pull was triggered by hand and a
+  second cron on the quarter hours added to `odds.yml`. Serve-once keys prevent double pulls.
+
 ### 2026-10-31, night MDT (final pre-Sunday sweep: concentration limits, tighter segment correction)
 - Rehearsed Sunday's pull on a synthetic board built from the real week 8 projections and the real segment file:
   no exceptions, no undefined scores, the checklist and the segment corrections work, 10 players blocked for
@@ -1094,6 +1098,10 @@ Open, with what would justify them:
   of each other; the second one's rebase then conflicts on generated files and its work is lost. The save step now
   keeps the job's own version of conflicting files and retries; the daily cron sits at 11:15 UTC, off the
   half-hour the pull job uses.
+- GitHub scheduled runs can stall for hours: on Saturday 2026-10-31 the half-hourly pull job did not run between
+  8:38 and 10:33 am, so the 9 am pull was fired by hand. The job now has a second cron on the quarter hours; slots
+  are served once, so the two never double-pull. If both stall, run "Pull tackle lines" by hand from the Actions
+  tab: a late run still serves every unserved slot.
 - GitHub scheduled runs drift by up to half an hour and some are skipped; a job that keys off "is it 5:30 now"
   misses slots. Key off "has the 5:30 slot been served" instead.
 - The smoke test copies the repo into a temp dir; it must skip live data (`data/odds/<season>`, `data/picks.csv`,
