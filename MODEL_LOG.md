@@ -819,7 +819,9 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 - Validation: smoke test; real-data daily run in a scratch copy (backtest on 28,861 games, 204 ESPN listings
   merged: 6 injured-reserve and 1 suspended regular now carry a status the league report did not have, 10 more
   questionable listings than the league report; 30 consensus rows matched); the live site after the pushed daily
-  job.
+  job (run by hand at 11:23 am MDT: Test green, 204 ESPN listings merged, 30 consensus rows, the new fields on
+  the site, `data/consensus/fantasypros_2026_w08.csv` committed). The Saturday 6 pm and Sunday pulls run on this
+  code.
 - Revert conditions: the ESPN merge if it ever marks a player out who then plays (then
   the feed's "date" is checked against the league report's week before it may override); the consensus column if
   it is found to have steered a pick (it must never enter a price, a grade or a lock score).
