@@ -518,6 +518,13 @@ function renderRecord() {
     }
   }
   // 3c. market watch: how the whole board resolved
+  if (s.luck && s.luck.length) {
+    const L = [...s.luck].sort((a, b) => b.week - a.week || a.level - b.level || b.picks - a.picks);
+    const row = (r) => [`Week ${r.week}`, r.segment, r.picks, pct(r.hit), pct(r.claimed), `${pct(r.market_base)} of ${r.market_lines}`, el("b", { class: r.lift > 0.05 ? "pos" : r.lift < -0.05 ? "neg" : "" }, (r.lift >= 0 ? "+" : "") + Math.round(r.lift * 100) + " pts"), r.beat_close == null ? "" : pct(r.beat_close), r.verdict];
+    box.append(section("Luck or skill: did we see it coming?", "Our hit rate in each kind of pick against the share of every closing line of that kind, picked or not, that resolved the same way (the market's own base rate that week). Lift is what our choice of lines added on top. A week where the whole board went under is not a week the model saw coming, whatever the record says; beating the close is the other tell.",
+      table(["Week", "Picks of this kind", "Picks", "Hit", "Claimed", "Whole market", "Lift", "Beat the close", "Verdict"], L.filter((r) => r.level <= 2).map(row)),
+      more("By position as well", table(["Week", "Picks of this kind", "Picks", "Hit", "Claimed", "Whole market", "Lift", "Beat the close", "Verdict"], L.filter((r) => r.level === 3).map(row)))));
+  }
   if (s.market_watch && s.market_watch.length) {
     box.append(section("Market watch: how the whole board resolved", "Every closing line on the board, not just our picks: how often the over hit against what the market's own price implied. Where the market itself is off is where the plays are; when a gap closes, so does the play.",
       el("div", { class: "scroll" }, table([["Week"], ["Market"], ["Lines", "n"], ["Over hit", "n"], ["Market said", "n"], ["Gap", "n"]],

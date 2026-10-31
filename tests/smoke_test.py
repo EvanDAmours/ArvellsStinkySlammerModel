@@ -183,6 +183,7 @@ check(len(pq) == 1 and pq.result.iloc[0] == "Win" and abs(pq.units_won.iloc[0] -
 summary["parlays"] = psum
 G.write_five_log(graded, summary, tmp / "data/weekly_five.md", pq)
 log = (tmp / "data/weekly_five.md").read_text()
+check(isinstance(summary.get("luck"), list) and all({"hit", "market_base", "lift", "verdict"} <= set(r) for r in summary["luck"]) and "Luck or skill" in (tmp / "data/weekly_five.md").read_text(), f"luck check computed against the whole market ({len(summary.get('luck') or [])} rows) and written to the weekly log")
 check("Locks record: 1-1" in log and "| 2026 wk 6 | 2 | 1-1 |" in log and "Parlays record: 1-0" in log, "locks and parlays log written with records, week line and parlay line")
 
 # scheduled pull slots and international windows, in Edmonton time

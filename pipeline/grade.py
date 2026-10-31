@@ -369,6 +369,67 @@ def market_watch(pw_comb):
     return out
 
 
+def luck_check(P, pw_comb):
+    """Luck or skill, week by week: for each segment of graded picks (side, then side x market, then side x market x
+    position), the picks' hit rate against the share of EVERY closing line in that segment that resolved the same
+    way (the market's base rate that week). lift = hit - base: what our choice of lines added on top of the way the
+    whole market went. A week where the whole board went under is not a week the model saw coming."""
+    if P is None or len(P) == 0 or "result" not in P.columns:
+        return []
+    g = P[P.result.isin(["Win", "Loss"])].copy()
+    if g.empty:
+        return []
+    if "group" not in g.columns or g.group.isna().any():
+        try:
+            pr = pd.read_csv(Path("data/cache/projections.csv"))[["player", "group"]].drop_duplicates("player").set_index("player").group
+            g["group"] = g.get("group", pd.Series(index=g.index, dtype=object)).fillna(g.player.map(pr))
+        except (OSError, KeyError, ValueError):
+            g["group"] = g.get("group", "")
+    g["mk"] = np.where(g.market.str.contains("solo"), "solo", "combined"); g["hit"] = (g.result == "Win").astype(float)
+    mo = pd.to_numeric(g["model_over"], errors="coerce") if "model_over" in g.columns else pd.Series(np.nan, index=g.index)
+    g["claimed"] = np.where(g.side == "Under", 1 - mo, mo)
+    if "clv_pos" in g.columns:
+        g["clv_pos"] = pd.to_numeric(g.clv_pos, errors="coerce")
+    out = []
+    for (sn, wk), gw in g.groupby(["season", "week"]):
+        cl = O.closing_lines(int(sn), int(wk))
+        if cl is None or len(cl) == 0:
+            continue
+        cl = cl.copy(); cl["name_key"] = cl.player.map(norm_name)
+        agg = cl.groupby(["event_id", "name_key", "market"]).agg(line=("line", "median")).reset_index()
+        st = pw_comb[(pw_comb.season == sn) & (pw_comb.week == wk)].groupby("name_key").agg(comb=("comb", "sum"), solo=("solo_t", "sum"))
+        agg = agg.join(st, on="name_key"); agg["actual"] = np.where(agg.market.str.contains("solo"), agg.solo, agg.comb)
+        agg = agg[agg.actual.notna() & (agg.actual != agg.line)].copy()
+        if agg.empty:
+            continue
+        agg["mk"] = np.where(agg.market.str.contains("solo"), "solo", "combined"); agg["under"] = (agg.actual < agg.line).astype(float)
+        if "group" in pw_comb.columns:
+            agg["group"] = agg.name_key.map(pw_comb[(pw_comb.season == sn) & (pw_comb.week == wk)].drop_duplicates("name_key").set_index("name_key").group)
+        else:
+            agg["group"] = agg.name_key.map(gw.drop_duplicates("name_key").set_index("name_key").group)
+        for keys in (["side"], ["side", "mk"], ["side", "mk", "group"]):
+            for k, part in gw.groupby(keys):
+                k = (k,) if not isinstance(k, tuple) else k; sel = dict(zip(keys, k))
+                m = agg
+                for kk, v in sel.items():
+                    if kk != "side":
+                        m = m[m[kk] == v]
+                if len(m) < 3 or len(part) < 1:
+                    continue
+                base = float(m.under.mean()) if sel["side"] == "Under" else float(1 - m.under.mean())
+                hit, claimed = float(part.hit.mean()), (float(part.claimed.mean()) if part.claimed.notna().any() else None)
+                beat = float(part.clv_pos.dropna().mean()) if "clv_pos" in part and part.clv_pos.notna().any() else None
+                lift = hit - base
+                verdict = ("the market went our way" if lift <= 0.05 and hit >= 0.5 else "we picked well" if lift > 0.05 else
+                           "we picked badly" if lift < -0.05 else "nothing added")
+                if len(part) < 8:
+                    verdict += " (few picks)"
+                out.append(dict(season=int(sn), week=int(wk), level=len(keys), segment=" ".join(str(v) for v in k if v), side=sel["side"],
+                                picks=int(len(part)), wins=int(part.hit.sum()), hit=hit, claimed=claimed, market_lines=int(len(m)), market_base=base,
+                                lift=lift, beat_close=beat, verdict=verdict))
+    return out
+
+
 def record_by(P, col, order=None):
     """Record per value of `col` (side, market): graded picks, with pending counted alongside."""
     if P is None or len(P) == 0 or col not in P.columns or "result" not in P.columns:
@@ -482,7 +543,11 @@ def grade(pw_comb):
         watch = market_watch(pw_comb)
     except Exception:  # noqa: BLE001
         watch = []
-    summary = dict(by_grade=by_grade, by_side=record_by(P, "side", ["Over", "Under"]), segments=seg_rows, market_watch=watch,
+    try:
+        luck = luck_check(P, pw_comb)
+    except Exception as e:  # noqa: BLE001
+        print(f"grade: luck check skipped ({type(e).__name__}: {e})"); luck = []
+    summary = dict(by_grade=by_grade, by_side=record_by(P, "side", ["Over", "Under"]), segments=seg_rows, market_watch=watch, luck=luck,
                    by_side_market=record_by(P, "side_market", ["Over combined", "Over solo", "Under combined", "Under solo"]),
                    five=dict(bets=int(len(five)), wins=int((five.result == "Win").sum()), losses=int((five.result == "Loss").sum()),
                              pushes=int((five.result == "Push").sum()), units=float(five.units.sum()) if len(five) else 0.0,
@@ -504,6 +569,7 @@ def write_five_log(P, summary, path, parlays=None):
     import datetime as dt
     f = (summary or {}).get("five") or {}
     weeks = f.get("weeks") or []
+    luck = [r for r in ((summary or {}).get("luck") or []) if r.get("level") == 1]
     lines = ["# Locks and parlays: running tally", "",
              "The locks: the highest-confidence picks of each slate day (3 on a one-game day, 5 on a multi-game day), named "
              "before kickoff and tracked here. Target: 70% hits. Then the recommended parlay for each slate day.",
@@ -528,6 +594,11 @@ def write_five_log(P, summary, path, parlays=None):
             lock = "" if pd.isna(getattr(r, "lock", np.nan)) else str(int(round(r.lock)))
             lines.append(f"| {r.player} {r.side} {r.line:g} {market} | {price} | {r.book} | {getattr(r, 'grade', '')} | {lock} | {actual} | {r.result} |")
     ps = (summary or {}).get("parlays") or {}
+    if luck:
+        lines += ["", "## Luck or skill, week by week", "", "All plays by side: our hit rate against the share of every closing line on the board that resolved the same way. Lift is what our choice of lines added; a week the whole board went our way is not a week the model saw coming.", "",
+                  "| Week | Side | Picks | Hit | Claimed | Whole market | Lift | Beat the close | Verdict |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+        for r in luck:
+            lines.append(f"| {r['season']} wk {r['week']} | {r['side']} | {r['picks']} | {r['hit']:.0%} | {'' if r.get('claimed') is None else f"{r['claimed']:.0%}"} | {r['market_base']:.0%} of {r['market_lines']} lines | {r['lift']:+.0%} | {'' if r.get('beat_close') is None else f"{r['beat_close']:.0%}"} | {r['verdict']} |")
     lines += ["", "## Parlays", ""]
     if parlays is None or len(parlays) == 0:
         lines.append("No parlays yet.")

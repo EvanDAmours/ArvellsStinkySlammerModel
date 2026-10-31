@@ -708,6 +708,51 @@ question stay on the same watch.
 Data note: two "Byron Murphy"s share a name key (MIN corner, SEA lineman); the pricer separates them by the
 game's teams, so no line was mispriced, but any by-name analysis must use the logged `group` or the team.
 
+## Luck or skill: the whole record against the market (2026-10-31, afternoon MDT, at the owner's question)
+
+After the corner answer the owner asked for every other place we "got lucky by accident", and for a weekly
+review that says whether we saw a result coming. The test is the one that undid the corner story: for each kind of
+pick, our hit rate against the share of EVERY closing line of that kind on the board (one consensus line per
+player and market, picked or not) that resolved the same way. That share is the market's base rate for the week;
+lift = our hit rate minus it, what our choice of lines added. Beating the close is the second tell.
+
+Week 7, all plays (245 consensus lines on the board):
+
+| Kind | Picks | Hit | Claimed | Whole market | Lift | Beat the close |
+| --- | --- | --- | --- | --- | --- | --- |
+| Under | 165 | 56% | 62% | 58% | -1 pt | 25% |
+| Over | 65 | 43% | 60% | 42% | +1 pt | 39% |
+| Under solo | 97 | 64% | 63% | 67% | -3 pts | 21% |
+| Under combined | 68 | 46% | 60% | 48% | -3 pts | 31% |
+| Over solo | 24 | 33% | 58% | 33% | 0 | 38% |
+| Over combined | 41 | 49% | 62% | 52% | -3 pts | 39% |
+
+Read it plainly: **in week 7 our choice of lines added nothing.** Every kind of pick hit at the rate the whole
+board did. The 131-116 record, the "solo Under is a huge play", the Over problem: all of it is the shape of one
+week in which two thirds of solo lines went under league-wide (the solo-crediting dip), not something the model
+saw. We did not beat the closing line either (25% on Unders). The only pockets with real lift are corner Unders
+(+24 pts combined, +10 solo, 31 picks) and, on the other side, safety combined Unders (-17) and linebacker
+combined Unders (-9), where our picks did worse than the board. Week 8 so far is 14 Unders at 71% against a 63%
+board (+9, few picks) and three Overs that all lost.
+
+What this changes:
+1. The claim "solo Unders are our play" is withdrawn as a finding. The solo Under hit 64% because 67% of solo
+   lines went under; the model's share of that was zero. The solo drift factor (3-week league solo share) is the
+   right response to the mechanism and stays; the segment correction, which learned the week's hit rates, is now
+   partly learning the board's drift rather than our selection (see the pitfall below). It stays for now, shrunk
+   by n/(n+40), and is reviewed against lift from here on.
+2. The weekly review the owner asked for is automatic. `luck_check` in `pipeline/grade.py` runs at every grading:
+   per week and kind of pick (side; side x market; side x market x position), picks, hit, claimed, the market's
+   base rate over the whole board, lift, beat-the-close, and a verdict ("the market went our way", "we picked
+   well", "we picked badly", "nothing added", with a "few picks" tag under 8). It is on the Track record tab
+   ("Luck or skill: did we see it coming?") and in `data/weekly_five.md`. The weekly post-mortem protocol now
+   starts from this table: a week is only evidence for a piece of the model where lift and beat-the-close agree
+   with the record.
+3. What is "fixable": nothing in the record was a bug. The model prices every line at the base rate the market
+   itself produced, which is what a model with no selection edge looks like after one week. The pieces with a
+   measured out-of-sample gain (per-snap base, PFR targets, dome corners, the corrector) are the case for a
+   selection edge; one graded week with 245 lines cannot show one either way. Judge on lift over 500 lines.
+
 ## Standing watch: grade order (opened 2026-10-30, evening MDT, at the owner's request)
 
 Live record by grade as of 2026-10-30: A 4-2 (67%), B 13-5 (72%), C 13-13 (50%). A below B on six A picks is not
@@ -720,6 +765,10 @@ saturates at 10%, claimed chance shrunk), so A picks from here on are a differen
 the review keeps the two apart.
 
 ## Weekly post-mortems
+
+Each post-mortem starts from the luck table (Track record tab; `data/weekly_five.md`): per kind of pick, our hit
+rate against the whole board's base rate and the beat-the-close share. Only where lift and the close agree with
+the record is the week evidence about the model.
 
 ### Week 8 Thursday, 2026 (GB at CAR; graded 2026-10-30, morning MDT)
 
@@ -842,6 +891,12 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-10-31, afternoon MDT (luck check: every kind of pick against the whole board)
+- See "Luck or skill" above. `luck_check` in `pipeline/grade.py` (consensus closing line per player and market
+  from `O.closing_lines`, resolved against the box score, split by side, market and position; `group` now passed
+  to the grader from `run.py`), `summary["luck"]`, Track record section, weekly log section, smoke check.
+  Protocol: the weekly post-mortem starts from this table.
 
 ### 2026-10-31, early afternoon MDT (hourly pulls, every live line on the board)
 - Owner: "you should be grading picks as soon as they come in, not waiting; I wanna see the lines that are live
@@ -1273,6 +1328,10 @@ Open, with what would justify them:
 ## Known pitfalls
 
 - Codespaces secrets are invisible to Actions. Only Actions secrets work.
+- A week's hit rate is the market's base rate plus our lift. Judge a kind of pick on lift against every closing
+  line of that kind (the luck check), never on the record alone: in week 7 every kind of pick hit at exactly the
+  board's rate, and the record looked like skill. The segment correction learns hit rates, so after a week of
+  board-wide drift it is partly learning the drift; read it beside the luck table.
 - The Plays tab is the current board. Anything settled (a parlay whose games are over, a graded pick) belongs to
   the Track record tab only; a weekly file rendered whole will show last Thursday's bet on Saturday.
 - A side table that only has a row when the player recorded something (PFR advanced defence, any "box score of

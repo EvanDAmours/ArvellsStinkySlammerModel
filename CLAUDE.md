@@ -10,7 +10,9 @@
 3. Append an entry to `MODEL_LOG.md` for every change: date, what, why, evidence, revert condition. Add any new
    pitfall to its list. A change that is not in the log did not happen.
 4. After each graded week, add a post-mortem to `MODEL_LOG.md`: record, calibration (claimed vs hit), results by
-   market, side, signal and grade, and what changed because of it.
+   market, side, signal and grade, and what changed because of it. Start from the luck table (Track record tab,
+   `data/weekly_five.md`): a kind of pick is evidence for the model only where lift over the whole board and
+   beating the close agree with the record. A record alone proves nothing.
 5. `python tests/smoke_test.py` must pass before every push. `TACKLE_FAKE_DATA=1 TACKLE_FAKE_ODDS=1` run the
    pipeline on synthetic data.
 6. Secrets: `ODDS_API_KEY` and `PARLAY_API_KEY` are GitHub Actions secrets. Never print or commit their values.

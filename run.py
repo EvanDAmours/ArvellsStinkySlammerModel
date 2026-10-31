@@ -288,7 +288,7 @@ def cmd_daily():
     games = week_games(sched, C.SEASON, week)
     json.dump(games, open(CACHE / "games.json", "w"), indent=1)
     status["international_games"] = [f"{g['away']} at {g['home']}, {g['edmonton']} Edmonton" for g in games if g["international"]]
-    graded, summary = G.grade(H[["season", "week", "team", "name_key", "comb", "solo_t"]])   # H has zero-tackle games from snap counts, so "played, no tackles" is not "did not play"
+    graded, summary = G.grade(H[["season", "week", "team", "name_key", "group", "comb", "solo_t"]])   # H has zero-tackle games from snap counts, so "played, no tackles" is not "did not play"
     parlays, psum = G.grade_parlays(pw)
     summary["parlays"] = psum
     G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)
