@@ -170,6 +170,10 @@ function recordsBar(s) {
     bar.append(el("div", { class: "rec" }, el("span", { class: `grade ${gr}`, title: "Confidence grade" }, gr), wl(g.wins, g.losses, g.pushes),
       el("span", { class: "label" }, `${gr} grade${g.hit == null ? "" : ` (${pct(g.hit)})`}${g.pending ? `, ${g.pending} pending` : ""}`)));
   }
+  for (const sd of ((s || {}).by_side || [])) {
+    bar.append(el("div", { class: "rec" }, el("span", { class: sd.key === "Under" ? "under" : "over", style: "font-weight:700;margin-right:6px" }, sd.key + "s"), wl(sd.wins, sd.losses, sd.pushes),
+      el("span", { class: "label" }, `${sd.hit == null ? "" : pct(sd.hit)}${sd.units == null ? "" : `, ${sd.units >= 0 ? "+" : ""}${sd.units.toFixed(1)}u`}${sd.pending ? `, ${sd.pending} pending` : ""}`)));
+  }
   const pr = (s || {}).parlays || {};
   bar.append(el("div", { class: "rec" }, wl(pr.wins, pr.losses), el("span", { class: "label" }, `Parlays${pr.units == null ? "" : `, ${pr.units >= 0 ? "+" : ""}${pr.units.toFixed(1)}u`}${pr.pending ? `, ${pr.pending} pending` : ""}`)));
   const rw = (r.retro && r.retro.weeks) || [];
