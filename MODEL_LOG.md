@@ -663,6 +663,51 @@ reachability from a script, for what they carry that nflverse does not, and for 
   and to show the owner an outside number next to ours, not to steer picks. The cross-check is logged so it can
   be judged later, the way everything else here is.
 
+## Why the CB Unders hit (2026-10-31, afternoon MDT, at the owner's question)
+
+The owner asked why the corner Unders have been so good and what the model sees that the books do not. The
+record on the site: CB Unders 27-5 (combined 14-3, solo 13-2) against a claimed 55%. Before answering, the
+question was put to the data four ways. Scripts: `scratchpad/cb_why*.py` (not in the repo).
+
+1. **The whole CB market went under in week 7, not just our picks.** Every closing CB line pulled in week 7,
+   picked or not, across every book: 108 lines, **74% under** (solo lines 82%, combined 67%). DL lines 80% under,
+   S 61%, LB 45%. Our CB Unders hit 74-84%, about the market's own base rate. In week 7 the edge was that the
+   books' CB lines sat where they always sit, near the season average (0.1 below it, like every position), and
+   corners came in far below their averages: CB solo tackles ran at 1.02x their season pace in week 7 against
+   1.31-1.39x in weeks 5-6, and the CB solo share of tackles fell to 0.57 from 0.68-0.70 (2023-25 norm 0.66-0.69).
+   That is the league solo-crediting dip found on 2026-10-30 (league solo share 0.50 in week 7), hitting the
+   position whose tackles are most often credited solo. A scorer's habit, not a football event.
+2. **Tackle counts are not skewed for corners.** 2023-2026 regulars, 11,400 games: 45% of games land below the
+   player's own average at every position; a half-point line at the average goes under 48% of the time for CB,
+   DL, LB and S alike. There is no free Under in the shape of the distribution.
+3. **The books did not come to us.** Our CB Unders beat the closing line 21% of the time (LB 29%, S 26%); the
+   closing-line probability moved 0.2 points on average. Whatever we see, the market did not price it in by
+   kickoff, which is either a persistent blind spot or a week of luck. One week cannot say which.
+4. **The model is lower than the books on corners, consistently.** On our CB Under picks the model gave the Under
+   58% and the book's price 47%; the model's own number sat 0.2-0.6 under the line (Ward 2.2 vs 2.5, Rodgers 1.8
+   vs 2.5, Humphrey 3.8 vs 4.5, Stephens 2.9 vs 3.5). That gap comes from pieces the books do not use:
+   - **coverage usage (PFR targets per game):** a corner's tackles come from his own targets; one who is not
+     thrown at (a shadow corner, or the side quarterbacks avoid) tackles less than his average says. The backtest
+     says the PFR piece earns its place (miss 1.6305 without, 1.6217 with: the largest single-piece gain).
+   - **the dome factor (+5% for corners indoors):** more passing, more corner tackles; absent indoors, the
+     number is lower than a season average built partly on dome games.
+   - **league solo drift:** solo lines hang on season averages while solo crediting drifts down through a season
+     (CB solo share 0.69 in weeks 1-7 to 0.66 after; league 0.55 to 0.51 in 2025) and dipped hard in week 7.
+     Added after week 7, so it earned none of the record above; it is there for the next dip.
+   - **the lowest dispersion of any position** (variance/mean 1.19 for CB against 2.08 for LB): a corner's
+     count is the most predictable, so the same gap between the model and the line is worth more probability
+     for a corner than for a linebacker, and the per-position phi lets the pricer say so.
+   - **opponent run/pass mix:** a corner facing a run-heavy offence sees fewer completions to tackle.
+
+What to tell the owner: a real structural reason (books hang corners at the season average and do not adjust for
+targets, venue, scorer drift or mix) plus one very favourable week. Keep betting the CB Unders the model likes,
+keep the segment correction (it feeds +8 pts into CB Under claims, shrunk by n/(n+40)), and judge it on the
+closing-line share and the next hundred corner picks, not on 27-5. The A/B/C grade order and the solo Under
+question stay on the same watch.
+
+Data note: two "Byron Murphy"s share a name key (MIN corner, SEA lineman); the pricer separates them by the
+game's teams, so no line was mispriced, but any by-name analysis must use the logged `group` or the team.
+
 ## Standing watch: grade order (opened 2026-10-30, evening MDT, at the owner's request)
 
 Live record by grade as of 2026-10-30: A 4-2 (67%), B 13-5 (72%), C 13-13 (50%). A below B on six A picks is not
