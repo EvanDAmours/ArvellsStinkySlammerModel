@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-31T04:47+00:00",
+ "generated_at": "2026-10-31T15:34+00:00",
  "season": 2026,
  "week": 8,
  "lines_pulled": null,
@@ -29,11 +29,11 @@
   "snaps_lag": false
  },
  "snaps_rows": 86196,
- "injury_rows": 20299,
+ "injury_rows": 20341,
  "volume_rows": 1848,
  "pbp_rows": 30899,
  "pfr_rows": 25824,
- "depth_chart_rows": 582851,
+ "depth_chart_rows": 584771,
  "international_games": [],
  "bars": {
   "pick": 0.06,
@@ -75,7 +75,7 @@
   "pick_bar": 0.06,
   "pick_bar_over": 0.1,
   "claim_shrink": 0.6,
-  "segment_k": 30,
+  "segment_k": 40,
   "segment_min_n": 10
  },
  "odds_credits_remaining": 402,
