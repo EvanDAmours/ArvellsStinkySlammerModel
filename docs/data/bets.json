@@ -289,7 +289,7 @@
   "mkt_side": 0.5192,
   "payout": 0.9259,
   "international": false,
-  "depth": null,
+  "depth": "",
   "uncertain": false,
   "new_role": false,
   "snap_jump": 1.0657,
