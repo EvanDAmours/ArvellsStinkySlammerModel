@@ -1,8 +1,9 @@
 {
- "generated_at": "2026-10-31T17:23+00:00",
+ "generated_at": "2026-10-31T17:39+00:00",
  "season": 2026,
  "week": 8,
  "lines_pulled": "20261031T163434Z",
+ "next_pull": "2026-11-01T00:00+00:00",
  "stats_source": "2023: nflreadpy; 2024: nflreadpy; 2025: nflreadpy; 2026: nflreadpy",
  "tackle_formula": "solo+with_ast+ast",
  "formula_check_ok": true,

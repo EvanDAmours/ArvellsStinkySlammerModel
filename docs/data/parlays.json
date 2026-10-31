@@ -9,6 +9,7 @@
   "units": 0.1,
   "chosen_at": "20261029T204822Z",
   "placed": true,
+  "finished": true,
   "first_kickoff": "2026-10-30T00:15:00+00:00",
   "legs": [
    {
