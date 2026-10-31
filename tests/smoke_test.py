@@ -130,6 +130,8 @@ check(list(graded.result) == ["Win", "Loss", "Win"], f"picks graded correctly ({
 _v = pd.read_csv(G.PICKS); _v = pd.concat([_v, _v.iloc[[0]].assign(player="Nobody Atall", event_id="void_test")], ignore_index=True); _v.to_csv(G.PICKS, index=False)
 _gv, _ = G.grade(pw)
 check("Void" in set(_gv.result) and int((_gv.result == "Void").sum()) == 1, f"a bet on a player who did not play in a finished game is void ({_gv.result.tolist()})")
+check(summary.get("by_side") and {x["key"] for x in summary["by_side"]} <= {"Over", "Under"} and all({"hit", "units", "pending"} <= set(x) for x in summary["by_side"]) and len(summary.get("by_side_market", [])) >= 1,
+      f"record by side and by side-market carried ({[(x['key'], x['wins'], x['losses']) for x in summary['by_side']]})")
 check(summary["by_grade"] and summary["by_grade"][0]["grade"] == "A" and all({"hit", "pushes", "pending", "staked", "stake"} <= set(g) for g in summary["by_grade"]),
       f"record by grade carries hit rate, pushes, pending and staked units ({[(g['grade'], g['wins'], g['losses']) for g in summary['by_grade']]})")
 check(abs(summary["units"] - (2 * (100 / 110) - 1)) < 1e-6, f"units computed ({summary['units']:.3f})")

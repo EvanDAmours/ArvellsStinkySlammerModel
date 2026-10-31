@@ -268,6 +268,25 @@ def lock_blocked(df):
     return out
 
 
+def record_by(P, col, order=None):
+    """Record per value of `col` (side, market): graded picks, with pending counted alongside."""
+    if P is None or len(P) == 0 or col not in P.columns or "result" not in P.columns:
+        return []
+    labels = P[col].fillna("").astype(str)
+    out = []
+    for v in (order or sorted(labels.unique())):
+        allp = P[labels == v]
+        if allp.empty:
+            continue
+        part = allp[allp.result.isin(["Win", "Loss", "Push"])]
+        decided = int((part.result != "Push").sum())
+        out.append(dict(key=v, bets=int(len(part)), wins=int((part.result == "Win").sum()), losses=int((part.result == "Loss").sum()),
+                        pushes=int((part.result == "Push").sum()), pending=int((allp.result == "Pending").sum()),
+                        units=float(part.units.sum()) if len(part) else 0.0, roi=float(part.units.mean()) if len(part) else None,
+                        hit=float((part.result == "Win").sum() / decided) if decided else None))
+    return out
+
+
 def record_by_grade(P):
     """Record per confidence grade (A, B, C, then any picks logged before grades existed), graded picks only, with
     pending counted alongside. `staked` is the units won at the suggested stake for the grade (GRADE_UNITS)."""
@@ -351,7 +370,9 @@ def grade(pw_comb):
         weeks.append(dict(season=int(sn), week=int(wk), picks=int(len(part)), wins=w, losses=l, pushes=pu,
                           pending=int((part.result == "Pending").sum()), units=float(part.units.sum()),
                           running_wins=cw, running_losses=cl))
-    summary = dict(by_grade=by_grade,
+    P["side_market"] = P.side.fillna("") + " " + np.where(P.market.str.contains("solo"), "solo", "combined")
+    summary = dict(by_grade=by_grade, by_side=record_by(P, "side", ["Over", "Under"]),
+                   by_side_market=record_by(P, "side_market", ["Over combined", "Over solo", "Under combined", "Under solo"]),
                    five=dict(bets=int(len(five)), wins=int((five.result == "Win").sum()), losses=int((five.result == "Loss").sum()),
                              pushes=int((five.result == "Push").sum()), units=float(five.units.sum()) if len(five) else 0.0,
                              hit=float((five.result == "Win").sum() / max(1, (five.result != "Push").sum())) if len(five) else None,

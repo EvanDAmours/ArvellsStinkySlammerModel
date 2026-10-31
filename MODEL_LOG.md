@@ -673,6 +673,20 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-10-31, morning MDT (Track record and Model check tabs reorganised)
+- Track record: sections with a one-line lead each (all plays, by grade, by side, locks, parlays, replays, every
+  pick); the duplicated stat rows above tables are gone; long explanations sit in collapsibles; each replayed week
+  is a collapsible with its summary in the heading. Model check: a summary strip (full model, season average,
+  held-out 2026 with and without the second model, solo), then "Does each piece earn its place?" (miss without
+  each piece against the full model, with a verdict), the held-out rows, simple benchmarks, solo rows, weak spots,
+  a compact dispersion grid by position, calibration with readable bins, and outlier regression.
+
+### 2026-10-31, morning MDT (record by side on the site)
+- Owner asked to track wins on Overs and Unders. The grader's summary carries `by_side` and `by_side_market`
+  (Over/Under x combined/solo: bets, record, hit, units, return, pending); the records bar on both tabs shows the
+  Over and Under records; the Track record tab has a "Record by side" block with the side-by-market table, where
+  the Over rule (plays only, never locks, until forty more Overs say otherwise) gets judged.
+
 ### 2026-10-31, morning MDT (league solo drift)
 - `SOLO_DRIFT`, `solo_drift_table` / `solo_drift_for` in `pipeline/model.py`, applied to the solo share; backtest row
   "Solo tackles: full model without league solo drift"; smoke check. See "Why the Overs miss" above. Revert: the

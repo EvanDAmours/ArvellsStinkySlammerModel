@@ -51,6 +51,11 @@ select, input[type="search"] { font: inherit; padding: 6px 8px; border: 1px soli
 .lock { color: var(--muted); font-size: 0.85rem; }
 .w { color: #1f8a4c; } .l { color: #c0392b; } .pos { color: #1f8a4c; } .neg { color: #c0392b; }
 td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weight: 600; }
+.section { margin: 26px 0 0; } .section h3 { margin: 0 0 4px; font: 700 1.15rem/1.3 var(--cond); }
+.lead { color: var(--muted); font-size: 0.9rem; max-width: 80ch; margin: 0 0 10px; }
+.more { margin: 8px 0 0; font-size: 0.9rem; color: var(--muted); max-width: 80ch; } .more summary { cursor: pointer; color: var(--ink); font-weight: 600; } .more p { margin: 6px 0; }
+.indent { padding-left: 18px; } small.muted { color: var(--muted); font-weight: 400; }
+.verdict.ok { color: #1f8a4c; font-weight: 600; } .verdict.no { color: #8a8f98; } .verdict.bad { color: #c0392b; font-weight: 600; }
 .records { display: flex; flex-wrap: wrap; gap: 8px 28px; align-items: baseline; margin: 0 0 14px; }
 .records .rec b { font: 700 1.5rem/1.1 var(--cond); font-variant-numeric: tabular-nums; }
 .records .rec .label { color: var(--muted); font-size: 0.9rem; margin-left: 6px; }
@@ -175,9 +180,8 @@ function recordsBar(s) {
     const rg = {};
     for (const w of rw) for (const g of (w.by_grade || [])) { rg[g.grade] = rg[g.grade] || { w: 0, l: 0 }; rg[g.grade].w += g.wins; rg[g.grade].l += g.losses; }
     const byGrade = ["A", "B", "C"].filter((k) => rg[k]).flatMap((k, i) => [i ? ", " : " (", `${k} `, wl(rg[k].w, rg[k].l)]);
-    bar.append(el("div", { class: "sub" }, "Projected under the current rules, replayed on ", weeks, " using only what was known before each kickoff: locks ",
-      wl(tot.w, tot.l), tot.pend ? ` (${tot.pend} pending)` : "", ", all plays ", wl(tot.pw, tot.pl), ...byGrade, byGrade.length ? ")" : "", ", parlays ", wl(tot.qw, tot.ql), ". ",
-      "Weeks 1-6 can't be replayed: no lines were collected before week 7, and historical lines need a paid Odds API plan."));
+    bar.append(el("div", { class: "sub" }, "Replayed under the current rules (", weeks, ", using only what was known before each kickoff): locks ",
+      wl(tot.w, tot.l), tot.pend ? ` (${tot.pend} pending)` : "", ", all plays ", wl(tot.pw, tot.pl), ...byGrade, byGrade.length ? ")" : "", ", parlays ", wl(tot.qw, tot.ql), "."));
   }
   return bar;
 }
@@ -367,87 +371,108 @@ function renderProj() {
   t.append(tb);
 }
 
+function section(title, lead, ...kids) {
+  const sec = el("section", { class: "section" }, el("h3", {}, title));
+  if (lead) sec.append(el("p", { class: "lead" }, lead));
+  for (const k of kids) if (k) sec.append(k);
+  return sec;
+}
+function more(label, ...kids) {
+  const d = el("details", { class: "more" }, el("summary", {}, label));
+  for (const k of kids) if (k) d.append(typeof k === "string" ? el("p", {}, k) : k);
+  return d;
+}
+const roiCell = (v) => el("b", { class: v == null ? "" : v >= 0 ? "pos" : "neg" }, v == null ? "" : signedPct(v));
+const recCell = (x) => el("span", {}, wl(x.wins, x.losses, x.pushes), x.pending ? el("small", { class: "muted" }, ` ${x.pending} pending`) : "");
+
 function renderRecord() {
   const box = $("#record-body"); box.replaceChildren();
   const r = DATA.results;
   if (!r || !r.picks || !r.picks.length) { box.append(el("div", { class: "empty" }, "No picks logged yet. Every pick the board makes is saved with the price at the time and graded against the official box score the next morning.")); return; }
   const s = r.summary || {};
   box.append(recordsBar(s));
-  box.append(el("h3", {}, "All plays"));
-  box.append(el("div", { class: "stat-line" },
-    el("div", {}, wl(s.wins, s.losses, s.pushes), "Record"),
-    el("div", {}, units(s.units), "Units (1 per bet)"),
-    el("div", {}, el("b", { class: s.roi == null ? "" : s.roi >= 0 ? "pos" : "neg" }, s.roi == null ? "" : signedPct(s.roi)), "Return per bet"),
-    el("div", {}, el("b", { class: clvClass(s.beat_close_share) }, s.beat_close_share == null ? "" : pct(s.beat_close_share)), `Beat the closing line${s.close_moved ? ` (${s.close_moved} moved lines of ${s.close_known})` : ""}`),
-    el("div", {}, el("b", {}, String(s.pending ?? 0)), "Pending")));
-  box.append(el("p", { class: "note" }, `Beating the closing line is the earliest reliable sign of a real edge: over a few hundred moved lines it predicts profit better than the win-loss record does. Cutoffs and the full explanation are in the legend on the Plays tab: ${clvWord(s.beat_close_share)}.`));
+
+  // 1. all plays
+  box.append(section("All plays", null,
+    el("div", { class: "stat-line" },
+      el("div", {}, wl(s.wins, s.losses, s.pushes), "Record"),
+      el("div", {}, units(s.units), "Units, 1 per bet"),
+      el("div", {}, roiCell(s.roi), "Return per bet"),
+      el("div", {}, el("b", { class: clvClass(s.beat_close_share) }, s.beat_close_share == null ? "" : pct(s.beat_close_share)), `Beat the close${s.close_moved ? ` (${s.close_moved} moved lines)` : ""}`),
+      el("div", {}, el("b", {}, String(s.pending ?? 0)), "Pending")),
+    el("p", { class: "lead" }, `Beating the closing line is the earliest reliable sign of a real edge; this one reads "${clvWord(s.beat_close_share)}". Cutoffs are in the legend on the Plays tab.`)));
+
+  // 2. by grade
   if (s.by_grade && s.by_grade.length) {
-    box.append(el("h3", {}, "Record by grade"));
-    box.append(el("div", { class: "stat-line" }, ...["A", "B", "C"].map((gr) => { const g = s.by_grade.find((x) => x.grade === gr) || {};
-      return el("div", {}, wl(g.wins, g.losses, g.pushes), el("span", { class: `grade ${gr}` }, gr), ` grade${g.hit == null ? "" : `, ${pct(g.hit)} hit`}${g.pending ? `, ${g.pending} pending` : ""}`); })));
-    box.append(el("div", { class: "scroll" }, table([["Grade"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Units (1 per bet)", "n"], ["Return per bet", "n"], ["Units at suggested stake", "n"], ["Pending", "n"]],
-      s.by_grade.map((g) => [g.grade === "ungraded" ? "No grade yet" : el("span", { class: `grade ${g.grade}` }, g.grade), g.bets, wl(g.wins, g.losses, g.pushes), g.hit == null ? "" : pct(g.hit), units(g.units, 2),
-        el("b", { class: g.roi == null ? "" : g.roi >= 0 ? "pos" : "neg" }, g.roi == null ? "" : signedPct(g.roi)), g.stake ? el("span", {}, units(g.staked, 2), ` at ${g.stake}u`) : "", g.pending || 0]))));
-    { const A = s.by_grade.find((x) => x.grade === "A") || {}, Bg = s.by_grade.find((x) => x.grade === "B") || {};
-      const nA = (A.wins || 0) + (A.losses || 0), nB = (Bg.wins || 0) + (Bg.losses || 0);
-      if (nA && nB) {
-        const bad = A.hit != null && Bg.hit != null && A.hit < Bg.hit;
-        box.append(el("p", { class: "note", style: bad ? "color:#c0392b;font-weight:600" : "" },
-          `Grade order check: A ${pct(A.hit)} on ${nA} graded picks against B ${pct(Bg.hit)} on ${nB}. ${bad ? "A is below B: watched after every slate; the grading weights are re-fitted if it holds at 30 graded A picks." : "In order. Judged again at 30 graded A picks."}`));
-      } }
-    box.append(el("p", { class: "note" }, "If the grades mean anything, A should beat B and B should beat C over time; if they don't, the grading formula in config.py is wrong and gets changed. "
-      + (s.by_grade.some((g) => g.grade === "ungraded") ? "\"No grade yet\" are the week 7 picks logged before grades existed (2026-10-26); the replay further down grades every one of them under the current rules. " : "")
-      + "Suggested stakes are A 1 unit, B 0.5, C 0.25 (see the legend on the Plays tab)."));
+    const A = s.by_grade.find((x) => x.grade === "A") || {}, Bg = s.by_grade.find((x) => x.grade === "B") || {};
+    const nA = (A.wins || 0) + (A.losses || 0), nB = (Bg.wins || 0) + (Bg.losses || 0);
+    const bad = nA && nB && A.hit != null && Bg.hit != null && A.hit < Bg.hit;
+    const order = nA && nB ? el("p", { class: "lead", style: bad ? "color:#c0392b;font-weight:600" : "" },
+      `Grade order check: A ${pct(A.hit)} on ${nA} graded picks, B ${pct(Bg.hit)} on ${nB}. ${bad ? "A is below B. Watched after every slate; the weights are re-fitted if it holds at 30 graded A picks." : "In order. Judged again at 30 graded A picks."}`) : null;
+    box.append(section("By grade", "A should beat B and B should beat C over time; if not, the grading formula changes. Suggested stakes: A 1 unit, B 0.5, C 0.25.",
+      el("div", { class: "scroll" }, table([["Grade"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Units, 1 per bet", "n"], ["Return per bet", "n"], ["Units at suggested stake", "n"]],
+        s.by_grade.map((g) => [g.grade === "ungraded" ? "No grade yet" : el("span", { class: `grade ${g.grade}` }, g.grade), g.bets, recCell(g), g.hit == null ? "" : pct(g.hit), units(g.units, 2), roiCell(g.roi), g.stake ? el("span", {}, units(g.staked, 2), ` at ${g.stake}u`) : ""]))),
+      order,
+      s.by_grade.some((g) => g.grade === "ungraded") ? more("What \"No grade yet\" means", "The week 7 picks logged before grades existed on 2026-10-26. The replay section grades every one of them under the current rules.") : null));
   }
+
+  // 3. by side
+  if (s.by_side && s.by_side.length) {
+    const rows = [];
+    for (const sd of s.by_side) {
+      rows.push([el("b", { class: sd.key === "Under" ? "under" : "over" }, sd.key + "s, all"), sd.bets, recCell(sd), sd.hit == null ? "" : pct(sd.hit), units(sd.units, 2), roiCell(sd.roi)]);
+      for (const m of (s.by_side_market || []).filter((m) => m.key.startsWith(sd.key))) rows.push([el("span", { class: "indent" }, m.key.replace(sd.key + " ", "")), m.bets, recCell(m), m.hit == null ? "" : pct(m.hit), units(m.units, 2), roiCell(m.roi)]);
+    }
+    box.append(section("By side", "Overs are plays at a higher bar and never locks until forty more of them hit 55%; this is where that gets judged.",
+      el("div", { class: "scroll" }, table([["Side"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Units, 1 per bet", "n"], ["Return per bet", "n"]], rows)),
+      more("Why the sides differ", "The market's price leans toward the over, so a model-found Over edge usually means the model is far above a number that was already set high. The same lean leaves real value on Unders.")));
+  }
+
+  // 4. locks
   if (s.five && (s.five.bets || (s.five.weeks && s.five.weeks.length))) {
-    box.append(el("h3", {}, "The locks (weekly five)"));
-    box.append(el("div", { class: "stat-line" },
-      el("div", {}, wl(s.five.wins, s.five.losses, s.five.pushes), "Record"),
-      el("div", {}, el("b", { class: s.five.hit == null ? "" : s.five.hit >= 0.7 ? "pos" : "neg" }, s.five.hit == null ? "" : pct(s.five.hit)), "Hit rate (target 70%)"),
-      el("div", {}, units(s.five.units), "Units"),
-      el("div", {}, el("b", {}, String(s.five.pending ?? 0)), "Pending")));
-    if (s.five.weeks && s.five.weeks.length) {
-      box.append(el("div", { class: "scroll" }, table([["Week"], ["Picks", "n"], ["Record"], ["Units", "n"], ["Running record"]],
-        [...s.five.weeks].reverse().map((w) => [`Wk ${w.week}`, w.picks, el("span", {}, wl(w.wins, w.losses, w.pushes), w.pending ? ` (${w.pending} pending)` : ""), units(w.units, 2), wl(w.running_wins, w.running_losses)]))));
-    }
     const fp = r.picks.filter((p) => p.five);
-    if (fp.length) {
-      box.append(el("div", { class: "scroll" }, table([["Week"], ["Pick"], ["Price", "n"], ["Book"], ["Grade"], ["Lock", "n"], ["Actual", "n"], ["Result"]],
-        [...fp].reverse().map((p) => [`Wk ${p.week}`, `${p.player} ${p.side} ${num(p.line)} ${(MARKET[p.market] || p.market).toLowerCase()}`, odds(p.odds), p.book, p.grade || "", p.lock == null ? "" : Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result]))));
-    }
-    box.append(el("p", { class: "note" }, "The same tally is kept in data/weekly_five.md in the repository, rewritten every morning."));
+    box.append(section("Locks", "The five most confident picks of a multi-game day and the three of a one-game day, chosen on the model's own evidence. Target: 70% over the season.",
+      el("div", { class: "stat-line" },
+        el("div", {}, wl(s.five.wins, s.five.losses, s.five.pushes), "Record"),
+        el("div", {}, el("b", { class: s.five.hit == null ? "" : s.five.hit >= 0.7 ? "pos" : "neg" }, s.five.hit == null ? "" : pct(s.five.hit)), "Hit rate"),
+        el("div", {}, units(s.five.units), "Units"),
+        el("div", {}, el("b", {}, String(s.five.pending ?? 0)), "Pending")),
+      s.five.weeks && s.five.weeks.length ? el("div", { class: "scroll" }, table([["Week"], ["Locks", "n"], ["Record"], ["Units", "n"], ["Running record"]],
+        [...s.five.weeks].reverse().map((w) => [`Week ${w.week}`, w.picks, recCell(w), units(w.units, 2), wl(w.running_wins, w.running_losses)]))) : null,
+      fp.length ? el("div", { class: "scroll" }, table([["Week"], ["Lock"], ["Price", "n"], ["Book"], ["Grade"], ["Score", "n"], ["Actual", "n"], ["Result"]],
+        [...fp].reverse().map((p) => [`Week ${p.week}`, `${p.player} ${p.side} ${num(p.line)} ${(MARKET[p.market] || p.market).toLowerCase()}`, odds(p.odds), p.book, p.grade ? el("span", { class: `grade ${p.grade}` }, p.grade) : "", p.lock == null ? "" : Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result]))) : null));
   }
+
+  // 5. parlays
   const ps = s.parlays || {};
   if (r.parlays && r.parlays.length) {
-    box.append(el("h3", {}, "Parlays"));
-    box.append(el("div", { class: "stat-line" },
-      el("div", {}, wl(ps.wins, ps.losses), "Record"),
-      el("div", {}, units(ps.units), `Units (${(ps.staked ?? 0).toFixed(1)} staked)`),
-      el("div", {}, el("b", {}, String(ps.pending ?? 0)), "Pending")));
-    for (const q of [...r.parlays].reverse()) box.append(parlayBox({ ...q, placed: true }, true));
+    box.append(section("Parlays", "One recommended parlay per slate day, two or three legs, quarter-Kelly stake between 0.1 and 1 unit.",
+      el("div", { class: "stat-line" },
+        el("div", {}, wl(ps.wins, ps.losses), "Record"),
+        el("div", {}, units(ps.units), `Units (${(ps.staked ?? 0).toFixed(1)} staked)`),
+        el("div", {}, el("b", {}, String(ps.pending ?? 0)), "Pending")),
+      ...[...r.parlays].reverse().map((q) => parlayBox({ ...q, placed: true }, true))));
   }
+
+  // 6. replays
   if (r.retro && r.retro.weeks && r.retro.weeks.length) {
-    box.append(el("h3", {}, "Replayed under the current rules"));
-    box.append(el("p", { class: "note" }, r.retro.note || ""));
-    for (const w of [...r.retro.weeks].reverse()) {
-      box.append(el("div", { class: "stat-line" },
-        el("div", {}, wl(w.five.wins, w.five.losses, w.five.pushes), `Week ${w.week} locks`),
-        el("div", {}, units(w.five.units), "Locks units"),
-        el("div", {}, wl(w.plays.wins, w.plays.losses, w.plays.pushes), `Week ${w.week} all plays (${w.plays.n})`),
-        el("div", {}, units(w.plays.units), "Plays units")));
-      if (w.by_grade && w.by_grade.length) {
-        box.append(el("div", { class: "stat-line" }, ...w.by_grade.map((g) => el("div", {}, wl(g.wins, g.losses, g.pushes), el("span", { class: `grade ${g.grade}` }, g.grade), ` grade, week ${w.week} (${g.bets}${g.hit == null ? "" : `, ${pct(g.hit)} hit`}, ${g.units >= 0 ? "+" : ""}${Number(g.units).toFixed(1)}u)`))));
-      }
-      box.append(el("div", { class: "scroll" }, table([["Lock"], ["Price", "n"], ["Book"], ["Grade"], ["Score", "n"], ["Actual", "n"], ["Result"]],
-        w.picks.map((p) => [`${p.player} ${p.side} ${num(p.line)} ${(MARKET[p.market] || p.market).toLowerCase()}`, odds(p.odds), p.book, p.grade, Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result]))));
-      for (const q of (w.parlays || [])) box.append(parlayBox({ ...q, placed: true }, true));
-    }
+    const weeks = [...r.retro.weeks].reverse().map((w) => {
+      const gl = (w.by_grade || []).map((g) => `${g.grade} ${g.wins}-${g.losses}`).join(", ");
+      const d = more(`Week ${w.week}: locks ${w.five.wins}-${w.five.losses} (${w.five.units >= 0 ? "+" : ""}${w.five.units.toFixed(1)}u), all plays ${w.plays.wins}-${w.plays.losses} of ${w.plays.n} (${w.plays.units >= 0 ? "+" : ""}${w.plays.units.toFixed(1)}u)${gl ? `, by grade ${gl}` : ""}`,
+        el("div", { class: "scroll" }, table([["Lock"], ["Price", "n"], ["Book"], ["Grade"], ["Score", "n"], ["Actual", "n"], ["Result"]],
+          w.picks.map((p) => [`${p.player} ${p.side} ${num(p.line)} ${(MARKET[p.market] || p.market).toLowerCase()}`, odds(p.odds), p.book, p.grade ? el("span", { class: `grade ${p.grade}` }, p.grade) : "", Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result]))),
+        ...(w.parlays || []).map((q) => parlayBox({ ...q, placed: true }, true)));
+      return d;
+    });
+    box.append(section("Replayed under the current rules", "What the current model would have picked, using only what was known at each line pull. Weeks before 7 cannot be replayed: no lines were collected, and historical lines need a paid Odds API plan.", ...weeks));
   }
-  box.append(el("h3", {}, "Every pick"));
-  box.append(el("p", { class: "note" }, "Click a column heading to sort; click again to flip. Sorting by grade or lock score shows whether confidence is tracking results."));
-  const holder = el("div", { class: "scroll" }); box.append(holder);
+
+  // 7. every pick
+  const holder = el("div", { class: "scroll" });
+  box.append(section(`Every pick (${r.picks.length})`, "Click a column heading to sort; click again to flip. Sorting by grade or score shows whether confidence tracks results.", holder));
   renderPicksTable(holder, r.picks);
 }
+
 
 let recSort = { key: "week", dir: -1 };
 const REC_COLS = [
@@ -491,35 +516,75 @@ function renderCheck() {
   const box = $("#check-body"); box.replaceChildren();
   const b = DATA.backtest;
   if (!b || b.error || !b.predictors) { box.append(el("div", { class: "empty" }, b?.error || "The backtest runs with the daily job.")); return; }
-  box.append(el("p", { class: "note" }, `Every game since ${Math.min(...b.seasons)} predicted using only what was known before it: ${b.games.toLocaleString()} defender-games. The model only keeps a piece while it beats the version without it.`));
-  box.append(el("h2", {}, "Which predictor is most accurate"));
-  box.append(el("p", { class: "note" }, "\"Level-matched miss\" scores each predictor after scaling it to zero bias, so a piece is judged on what it knows about who makes tackles, not on whether it happens to shift the overall level (the daily calibration handles the level). That is the column the model is judged on."));
-  box.append(el("div", { class: "scroll" }, table([["Predictor"], ["Games", "n"], ["Level-matched miss", "n"], ["Average miss", "n"], ["Actual minus predicted", "n"], ["Beat last game", "n"]],
-    [...b.predictors].sort((x, y) => (x.mae_cal ?? x.mae) - (y.mae_cal ?? y.mae)).map((r) => [r.predictor, r.n.toLocaleString(), num(r.mae_cal ?? r.mae, 3), num(r.mae, 3), (r.bias >= 0 ? "+" : "") + num(r.bias, 2), r.beats_last_game?.toLocaleString?.() ?? ""]))));
-  if (b.dispersion?.length) {
-    box.append(el("h2", {}, "How spread out tackle counts are"));
-    box.append(el("p", { class: "note" }, "Variance divided by mean. Below 1 means games cluster closer to a player’s average than a Poisson count, so long-shot overs are less likely than standard pricing assumes."));
-    box.append(el("div", { class: "scroll" }, table([["Position"], ["Games", "n"], ["Raw", "n"], ["Corrected", "n"], ["Used", "n"]], b.dispersion.map((d) => [d.group, d.n.toLocaleString(), num(d.raw, 2), num(d.corrected, 2), num(d.used, 2)]))));
+  const P = b.predictors, m = (r) => r.mae_cal ?? r.mae;
+  const full = P.find((r) => r.predictor === "Full model"), avg = P.find((r) => r.predictor === "Season average");
+  const foldF = P.find((r) => r.predictor.startsWith("Full model, ") && r.predictor.includes("fold")), foldG = P.find((r) => r.predictor.includes("corrector blend"));
+  const soloF = P.find((r) => r.predictor.startsWith("Solo tackles: full model (")), soloA = P.find((r) => r.predictor === "Solo tackles: season average");
+  box.append(el("p", { class: "lead" }, `Every game since ${Math.min(...b.seasons)} predicted using only what was known before it: ${b.games.toLocaleString()} defender-games. "Miss" is the average error in tackles after each predictor is scaled to zero bias, so a piece is judged on what it knows about who makes tackles, not on the overall level (the daily calibration handles that).`));
+  box.append(el("div", { class: "stat-line" },
+    full ? el("div", {}, el("b", {}, num(m(full), 3)), "Full model miss") : "",
+    avg ? el("div", {}, el("b", {}, num(m(avg), 3)), "Season average miss") : "",
+    foldF ? el("div", {}, el("b", {}, num(m(foldF), 3)), `Held-out ${foldF.predictor.match(/\d{4}/)?.[0] ?? ""} miss`) : "",
+    foldG ? el("div", {}, el("b", {}, num(m(foldG), 3)), "Same, with the second model") : "",
+    soloF ? el("div", {}, el("b", {}, num(m(soloF), 3)), "Solo tackles miss") : ""));
+
+  // pieces
+  const pieces = P.filter((r) => r.predictor.startsWith("Full model without") || r.predictor.startsWith("Full model with one"));
+  if (full && pieces.length) {
+    const rows = pieces.map((r) => { const d = m(r) - m(full); const v = d > 0.0005 ? ["Keeps its place", "ok"] : d < -0.0005 ? ["Hurts: under review", "bad"] : ["No measurable gain", "no"];
+      const name = r.predictor === "Full model with one shrink for every position" ? "Position-specific shrinkage" : r.predictor.replace("Full model without ", "").replace(/^./, (c) => c.toUpperCase());
+      return { name, d, v }; }).sort((x, y) => y.d - x.d);
+    box.append(section("Does each piece earn its place?", "The miss when a piece is removed, against the full model. A piece stays while the model is worse without it.",
+      el("div", { class: "scroll" }, table([["Piece"], ["Miss without it, vs full model", "n"], ["Verdict"]],
+        rows.map((x) => [x.name, (x.d >= 0 ? "+" : "") + num(x.d, 4), el("span", { class: `verdict ${x.v[1]}` }, x.v[0])])))));
   }
-  if (b.calibration?.length) {
-    box.append(el("h2", {}, "Are the probabilities honest?"));
-    box.append(el("p", { class: "note" }, "When the model says an over has a given chance, how often it actually went over, across lines near each projection."));
-    box.append(el("div", { class: "scroll" }, table([["Model chance"], ["Cases", "n"], ["Predicted", "n"], ["Actual", "n"]], b.calibration.map((c) => [c.bucket, c.n.toLocaleString(), pct(c.predicted, 1), pct(c.observed, 1)]))));
+  // held out
+  const folds = P.filter((r) => r.predictor.includes("fold"));
+  if (folds.length) {
+    box.append(section("The honest number: held-out season", "Trained on the seasons before it, scored on the latest season only. Nothing here was tuned on the games it is scored on.",
+      el("div", { class: "scroll" }, table([["Predictor"], ["Games", "n"], ["Miss", "n"], ["Bias", "n"]], folds.map((r) => [r.predictor, r.n.toLocaleString(), num(m(r), 3), (r.bias >= 0 ? "+" : "") + num(r.bias, 2)])))));
   }
-  if (b.regression?.length) {
-    box.append(el("h2", {}, "What follows an outlier game"));
-    box.append(el("div", { class: "scroll" }, table([["Situation"], ["Games", "n"], ["Next game vs season avg", "n"], ["Next game vs that game", "n"]], b.regression.map((r) => [r.situation, r.n.toLocaleString(), num(r.vs_avg), num(r.vs_last)]))));
+  // benchmarks
+  const bench = P.filter((r) => !r.predictor.startsWith("Full model") && !r.predictor.includes("fold") && !r.predictor.startsWith("Solo"));
+  if (bench.length) {
+    box.append(section("Simple benchmarks", "What a bettor without a model would use. The full model has to beat all of them.",
+      el("div", { class: "scroll" }, table([["Predictor"], ["Miss", "n"], ["Bias", "n"]], [...(full ? [full] : []), ...bench].sort((x, y) => m(x) - m(y)).map((r) => [r.predictor === "Full model" ? el("b", {}, "Full model") : r.predictor, num(m(r), 3), (r.bias >= 0 ? "+" : "") + num(r.bias, 2)])))));
   }
+  // solo
+  const solo = P.filter((r) => r.predictor.startsWith("Solo"));
+  if (solo.length) {
+    box.append(section("Solo tackles", `Half the lines are solo markets. The solo projection is the combined projection times a shrunk solo share, with a league drift factor${b.scale_solo ? ` and a level calibration of ${num(b.scale_solo, 3)}` : ""}.`,
+      el("div", { class: "scroll" }, table([["Predictor"], ["Miss", "n"], ["Bias", "n"]], solo.sort((x, y) => m(x) - m(y)).map((r) => [r.predictor.replace("Solo tackles: ", "").replace(/^./, (c) => c.toUpperCase()), num(m(r), 3), (r.bias >= 0 ? "+" : "") + num(r.bias, 2)])))));
+  }
+  // weak spots
   if (b.weak_spots?.length) {
-    box.append(el("h2", {}, "Where the model is weakest"));
-    box.append(el("p", { class: "note" }, "Situations where a player's season log stops describing him. Each is priced with its own factor and is never a lock; this table checks the factor keeps the bias near zero. Positive means the player beat the model."));
-    box.append(el("div", { class: "scroll" }, table([["Situation"], ["Games", "n"], ["Actual vs model", "n"], ["Without its factor", "n"], ["Average miss", "n"]],
-      b.weak_spots.map((w) => [w.situation, w.n.toLocaleString(), signedPct(w.actual_vs_model), signedPct(w.actual_vs_model_without), num(w.mae, 2)]))));
+    box.append(section("Where the model is weakest", "Situations where a player's season log stops describing him. Each has its own factor and is never a lock; this checks the factor keeps the bias near zero. Positive means the player beat the model.",
+      el("div", { class: "scroll" }, table([["Situation"], ["Games", "n"], ["Actual vs model", "n"], ["Without its factor", "n"], ["Miss", "n"]],
+        b.weak_spots.map((w) => [w.situation, w.n.toLocaleString(), signedPct(w.actual_vs_model), signedPct(w.actual_vs_model_without), num(w.mae, 2)])))));
   }
-  if (b.role) {
-    box.append(el("h2", {}, "Backups when a regular sits"));
-    box.append(el("p", { class: "note" }, `${b.role.n.toLocaleString()} games where a teammate at the same position who played 75%+ of snaps was inactive. These backups finished ${signedPct(b.role.actual_vs_avg_pct)} versus their own season average.`));
+  // dispersion, compact
+  if (b.dispersion?.length) {
+    const byPos = {};
+    for (const d of b.dispersion) {
+      const pos = d.group.split(" ")[0], low = d.group.includes("under 60%"), solo = d.group.endsWith("solo");
+      (byPos[pos] = byPos[pos] || {})[(solo ? "solo" : "comb") + (low ? "_low" : "")] = d;
+    }
+    const f = (d) => d ? num(d.used, 2) : "";
+    box.append(section("How spread out tackle counts are", "Variance divided by mean, used to price each line. 1 is a Poisson count; higher means more games far from the average, so long-shot overs and unders are likelier than standard pricing assumes. Part-timers are far more spread than starters; solo counts less than combined.",
+      el("div", { class: "scroll" }, table([["Position"], ["Starters", "n"], ["Expected share under 60%", "n"], ["Starters, solo", "n"], ["Under 60%, solo", "n"]],
+        Object.entries(byPos).map(([pos, v]) => [pos, f(v.comb), f(v.comb_low), f(v.solo), f(v.solo_low)])))));
   }
+  // calibration
+  if (b.calibration?.length) {
+    const lab = (s) => { const mm = String(s).match(/([\d.]+),\s*([\d.]+)/); return mm ? `${Math.round(Math.max(0, +mm[1]) * 100)} to ${Math.round(+mm[2] * 100)}%` : s; };
+    box.append(section("Are the probabilities honest?", "When the model gives an over a certain chance, how often it went over, at lines near each projection.",
+      el("div", { class: "scroll" }, table([["Model chance"], ["Cases", "n"], ["Predicted", "n"], ["Actual", "n"]], b.calibration.map((c) => [lab(c.bucket), c.n.toLocaleString(), pct(c.predicted, 1), pct(c.observed, 1)])))));
+  }
+  // outliers and backups
+  const kids = [];
+  if (b.regression?.length) kids.push(el("div", { class: "scroll" }, table([["Situation"], ["Games", "n"], ["Next game vs his average", "n"], ["Next game vs that game", "n"]], b.regression.map((r) => [r.situation, r.n.toLocaleString(), (r.vs_avg >= 0 ? "+" : "") + num(r.vs_avg), (r.vs_last >= 0 ? "+" : "") + num(r.vs_last)]))));
+  if (b.role) kids.push(el("p", { class: "lead" }, `Backups when a regular sits: ${b.role.n.toLocaleString()} games where a teammate at the same position who played 75%+ of snaps was inactive. These backups finished ${signedPct(b.role.actual_vs_avg_pct)} against their own season average.`));
+  if (kids.length) box.append(section("What follows an outlier game", "A big game is mostly noise: the next one lands back near his average, not near the big one. A low game predicts lower.", ...kids));
 }
 
 function show(id) {
