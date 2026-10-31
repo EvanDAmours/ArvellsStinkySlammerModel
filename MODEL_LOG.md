@@ -711,6 +711,22 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-10-31, late evening MDT (before Sunday: outlier damping, segment correction steers picks)
+- **Outlier damping** (`OUTLIER_DAMP`): in a settled role, after a game 3+ above his base the player ran 5.5% under
+  the model in both halves of the data (n 706 / 461), and 4-9% under after a game 3+ below (373 / 236). Half a game
+  of shrinkage for linebackers lets one game pull the season average. Factors x0.975 after a big game, x0.96 after
+  a low game, settled roles only; subset bias -0.25 -> -0.13 and -0.15 -> +0.10 tackles, overall error unchanged.
+  Backtest row "Full model without outlier damping". Also reinforces the Under fade in the math itself.
+- **Segment correction steers the pick decision** (`SEGMENT_CAL["ev_weight"]` 0.5): half of each side's correction
+  (how our claims for picks of that kind have resolved) moves the probability that decides whether a line clears the
+  pick bar; the full correction reaches the claim and the score. So solo Unders on defensive backs clear the bar
+  more often and combined Unders on linebackers less often, until the record says otherwise.
+- Solo drift window 1-4 weeks tested: no difference; stays 3.
+- **Replay tool bug**: it dropped the lock-eligibility columns when logging picks, so replayed locks ignored the
+  checklist (an Over and a new-role player could be replayed locks). Fixed; replays below are re-run.
+- Revert conditions: the damping row beating the full model for a season; the segment-steered picks' hit rate
+  below the unsteered picks' over 100 picks (both are logged: `segment_adj` on each pick).
+
 ### 2026-10-31, midday MDT (segment calibration, stronger solo prior, solo level by position, market watch)
 - See "Is the solo Under our play?" above. `SEGMENT_CAL`, `SOLO_SHARE_PSEUDO`; `segment_calibration`, `market_watch`,
   `SEGMENTS` in `pipeline/grade.py`; `segment_adjust`, `claimed_prob(adj)`, `price_lines(segments=)` in

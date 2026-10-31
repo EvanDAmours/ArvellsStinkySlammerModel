@@ -77,8 +77,9 @@ def replay(season, week):
             continue
         new = new.assign(season=season, week=week, pulled_at=t, side=new.pick,
                          odds=np.where(new.pick == "Over", new.over_odds, new.under_odds))
-        cols = G.KEY + ["team", "opp", "odds", "proj", "proj_model", "mkt_line", "model_over", "market_over", "ev", "why",
-                        "lock", "grade", "consistency", "cons_hits", "cons_n", "payout", "event_id", "commence_time", "pulled_at"]
+        cols = G.KEY + ["team", "opp", "group", "odds", "proj", "proj_model", "mkt_line", "model_over", "market_over", "ev", "why",
+                        "lock", "grade", "consistency", "cons_hits", "cons_n", "payout", "uncertain", "new_role", "reduced_role", "absence", "new_team",
+                        "in_role_games", "lock_block", "lock_eligible", "p_claim", "event_id", "commence_time", "pulled_at"]   # the checklist travels with the pick, as live
         new = new[[c for c in cols if c in new.columns]]
         picks = pd.concat([picks, new], ignore_index=True).drop_duplicates(G.KEY, keep="first")
         picks = G.mark_locks(picks, season, week, now=now)

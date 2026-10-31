@@ -60,6 +60,7 @@ def run_backtest(H, seasons):
     preds["Full model without per-snap base"] = M.project_frame(T, use_persnap=False)[1]
     preds["Full model without vacancy rule"] = M.project_frame(T, use_vacancy=False)[1]
     preds["Full model without dome corners"] = M.project_frame(T, use_dome=False)[1]
+    preds["Full model without outlier damping"] = M.project_frame(T, use_outlier_damp=False)[1]
 
     table = []
     for name, p in preds.items():

@@ -83,7 +83,7 @@ check(all("lock_block" in b and "lock_eligible" in b and "in_role_games" in b fo
 check(all(not (b.get("lock_block") and "Over" == b.get("side") and "fading" in str(b.get("why"))) for b in priced) and not any("Over" == b.get("side") and "fading an outlier" in str(b.get("why")) for b in priced),
       "no Over is sold as fading an outlier")
 check(any("role-shift" in r["predictor"] for r in bt["predictors"]) and isinstance(bt.get("weak_spots"), list), "backtest reports the role-shift factors and the weak-spot table")
-check(all(any(k in r["predictor"] for r in bt["predictors"]) for k in ("per-snap base", "vacancy rule", "dome corners")), "backtest reports the per-snap, vacancy and dome pieces")
+check(all(any(k in r["predictor"] for r in bt["predictors"]) for k in ("per-snap base", "vacancy rule", "dome corners", "outlier damping")), "backtest reports the per-snap, vacancy, dome and outlier-damping pieces")
 check(any(p.get("share_pred") is not None and p.get("tsnaps_exp") for p in proj) and all(0 <= (p.get("share_pred") or 0) <= 1 for p in proj), "projections carry an expected snap share and team snaps")
 check(any(":low" in k or "under 60%" in str(d.get("group", "")) for d in bt["dispersion"] for k in [d.get("group", "")]), "dispersion estimated separately for low expected snap share")
 check(meta.get("freshness", {}).get("stats_through_week") is not None, "data freshness (stats and snaps through week) reported")

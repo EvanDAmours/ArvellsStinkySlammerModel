@@ -92,7 +92,10 @@ SOLO_SHARE_PSEUDO = 25             # tackles of position prior mixed into a play
 # Segment calibration (2026-10-31): a pick's claimed chance is corrected by how the model's claims have actually
 # resolved for picks like it (side x market x position), shrunk by n/(n+k) toward no correction. Our own results only,
 # never the book's. Finest segment with min_n graded picks wins; the correction is capped.
-SEGMENT_CAL = dict(k=30, min_n=10, cap=0.15)
+SEGMENT_CAL = dict(k=30, min_n=10, cap=0.15, ev_weight=0.5)   # ev_weight: how much of the correction also moves the probability that decides whether a line is a pick
+# After an outlier game in a settled role the season average still leans toward it: actual ran 5.5% under the model
+# after a game 3+ above his base (both halves) and 4-9% under after a game 3+ below. Damping on top of the shrinkage.
+OUTLIER_DAMP = dict(after_high=0.975, after_low=0.96)
 SPREAD_TILT = 0.005                # +0.5% tackles per point a defense is an underdog (capped)
 SPREAD_TILT_CAP = 0.05
 CREW_PSEUDO_TACKLES = 250          # how hard each stadium's crew rate is pulled toward league average

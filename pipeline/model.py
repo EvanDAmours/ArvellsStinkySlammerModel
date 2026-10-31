@@ -617,13 +617,31 @@ def dome_factor(F):
     return pd.Series(np.where((F.group == "CB") & roof.isin(["dome", "closed"]), C.DOME_CB, 1.0), index=F.index)
 
 
+def outlier_damp_factor(F):
+    """After a game far above or below his base, in a settled role, the season average still leans toward that game."""
+    c = C.OUTLIER_DAMP
+    last = pd.to_numeric(_col_or(F, "last", np.nan), errors="coerce")
+    base = _base_for_outliers(F)
+    settled = snap_jump(F).between(0.8, 1.25)
+    hi = (last - base >= C.FADE_GAP) & settled; lo = (base - last >= C.FADE_GAP) & settled
+    return pd.Series(np.where(hi.fillna(False), c["after_high"], np.where(lo.fillna(False), c["after_low"], 1.0)), index=F.index)
+
+
+def _base_for_outliers(F):
+    """The shrunk per-game base, recomputed cheaply (same formula as project_frame's base)."""
+    k = F.group.map(C.SHRINK_GAMES_BY_GROUP).fillna(C.SHRINK_GAMES)
+    prior = np.where(F.ps_games.fillna(0) >= 4, F.ps_avg, F.group.map(C.POS_PRIOR).fillna(4.0))
+    n = F.n_prev.astype(float)
+    return pd.Series(np.where(n + k > 0, (F.comb_prev + k * prior) / np.maximum(n + k, 1e-9), prior), index=F.index)
+
+
 def rest_factor(F):
     r = C.REST
     return pd.Series(np.where(F.get("rest", pd.Series(7, index=F.index)).fillna(7) >= r["bye_days"], r["bye"], 1.0), index=F.index)
 
 
 def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_snap=True, use_volume=True, use_depth=True, use_pfr=True, use_mix=True, use_rest=True, use_injury=True, use_new_role=True, use_role_shift=True,
-                  use_persnap=True, use_vacancy=True, use_dome=True, use_solo_drift=True):
+                  use_persnap=True, use_vacancy=True, use_dome=True, use_solo_drift=True, use_outlier_damp=True):
     k = F.group.map(C.SHRINK_GAMES_BY_GROUP).fillna(C.SHRINK_GAMES) if k is None else k
     if use_crew:
         prev, ps = F.comb_prev, F.ps_avg
@@ -653,6 +671,8 @@ def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_sn
         extra = extra * role_shift_factor(F, "availability").values
     if use_dome:
         extra = extra * dome_factor(F).values
+    if use_outlier_damp:
+        extra = extra * outlier_damp_factor(F).values
     # the per-game core: season rate x snap trend x role bump x the share-related corrections
     pg = base * role * snap
     if use_new_role:
@@ -948,8 +968,14 @@ def price_lines(lines, P, segments=None):
         else:
             mkt = 1 - 1 / d_u
         po = mkt + C.PROB_SHRINK * (po_model - mkt)
-        ev_o = po * (d_o - 1) - (1 - po) if d_o else -9
-        ev_u = (1 - po) * (d_u - 1) - po if d_u else -9
+        # half of each side's segment correction (how our claims for picks of this kind have resolved) moves the
+        # probability that decides whether this line is a pick; the full correction reaches the claim and the score
+        wv = C.SEGMENT_CAL.get("ev_weight", 0.0)
+        adj_o = segment_adjust(segments, "Over", solo, p.group)[0] if wv else 0.0
+        adj_u = segment_adjust(segments, "Under", solo, p.group)[0] if wv else 0.0
+        po_o = float(np.clip(po + wv * adj_o, 0.02, 0.98)); pu_u = float(np.clip(1 - po + wv * adj_u, 0.02, 0.98))
+        ev_o = po_o * (d_o - 1) - (1 - po_o) if d_o else -9
+        ev_u = pu_u * (d_u - 1) - (1 - pu_u) if d_u else -9
         side, ev = ("Over", ev_o) if ev_o >= ev_u else ("Under", ev_u)
         fl = {k: _flag(p.get(k, False)) for k in ("new_role", "reduced_role", "absence", "missed_game", "new_team")}
         new_role = fl["new_role"]
