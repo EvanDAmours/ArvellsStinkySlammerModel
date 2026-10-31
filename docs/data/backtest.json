@@ -12,7 +12,7 @@
   {
    "n": 28861,
    "mae": 1.6209,
-   "mae_cal": 1.62,
+   "mae_cal": 1.6199,
    "rmse": 2.1665,
    "bias": -0.0073,
    "predictor": "Full model without dome corners",
@@ -30,7 +30,7 @@
   {
    "n": 28861,
    "mae": 1.6215,
-   "mae_cal": 1.6194,
+   "mae_cal": 1.6193,
    "rmse": 2.1659,
    "bias": -0.0173,
    "predictor": "Full model without stat crew",
@@ -86,13 +86,13 @@
    "mae": 1.6225,
    "mae_cal": 1.6209,
    "rmse": 2.1682,
-   "bias": -0.0132,
+   "bias": -0.0131,
    "predictor": "Full model without opportunity volume",
    "beats_last_game": 16990
   },
   {
    "n": 28861,
-   "mae": 1.6226,
+   "mae": 1.6225,
    "mae_cal": 1.62,
    "rmse": 2.1669,
    "bias": -0.0204,
@@ -101,7 +101,7 @@
   },
   {
    "n": 28861,
-   "mae": 1.6234,
+   "mae": 1.6233,
    "mae_cal": 1.6197,
    "rmse": 2.168,
    "bias": -0.0283,
@@ -133,7 +133,7 @@
    "rmse": 2.1731,
    "bias": -0.0309,
    "predictor": "Full model without PFR targets and missed tackles",
-   "beats_last_game": 16953
+   "beats_last_game": 16954
   },
   {
    "n": 28861,
@@ -149,7 +149,7 @@
    "mae": 1.6308,
    "mae_cal": 1.636,
    "rmse": 2.1763,
-   "bias": 0.0482,
+   "bias": 0.0483,
    "predictor": "Full model without per-snap base",
    "beats_last_game": 16966
   },
@@ -158,7 +158,7 @@
    "mae": 1.6313,
    "mae_cal": 1.6236,
    "rmse": 2.1689,
-   "bias": -0.0589,
+   "bias": -0.0588,
    "predictor": "Full model without role-shift factors",
    "beats_last_game": 16897
   },
@@ -228,18 +228,18 @@
   {
    "predictor": "Full model, 2026 fold",
    "n": 2686,
-   "mae": 1.5966,
-   "mae_cal": 1.6019,
+   "mae": 1.5965,
+   "mae_cal": 1.6018,
    "rmse": 2.1281,
-   "bias": 0.0438
+   "bias": 0.0439
   },
   {
    "predictor": "60% boosted corrector blend, 2026 fold (trained on earlier seasons)",
    "n": 2686,
-   "mae": 1.5755,
-   "mae_cal": 1.5778,
-   "rmse": 2.095,
-   "bias": 0.0227
+   "mae": 1.5754,
+   "mae_cal": 1.5777,
+   "rmse": 2.0949,
+   "bias": 0.0228
   },
   {
    "predictor": "Solo tackles: full model (solo share of the projection)",
@@ -255,7 +255,7 @@
    "mae": 1.1293,
    "mae_cal": 1.1195,
    "rmse": 1.4958,
-   "bias": -0.0666
+   "bias": -0.0665
   },
   {
    "predictor": "Solo tackles: season average",
@@ -359,10 +359,10 @@
   },
   {
    "n": 2686,
-   "mae": 1.5986,
-   "mae_cal": 1.6019,
+   "mae": 1.5985,
+   "mae_cal": 1.6018,
    "rmse": 2.1289,
-   "bias": 0.0263,
+   "bias": 0.0264,
    "season": 2026,
    "predictor": "Full model"
   },
@@ -381,8 +381,8 @@
    "group": "CB",
    "n": 5312,
    "raw": 1.4515,
-   "corrected": 1.2879,
-   "used": 1.2879
+   "corrected": 1.2878,
+   "used": 1.2878
   },
   {
    "group": "CB (expected share under 60%)",
@@ -394,9 +394,9 @@
   {
    "group": "CB solo",
    "n": 5316,
-   "raw": 1.2792,
-   "corrected": 1.1155,
-   "used": 1.1155
+   "raw": 1.2793,
+   "corrected": 1.1156,
+   "used": 1.1156
   },
   {
    "group": "CB (expected share under 60%) solo",
@@ -494,7 +494,7 @@
   {
    "bucket": "(-0.001, 0.2]",
    "n": 3765,
-   "predicted": 0.1274,
+   "predicted": 0.1273,
    "observed": 0.1469
   },
   {
@@ -505,20 +505,20 @@
   },
   {
    "bucket": "(0.35, 0.45]",
-   "n": 2173,
+   "n": 2174,
    "predicted": 0.3994,
-   "observed": 0.3889
+   "observed": 0.3887
   },
   {
    "bucket": "(0.45, 0.55]",
-   "n": 1889,
+   "n": 1888,
    "predicted": 0.4981,
-   "observed": 0.4817
+   "observed": 0.482
   },
   {
    "bucket": "(0.55, 0.65]",
    "n": 1725,
-   "predicted": 0.5981,
+   "predicted": 0.598,
    "observed": 0.6012
   },
   {
