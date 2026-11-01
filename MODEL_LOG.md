@@ -892,6 +892,12 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-01, morning MDT (book filter on the board)
+- Owner asked to filter by DraftKings or theScore Bet. The Plays toolbar has a Book dropdown built from the books
+  on the board at each render (so a book appears the moment it posts); choosing one shows that book's lines only
+  and sets "Best price per line" aside, since a line is never hidden behind another book's price while you are
+  looking at one book. Site only; no model change.
+
 ### 2026-10-31, afternoon MDT (luck check: every kind of pick against the whole board)
 - See "Luck or skill" above. `luck_check` in `pipeline/grade.py` (consensus closing line per player and market
   from `O.closing_lines`, resolved against the box score, split by side, market and position; `group` now passed

@@ -133,6 +133,7 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
     <div class="controls toolbar" id="plays-controls">
       <label>Position <select id="pos"><option value="">All</option><option value="LB">Linebackers</option><option value="S">Safeties</option><option value="CB">Corners</option><option value="DL">Defensive line</option></select></label>
       <label>Side <select id="side"><option value="">Both</option><option value="Under">Unders</option><option value="Over">Overs</option></select></label>
+      <label>Book <select id="book"><option value="">Any book</option></select></label>
       <label>Market <select id="market"><option value="">Both</option><option value="player_tackles_assists">Tackles + assists</option><option value="player_solo_tackles">Solo tackles</option></select></label>
       <label>Slate <select id="slate"><option value="">All games</option><option value="early">Early (noon)</option><option value="late">Afternoon</option><option value="prime">Prime time</option></select></label>
       <label>Sort <select id="sort"><option value="lock">Lock score</option><option value="ev">Expected return</option><option value="kick">Kickoff</option><option value="player">Player</option><option value="line">Line</option></select></label>
@@ -256,8 +257,14 @@ function renderPlays() {
   const haveLines = all.length > 0;
   $("#plays-controls").hidden = !haveLines;
   if (!haveLines) { box.append(el("div", { class: "empty" }, "No tackle lines yet this week. Books usually post them Thursday to Saturday; the odds job pulls them automatically and this list fills in.")); return; }
-  const picksOnly = $("#picks-only").checked, market = $("#market").value, best = $("#best-only").checked, slate = $("#slate").value, pos = $("#pos").value, sideF = $("#side").value, sortBy = $("#sort").value;
-  const unfiltered = !slate && !market && !pos && !sideF;
+  const picksOnly = $("#picks-only").checked, market = $("#market").value, bookF = $("#book").value, best = $("#best-only").checked && !bookF, slate = $("#slate").value, pos = $("#pos").value, sideF = $("#side").value, sortBy = $("#sort").value;
+  // the book list follows what is on the board (DraftKings, theScore Bet, Bally Bet, whoever posts), kept in place across re-renders
+  const bookSel = $("#book"), books = [...new Set((DATA.bets || []).map((b) => b.book).filter(Boolean))].sort();
+  if (bookSel.options.length !== books.length + 1 || books.some((b, i) => bookSel.options[i + 1].value !== b)) {
+    bookSel.replaceChildren(el("option", { value: "" }, "Any book"), ...books.map((b) => el("option", { value: b }, b)));
+    bookSel.value = books.includes(bookF) ? bookF : "";
+  }
+  const unfiltered = !slate && !market && !pos && !sideF && !bookF;
   // locks and the parlay stay on top whenever no filter is set
   const five = all.filter((b) => b.five);
   if (unfiltered) {
@@ -282,7 +289,7 @@ function renderPlays() {
     }
   }
   const anyPick = all.some((b) => b.pick === "Over" || b.pick === "Under"), showAll = picksOnly && !anyPick;   // nothing clears the bar: show every live line with the model's read rather than an empty board
-  let rows = all.filter((b) => (!picksOnly || showAll || b.pick === "Over" || b.pick === "Under") && (!market || b.market === market) && (!best || b.best_price !== false) && (!slate || slateOf(betKick(b)) === slate) && (!pos || b.group === pos) && (!sideF || (b.side || b.pick) === sideF));
+  let rows = all.filter((b) => (!picksOnly || showAll || b.pick === "Over" || b.pick === "Under") && (!market || b.market === market) && (!bookF || b.book === bookF) && (!best || b.best_price !== false) && (!slate || slateOf(betKick(b)) === slate) && (!pos || b.group === pos) && (!sideF || (b.side || b.pick) === sideF));
   const key = { lock: (b) => -(b.lock ?? -1), ev: (b) => -(b.ev ?? -9), kick: (b) => +(betKick(b) || 0), player: (b) => b.player, line: (b) => +(b.line ?? 0) }[sortBy] || ((b) => -(b.lock ?? -1));
   rows.sort((x, y) => { const a = key(x), c = key(y); return typeof a === "string" ? a.localeCompare(c) : a - c; });
   const nPicks = all.filter((b) => b.pick === "Over" || b.pick === "Under").length;
@@ -698,7 +705,7 @@ function show(id) {
 (async () => {
   [DATA.meta, DATA.bets, DATA.proj, DATA.results, DATA.backtest, DATA.parlays] = await Promise.all(["meta", "bets", "projections", "results", "backtest", "parlays"].map(load));
   renderMeta(); renderPlays(); renderDaybar(); renderProj(); renderRecord(); renderCheck();
-  ["#picks-only", "#market", "#best-only", "#slate", "#pos", "#side", "#sort"].forEach((s) => $(s).addEventListener("change", renderPlays));
+  ["#picks-only", "#market", "#best-only", "#slate", "#pos", "#side", "#sort", "#book"].forEach((s) => $(s).addEventListener("change", renderPlays));
   $("#q").addEventListener("input", renderProj);
   $("#proj-slate").addEventListener("change", renderProj);
   document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => show(b.dataset.tab)));
