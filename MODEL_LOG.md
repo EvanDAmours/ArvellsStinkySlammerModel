@@ -897,6 +897,11 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-01, afternoon MDT (My board: money counts from kickoff)
+- Owner: a bet on a game that has not started can still be withdrawn, so it should not count. The bar's money
+  now covers started games only ("in play or settled", "to win if every started bet hits", "on current pace");
+  stakes on games yet to kick off sit in their own column, labelled as withdrawable. Site only.
+
 ### 2026-11-01, afternoon MDT (My board: the day on its current pace)
 - Owner: "if every bet hits I'd make $80, but given I'm 4 of 6 what would that pay out?" The bar now carries "on
   current pace": settled results plus every bet in play finishing the way it is trending right now (on track
