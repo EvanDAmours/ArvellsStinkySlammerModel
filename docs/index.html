@@ -93,6 +93,7 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 .live .now b { display: block; font: 700 1.9rem/1 var(--cond); font-variant-numeric: tabular-nums; } .live .now span { font-size: 0.8rem; color: var(--muted); }
 .live .bet { font: 600 1.05rem var(--cond); } .live .bet .over { color: var(--over); } .live .bet .under { color: var(--under); }
 .live .trend { color: var(--muted); font-size: 0.9rem; } .live .trend b.ok { color: #1f8a4c; } .live .trend b.no { color: #c0392b; }
+.live .stake { grid-column: 1 / -1; font-size: 0.9rem; color: var(--muted); } .live .stake input { font: inherit; width: 6em; padding: 2px 6px; } .live .stake b.ok { color: #1f8a4c; } .live .stake b.no { color: #c0392b; }
 .live .rm { grid-column: 1 / -1; justify-self: start; font-size: 0.8rem; color: var(--muted); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline; }
 @media (max-width: 640px) { .live { grid-template-columns: 1fr; } .live .now { grid-row: auto; grid-column: 1; text-align: left; } .live .now b { display: inline; font-size: 1.3rem; margin-right: 6px; } .play .add { grid-column: 1; justify-self: start; } }
 [hidden] { display: none !important; }
@@ -742,6 +743,8 @@ function addButton(b) {
   return btn;
 }
 const LIVE = { events: null, box: {}, at: null, error: null, timer: null };
+const money = (x) => (x == null || isNaN(x) ? "" : (x < 0 ? "-$" : "$") + Math.abs(x).toFixed(2).replace(/\.00$/, ""));
+function setStake(key, v) { const list = mine(), b = list.find((x) => x.key === key); if (!b) return; b.stake = v === "" || isNaN(+v) ? null : Math.max(0, +v); saveMine(list); renderMine(); }
 async function espn(url) { const r = await fetch(url, { cache: "no-store" }); if (!r.ok) throw new Error(`ESPN ${r.status}`); return r.json(); }
 function gameOf(bet) {
   const want = new Set([bet.team, bet.opp].filter(Boolean));
@@ -785,9 +788,9 @@ function elapsedShare(g) {
 function renderMine() {
   const box = $("#mine-body"); if (!box) return; box.replaceChildren();
   const list = mine();
-  box.append(el("p", { class: "lead" }, "The bets you took, tracked live. Press \"+ My board\" on any card on the Plays tab; it is kept in this browser only. While a game is on, each bet refreshes from ESPN's box score every minute: tackles so far, the pace for the full game, and whether the bet is trending the right way. The official box score the books settle on can differ by a tackle from the live feed."));
+  box.append(el("p", { class: "lead" }, "The bets you took, tracked live, with your stakes. Press \"+ My board\" on any card on the Plays tab; it is kept in this browser only. While a game is on, each bet refreshes from ESPN's box score every minute: tackles so far, the pace for the full game, and whether the bet is trending the right way. The official box score the books settle on can differ by a tackle from the live feed."));
   if (!list.length) { box.append(el("div", { class: "empty" }, "Nothing on your board yet. Add bets from the Plays tab, or find one below."), addPicker()); return; }
-  let w = 0, l = 0, p = 0, onTrack = 0, live = 0;
+  let w = 0, l = 0, p = 0, onTrack = 0, live = 0, staked = 0, toWin = 0, settled = 0, pendingStake = 0;
   const cards = list.map((b) => {
     const g = gameOf(b), bx = g ? LIVE.box[g.id] : null, st = bx?.players?.[normName(b.player)];
     const solo = (b.market || "").includes("solo"); const have = st ? (solo ? st.solo : st.tot) : (bx && g && g.state !== "pre" ? 0 : null);   // in the box score but no row yet means no tackles yet
@@ -801,15 +804,23 @@ function renderMine() {
       status = `${g.detail || `Q${g.period} ${g.clock}`} · ${g.teams[0]} ${g.score[g.teams[0]]}-${g.score[g.teams[1]]} ${g.teams[1]}`; cls = dead ? " bad" : clinched || ok ? " good" : " bad"; if (!dead && (clinched || ok)) onTrack++;
       const early = share < 0.25 ? "early, " : "";
       verdict = dead ? `Lost: already past ${b.line}` : clinched ? `Won: past ${b.line}` : ok ? `On track (${early}pace ${pace.toFixed(1)} for the game)` : `Behind (${early}pace ${pace == null ? "?" : pace.toFixed(1)} for the game)`; }
+    const stake = b.stake == null ? null : +b.stake, dec = toDec(b.odds), win = stake != null && dec ? stake * (dec - 1) : null;
+    let result = null;
+    if (stake != null) { staked += stake; if (win != null) toWin += win; if (status.startsWith("Final")) { result = status.includes("Win") ? win : status.includes("Loss") ? -stake : 0; settled += result; } else pendingStake += stake; }
+    const stakeBox = el("label", { class: "stake" }, "$ ", (() => { const i = el("input", { type: "number", min: "0", step: "1", inputmode: "decimal", placeholder: "stake", value: stake == null ? "" : String(stake) }); i.addEventListener("change", () => setStake(b.key, i.value)); return i; })(),
+      win != null ? el("small", {}, ` to win ${money(win)}`) : "", result != null ? el("b", { class: result > 0 ? "ok" : result < 0 ? "no" : "" }, ` ${result > 0 ? "+" : ""}${money(result)}`) : "");
     const c = el("div", { class: "live" + cls },
       el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}` }, b.grade) : "", b.player, el("small", {}, [b.group, b.team, b.opp ? `vs ${b.opp}` : ""].filter(Boolean).join(" "))),
       el("div", { class: "now" }, el("b", {}, have == null ? "–" : String(have)), el("span", {}, solo ? "solo so far" : "tackles so far")),
       el("div", { class: "bet" }, el("span", { class: under ? "under" : "over" }, `${b.side} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market || "").toLowerCase()}`, el("small", {}, ` · ${odds(b.odds)} at ${b.book}${b.proj != null ? ` · model ${num(b.proj)}` : ""}`)),
       el("div", { class: "trend" }, status, ...(verdict ? [" · ", el("b", { class: cls.includes("good") ? "ok" : "no" }, verdict)] : [])),
+      stakeBox,
       (() => { const r = el("button", { type: "button", class: "rm" }, "Remove"); r.onclick = () => toggleMine({ ...b, pick: b.side, side: b.side }); return r; })());
     return c;
   });
   box.append(el("div", { class: "mine-bar" }, el("div", {}, el("b", {}, `${w}-${l}${p ? `-${p}` : ""}`), el("span", {}, "settled")), el("div", {}, el("b", {}, String(live)), el("span", {}, "in play")), el("div", {}, el("b", {}, `${onTrack} of ${live}`), el("span", {}, "trending right")),
+    el("div", {}, el("b", {}, money(staked) || "$0"), el("span", {}, "in for today")), el("div", {}, el("b", {}, money(toWin) || "$0"), el("span", {}, "to win if every bet hits")),
+    el("div", {}, el("b", { class: settled > 0 ? "pos" : settled < 0 ? "neg" : "" }, (settled > 0 ? "+" : "") + (money(settled) || "$0")), el("span", {}, `settled so far${pendingStake ? ` (${money(pendingStake)} still riding)` : ""}`)),
     el("div", {}, el("b", {}, LIVE.at ? new Date(LIVE.at).toLocaleTimeString([], { timeZone: TZ, hour: "numeric", minute: "2-digit" }) : "–"), el("span", {}, LIVE.error ? `last update (${LIVE.error})` : "last update"))));
   cards.forEach((c) => box.append(c));
   const clr = el("button", { type: "button", class: "rm" }, "Clear my board"); clr.onclick = () => { if (confirm("Remove every bet from My board?")) { saveMine([]); MINE = []; renderPlays(); renderMine(); } }; box.append(clr);

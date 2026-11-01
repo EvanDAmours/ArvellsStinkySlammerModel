@@ -897,6 +897,13 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-01, early afternoon MDT (My board: stakes and the day's money)
+- Owner wants the board for record keeping during the day: each bet now takes a stake (kept with the bet in the
+  browser), shows what it wins at the price taken and its dollar result once final, and the bar at the top adds
+  up what is in for the day, what the day pays if every bet hits, and what has settled so far with what is still
+  riding. Verified on a live game and the finished Thursday game (stakes 50/20/30: in for $100, settled -$9.40,
+  $50 riding). Site only.
+
 ### 2026-11-01, early afternoon MDT (My board: add a bet after its game has started)
 - Owner: Quay Walker was on the site in the morning and gone by the time he wanted to add his bet. The board shows
   only games that have not kicked off (the Jets-Raiders game started at noon), and the add button lived on the
