@@ -897,6 +897,14 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-01, early afternoon MDT (My board: add a bet after its game has started)
+- Owner: Quay Walker was on the site in the morning and gone by the time he wanted to add his bet. The board shows
+  only games that have not kicked off (the Jets-Raiders game started at noon), and the add button lived on the
+  card. Now every line pulled this week is written at its last price, started games included
+  (`write_week_lines`, `docs/data/lines_week.json`, at every pull and daily run), and the My board tab has a
+  search box to add a bet from it, with the model's number beside each line. Smoke check. Pitfall: anything the
+  owner can act on must not depend on a card that disappears at kickoff.
+
 ### 2026-11-01, midday MDT (My board: the bets you took, tracked live)
 - Owner asked for a tab where he picks his bets for the day and watches them live. ESPN's public scoreboard and
   game-summary endpoints (`site.api.espn.com/.../scoreboard`, `.../summary?event=`) answer cross-origin requests

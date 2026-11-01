@@ -296,6 +296,7 @@ def cmd_daily():
     bets = M.price_lines(lines, P, segments=load_segments()) if len(lines) else pd.DataFrame()
     bets = mark_five(bets, C.SEASON, week)
     write_site(P, bets, bt, graded, summary, week, status, lines_pulled=None if lines.empty else str(lines.pulled_at.max()), parlays=parlays)
+    write_week_lines(P, C.SEASON, week)
     write_parlays(C.SEASON, week)
     print(f"daily: week {week}, {len(P)} projections, {len(bets)} priced lines, backtest on {bt.get('games', 0)} games")
 
@@ -375,7 +376,22 @@ def cmd_odds(hours=None, auto=False):
     meta.update(odds_credits_remaining=remaining, odds_credits_by_key=credits, lines_pulled=stamp, lines_count=int(len(lines)), next_pull=next_pull(games=games))
     _json(meta_path, meta)
     _json(SITE / "bets.json", records(bets))
+    write_week_lines(P, C.SEASON, week)
     print(f"odds: {len(rows)} prices pulled, {len(lines)} current lines, {n_new} new picks logged, credits left {remaining}")
+
+
+WEEK_LINE_COLS = ["player", "team", "opp", "group", "market", "line", "book", "over_odds", "under_odds", "side", "pick", "proj", "model_over", "grade", "lock", "commence_time", "event_id"]
+
+
+def write_week_lines(P, season, week):
+    """Every line pulled this week at its last price, started games included, priced the same way as the board:
+    the My board tab lets a bet be added from here after its game has kicked off or the book has pulled the line."""
+    lines = O.latest_lines(season, week)
+    if lines is None or len(lines) == 0 or P is None or len(P) == 0:
+        _json(SITE / "lines_week.json", [])
+        return
+    bets = M.price_lines(lines, P, segments=load_segments())
+    _json(SITE / "lines_week.json", records(bets[[c for c in WEEK_LINE_COLS if c in bets.columns]]) if len(bets) else [])
 
 
 def write_parlays(season, week):

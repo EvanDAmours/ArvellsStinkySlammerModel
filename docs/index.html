@@ -81,7 +81,9 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 .five-box .note { margin: 0 0 8px; }
 .play.five { border-left: 4px solid #1f8a4c; }
 .play .add { grid-column: 2; justify-self: end; font: 600 0.8rem var(--cond); padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); cursor: pointer; }
-.play .add.on { background: #1f8a4c; color: #fff; border-color: #1f8a4c; }
+.play .add.on, #mine-body .add.on { background: #1f8a4c; color: #fff; border-color: #1f8a4c; }
+#mine-body .add { font: 600 0.8rem var(--cond); padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); cursor: pointer; margin: 2px 6px 2px 0; }
+#mine-body input[type=search] { font: inherit; padding: 6px 10px; width: min(100%, 320px); margin: 4px 0 8px; }
 .mine-bar { display: flex; flex-wrap: wrap; gap: 4px 22px; margin: 0 0 12px; font-variant-numeric: tabular-nums; }
 .mine-bar b { font: 700 1.4rem/1.1 var(--cond); display: block; } .mine-bar span { color: var(--muted); font-size: 0.85rem; }
 .live { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 10px; padding: 10px 14px; margin: 0 0 10px; }
@@ -784,7 +786,7 @@ function renderMine() {
   const box = $("#mine-body"); if (!box) return; box.replaceChildren();
   const list = mine();
   box.append(el("p", { class: "lead" }, "The bets you took, tracked live. Press \"+ My board\" on any card on the Plays tab; it is kept in this browser only. While a game is on, each bet refreshes from ESPN's box score every minute: tackles so far, the pace for the full game, and whether the bet is trending the right way. The official box score the books settle on can differ by a tackle from the live feed."));
-  if (!list.length) { box.append(el("div", { class: "empty" }, "Nothing on your board yet. Add bets from the Plays tab.")); return; }
+  if (!list.length) { box.append(el("div", { class: "empty" }, "Nothing on your board yet. Add bets from the Plays tab, or find one below."), addPicker()); return; }
   let w = 0, l = 0, p = 0, onTrack = 0, live = 0;
   const cards = list.map((b) => {
     const g = gameOf(b), bx = g ? LIVE.box[g.id] : null, st = bx?.players?.[normName(b.player)];
@@ -811,6 +813,38 @@ function renderMine() {
     el("div", {}, el("b", {}, LIVE.at ? new Date(LIVE.at).toLocaleTimeString([], { timeZone: TZ, hour: "numeric", minute: "2-digit" }) : "–"), el("span", {}, LIVE.error ? `last update (${LIVE.error})` : "last update"))));
   cards.forEach((c) => box.append(c));
   const clr = el("button", { type: "button", class: "rm" }, "Clear my board"); clr.onclick = () => { if (confirm("Remove every bet from My board?")) { saveMine([]); MINE = []; renderPlays(); renderMine(); } }; box.append(clr);
+  box.append(addPicker());
+}
+let pickerQuery = "";
+function addPicker() {
+  // a bet whose game has kicked off, or whose line the book pulled, is no longer on the Plays tab: find it here
+  const all = DATA.week_lines || [];
+  const wrap = el("div", { class: "section" }, el("h3", {}, "Add a bet from a game that has started"),
+    el("p", { class: "lead" }, "The Plays tab only shows games that have not kicked off. Every line pulled this week is here at its last price, so a bet you placed can be added after kickoff."));
+  if (!all.length) { wrap.append(el("div", { class: "empty" }, "No lines pulled this week yet.")); return wrap; }
+  const q = el("input", { type: "search", placeholder: "Player or team", value: pickerQuery, "aria-label": "Find a line" });
+  const list = el("div");
+  const draw = () => {
+    list.replaceChildren();
+    const t = pickerQuery.trim().toLowerCase(); if (t.length < 2) return;
+    const have = new Set(mine().map((x) => x.key));
+    const hits = all.filter((b) => `${b.player} ${b.team} ${b.opp}`.toLowerCase().includes(t)).slice(0, 40);
+    if (!hits.length) { list.append(el("div", { class: "empty" }, "No line matches.")); return; }
+    for (const b of hits) {
+      const row = el("div", { class: "nums" }, el("span", {}, el("b", {}, b.player), ` ${b.group || ""} ${b.team}${b.opp ? ` vs ${b.opp}` : ""} · ${(MARKET[b.market] || b.market).toLowerCase()} ${num(b.line)} at ${b.book}${b.proj != null ? ` · model ${num(b.proj)}` : ""}`));
+      for (const side of ["Over", "Under"]) {
+        const price = side === "Over" ? b.over_odds : b.under_odds; if (price == null) continue;
+        const key = betKey({ ...b, side }); const on = have.has(key);
+        const btn = el("button", { type: "button", class: "add" + (on ? " on" : "") }, `${on ? "✓ " : "+ "}${side} ${num(b.line)} (${odds(price)})`);
+        btn.onclick = () => { toggleMine({ ...b, side, pick: side }); };
+        row.append(btn);
+      }
+      list.append(row);
+    }
+  };
+  q.addEventListener("input", () => { pickerQuery = q.value; draw(); });
+  wrap.append(q, list); draw();
+  return wrap;
 }
 
 function show(id) {
@@ -821,7 +855,7 @@ function show(id) {
 }
 
 (async () => {
-  [DATA.meta, DATA.bets, DATA.proj, DATA.results, DATA.backtest, DATA.parlays] = await Promise.all(["meta", "bets", "projections", "results", "backtest", "parlays"].map(load));
+  [DATA.meta, DATA.bets, DATA.proj, DATA.results, DATA.backtest, DATA.parlays, DATA.week_lines] = await Promise.all(["meta", "bets", "projections", "results", "backtest", "parlays", "lines_week"].map(load));
   renderMeta(); renderPlays(); renderDaybar(); renderProj(); renderRecord(); renderCheck();
   ["#picks-only", "#market", "#best-only", "#slate", "#pos", "#side", "#sort", "#book"].forEach((s) => $(s).addEventListener("change", renderPlays));
   $("#q").addEventListener("input", renderProj);

@@ -132,6 +132,8 @@ check(len(parlays) >= 2 and parlays.parlay_id.nunique() >= 1 and parlays.groupby
 check(len(parlays) and parlays.player.nunique() == len(parlays) and parlays.units.between(0.1, 1.0).all(), "parlay legs are distinct players with a stake between 0.1 and 1 unit")
 pj = json.loads((tmp / "docs/data/parlays.json").read_text())
 check(len(pj) >= 1 and pj[0]["n_legs"] == len(pj[0]["legs"]) and sum(1 for b in bets if b.get("parlay")) == len(parlays), "parlay written for the site and marked on the board")
+_wl = json.loads((tmp / "docs/data/lines_week.json").read_text())
+check(len(_wl) >= len(bets) and all({"player", "market", "line", "book", "commence_time"} <= set(r) for r in _wl), f"every line pulled this week written for My board ({len(_wl)} lines)")
 check(all(q.get("finished") is False for q in pj) and json.loads((tmp / "docs/data/meta.json").read_text()).get("next_pull"), "open parlays flagged as not finished and the next pull time published")
 sys.path.insert(0, str(tmp))
 import run as _R
