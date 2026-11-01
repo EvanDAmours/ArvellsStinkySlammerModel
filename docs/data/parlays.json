@@ -50,17 +50,33 @@
   "parlay_id": "2026-wk08-2026-11-01",
   "slate": "2026-11-01",
   "n_legs": 3,
-  "combined_decimal": 5.0353,
-  "combined_american": 404,
-  "combined_prob": 0.3628,
+  "combined_decimal": 4.4617,
+  "combined_american": 346,
+  "combined_prob": 0.3719,
   "units": 0.1,
-  "chosen_at": "20261101T132528Z",
+  "chosen_at": "20261101T154223Z",
   "placed": false,
   "finished": false,
   "first_kickoff": "2026-11-01T18:00:00+00:00",
   "legs": [
    {
     "leg": 1,
+    "player": "Jason Marshall Jr.",
+    "team": "MIA",
+    "opp": "NE",
+    "market": "player_solo_tackles",
+    "side": "Under",
+    "line": 2.5,
+    "book": "theScore Bet",
+    "odds": -240.0,
+    "p_side": 0.7241,
+    "mkt_side": 0.6559,
+    "lock": 87.4074,
+    "grade": "A",
+    "commence_time": "2026-11-01T21:25:00Z"
+   },
+   {
+    "leg": 2,
     "player": "Christian Benford",
     "team": "BUF",
     "opp": "BAL",
@@ -76,7 +92,7 @@
     "commence_time": "2026-11-01T18:00:00Z"
    },
    {
-    "leg": 2,
+    "leg": 3,
     "player": "Sam Williams",
     "team": "CLE",
     "opp": "PIT",
@@ -89,22 +105,6 @@
     "mkt_side": 0.4694,
     "lock": 48.1419,
     "grade": "C",
-    "commence_time": "2026-11-01T18:00:00Z"
-   },
-   {
-    "leg": 3,
-    "player": "DaRon Bland",
-    "team": "DAL",
-    "opp": "ARI",
-    "market": "player_solo_tackles",
-    "side": "Under",
-    "line": 3.5,
-    "book": "DraftKings",
-    "odds": -167.0,
-    "p_side": 0.7064,
-    "mkt_side": 0.5878,
-    "lock": 79.8908,
-    "grade": "A",
     "commence_time": "2026-11-01T18:00:00Z"
    }
   ]
