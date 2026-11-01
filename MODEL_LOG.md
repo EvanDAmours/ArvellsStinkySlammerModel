@@ -651,6 +651,11 @@ reachability from a script, for what they carry that nflverse does not, and for 
 16. ESPN scoreboard: reachable; carries nothing the nflverse schedule lacks (kickoffs, venues).
 17. PrizePicks (HTTP 403) and Underdog (HTTP 426) projection APIs: refused to scripts. Their lines cannot be
     read; no pick-'em cross-check this round.
+18. Divisional matchups (2026-11-01, at the owner's question; nflverse team divisions): actual over model 0.987 /
+    0.986 in divisional games against 0.982 / 0.992 in the rest (10,156 divisional games of 28,861), no consistent
+    sign by position, solo +1 point in both halves, first and second meetings alike. Divisional games are about
+    5% more spread (residual var/mean 1.41 vs 1.34; miss 1.64 vs 1.62), a familiarity effect on the spread and
+    not the level, too small for a parameter. Nothing to add.
 
 ### What the owner should read into it
 
