@@ -897,6 +897,21 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-01, midday MDT (My board: the bets you took, tracked live)
+- Owner asked for a tab where he picks his bets for the day and watches them live. ESPN's public scoreboard and
+  game-summary endpoints (`site.api.espn.com/.../scoreboard`, `.../summary?event=`) answer cross-origin requests
+  (`access-control-allow-origin: *`) and carry per-player defensive totals and solo tackles that update during
+  the game, so the page can do it with no server: a "+ My board" button on every card, the list kept in the
+  viewer's browser (localStorage, per week; nothing leaves the browser), and a "My board" tab that polls ESPN
+  every minute while any of its games is on (every two minutes in the half hour before kickoff, every ten
+  otherwise): tackles so far, the full-game pace from the clock, on track / behind / won / lost, the score, and
+  the settled record at the top. A player with no box-score row yet counts as zero. Team codes WSH, LAR, JAC
+  translated; names matched the way the pipeline matches them. Verified in a headless browser on the real
+  Cowboys-Cardinals box score from the first quarter. Caveat on the tab: the official box score the books settle
+  on can differ by a tackle from the live feed.
+- Site only; no model change. Revert condition: ESPN closing the cross-origin door, in which case the tab says
+  "last update (failed)" and the board itself still works.
+
 ### 2026-11-01, morning MDT (book filter on the board)
 - Owner asked to filter by DraftKings or theScore Bet. The Plays toolbar has a Book dropdown built from the books
   on the board at each render (so a book appears the moment it posts); choosing one shows that book's lines only
