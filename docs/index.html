@@ -792,7 +792,7 @@ function renderMine() {
   const list = mine();
   box.append(el("p", { class: "lead" }, "The bets you took, tracked live, with your stakes. Press \"+ My board\" on any card on the Plays tab; it is kept in this browser only. While a game is on, each bet refreshes from ESPN's box score every minute: tackles so far, the pace for the full game, and whether the bet is trending the right way. The official box score the books settle on can differ by a tackle from the live feed."));
   if (!list.length) { box.append(el("div", { class: "empty" }, "Nothing on your board yet. Add bets from the Plays tab, or find one below."), addPicker()); return; }
-  let w = 0, l = 0, p = 0, onTrack = 0, live = 0, staked = 0, toWin = 0, settled = 0, pendingStake = 0;
+  let w = 0, l = 0, p = 0, onTrack = 0, live = 0, staked = 0, toWin = 0, settled = 0, pendingStake = 0, paced = 0, pacedN = 0, unstarted = 0;
   const GR = { A: 0, B: 1, C: 2 };
   const sorted = [...list].sort((a, b) => (GR[a.grade] ?? 3) - (GR[b.grade] ?? 3) || (b.lock ?? 0) - (a.lock ?? 0) || String(a.commence_time || "").localeCompare(String(b.commence_time || "")));
   const groups = { in: [], pre: [], post: [] };
@@ -811,7 +811,9 @@ function renderMine() {
       verdict = dead ? `Lost: already past ${b.line}` : clinched ? `Won: past ${b.line}` : ok ? `On track (${early}pace ${pace.toFixed(1)} for the game)` : `Behind (${early}pace ${pace == null ? "?" : pace.toFixed(1)} for the game)`; }
     const stake = b.stake == null ? null : +b.stake, dec = toDec(b.odds), win = stake != null && dec ? stake * (dec - 1) : null;
     let result = null;
-    if (stake != null) { staked += stake; if (win != null) toWin += win; if (status.startsWith("Final")) { result = status.includes("Win") ? win : status.includes("Loss") ? -stake : 0; settled += result; } else pendingStake += stake; }
+    if (stake != null) { staked += stake; if (win != null) toWin += win;
+      if (status.startsWith("Final")) { result = status.includes("Win") ? win : status.includes("Loss") ? -stake : 0; settled += result; paced += result; pacedN++; }
+      else { pendingStake += stake; if (g && g.state === "in") { paced += cls.includes("good") ? (win ?? 0) : -stake; pacedN++; } else unstarted++; } }
     const stakeBox = el("label", { class: "stake" }, "$ ", (() => { const i = el("input", { type: "number", min: "0", step: "1", inputmode: "decimal", placeholder: "stake", value: stake == null ? "" : String(stake) }); i.addEventListener("change", () => setStake(b.key, i.value)); return i; })(),
       win != null ? el("small", {}, ` to win ${money(win)}`) : "", result != null ? el("b", { class: result > 0 ? "ok" : result < 0 ? "no" : "" }, ` ${result > 0 ? "+" : ""}${money(result)}`) : "");
     const c = el("div", { class: "live" + cls },
@@ -827,6 +829,7 @@ function renderMine() {
   box.append(el("div", { class: "mine-bar" }, el("div", {}, el("b", {}, `${w}-${l}${p ? `-${p}` : ""}`), el("span", {}, "settled")), el("div", {}, el("b", {}, String(live)), el("span", {}, "in play")), el("div", {}, el("b", {}, `${onTrack} of ${live}`), el("span", {}, "trending right")),
     el("div", {}, el("b", {}, money(staked) || "$0"), el("span", {}, "in for today")), el("div", {}, el("b", {}, money(toWin) || "$0"), el("span", {}, "to win if every bet hits")),
     el("div", {}, el("b", { class: settled > 0 ? "pos" : settled < 0 ? "neg" : "" }, (settled > 0 ? "+" : "") + (money(settled) || "$0")), el("span", {}, `settled so far${pendingStake ? ` (${money(pendingStake)} still riding)` : ""}`)),
+    el("div", { title: "Settled results plus every bet in play finishing the way it is trending right now. Bets that have not kicked off are not counted." }, el("b", { class: paced > 0 ? "pos" : paced < 0 ? "neg" : "" }, (paced > 0 ? "+" : "") + (money(paced) || "$0")), el("span", {}, `on current pace (${pacedN} bet${pacedN === 1 ? "" : "s"}${unstarted ? `, ${unstarted} not started` : ""})`)),
     el("div", {}, el("b", {}, LIVE.at ? new Date(LIVE.at).toLocaleTimeString([], { timeZone: TZ, hour: "numeric", minute: "2-digit" }) : "–"), el("span", {}, LIVE.error ? `last update (${LIVE.error})` : "last update"))));
   for (const [key, title] of [["in", "In play"], ["pre", "Still to kick off"], ["post", "Settled"]]) {
     if (!groups[key].length) continue;

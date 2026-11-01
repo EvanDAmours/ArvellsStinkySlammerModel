@@ -897,6 +897,13 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-01, afternoon MDT (My board: the day on its current pace)
+- Owner: "if every bet hits I'd make $80, but given I'm 4 of 6 what would that pay out?" The bar now carries "on
+  current pace": settled results plus every bet in play finishing the way it is trending right now (on track
+  pays, behind loses the stake); bets not yet started are left out and counted beside it. Checked by hand on a
+  five-bet board (settled +$0.60, one live on track +$11.98, one live behind -$20: -$7.42 on pace, one not
+  started). Site only.
+
 ### 2026-11-01, afternoon MDT (My board: grouped and sorted by grade)
 - Owner asked for the board sorted by grade rather than by the order bets were added, and a little more
   readability. Bets sit in three groups (In play, Still to kick off, Settled), each sorted A to C and then by
