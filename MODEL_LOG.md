@@ -897,6 +897,12 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-01, afternoon MDT (My board: grouped and sorted by grade)
+- Owner asked for the board sorted by grade rather than by the order bets were added, and a little more
+  readability. Bets sit in three groups (In play, Still to kick off, Settled), each sorted A to C and then by
+  lock score and kickoff; the trend line leads with the verdict (on track / behind / won / lost) and the clock
+  and score follow. Site only.
+
 ### 2026-11-01, early afternoon MDT (My board: stakes and the day's money)
 - Owner wants the board for record keeping during the day: each bet now takes a stake (kept with the bet in the
   browser), shows what it wins at the price taken and its dollar result once final, and the bar at the top adds
