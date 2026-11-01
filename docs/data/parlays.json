@@ -55,7 +55,7 @@
   "combined_prob": 0.3719,
   "units": 0.1,
   "chosen_at": "20261101T154223Z",
-  "placed": false,
+  "placed": true,
   "finished": false,
   "first_kickoff": "2026-11-01T18:00:00+00:00",
   "legs": [

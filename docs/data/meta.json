@@ -2,7 +2,7 @@
  "generated_at": "2026-11-01T17:07+00:00",
  "season": 2026,
  "week": 8,
- "lines_pulled": "20261101T154222Z",
+ "lines_pulled": "20261101T183615Z",
  "next_pull": "2026-11-02T15:00+00:00",
  "stats_source": "2023: nflreadpy; 2024: nflreadpy; 2025: nflreadpy; 2026: nflreadpy",
  "tackle_formula": "solo+with_ast+ast",
@@ -81,9 +81,10 @@
   "segment_k": 40,
   "segment_min_n": 10
  },
- "odds_credits_remaining": 428,
+ "odds_credits_remaining": 420,
  "odds_credits_by_key": {
-  "ODDS_API_KEY": 428.0,
+  "ODDS_API_KEY": 420.0,
   "PARLAY_API_KEY": 0.0
- }
+ },
+ "lines_count": 195
 }
