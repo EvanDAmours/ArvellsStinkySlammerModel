@@ -380,7 +380,7 @@ def cmd_odds(hours=None, auto=False):
     print(f"odds: {len(rows)} prices pulled, {len(lines)} current lines, {n_new} new picks logged, credits left {remaining}")
 
 
-WEEK_LINE_COLS = ["player", "team", "opp", "group", "market", "line", "book", "over_odds", "under_odds", "side", "pick", "proj", "model_over", "grade", "lock", "commence_time", "event_id"]
+WEEK_LINE_COLS = ["player", "team", "opp", "group", "market", "line", "book", "over_odds", "under_odds", "over_link", "under_link", "side", "pick", "proj", "model_over", "grade", "lock", "commence_time", "event_id"]
 
 
 def write_week_lines(P, season, week):
@@ -409,7 +409,7 @@ def write_parlays(season, week):
                             units=float(first.units), chosen_at=first.chosen_at, placed=bool((start <= now).any()),
                             finished=bool(start.notna().all() and (start + dt.timedelta(hours=4, minutes=30) <= now).all()),   # every leg's game is over: it belongs to the Track record tab, not the board
                             first_kickoff=None if start.isna().all() else start.min().isoformat(),
-                            legs=records(legs[[c for c in ["leg", "player", "team", "opp", "market", "side", "line", "book", "odds", "p_side", "mkt_side", "lock", "grade", "commence_time"] if c in legs.columns]])))
+                            legs=records(legs[[c for c in ["leg", "player", "team", "opp", "market", "side", "line", "book", "odds", "link", "sid", "p_side", "mkt_side", "lock", "grade", "commence_time"] if c in legs.columns]])))
     _json(SITE / "parlays.json", out)
 
 

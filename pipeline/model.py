@@ -947,8 +947,11 @@ def price_lines(lines, P, segments=None):
             cand2 = cand[cand.team_name.isin([getattr(r, "home_team", None), getattr(r, "away_team", None)])]
             cand = cand2 if len(cand2) else cand
         solo = "solo" in str(r.market)
+        clean = lambda v: None if v is None or (isinstance(v, float) and pd.isna(v)) else v
         base = dict(player=r.player, book=r.book, market=r.market, line=float(r.line), over_odds=r.over_odds,
-                    under_odds=r.under_odds, commence_time=getattr(r, "commence_time", ""), event_id=getattr(r, "event_id", ""))
+                    under_odds=r.under_odds, commence_time=getattr(r, "commence_time", ""), event_id=getattr(r, "event_id", ""),
+                    book_key=clean(getattr(r, "book_key", None)), over_link=clean(getattr(r, "over_link", None)), under_link=clean(getattr(r, "under_link", None)),
+                    over_sid=clean(getattr(r, "over_sid", None)), under_sid=clean(getattr(r, "under_sid", None)), market_link=clean(getattr(r, "market_link", None)))
         if cand.empty:
             rows.append({**base, "pick": "No projection", "why": "Player not in the model (no defensive snaps logged)"})
             continue

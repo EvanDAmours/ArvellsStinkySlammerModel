@@ -897,6 +897,19 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-01, evening MDT (bet-slip links: tail a pick or a parlay at the book)
+- Owner asked for links that open DraftKings or FanDuel with the parlay ready to tail. The Odds API returns each
+  book's own bet-slip link and selection id per outcome when asked (`includeLinks`, `includeSids`; no extra
+  credits). The pull now asks for them and keeps them in the snapshots (`over_link`, `under_link`, `over_sid`,
+  `under_sid`, `market_link`, `book_link`, `event_sid`); priced lines, the week's line file, parlay legs and My
+  board carry the chosen side's link. On the site: "Bet at <book> ↗" on each card, "Tail it" with one link per
+  leg on an open parlay, "Open at <book>" on a My board bet before kickoff. Links are the book's own, opened in a
+  new tab; nothing is placed by the site.
+- One link per leg, not one link for the whole parlay, until a real pull shows the two books' link formats
+  (DraftKings puts outcome ids in a query string, FanDuel market and selection ids; both can carry several
+  selections, but the exact form is checked against real links before anything is built on it). The first pull
+  with links is Monday 9 am for the Monday game. Smoke check: synthetic lines carry links on both sides.
+
 ### 2026-11-01, afternoon MDT (My board: money counts from kickoff)
 - Owner: a bet on a game that has not started can still be withdrawn, so it should not count. The bar's money
   now covers started games only ("in play or settled", "to win if every started bet hits", "on current pace");

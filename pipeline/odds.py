@@ -93,7 +93,7 @@ def pull(api_keys, hours_ahead=None, days=None, event_ids=None):
             print(f"Stopping: every key is below {C.MIN_CREDITS_LEFT} credits for this month.")
             break
         r = requests.get(f"{BASE}/sports/{C.ODDS_SPORT}/events/{e['id']}/odds", timeout=30, params={
-            "apiKey": api_keys[name], "markets": ",".join(C.ODDS_MARKETS), "oddsFormat": "american", **_book_params()})
+            "apiKey": api_keys[name], "markets": ",".join(C.ODDS_MARKETS), "oddsFormat": "american", "includeLinks": "true", "includeSids": "true", **_book_params()})
         label = f"{e['away_team']} @ {e['home_team']} {e['commence_time']}"
         if r.status_code in (404, 422):
             print(f"  {label}: HTTP {r.status_code} {r.text[:200].strip()}")
@@ -108,17 +108,20 @@ def pull(api_keys, hours_ahead=None, days=None, event_ids=None):
         print(f"  {label}: {n_books} books with tackle lines, cost {r.headers.get('x-requests-last', '?')} via {name}, left {credits[name]:g}")
         for bk in books:
             for m in bk.get("markets", []):
-                sides = {}
+                sides, links, sids = {}, {}, {}
                 for o in m.get("outcomes", []):
-                    key = (o.get("description"), o.get("point"))
-                    sides.setdefault(key, {})[str(o.get("name", "")).lower()] = o.get("price")
+                    key = (o.get("description"), o.get("point")); side = str(o.get("name", "")).lower()
+                    sides.setdefault(key, {})[side] = o.get("price")
+                    links.setdefault(key, {})[side] = o.get("link"); sids.setdefault(key, {})[side] = o.get("sid")   # the book's own bet-slip link and selection id, when it gives them
                 for (player, point), s in sides.items():
                     if player is None or point is None:
                         continue
+                    lk, sd = links.get((player, point), {}), sids.get((player, point), {})
                     rows.append(dict(event_id=e["id"], commence_time=e["commence_time"], home_team=e["home_team"],
                                      away_team=e["away_team"], book=bk.get("title", bk.get("key")), book_key=bk.get("key"), market=m["key"],
                                      player=player, line=float(point), over_odds=s.get("over"), under_odds=s.get("under"),
-                                     book_update=m.get("last_update")))
+                                     book_update=m.get("last_update"), over_link=lk.get("over"), under_link=lk.get("under"), over_sid=sd.get("over"), under_sid=sd.get("under"),
+                                     market_link=m.get("link"), book_link=bk.get("link"), event_sid=e.get("sid")))
     return rows, credits
 
 

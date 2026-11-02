@@ -80,7 +80,11 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 .five-box h3 { margin: 0 0 6px; font: 700 1.1rem/1.2 var(--cond); }
 .five-box .note { margin: 0 0 8px; }
 .play.five { border-left: 4px solid #1f8a4c; }
-.play .add { grid-column: 2; justify-self: end; font: 600 0.8rem var(--cond); padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); cursor: pointer; }
+.play .actions { grid-column: 2; justify-self: end; display: flex; gap: 6px; align-items: center; }
+.bet-link { font: 600 0.8rem var(--cond); padding: 3px 9px; border: 1px solid #2c5aa0; border-radius: 999px; color: #2c5aa0; text-decoration: none; white-space: nowrap; }
+.bet-link:hover { background: #2c5aa0; color: #fff; }
+.parlay-box .tail { margin: 6px 0 2px; font-size: 0.9rem; color: var(--muted); } .parlay-box .tail a { margin-right: 8px; }
+.play .add { justify-self: end; font: 600 0.8rem var(--cond); padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); cursor: pointer; }
 .play .add.on, #mine-body .add.on { background: #1f8a4c; color: #fff; border-color: #1f8a4c; }
 #mine-body .add { font: 600 0.8rem var(--cond); padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); cursor: pointer; margin: 2px 6px 2px 0; }
 #mine-body input[type=search] { font: inherit; padding: 6px 10px; width: min(100%, 320px); margin: 4px 0 8px; }
@@ -97,7 +101,7 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 .mine-h { font: 700 1.05rem/1.2 var(--cond); margin: 18px 0 8px; } .mine-h small { font: 400 0.85rem var(--sans, inherit); color: var(--muted); }
 .live .trend b { font-size: 0.95rem; }
 .live .rm { grid-column: 1 / -1; justify-self: start; font-size: 0.8rem; color: var(--muted); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline; }
-@media (max-width: 640px) { .live { grid-template-columns: 1fr; } .live .now { grid-row: auto; grid-column: 1; text-align: left; } .live .now b { display: inline; font-size: 1.3rem; margin-right: 6px; } .play .add { grid-column: 1; justify-self: start; } }
+@media (max-width: 640px) { .live { grid-template-columns: 1fr; } .live .now { grid-row: auto; grid-column: 1; text-align: left; } .live .now b { display: inline; font-size: 1.3rem; margin-right: 6px; } .play .actions { grid-column: 1; justify-self: start; } }
 [hidden] { display: none !important; }
 .daybar button { padding: 6px 12px; border: 1px solid var(--line, #cfd4dc); background: transparent; border-radius: 8px; margin-right: 4px; cursor: pointer; font: inherit; color: var(--ink); }
 .daybar button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
@@ -377,6 +381,8 @@ function parlayBox(q, graded) {
       el("div", {}, el("b", {}, `${(q.units * (q.combined_decimal - 1)).toFixed(2)}u`), el("span", {}, "pays if it hits")),
       q.units_won == null ? "" : el("div", {}, units(q.units_won, 2), el("span", {}, "result"))),
     legs,
+    (() => { const ls = (q.legs || []).filter((l) => l.link && /^https:\/\//.test(l.link)); if (!ls.length || q.placed) return "";
+      return el("div", { class: "tail" }, `Tail it at ${ls[0].book}: `, ...ls.map((l, i) => el("a", { class: "bet-link", href: l.link, target: "_blank", rel: "noopener noreferrer" }, `leg ${i + 1} ↗`)), ls.length < (q.legs || []).length ? " (a leg without a link must be added by hand)" : ""); })(),
     q.placed ? el("div", { class: "placed" }, "First game has kicked off: this is the parlay as placed before kickoff.") : el("div", { class: "placed" }, "Re-chosen at every line pull until the first game of the day kicks off."));
 }
 
@@ -437,7 +443,7 @@ function card(b, isLock) {
       el("small", {}, [b.group, b.team, b.opp ? `vs ${b.opp}` : "", kickoffLocal(betKick(b)) ? `· ${kickoffLocal(betKick(b))}` : ""].filter(Boolean).join(" ")),
       b.lock == null ? "" : el("div", { class: "lock" }, `Lock score ${Math.round(b.lock)}/100`)),
     el("div", { class: "ev" }, el("b", {}, b.ev == null ? "" : signedPct(b.ev)), el("span", {}, "expected return")),
-    addButton(b),
+    el("div", { class: "actions" }, addButton(b), betLink(b, side)),
     el("div", { class: "bet" }, el("span", { class: side === "Under" ? "under" : "over" }, `${side || ""} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market).toLowerCase()}`, el("small", {}, ` · ${odds(price)} at ${b.book}`, b.payout == null ? "" : ` · pays ${num(b.payout, 2)} per unit`)),
     tags.length ? el("div", { class: "tags" }, ...tags) : "",
     el("div", { class: "nums" }, ...(b.proj == null ? [] : [el("span", {}, `Projection ${num(b.proj)}`), b.proj_model == null ? "" : el("span", {}, `Model alone ${num(b.proj_model)}`), el("span", {}, `Model ${(side || "over").toLowerCase()} ${pct(side === "Under" ? 1 - b.model_over : b.model_over)}`), el("span", {}, `Book ${pct(side === "Under" ? 1 - b.market_over : b.market_over)}`),
@@ -734,8 +740,14 @@ function toggleMine(b) {
   if (i >= 0) list.splice(i, 1);
   else list.push({ key: k, player: b.player, team: b.team, opp: b.opp, group: b.group, market: b.market, side: b.side || b.pick, line: b.line, book: b.book,
                    odds: (b.side || b.pick) === "Under" ? b.under_odds : b.over_odds, proj: b.proj, model_p: (b.side || b.pick) === "Under" ? 1 - b.model_over : b.model_over,
-                   grade: b.grade, lock: b.lock, commence_time: b.commence_time, added: new Date().toISOString() });
+                   grade: b.grade, lock: b.lock, commence_time: b.commence_time, link: sideLink(b, b.side || b.pick), added: new Date().toISOString() });
   saveMine(list); renderPlays(); renderMine(); liveLoop(true);
+}
+// the book's own bet-slip link for a side, when The Odds API passed one through (DraftKings and FanDuel do)
+const sideLink = (b, side) => (side === "Under" ? b.under_link : b.over_link) || null;
+function betLink(b, side, label) {
+  const href = sideLink(b, side); if (!href || !/^https:\/\//.test(href)) return "";
+  return el("a", { class: "bet-link", href, target: "_blank", rel: "noopener noreferrer", title: `Opens ${b.book} with this selection in the bet slip` }, label || `Bet at ${b.book} ↗`);
 }
 function addButton(b) {
   if (!(b.pick === "Over" || b.pick === "Under") && b.proj == null) return "";
@@ -823,7 +835,7 @@ function renderMine() {
     const c = el("div", { class: "live" + cls },
       el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}` }, b.grade) : "", b.player, el("small", {}, [b.group, b.team, b.opp ? `vs ${b.opp}` : ""].filter(Boolean).join(" "))),
       el("div", { class: "now" }, el("b", {}, have == null ? "–" : String(have)), el("span", {}, solo ? "solo so far" : "tackles so far")),
-      el("div", { class: "bet" }, el("span", { class: under ? "under" : "over" }, `${b.side} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market || "").toLowerCase()}`, el("small", {}, ` · ${odds(b.odds)} at ${b.book}${b.proj != null ? ` · model ${num(b.proj)}` : ""}`)),
+      el("div", { class: "bet" }, el("span", { class: under ? "under" : "over" }, `${b.side} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market || "").toLowerCase()}`, el("small", {}, ` · ${odds(b.odds)} at ${b.book}${b.proj != null ? ` · model ${num(b.proj)}` : ""} `), g && g.state === "pre" && b.link ? el("a", { class: "bet-link", href: b.link, target: "_blank", rel: "noopener noreferrer" }, `Open at ${b.book} ↗`) : ""),
       el("div", { class: "trend" }, ...(verdict ? [el("b", { class: cls.includes("good") ? "ok" : "no" }, verdict), " · "] : []), status),
       stakeBox,
       (() => { const r = el("button", { type: "button", class: "rm" }, "Remove"); r.onclick = () => toggleMine({ ...b, pick: b.side, side: b.side }); return r; })());

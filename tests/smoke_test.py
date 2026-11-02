@@ -114,6 +114,7 @@ check(not any(b.get("five") and b.get("side") == "Over" for b in priced) and all
 check(all(b.get("ev", 0) >= 0.10 - 1e-9 or "fading" in str(b.get("why")) or "role" in str(b.get("why")) for b in priced if b.get("pick") == "Over"), "an Over pick clears the higher Over bar unless a signal backs it")
 check(all(b.get("mkt_line") is not None and abs(b["proj"] - b["proj_model"]) <= abs(b["mkt_line"] - b["proj_model"]) + 1e-9 for b in priced), "pricing mean sits between the model and the market line")
 check(any(b.get("cons_n", 0) > 0 for b in priced), "consistency (games cleared) computed from game logs")
+check(all(str(b.get("over_link", "")).startswith("https://") and str(b.get("under_link", "")).startswith("https://") for b in priced), "priced lines carry the book's bet-slip links for both sides")
 picks = pd.read_csv(tmp / "data/picks.csv") if (tmp / "data/picks.csv").exists() else pd.DataFrame()
 check(len(picks) >= 1, f"picks logged ({len(picks)})")
 check(picks.drop_duplicates(["player", "market", "side", "line"]).shape[0] == len(picks), "one logged pick per player/line (best price only)")

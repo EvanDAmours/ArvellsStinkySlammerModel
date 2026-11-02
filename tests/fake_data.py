@@ -132,13 +132,15 @@ def fake_odds_rows():
     rng = np.random.default_rng(7)
     start = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=2)).isoformat()
     rows = []
-    for r in P.itertuples():
+    from pipeline.sources import norm_name
+    for i, r in enumerate(P.itertuples()):
         for book in ("DraftKings", "FanDuel"):
             line = float(np.floor(r.season_avg + rng.normal(0, 0.6))) + 0.5
             rows.append(dict(event_id=f"E{r.team}", commence_time=start, home_team=TEAM_NAMES.get(r.team), away_team=TEAM_NAMES.get(r.opp_team),
                              book=book, market="player_tackles_assists", player=r.player, line=line,
                              over_odds=int(rng.choice([-125, -115, -110, -105, 100])), under_odds=int(rng.choice([-115, -110, -105, -120])),
-                             book_update=start))
+                             book_update=start, over_link=f"https://example.test/{book}/{r.team}/{norm_name(r.player)}/over", under_link=f"https://example.test/{book}/{r.team}/{norm_name(r.player)}/under",
+                             over_sid=f"o-{r.team}-{i}", under_sid=f"u-{r.team}-{i}"))
     return rows
 
 

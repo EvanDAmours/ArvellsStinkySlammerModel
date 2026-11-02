@@ -153,7 +153,7 @@ mark_weekly_five = mark_locks   # old name
 
 # ---------------------------------------------------------------- parlays
 PARLAYS = Path("data/parlays.csv")
-LEG_COLS = ["season", "week", "slate", "parlay_id", "leg", "player", "team", "opp", "market", "side", "line", "book", "odds",
+LEG_COLS = ["season", "week", "slate", "parlay_id", "leg", "player", "team", "opp", "market", "side", "line", "book", "odds", "link", "sid",
             "p_side", "mkt_side", "lock", "grade", "event_id", "commence_time", "n_legs", "combined_decimal", "combined_prob", "units", "chosen_at"]
 
 
@@ -220,7 +220,9 @@ def build_parlays(bets, season, week, stamp, now=None):
         if legs is None:
             continue   # the board no longer supports a parlay for this slate: none is shown
         legs = legs.assign(season=season, week=week, slate=slate, parlay_id=f"{season}-wk{week:02d}-{slate}", chosen_at=stamp,
-                           odds=np.where(legs.side == "Over", legs.over_odds, legs.under_odds))
+                           odds=np.where(legs.side == "Over", legs.over_odds, legs.under_odds),
+                           link=np.where(legs.side == "Over", legs.get("over_link", pd.Series(None, index=legs.index)), legs.get("under_link", pd.Series(None, index=legs.index))),
+                           sid=np.where(legs.side == "Over", legs.get("over_sid", pd.Series(None, index=legs.index)), legs.get("under_sid", pd.Series(None, index=legs.index))))
         legs = legs[[c for c in LEG_COLS if c in legs.columns]]
         old = pd.concat([old, legs], ignore_index=True)
     PARLAYS.parent.mkdir(parents=True, exist_ok=True)
