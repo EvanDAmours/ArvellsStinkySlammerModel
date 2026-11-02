@@ -930,6 +930,93 @@ def grade_of(score):
     return "A" if score >= C.GRADE_BARS["A"] else "B" if score >= C.GRADE_BARS["B"] else "C"
 
 
+def _num(v, d=np.nan):
+    try:
+        v = float(v)
+    except (TypeError, ValueError):
+        return d
+    return d if np.isnan(v) else v
+
+
+def rundown(p, line, side, solo, mu_model, mu, p_side, claim, ev, pick, why, fl, new_role, in_role_n, log_raw):
+    """A templated read-up of one line from the numbers the pricer used: who he is, his recent games, the model's
+    read, what the book's line implies about his snaps, what decides it, and the nudges. Every sentence is a
+    number restated; nothing here is a view the data does not hold."""
+    stat = "solo tackles" if solo else "tackles + assists"
+    n = int(_num(p.get("n_prev"), 0)); grp = str(p.get("group", "")); team = str(p.get("team", "")); opp = str(p.get("opp_team", ""))
+    avg = _num(p.get("solo_prev") if solo else p.get("comb_prev_raw")) / max(n, 1) if n else np.nan
+    share = _num(p.get("pct_prev")); last_sh = _num(p.get("pct_last")); exp_sh = _num(p.get("share_pred")); rate = _num(p.get("rate_clean")); tsn = _num(p.get("tsnaps_exp"))
+    ps_g = int(_num(p.get("ps_games"), 0)); ps_avg = _num(p.get("ps_avg_raw"))
+    out = []
+    pos = {"CB": "corner", "S": "safety", "LB": "linebacker", "DL": "lineman"}.get(grp, grp)
+    who = f"{p.player}, {team} {pos}"
+    if n:
+        who += f": {avg:.1f} {stat} a game over {n} game{'s' if n != 1 else ''} this season"
+        if not np.isnan(share):
+            who += f" at {share:.0%} of the defensive snaps"
+    if ps_g >= 4 and not np.isnan(ps_avg) and not solo:
+        who += f"; last season {ps_avg:.1f} a game over {ps_g} games"
+    out.append(who + ".")
+    lp = _log(p, "log_pct"); lg = log_raw or []
+    if lg:
+        tail = lg[-3:]; sh = [x for x in lp[-3:]] if lp and len(lp) == len(lg) else []
+        recent = ", ".join(f"{int(x)}" + (f" on {s:.0%}" if sh and len(sh) == len(tail) else "") for x, s in zip(tail, sh if sh and len(sh) == len(tail) else [np.nan] * len(tail)))
+        out.append(f"Last {len(tail)} game{'s' if len(tail) != 1 else ''}: {recent}{' of the snaps' if sh and len(sh) == len(tail) else ''}.")
+    if not np.isnan(exp_sh) and not np.isnan(last_sh) and abs(exp_sh - last_sh) >= 0.15:
+        out.append(f"Expected at {exp_sh:.0%} of the snaps tonight against {last_sh:.0%} last game.")
+    # the model's read
+    out.append(f"The model's own number is {mu_model:.1f}; priced from {mu:.1f} after blending with the line. {side} {line:g}: model {p_side:.0%}, claimed {claim:.0%} after shrinking, {ev:+.0%} expected return at this price.")
+    # the book's reading: the snap share at which the model's number would meet the line (the per-snap part scales with share)
+    if not np.isnan(exp_sh) and exp_sh > 0.05 and mu_model > 0.05 and not np.isnan(rate):
+        implied = float(np.clip(exp_sh * line / mu_model, 0.05, 1.0))
+        if abs(implied - exp_sh) >= 0.08:
+            out.append(f"The book's line sits where the model would put him at about {implied:.0%} of the snaps; the model expects {exp_sh:.0%}. The two sides disagree about his playing time more than his tackle rate.")
+        else:
+            out.append(f"The line matches the model at about {implied:.0%} of the snaps, close to the {exp_sh:.0%} expected: the disagreement, if any, is about his tackle rate, which is mostly variance.")
+    # what decides it: the share of his games that landed on this side
+    if lg:
+        k = sum((x > line) if side == "Over" else (x < line) for x in lg)
+        out.append(f"He landed on the {side.lower()} of {line:g} in {k} of his {len(lg)} games this season.")
+    # nudges
+    nud = []
+    st = str(p.get("status", "")).lower()
+    if st == "questionable":
+        nud.append("listed questionable (priced 8% down; the bet voids if he sits)")
+    if _flag(p.get("vacancy_rule", False)) or _flag(p.get("vacancy", False)):
+        nud.append("a regular at his position is out or gone, so his share is read from his last game")
+    if new_role:
+        nud.append("a part-timer who just played a starter's snaps; his history describes someone else")
+    if fl.get("reduced_role"):
+        nud.append("his last game's share was well below his season share")
+    if fl.get("absence") or fl.get("missed_game"):
+        nud.append("back from a missed game")
+    if fl.get("new_team"):
+        nud.append("first game for a new team")
+    if _flag(p.get("opp_qb_out", False)):
+        nud.append("the opposing starting quarterback is out")
+    if _flag(p.get("opp_rb_out", False)):
+        nud.append("the opposing lead rusher is out")
+    dc = str(p.get("dc_status", ""))
+    if dc in ("promoted", "demoted"):
+        nud.append(f"{dc} on the latest depth chart ({'+2' if dc == 'promoted' else '-10'}% in the number)")
+    crew = _num(p.get("crew_solo") if solo else p.get("crew_comb"), 1.0)
+    if abs(crew - 1) >= 0.02:
+        nud.append(f"this stadium's stat crew credits {stat} {abs(crew - 1):.0%} {'high' if crew > 1 else 'low'}")
+    roof = str(p.get("roof", "")).lower()
+    if grp == "CB" and roof in ("dome", "closed"):
+        nud.append("indoors: corners run 5% higher")
+    rest = _num(p.get("rest"))
+    if not np.isnan(rest) and rest >= 10:
+        nud.append("off a bye (defences run 4% under their average)")
+    fp = _num(p.get("fp_rel_solo") if solo else p.get("fp_rel_comb"))
+    if not np.isnan(fp) and abs(fp) >= 0.08:
+        nud.append(f"the outside expert consensus sits {fp:+.0%} from its usual relation to this model for him")
+    if nud:
+        out.append("Also: " + "; ".join(nud) + ".")
+    out.append(("Pick: " if pick in ("Over", "Under") else "Pass: ") + why + ".")
+    return " ".join(out)
+
+
 def price_lines(lines, P, segments=None):
     """Evaluate every posted line against the projection; return one row per line with EV, pick and confidence grade."""
     if lines is None or len(lines) == 0 or P is None or len(P) == 0:
@@ -986,6 +1073,7 @@ def price_lines(lines, P, segments=None):
         new_role = fl["new_role"]
         shifted = any(fl.values())
         log = _log(p, "log_solo" if solo else "log_comb")
+        log_raw = list(log)
         # consistency counts in-role games only: games where he played at least 70% of the snap share he played last game
         lp = _log(p, "log_pct")
         pct_last = p.get("pct_last", np.nan)
@@ -1066,6 +1154,7 @@ def price_lines(lines, P, segments=None):
                      "vacancy": _flag(p.get("vacancy_rule", False)), "share_pred": None if pd.isna(p.get("share_pred", np.nan)) else float(p.get("share_pred")),
                      "opp_qb_out": bool(p.get("opp_qb_out", False)), "opp_rb_out": bool(p.get("opp_rb_out", False)),
                      "rest": None if pd.isna(p.get("rest", np.nan)) else int(p.get("rest")),
+                     "rundown": rundown(p, float(r.line), side, solo, float(mu_model), float(mu), float(p_side), float(claim), float(ev), pick, why, fl, new_role, in_role_n, log_raw),
                      "press_pg": None if pd.isna(p.get("press_pg", np.nan)) else float(p.get("press_pg")),
                      "fp_comb": None if pd.isna(p.get("fp_comb", np.nan)) else float(p.get("fp_comb")),
                      "fp_solo": None if pd.isna(p.get("fp_solo", np.nan)) else float(p.get("fp_solo")),

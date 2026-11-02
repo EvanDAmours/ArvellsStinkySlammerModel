@@ -1080,6 +1080,18 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, late morning MDT (the rundown: a templated read-up under every line)
+- Owner asked for a Kyler Gordon-style read-up on every bet every day. `rundown` in `pipeline/model.py` writes one
+  from the numbers the pricer already used: who he is (season rate, snap share, last season when it is a full
+  one), his last three games with their snap shares, a change in expected share, the model's own number and the
+  priced one, the side's chance, claim and return, what the book's line implies about his snap share (the share at
+  which the model's number meets the line, since the per-snap part scales with share) and so whether the two
+  sides disagree about playing time or tackle rate, how many of his games landed on this side, the nudges
+  (questionable, vacancy, new or reduced role, absence, new team, opposing QB or RB out, depth chart move, the
+  stadium's crew, dome, bye, the outside consensus) and the pick or pass with its reason. Every sentence is a
+  number restated; no language model, no view the data does not hold. It sits at the top of every card's "Why"
+  box, for passes too, and in the week's line file for My board. Smoke test; checked on tonight's 20 lines.
+
 ### 2026-11-02, morning MDT (one name per player: PFR-named feeds matched by id)
 - Owner asked why Cam Lewis (CHI) had no snap counts. The snap-count and PFR advanced feeds print Pro Football
   Reference's names ("Cameron Lewis"); the stats feed prints the league's ("Cam Lewis"); the join was by name, so

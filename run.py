@@ -380,7 +380,7 @@ def cmd_odds(hours=None, auto=False):
     print(f"odds: {len(rows)} prices pulled, {len(lines)} current lines, {n_new} new picks logged, credits left {remaining}")
 
 
-WEEK_LINE_COLS = ["player", "team", "opp", "group", "market", "line", "book", "over_odds", "under_odds", "over_link", "under_link", "side", "pick", "proj", "model_over", "grade", "lock", "commence_time", "event_id"]
+WEEK_LINE_COLS = ["player", "team", "opp", "group", "market", "line", "book", "over_odds", "under_odds", "over_link", "under_link", "side", "pick", "proj", "model_over", "grade", "lock", "commence_time", "event_id", "rundown"]
 
 
 def write_week_lines(P, season, week):
