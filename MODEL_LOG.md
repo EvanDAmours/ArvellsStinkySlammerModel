@@ -918,6 +918,21 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, 3 am MDT (Track record rebuilt: pick filters, parlay history)
+- Owner asked for readability on the Track record tab, a filter system (week, rating, Over/Under and the like)
+  and a parlay history. The tab now opens with the records bar and a row of jump links (every pick, parlay
+  history, locks, by grade, by side, luck/calibration/replays). "Every pick" has filters for week, grade, side,
+  market, position, result, book, locks only and a player/team search, a sort (newest, grade, lock score, units,
+  result, player, Over/Under), and a summary that follows the filters: record, hit rate, units at 1 per bet,
+  return per bet, units at the suggested stake, beat-the-close (the grader's moved-line rule), and a breakdown by
+  grade, side and position. The table shows 60 rows with "show all", has a position column, colours the side,
+  and breaks ties by lock score. "Parlay history": record, hit rate against the model's average claim, units,
+  return per unit staked, then every parlay newest first as a collapsible row (week, day, legs with ticks,
+  odds, model chance, stake, result, running record and units) opening to the full parlay. Luck, calibration,
+  market watch and the replays moved into collapsibles under one section. Checked on the live data at desktop and
+  phone width (no errors, no sideways scroll; totals match the grader: 216-180, A 16-2, CB Unders 62-23,
+  beat the close 57% of 191 moved). Site only.
+
 ### 2026-11-01, late evening MDT (grade-order review after week 8 Sunday)
 - See "Standing watch: grade order". A 16-2, B 55-42, C 44-40; A no longer trails B; no weight change (18 graded
   A picks, rule needs 30).
