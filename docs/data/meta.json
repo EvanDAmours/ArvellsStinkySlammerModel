@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-02T06:24+00:00",
+ "generated_at": "2026-11-02T13:34+00:00",
  "season": 2026,
  "week": 8,
  "lines_pulled": "20261102T130802Z",
@@ -29,18 +29,18 @@
   "snaps_through_week": 8,
   "snaps_lag": false
  },
- "snaps_rows": 86196,
+ "snaps_rows": 87322,
  "injury_rows": 20525,
  "espn_injury_rows": 293,
  "volume_rows": 1872,
  "pbp_rows": 31319,
  "pfr_rows": 25849,
- "depth_chart_rows": 586731,
+ "depth_chart_rows": 587710,
  "fantasypros_rows": 30,
  "international_games": [],
  "bars": {
   "pick": 0.06,
-  "signal": 0.04
+  "signal": 0.06
  },
  "grading": {
   "bars": {
@@ -77,6 +77,7 @@
   },
   "pick_bar": 0.06,
   "pick_bar_over": 0.1,
+  "pick_min_claim": 0.55,
   "claim_shrink": 0.6,
   "segment_k": 40,
   "segment_min_n": 10
@@ -85,6 +86,5 @@
  "odds_credits_by_key": {
   "ODDS_API_KEY": 416.0,
   "PARLAY_API_KEY": 0.0
- },
- "lines_count": 20
+ }
 }
