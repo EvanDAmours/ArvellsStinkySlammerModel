@@ -13,8 +13,8 @@
    "n": 29352,
    "mae": 1.6203,
    "mae_cal": 1.6196,
-   "rmse": 2.1657,
-   "bias": -0.0059,
+   "rmse": 2.1656,
+   "bias": -0.006,
    "predictor": "Full model without dome corners",
    "beats_last_game": 17284
   },
@@ -131,7 +131,7 @@
    "mae": 1.6258,
    "mae_cal": 1.6219,
    "rmse": 2.1724,
-   "bias": -0.0301,
+   "bias": -0.0302,
    "predictor": "Full model without PFR targets and missed tackles",
    "beats_last_game": 17254
   },
@@ -140,7 +140,7 @@
    "mae": 1.6263,
    "mae_cal": 1.6242,
    "rmse": 2.1699,
-   "bias": -0.0164,
+   "bias": -0.0165,
    "predictor": "Full model with one shrink for every position",
    "beats_last_game": 17231
   },
@@ -149,16 +149,16 @@
    "mae": 1.6306,
    "mae_cal": 1.636,
    "rmse": 2.1756,
-   "bias": 0.0508,
+   "bias": 0.0507,
    "predictor": "Full model without per-snap base",
    "beats_last_game": 17249
   },
   {
    "n": 29352,
    "mae": 1.631,
-   "mae_cal": 1.6235,
+   "mae_cal": 1.6234,
    "rmse": 2.1681,
-   "bias": -0.0579,
+   "bias": -0.058,
    "predictor": "Full model without role-shift factors",
    "beats_last_game": 17195
   },
@@ -230,8 +230,8 @@
    "n": 3157,
    "mae": 1.5975,
    "mae_cal": 1.6033,
-   "rmse": 2.1265,
-   "bias": 0.054
+   "rmse": 2.1264,
+   "bias": 0.0539
   },
   {
    "predictor": "60% boosted corrector blend, 2026 fold (trained on earlier seasons)",
@@ -361,8 +361,8 @@
    "n": 3157,
    "mae": 1.5991,
    "mae_cal": 1.6033,
-   "rmse": 2.1271,
-   "bias": 0.038,
+   "rmse": 2.127,
+   "bias": 0.0378,
    "season": 2026,
    "predictor": "Full model"
   },
@@ -408,7 +408,7 @@
   {
    "group": "DL",
    "n": 9707,
-   "raw": 1.1806,
+   "raw": 1.1807,
    "corrected": 1.0246,
    "used": 1.0246
   },
@@ -416,8 +416,8 @@
    "group": "DL (expected share under 60%)",
    "n": 6944,
    "raw": 1.2001,
-   "corrected": 1.0397,
-   "used": 1.0397
+   "corrected": 1.0398,
+   "used": 1.0398
   },
   {
    "group": "DL solo",
@@ -436,30 +436,30 @@
   {
    "group": "LB",
    "n": 8625,
-   "raw": 1.7338,
-   "corrected": 1.5723,
-   "used": 1.5723
+   "raw": 1.7336,
+   "corrected": 1.5721,
+   "used": 1.5721
   },
   {
    "group": "LB (expected share under 60%)",
    "n": 4520,
-   "raw": 2.0752,
-   "corrected": 1.9012,
-   "used": 1.9012
+   "raw": 2.0749,
+   "corrected": 1.9009,
+   "used": 1.9009
   },
   {
    "group": "LB solo",
    "n": 8610,
    "raw": 1.3689,
-   "corrected": 1.2075,
-   "used": 1.2075
+   "corrected": 1.2074,
+   "used": 1.2074
   },
   {
    "group": "LB (expected share under 60%) solo",
    "n": 4505,
    "raw": 1.5546,
-   "corrected": 1.3806,
-   "used": 1.3806
+   "corrected": 1.3805,
+   "used": 1.3805
   },
   {
    "group": "S",
@@ -493,13 +493,13 @@
  "calibration": [
   {
    "bucket": "(-0.001, 0.2]",
-   "n": 3750,
+   "n": 3749,
    "predicted": 0.1277,
-   "observed": 0.1389
+   "observed": 0.139
   },
   {
    "bucket": "(0.2, 0.35]",
-   "n": 4134,
+   "n": 4135,
    "predicted": 0.2709,
    "observed": 0.2634
   },
@@ -517,15 +517,15 @@
   },
   {
    "bucket": "(0.55, 0.65]",
-   "n": 1649,
-   "predicted": 0.5989,
-   "observed": 0.5731
+   "n": 1648,
+   "predicted": 0.5988,
+   "observed": 0.5734
   },
   {
    "bucket": "(0.65, 0.8]",
-   "n": 1025,
+   "n": 1026,
    "predicted": 0.6994,
-   "observed": 0.6556
+   "observed": 0.655
   }
  ],
  "scale_solo": 0.967,
@@ -581,7 +581,7 @@
    "n": 4718,
    "actual_vs_model": 0.075,
    "actual_vs_model_without": -0.0246,
-   "mae": 1.2906
+   "mae": 1.2905
   },
   {
    "situation": "Back after 3+ weeks out",
