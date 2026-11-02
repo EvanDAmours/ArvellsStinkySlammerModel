@@ -5,265 +5,265 @@
   2025,
   2026
  ],
- "games": 28861,
+ "games": 29307,
  "best_shrink_games": 1,
- "scale": 0.9949,
+ "scale": 0.9959,
  "predictors": [
   {
-   "n": 28861,
-   "mae": 1.6209,
-   "mae_cal": 1.6199,
-   "rmse": 2.1665,
-   "bias": -0.0073,
-   "predictor": "Full model without dome corners",
-   "beats_last_game": 16985
-  },
-  {
-   "n": 28861,
-   "mae": 1.6211,
-   "mae_cal": 1.6212,
-   "rmse": 2.1664,
-   "bias": 0.0003,
-   "predictor": "Full model without snap trend",
-   "beats_last_game": 16957
-  },
-  {
-   "n": 28861,
-   "mae": 1.6215,
-   "mae_cal": 1.6193,
+   "n": 29307,
+   "mae": 1.6205,
+   "mae_cal": 1.6201,
    "rmse": 2.1659,
-   "bias": -0.0173,
+   "bias": -0.0039,
+   "predictor": "Full model without dome corners",
+   "beats_last_game": 17256
+  },
+  {
+   "n": 29307,
+   "mae": 1.6208,
+   "mae_cal": 1.6213,
+   "rmse": 2.166,
+   "bias": 0.0037,
+   "predictor": "Full model without snap trend",
+   "beats_last_game": 17223
+  },
+  {
+   "n": 29307,
+   "mae": 1.6212,
+   "mae_cal": 1.6194,
+   "rmse": 2.1655,
+   "bias": -0.0139,
    "predictor": "Full model without stat crew",
-   "beats_last_game": 16982
+   "beats_last_game": 17252
   },
   {
-   "n": 28861,
-   "mae": 1.6217,
-   "mae_cal": 1.6203,
-   "rmse": 2.1667,
-   "bias": -0.011,
-   "predictor": "Full model without vacancy rule",
-   "beats_last_game": 16967
-  },
-  {
-   "n": 28861,
-   "mae": 1.6217,
-   "mae_cal": 1.6195,
-   "rmse": 2.1664,
-   "bias": -0.0175,
+   "n": 29307,
+   "mae": 1.6214,
+   "mae_cal": 1.6196,
+   "rmse": 2.166,
+   "bias": -0.0141,
    "predictor": "Full model",
-   "beats_last_game": 16971
+   "beats_last_game": 17242
   },
   {
-   "n": 28861,
-   "mae": 1.6219,
+   "n": 29307,
+   "mae": 1.6215,
    "mae_cal": 1.6205,
-   "rmse": 2.1684,
-   "bias": -0.0106,
-   "predictor": "Full model without role bump",
-   "beats_last_game": 16977
+   "rmse": 2.1664,
+   "bias": -0.0077,
+   "predictor": "Full model without vacancy rule",
+   "beats_last_game": 17236
   },
   {
-   "n": 28861,
-   "mae": 1.6221,
-   "mae_cal": 1.6199,
-   "rmse": 2.1665,
-   "bias": -0.0176,
-   "predictor": "Full model without run/pass mix",
-   "beats_last_game": 16999
-  },
-  {
-   "n": 28861,
-   "mae": 1.6223,
-   "mae_cal": 1.6202,
-   "rmse": 2.1677,
-   "bias": -0.0172,
-   "predictor": "Full model without spread tilt",
-   "beats_last_game": 16986
-  },
-  {
-   "n": 28861,
-   "mae": 1.6225,
-   "mae_cal": 1.6209,
-   "rmse": 2.1682,
-   "bias": -0.0131,
-   "predictor": "Full model without opportunity volume",
-   "beats_last_game": 16990
-  },
-  {
-   "n": 28861,
-   "mae": 1.6225,
-   "mae_cal": 1.62,
-   "rmse": 2.1669,
-   "bias": -0.0204,
-   "predictor": "Full model without depth chart",
-   "beats_last_game": 16963
-  },
-  {
-   "n": 28861,
-   "mae": 1.6233,
-   "mae_cal": 1.6197,
-   "rmse": 2.168,
-   "bias": -0.0283,
-   "predictor": "Full model without outlier damping",
-   "beats_last_game": 16969
-  },
-  {
-   "n": 28861,
-   "mae": 1.6241,
-   "mae_cal": 1.6193,
+   "n": 29307,
+   "mae": 1.6216,
+   "mae_cal": 1.6207,
    "rmse": 2.1679,
-   "bias": -0.0367,
-   "predictor": "Full model without rest days",
-   "beats_last_game": 16950
+   "bias": -0.0072,
+   "predictor": "Full model without role bump",
+   "beats_last_game": 17248
   },
   {
-   "n": 28861,
-   "mae": 1.6241,
-   "mae_cal": 1.6197,
-   "rmse": 2.1671,
-   "bias": -0.0342,
-   "predictor": "Full model without injury report",
-   "beats_last_game": 16951
+   "n": 29307,
+   "mae": 1.6218,
+   "mae_cal": 1.62,
+   "rmse": 2.1661,
+   "bias": -0.0143,
+   "predictor": "Full model without run/pass mix",
+   "beats_last_game": 17269
   },
   {
-   "n": 28861,
-   "mae": 1.6262,
-   "mae_cal": 1.6222,
-   "rmse": 2.1731,
+   "n": 29307,
+   "mae": 1.6219,
+   "mae_cal": 1.6202,
+   "rmse": 2.1672,
+   "bias": -0.0138,
+   "predictor": "Full model without spread tilt",
+   "beats_last_game": 17257
+  },
+  {
+   "n": 29307,
+   "mae": 1.6223,
+   "mae_cal": 1.6201,
+   "rmse": 2.1665,
+   "bias": -0.017,
+   "predictor": "Full model without depth chart",
+   "beats_last_game": 17234
+  },
+  {
+   "n": 29307,
+   "mae": 1.6223,
+   "mae_cal": 1.6211,
+   "rmse": 2.1679,
+   "bias": -0.01,
+   "predictor": "Full model without opportunity volume",
+   "beats_last_game": 17261
+  },
+  {
+   "n": 29307,
+   "mae": 1.623,
+   "mae_cal": 1.6198,
+   "rmse": 2.1675,
+   "bias": -0.0249,
+   "predictor": "Full model without outlier damping",
+   "beats_last_game": 17240
+  },
+  {
+   "n": 29307,
+   "mae": 1.6237,
+   "mae_cal": 1.6198,
+   "rmse": 2.1666,
    "bias": -0.0309,
+   "predictor": "Full model without injury report",
+   "beats_last_game": 17223
+  },
+  {
+   "n": 29307,
+   "mae": 1.6238,
+   "mae_cal": 1.6195,
+   "rmse": 2.1674,
+   "bias": -0.0334,
+   "predictor": "Full model without rest days",
+   "beats_last_game": 17223
+  },
+  {
+   "n": 29307,
+   "mae": 1.6259,
+   "mae_cal": 1.6223,
+   "rmse": 2.1726,
+   "bias": -0.0277,
    "predictor": "Full model without PFR targets and missed tackles",
-   "beats_last_game": 16954
+   "beats_last_game": 17224
   },
   {
-   "n": 28861,
-   "mae": 1.6269,
-   "mae_cal": 1.6246,
-   "rmse": 2.1707,
-   "bias": -0.0183,
+   "n": 29307,
+   "mae": 1.6266,
+   "mae_cal": 1.6247,
+   "rmse": 2.1702,
+   "bias": -0.0149,
    "predictor": "Full model with one shrink for every position",
-   "beats_last_game": 16936
+   "beats_last_game": 17205
   },
   {
-   "n": 28861,
-   "mae": 1.6308,
-   "mae_cal": 1.636,
-   "rmse": 2.1763,
-   "bias": 0.0483,
+   "n": 29307,
+   "mae": 1.6307,
+   "mae_cal": 1.6362,
+   "rmse": 2.1758,
+   "bias": 0.0511,
    "predictor": "Full model without per-snap base",
-   "beats_last_game": 16966
+   "beats_last_game": 17227
   },
   {
-   "n": 28861,
-   "mae": 1.6313,
-   "mae_cal": 1.6236,
-   "rmse": 2.1689,
-   "bias": -0.0588,
+   "n": 29307,
+   "mae": 1.631,
+   "mae_cal": 1.6238,
+   "rmse": 2.1684,
+   "bias": -0.0555,
    "predictor": "Full model without role-shift factors",
-   "beats_last_game": 16897
+   "beats_last_game": 17170
   },
   {
-   "n": 28861,
+   "n": 29307,
    "mae": 1.6771,
-   "mae_cal": 1.6764,
+   "mae_cal": 1.6766,
    "rmse": 2.2259,
-   "bias": -0.0058,
+   "bias": -0.0037,
    "predictor": "Season average shrunk 1 game toward last season",
-   "beats_last_game": 16619
+   "beats_last_game": 16878
   },
   {
-   "n": 28861,
-   "mae": 1.6902,
-   "mae_cal": 1.7033,
-   "rmse": 2.2789,
-   "bias": 0.0797,
+   "n": 29307,
+   "mae": 1.6903,
+   "mae_cal": 1.7036,
+   "rmse": 2.279,
+   "bias": 0.0813,
    "predictor": "Season average",
-   "beats_last_game": 15739
+   "beats_last_game": 15976
   },
   {
-   "n": 28861,
-   "mae": 1.6941,
-   "mae_cal": 1.6865,
-   "rmse": 2.2261,
-   "bias": -0.059,
+   "n": 29307,
+   "mae": 1.6938,
+   "mae_cal": 1.6866,
+   "rmse": 2.2258,
+   "bias": -0.0565,
    "predictor": "Season average shrunk 2 games toward last season",
-   "beats_last_game": 16321
+   "beats_last_game": 16580
   },
   {
-   "n": 28861,
-   "mae": 1.6952,
-   "mae_cal": 1.7054,
-   "rmse": 2.28,
-   "bias": 0.0655,
+   "n": 29307,
+   "mae": 1.6951,
+   "mae_cal": 1.7056,
+   "rmse": 2.2798,
+   "bias": 0.0672,
    "predictor": "80% season average, 20% last game",
-   "beats_last_game": 16325
+   "beats_last_game": 16577
   },
   {
-   "n": 28861,
-   "mae": 1.7366,
-   "mae_cal": 1.7204,
-   "rmse": 2.2591,
-   "bias": -0.124,
+   "n": 29307,
+   "mae": 1.7358,
+   "mae_cal": 1.72,
+   "rmse": 2.2582,
+   "bias": -0.121,
    "predictor": "Season average shrunk 4 games toward last season",
-   "beats_last_game": 16022
+   "beats_last_game": 16285
   },
   {
-   "n": 28861,
+   "n": 29307,
    "mae": 1.8331,
-   "mae_cal": 1.8408,
-   "rmse": 2.4832,
-   "bias": 0.0267,
+   "mae_cal": 1.841,
+   "rmse": 2.4829,
+   "bias": 0.0274,
    "predictor": "Average of last two games",
-   "beats_last_game": 13448
+   "beats_last_game": 13658
   },
   {
-   "n": 28861,
-   "mae": 2.0597,
-   "mae_cal": 2.0635,
-   "rmse": 2.8169,
-   "bias": 0.0088,
+   "n": 29307,
+   "mae": 2.0594,
+   "mae_cal": 2.0641,
+   "rmse": 2.8154,
+   "bias": 0.0108,
    "predictor": "Last game",
    "beats_last_game": 0
   },
   {
    "predictor": "Full model, 2026 fold",
-   "n": 2686,
-   "mae": 1.5965,
-   "mae_cal": 1.6018,
-   "rmse": 2.1281,
-   "bias": 0.0439
+   "n": 3132,
+   "mae": 1.5974,
+   "mae_cal": 1.6047,
+   "rmse": 2.1293,
+   "bias": 0.0665
   },
   {
    "predictor": "60% boosted corrector blend, 2026 fold (trained on earlier seasons)",
-   "n": 2686,
-   "mae": 1.5754,
-   "mae_cal": 1.5777,
-   "rmse": 2.0949,
-   "bias": 0.0228
+   "n": 3132,
+   "mae": 1.5757,
+   "mae_cal": 1.58,
+   "rmse": 2.0965,
+   "bias": 0.0475
   },
   {
    "predictor": "Solo tackles: full model (solo share of the projection)",
-   "n": 28861,
-   "mae": 1.1284,
-   "mae_cal": 1.1196,
-   "rmse": 1.4953,
-   "bias": -0.0601
+   "n": 29307,
+   "mae": 1.128,
+   "mae_cal": 1.1191,
+   "rmse": 1.495,
+   "bias": -0.0608
   },
   {
    "predictor": "Solo tackles: full model without league solo drift",
-   "n": 28861,
-   "mae": 1.1293,
-   "mae_cal": 1.1195,
-   "rmse": 1.4958,
-   "bias": -0.0665
+   "n": 29307,
+   "mae": 1.1289,
+   "mae_cal": 1.119,
+   "rmse": 1.4956,
+   "bias": -0.0673
   },
   {
    "predictor": "Solo tackles: season average",
-   "n": 28861,
-   "mae": 1.1802,
-   "mae_cal": 1.1865,
-   "rmse": 1.5818,
-   "bias": 0.0331
+   "n": 29307,
+   "mae": 1.1796,
+   "mae_cal": 1.1856,
+   "rmse": 1.5813,
+   "bias": 0.0317
   }
  ],
  "by_season": [
@@ -278,10 +278,10 @@
   },
   {
    "n": 8522,
-   "mae": 1.6643,
+   "mae": 1.6644,
    "mae_cal": 1.6574,
    "rmse": 2.2025,
-   "bias": -0.0583,
+   "bias": -0.0584,
    "season": 2023,
    "predictor": "Full model"
   },
@@ -308,7 +308,7 @@
    "mae": 1.6062,
    "mae_cal": 1.607,
    "rmse": 2.1646,
-   "bias": 0.0062,
+   "bias": 0.0061,
    "season": 2024,
    "predictor": "Full model"
   },
@@ -335,7 +335,7 @@
    "mae": 1.6031,
    "mae_cal": 1.6011,
    "rmse": 2.1447,
-   "bias": -0.0147,
+   "bias": -0.0148,
    "season": 2025,
    "predictor": "Full model"
   },
@@ -349,29 +349,29 @@
    "predictor": "Last game"
   },
   {
-   "n": 2686,
-   "mae": 1.7052,
-   "mae_cal": 1.7236,
-   "rmse": 2.2864,
-   "bias": 0.0936,
+   "n": 3132,
+   "mae": 1.704,
+   "mae_cal": 1.724,
+   "rmse": 2.2862,
+   "bias": 0.1062,
    "season": 2026,
    "predictor": "Season average"
   },
   {
-   "n": 2686,
-   "mae": 1.5985,
-   "mae_cal": 1.6018,
-   "rmse": 2.1289,
-   "bias": 0.0264,
+   "n": 3132,
+   "mae": 1.5988,
+   "mae_cal": 1.6047,
+   "rmse": 2.1298,
+   "bias": 0.0525,
    "season": 2026,
    "predictor": "Full model"
   },
   {
-   "n": 2686,
-   "mae": 2.0331,
-   "mae_cal": 2.0331,
-   "rmse": 2.7623,
-   "bias": -0.0004,
+   "n": 3132,
+   "mae": 2.0342,
+   "mae_cal": 2.0423,
+   "rmse": 2.7552,
+   "bias": 0.0195,
    "season": 2026,
    "predictor": "Last game"
   }
@@ -379,236 +379,230 @@
  "dispersion": [
   {
    "group": "CB",
-   "n": 5312,
-   "raw": 1.4515,
-   "corrected": 1.2878,
-   "used": 1.2878
+   "n": 5399,
+   "raw": 1.4471,
+   "corrected": 1.2835,
+   "used": 1.2835
   },
   {
    "group": "CB (expected share under 60%)",
-   "n": 1625,
-   "raw": 1.8528,
-   "corrected": 1.6637,
-   "used": 1.6637
+   "n": 1649,
+   "raw": 1.8377,
+   "corrected": 1.6485,
+   "used": 1.6485
   },
   {
    "group": "CB solo",
-   "n": 5316,
-   "raw": 1.2793,
-   "corrected": 1.1156,
-   "used": 1.1156
+   "n": 5403,
+   "raw": 1.2786,
+   "corrected": 1.1149,
+   "used": 1.1149
   },
   {
    "group": "CB (expected share under 60%) solo",
-   "n": 1629,
-   "raw": 1.4714,
-   "corrected": 1.2822,
-   "used": 1.2822
+   "n": 1653,
+   "raw": 1.4633,
+   "corrected": 1.2741,
+   "used": 1.2741
   },
   {
    "group": "DL",
-   "n": 9551,
-   "raw": 1.174,
-   "corrected": 1.018,
-   "used": 1.018
+   "n": 9686,
+   "raw": 1.1807,
+   "corrected": 1.0247,
+   "used": 1.0247
   },
   {
    "group": "DL (expected share under 60%)",
-   "n": 6782,
-   "raw": 1.197,
-   "corrected": 1.0369,
-   "used": 1.0369
+   "n": 6876,
+   "raw": 1.204,
+   "corrected": 1.0439,
+   "used": 1.0439
   },
   {
    "group": "DL solo",
-   "n": 9522,
-   "raw": 1.0545,
-   "corrected": 0.8986,
-   "used": 0.8986
+   "n": 9657,
+   "raw": 1.0615,
+   "corrected": 0.9056,
+   "used": 0.9056
   },
   {
    "group": "DL (expected share under 60%) solo",
-   "n": 6753,
-   "raw": 1.0579,
-   "corrected": 0.898,
-   "used": 0.898
+   "n": 6847,
+   "raw": 1.0668,
+   "corrected": 0.9068,
+   "used": 0.9068
   },
   {
    "group": "LB",
-   "n": 8473,
-   "raw": 1.731,
-   "corrected": 1.5693,
-   "used": 1.5693
+   "n": 8606,
+   "raw": 1.7257,
+   "corrected": 1.5641,
+   "used": 1.5641
   },
   {
    "group": "LB (expected share under 60%)",
-   "n": 4303,
-   "raw": 2.0836,
-   "corrected": 1.9091,
-   "used": 1.9091
+   "n": 4372,
+   "raw": 2.0755,
+   "corrected": 1.9013,
+   "used": 1.9013
   },
   {
    "group": "LB solo",
-   "n": 8460,
-   "raw": 1.373,
-   "corrected": 1.2112,
-   "used": 1.2112
+   "n": 8593,
+   "raw": 1.3658,
+   "corrected": 1.2043,
+   "used": 1.2043
   },
   {
    "group": "LB (expected share under 60%) solo",
-   "n": 4290,
-   "raw": 1.5725,
-   "corrected": 1.398,
-   "used": 1.398
+   "n": 4359,
+   "raw": 1.5596,
+   "corrected": 1.3853,
+   "used": 1.3853
   },
   {
    "group": "S",
-   "n": 5473,
-   "raw": 1.6051,
-   "corrected": 1.4425,
-   "used": 1.4425
+   "n": 5563,
+   "raw": 1.6095,
+   "corrected": 1.4467,
+   "used": 1.4467
   },
   {
    "group": "S (expected share under 60%)",
-   "n": 1975,
-   "raw": 2.096,
-   "corrected": 1.9114,
-   "used": 1.9114
+   "n": 2024,
+   "raw": 2.1057,
+   "corrected": 1.9209,
+   "used": 1.9209
   },
   {
    "group": "S solo",
-   "n": 5474,
-   "raw": 1.3463,
-   "corrected": 1.1835,
-   "used": 1.1835
+   "n": 5564,
+   "raw": 1.3454,
+   "corrected": 1.1825,
+   "used": 1.1825
   },
   {
    "group": "S (expected share under 60%) solo",
-   "n": 1976,
-   "raw": 1.6535,
-   "corrected": 1.4687,
-   "used": 1.4687
+   "n": 2025,
+   "raw": 1.6537,
+   "corrected": 1.4686,
+   "used": 1.4686
   }
  ],
  "calibration": [
   {
    "bucket": "(-0.001, 0.2]",
-   "n": 3765,
-   "predicted": 0.1273,
-   "observed": 0.1469
+   "n": 3730,
+   "predicted": 0.1285,
+   "observed": 0.144
   },
   {
    "bucket": "(0.2, 0.35]",
-   "n": 4153,
-   "predicted": 0.2715,
-   "observed": 0.2716
+   "n": 4119,
+   "predicted": 0.2712,
+   "observed": 0.2722
   },
   {
    "bucket": "(0.35, 0.45]",
-   "n": 2174,
-   "predicted": 0.3994,
-   "observed": 0.3887
+   "n": 2234,
+   "predicted": 0.3979,
+   "observed": 0.3872
   },
   {
    "bucket": "(0.45, 0.55]",
-   "n": 1888,
-   "predicted": 0.4981,
-   "observed": 0.482
+   "n": 1927,
+   "predicted": 0.4988,
+   "observed": 0.4878
   },
   {
    "bucket": "(0.55, 0.65]",
-   "n": 1725,
-   "predicted": 0.598,
-   "observed": 0.6012
+   "n": 1721,
+   "predicted": 0.5984,
+   "observed": 0.5718
   },
   {
    "bucket": "(0.65, 0.8]",
-   "n": 978,
+   "n": 1028,
    "predicted": 0.7001,
-   "observed": 0.6769
-  },
-  {
-   "bucket": "(0.8, 1.0]",
-   "n": 3,
-   "predicted": 0.8005,
-   "observed": 0.6667
+   "observed": 0.6673
   }
  ],
- "scale_solo": 0.9679,
+ "scale_solo": 0.9675,
  "scale_solo_by_group": {
-  "CB": 0.9573,
-  "DL": 0.9666,
-  "LB": 0.9777,
-  "S": 0.966
+  "CB": 0.9545,
+  "DL": 0.9704,
+  "LB": 0.9767,
+  "S": 0.9658
  },
  "regression": [
   {
    "situation": "After a game 4+ above his average",
-   "n": 924,
-   "vs_avg": 0.3254,
-   "vs_last": -4.9134
+   "n": 939,
+   "vs_avg": 0.3346,
+   "vs_last": -4.8978
   },
   {
    "situation": "After a game 3+ below his average",
-   "n": 1192,
-   "vs_avg": -0.8199,
-   "vs_last": 3.0034
+   "n": 1203,
+   "vs_avg": -0.8197,
+   "vs_last": 3.0067
   }
  ],
  "role": {
-  "n": 1205,
-  "actual_vs_avg": 1.0354,
-  "actual_vs_avg_pct": 0.4243
+  "n": 1233,
+  "actual_vs_avg": 1.0329,
+  "actual_vs_avg_pct": 0.4255
  },
  "new_role": {
   "situation": "New role: part-timer who just played a starter's snaps",
-  "n": 1050,
-  "actual_vs_model": 0.0123,
-  "actual_vs_model_without": 0.1394,
-  "mae": 2.1325
+  "n": 1059,
+  "actual_vs_model": 0.0125,
+  "actual_vs_model_without": 0.1396,
+  "mae": 2.1275
  },
  "weak_spots": [
   {
    "situation": "Vacancy: a regular at his group out or gone, his share jumped",
-   "n": 307,
-   "actual_vs_model": 0.0453,
-   "actual_vs_model_without": 0.2204,
-   "mae": 2.2152
+   "n": 312,
+   "actual_vs_model": 0.0482,
+   "actual_vs_model_without": 0.2227,
+   "mae": 2.2063
   },
   {
    "situation": "New role: part-timer who just played a starter's snaps",
-   "n": 1050,
-   "actual_vs_model": 0.0123,
-   "actual_vs_model_without": 0.1394,
-   "mae": 2.1325
+   "n": 1059,
+   "actual_vs_model": 0.0125,
+   "actual_vs_model_without": 0.1396,
+   "mae": 2.1275
   },
   {
    "situation": "Reduced role: last game's snaps well below his season share",
-   "n": 4538,
-   "actual_vs_model": 0.0793,
-   "actual_vs_model_without": -0.0207,
-   "mae": 1.2945
+   "n": 4618,
+   "actual_vs_model": 0.0773,
+   "actual_vs_model_without": -0.0227,
+   "mae": 1.292
   },
   {
    "situation": "Back after 3+ weeks out",
-   "n": 1549,
-   "actual_vs_model": 0.0183,
-   "actual_vs_model_without": -0.0729,
-   "mae": 1.3946
+   "n": 1576,
+   "actual_vs_model": 0.0242,
+   "actual_vs_model_without": -0.0676,
+   "mae": 1.4031
   },
   {
    "situation": "Back after one missed game (no bye)",
-   "n": 1193,
-   "actual_vs_model": 0.0521,
-   "actual_vs_model_without": -0.0683,
-   "mae": 1.3581
+   "n": 1207,
+   "actual_vs_model": 0.0531,
+   "actual_vs_model_without": -0.0674,
+   "mae": 1.3568
   },
   {
    "situation": "First game for a new team",
    "n": 124,
    "actual_vs_model": -0.0313,
    "actual_vs_model_without": -0.1836,
-   "mae": 1.4936
+   "mae": 1.4937
   }
  ]
 }

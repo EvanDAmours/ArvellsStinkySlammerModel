@@ -56,7 +56,7 @@
   "units": 0.1,
   "chosen_at": "20261101T154223Z",
   "placed": true,
-  "finished": false,
+  "finished": true,
   "first_kickoff": "2026-11-01T18:00:00+00:00",
   "legs": [
    {
