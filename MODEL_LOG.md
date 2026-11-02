@@ -1080,6 +1080,14 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, 10:20 am MDT (one-tap parlay links)
+- The 9 am pull carried links for every DraftKings outcome (`https://sportsbook.draftkings.com/?outcomes=<id>`);
+  several ids join with "+" in one query, which the owner's slip on Sunday night confirmed loads as one parlay.
+  The site now builds that link: "Tail this parlay at DraftKings: all N legs in one slip" on an open parlay whose
+  legs are all DraftKings, and on My board "open every unstarted bet in one slip" when two or more have links. Any
+  other book, or a mixed-book parlay, keeps one link per leg until its format has been seen; FanDuel and
+  theScore Bet have posted no lines with links yet. Site only.
+
 ### 2026-11-02, midday MDT (parlay legs: combined tackles only)
 - Owner: the books refuse solo-tackle legs in a same-game parlay, so the recommended parlay must be combined
   tackles + assists on every leg. `PARLAY_MARKETS` in `config.py`; `choose_parlay` filters on it; the board note,

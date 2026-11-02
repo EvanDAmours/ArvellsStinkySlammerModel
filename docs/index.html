@@ -106,7 +106,7 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 .play .actions { grid-column: 2; justify-self: end; display: flex; gap: 6px; align-items: center; }
 .bet-link { font: 600 0.8rem var(--cond); padding: 3px 9px; border: 1px solid #2c5aa0; border-radius: 999px; color: #2c5aa0; text-decoration: none; white-space: nowrap; }
 .bet-link:hover { background: #2c5aa0; color: #fff; }
-.parlay-box .tail { margin: 6px 0 2px; font-size: 0.9rem; color: var(--muted); } .parlay-box .tail a { margin-right: 8px; }
+.parlay-box .tail, #mine-body .tail { margin: 6px 0 10px; font-size: 0.9rem; color: var(--muted); } .tail a { margin-right: 8px; }
 .play .add { justify-self: end; font: 600 0.8rem var(--cond); padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); cursor: pointer; }
 .play .add.on, #mine-body .add.on { background: #1f8a4c; color: #fff; border-color: #1f8a4c; }
 #mine-body .add { font: 600 0.8rem var(--cond); padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); cursor: pointer; margin: 2px 6px 2px 0; }
@@ -405,6 +405,8 @@ function parlayBox(q, graded) {
       q.units_won == null ? "" : el("div", {}, units(q.units_won, 2), el("span", {}, "result"))),
     legs,
     (() => { const ls = (q.legs || []).filter((l) => l.link && /^https:\/\//.test(l.link)); if (!ls.length || q.placed) return "";
+      const one = ls.length === (q.legs || []).length ? tailLink(ls.map((l) => l.link)) : null;
+      if (one) return el("div", { class: "tail" }, el("a", { class: "bet-link", href: one.href, target: "_blank", rel: "noopener noreferrer" }, `Tail this parlay at ${one.book}: all ${ls.length} legs in one slip ↗`), " Check every leg loaded and the prices before you confirm.");
       return el("div", { class: "tail" }, `Tail it at ${ls[0].book}: `, ...ls.map((l, i) => el("a", { class: "bet-link", href: l.link, target: "_blank", rel: "noopener noreferrer" }, `leg ${i + 1} ↗`)), ls.length < (q.legs || []).length ? " (a leg without a link must be added by hand)" : ""); })(),
     q.placed ? el("div", { class: "placed" }, "First game has kicked off: this is the parlay as placed before kickoff.") : el("div", { class: "placed" }, "Re-chosen at every line pull until the first game of the day kicks off."));
 }
@@ -865,6 +867,14 @@ function betLink(b, side, label) {
   const href = sideLink(b, side); if (!href || !/^https:\/\//.test(href)) return "";
   return el("a", { class: "bet-link", href, target: "_blank", rel: "noopener noreferrer", title: `Opens ${b.book} with this selection in the bet slip` }, label || `Bet at ${b.book} ↗`);
 }
+// one slip for several selections: DraftKings joins outcome ids with "+" in one outcomes= query (seen on the 2026-11-01 pull
+// and opened by the owner that night). Other books get one link per leg until their format has been seen.
+const DK_RE = /^https:\/\/sportsbook\.draftkings\.com\/\?outcomes=([^&]+)$/;
+function tailLink(links) {
+  const ids = links.map((h) => (h || "").match(DK_RE)?.[1]).filter(Boolean);
+  if (!links.length || ids.length !== links.length) return null;
+  return { book: "DraftKings", href: `https://sportsbook.draftkings.com/?outcomes=${ids.join("+")}` };
+}
 function addButton(b) {
   if (!(b.pick === "Over" || b.pick === "Under") && b.proj == null) return "";
   const on = mine().some((x) => x.key === betKey(b));
@@ -964,6 +974,9 @@ function renderMine() {
     el("div", {}, el("b", { class: settled > 0 ? "pos" : settled < 0 ? "neg" : "" }, (settled > 0 ? "+" : "") + (money(settled) || "$0")), el("span", {}, `settled so far${pendingStake ? ` (${money(pendingStake)} still riding)` : ""}`)),
     el("div", { title: "Settled results plus every bet in play finishing the way it is trending right now. Bets that have not kicked off are not counted." }, el("b", { class: paced > 0 ? "pos" : paced < 0 ? "neg" : "" }, (paced > 0 ? "+" : "") + (money(paced) || "$0")), el("span", {}, `on current pace (${pacedN} started bet${pacedN === 1 ? "" : "s"})`)),
     el("div", {}, el("b", {}, LIVE.at ? new Date(LIVE.at).toLocaleTimeString([], { timeZone: TZ, hour: "numeric", minute: "2-digit" }) : "–"), el("span", {}, LIVE.error ? `last update (${LIVE.error})` : "last update"))));
+  const openLinks = list.filter((b) => b.link && (!gameOf(b) || gameOf(b).state === "pre")).map((b) => b.link);
+  const slip = tailLink(openLinks);
+  if (slip && openLinks.length >= 2) box.append(el("div", { class: "tail" }, el("a", { class: "bet-link", href: slip.href, target: "_blank", rel: "noopener noreferrer" }, `Open every unstarted bet on this board at ${slip.book} in one slip (${openLinks.length}) ↗`), " The slip opens as one parlay; split it there if you want singles."));
   for (const [key, title] of [["in", "In play"], ["pre", "Still to kick off"], ["post", "Settled"]]) {
     if (!groups[key].length) continue;
     box.append(el("h3", { class: "mine-h" }, `${title} · ${groups[key].length}`, el("small", {}, " sorted by grade")));
