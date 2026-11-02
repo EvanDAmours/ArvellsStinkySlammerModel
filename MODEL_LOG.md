@@ -898,6 +898,66 @@ Each post-mortem starts from the luck table (Track record tab; `data/weekly_five
 rate against the whole board's base rate and the beat-the-close share. Only where lift and the close agree with
 the record is the week evidence about the model.
 
+### Week 8 through Sunday, 2026 (graded 2026-11-02; Monday's game pending; review at the owner's request, 4 am MDT)
+
+**Record:** 95-71 (57%), +23.0 u at 1 u each; locks 6-2; parlays 1-1. Claimed 57.2%, hit 57.2%: calibrated in total,
+and the luck table says the whole board went the same way (Unders 58% vs a 57% board, lift +1; solo Unders 63% vs
+64%). By grade A 13-1, B 49-40, C 33-30. By kind: Under solo 65-38 (+25.5 u), Under combined 25-27 (-1.8 u), Overs
+5-6. Signals: the outlier fade went 13-16 (-4.0 u) after 17-6 in week 7; price-gap picks 81-55. No role-shift flag
+was on any graded pick.
+
+**Why the 71 losses missed.** Every loss was put against what happened on the field: the player's snap share
+against the share the model expected, his team's plays faced against the expected plays, and what was left (the
+tackle rate itself).
+
+- 40 of the 71 losses were within one tackle of the line; 20 were 1.5 to 2.5 off; 11 were blown out by 3 or more.
+- Snap share and plays faced together explain 13% of the miss against the model (an R-squared of 0.13). The rest
+  is the tackle rate on a normal day's work: 50 of the 71 losses came with normal snaps and a normal number of
+  plays. That is variance, and no data set removes it.
+- The explainable part is plays faced. Under losses came in games where the defence faced 3.3 more plays than
+  expected; Under wins 0.3 fewer. By defence: Buffalo faced 16 fewer plays than expected and our picks on its
+  defenders went 9-2; Minnesota, Arizona, Cincinnati, Washington, Carolina, Atlanta and Denver faced 6 to 12 more
+  and our picks on them went 7-27. All 11 blow-outs sat in high-play games (Anthony Hill 10 solo on 60 plays
+  faced, Byron Murphy 10 combined on 61, Alex Singleton 14 on 56).
+- Snap surprises were the minor cause: 9 losses from a man playing far fewer snaps than expected (benched or hurt
+  in-game) against 13 wins from the same thing; 5 losses from far more snaps (C.J. Henderson, 100% of the snaps
+  against 79% expected, 8 tackles against a 4.5 line).
+
+**Can plays faced be forecast better?** Tested on 1,848 team-games since 2023. The model's expectation (the
+defence's own average and the opponent's, shrunk toward last season) has a correlation of 0.15 with the game's
+plays; the residual spread is 7.7 plays on a mean of 50. Adding the spread (an underdog's defence faces 2 more
+plays at 7+ points, a favourite's 2 fewer), the opponent's no-huddle rate and plays per drive, the own offence's
+plays per drive and the opponent's pass rate: held-out residual 7.65 to 7.77 against 7.66 without. Nothing
+forecasts a game's plays beyond the spread, which the spread tilt already carries. Plays faced are game-script
+noise, and a tackle line pays on them.
+
+**Data sets not yet explored, tested now.**
+
+- *FTN charting (nflverse, 2023-2026, play by play):* the opponent's play-action, screen, RPO, scramble (QB out
+  of pocket) and motion rates, and the defence's own box count and blitz rate, each as a factor by position, fit
+  2023-24 and checked 2025-26. 28 tests; none consistent in both halves. Largest held-out gains (safeties vs
+  screens -0.41%, linebackers vs motion -0.40%) have the opposite sign in the fitting half. Rejected.
+- *nflverse participation (on-field defenders per play, coverage scheme man or zone, defenders in box):* covers
+  2016-2025 only; not published for 2026, so it cannot price a live line. Kept for research (whether a corner's
+  man-coverage share predicts his tackles) if it returns.
+- Open-Meteo rain, corner quality, opponent passing: research rounds 6 and 7 (above), all rejected or below the
+  bar.
+
+**What changed because of it (validated on the live record, both weeks separately).**
+
+1. **A pick needs a claimed chance of at least 55%** (`PICK_MIN_CLAIM`). The 108 picks claimed under 55% went 44-64
+   (-6.1 u): week 7 25-33 and -0.5 u, week 8 19-31 and -5.7 u. Those are plus-money sides where the return clears
+   6% on a coin-flip claim. Under the rule: week 7 94-75 (+6.2 u) instead of 121-109 (+4.4 u); week 8 73-40
+   (+29.9 u) instead of 95-71 (+23.0 u). One lock of nine would not have been a pick (and it won).
+2. **A signal no longer lowers the bar** (`SIGNAL_BAR` 0.04 to 0.06). The 12 picks taken at 4-6% return went 3-9
+   (-6.5 u); the fade signal itself went 30-22 over the two weeks and keeps its place in the lock score.
+3. Smoke check: every pick clears both. Legend updated. Revert if, over the next 100 picks that the floor would
+   have dropped, they hit above 52%.
+
+**Standing watch.** LB combined Unders are 8-23 live (3-11 this week, 29 points below the board). The segment
+correction already sits at its cap for them (-8 points on the claim); if the next 20 go the same way the cap
+rises for that segment.
+
 ### Week 8 Thursday, 2026 (GB at CAR; graded 2026-10-30, morning MDT)
 
 **Record:** 10-7, +4.56 units. **Locks 1-2:** Xavier McKinney Under 2.5 solo won (2); Isaiah McDuffie Under 7.5
@@ -1019,6 +1079,12 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-11-02, 4 am MDT (week 8 review: claimed-chance floor, no lowered signal bar)
+- See the week 8 post-mortem. `PICK_MIN_CLAIM = 0.55` and `SIGNAL_BAR = 0.06` in `config.py`; the pricer computes the
+  segment-corrected claim before the pick decision and passes a line with a low claim with its own reason; the
+  legend says so; smoke check. Evidence: the live record on both weeks (above). FTN charting tested and rejected;
+  participation data unavailable for 2026.
 
 ### 2026-11-02, 3 am MDT (research round 7: rain and linebacker Overs)
 - See "Research round 7". Rain flips sign between halves for LB; LB Overs at their season-average line hit 45% in
@@ -1537,6 +1603,9 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Ideas backlog
 
+- nflverse participation data (on-field defenders per play, man/zone, box count) for research on corner and
+  linebacker usage, if it is published for 2026 again.
+
 - Rain by measured precipitation (Open-Meteo ERA5 archive, mm per game hour at each stadium) to test real downpours
   separately from drizzle; and high wind (18 mph+) for linemen, which ran over the model in both halves on 11 games.
 
@@ -1571,6 +1640,8 @@ Open, with what would justify them:
 ## Known pitfalls
 
 - Codespaces secrets are invisible to Actions. Only Actions secrets work.
+- A game's plays faced cannot be forecast beyond the spread (correlation 0.15, residual 7.7 plays on 50). It is the
+  largest explainable cause of misses and is noise to the model; do not spend another round on pace features.
 - Open-Meteo's free APIs share a daily request limit per network; from this machine's network the limit can already
   be spent by others. Cache every response and treat a refusal as "try tomorrow", not as no data.
 - A slate with several kickoff waves (Sunday noon, 2 pm, 6 pm Edmonton) needs pulls up to the last wave; a schedule that stops at the first wave prices the late games on stale lines.

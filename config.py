@@ -113,7 +113,10 @@ PROB_SHRINK = 1.0                  # 1 = use the blended model probability as is
 # --- betting rules ---
 PICK_BAR = 0.06                    # minimum expected return without a supporting signal
 PICK_BAR_OVER = 0.10               # an Over needs more: the model's Over leans hit 32-46% on weeks 7-8 lines where it was above the market (audit 2026-10-30)
-SIGNAL_BAR = 0.04                  # minimum with a role-change or outlier-fade signal
+SIGNAL_BAR = 0.06                  # a signal no longer lowers the bar: the 12 live picks taken at 4-6% went 3-9 (-6.5 u) on weeks 7-8
+# A pick also needs a claimed chance (shrunk, segment-corrected) of at least this. Live weeks 7-8: the 108 picks claimed
+# under 55% went 44-64 (-6.1 u) in both weeks; the rest 57% and +33 u. A plus-money side with a 50% claim is a coin flip.
+PICK_MIN_CLAIM = 0.55
 # Selected picks claim more than they hit (weeks 7-8 replay: claimed 55.8%, hit 50.9% on 163 picks; the winner's curse of
 # picking the biggest disagreements). The claimed chance of a pick is shrunk toward even by this factor for the lock score,
 # the card and parlays. Market-free: it shrinks toward 50%, not toward the book.

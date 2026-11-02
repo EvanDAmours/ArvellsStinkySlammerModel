@@ -1013,8 +1013,11 @@ def price_lines(lines, P, segments=None):
         uncertain = str(p.status).lower() == "questionable"
         thin = p.n_prev < C.MIN_GAMES_FOR_PICK and not role
         bar = C.SIGNAL_BAR if (fade or role) else (C.PICK_BAR_OVER if side == "Over" else C.PICK_BAR)
-        pick = side if (ev >= bar and not flagged and not thin) else "Pass"
         p_side = po if side == "Over" else 1 - po
+        seg_adj, seg_key = segment_adjust(segments, side, solo, p.group)
+        claim = claimed_prob(p_side, seg_adj)
+        low_claim = claim < C.PICK_MIN_CLAIM
+        pick = side if (ev >= bar and not flagged and not thin and not low_claim) else "Pass"
         # lock eligibility checklist (market-free): the model must be on ground where it is reliable
         settled = in_role_n >= C.LOCK_RULES["min_in_role_games"] or in_role_n >= int(p.n_prev)
         snaps_missing = pd.isna(pct_last) and int(p.n_prev) > 0      # he has games but no snap count for his last one: the role checks are blind
@@ -1022,7 +1025,6 @@ def price_lines(lines, P, segments=None):
                                        (fl["new_team"], "new team"), (not settled, f"only {in_role_n} game{'s' if in_role_n != 1 else ''} in this role"),
                                        (uncertain, "questionable"), (snaps_missing, "snap counts missing for his last game"),
                                        (side == "Over" and not C.LOCK_RULES.get("overs_eligible", True), "Over side")) if ok]
-        seg_adj, seg_key = segment_adjust(segments, side, solo, p.group)
         lock = lock_score(ev, p_side, consistency, in_role_n, fade or role, seg_adj)
         if flagged:
             why = f"His own status is {p.status or 'uncertain'}: wait for the final report"
@@ -1030,6 +1032,8 @@ def price_lines(lines, P, segments=None):
             why = f"Only {int(p.n_prev)} games of data"
         elif ev < bar:
             why = f"Best side returns {ev:+.0%}; needs {bar:.0%}"
+        elif low_claim:
+            why = f"{side} returns {ev:+.0%} but the claimed chance is only {claim:.0%}; a pick needs {C.PICK_MIN_CLAIM:.0%}"
         else:
             why = f"{side} returns {ev:+.0%}" + (", backed by a role change" if role else ", fading an outlier last game" if fade else ", price gap only")
             if uncertain:
@@ -1050,7 +1054,7 @@ def price_lines(lines, P, segments=None):
                 why += "; not lock-eligible: " + ", ".join(block)
         rows.append({**base, "team": p.team, "opp": p.opp_team, "group": p.group, "proj": float(mu), "proj_model": float(mu_model),
                      "mkt_line": float(r.mkt_line), "phi": phi_use, "model_over": po, "market_over": mkt, "ev": ev, "side": side, "far_from_line": bool(far_from_line),
-                     "p_claim": claimed_prob(p_side, seg_adj), "segment": seg_key, "segment_adj": float(seg_adj),
+                     "p_claim": claim, "segment": seg_key, "segment_adj": float(seg_adj),
                      "pick": pick, "why": why, "signal_fade": bool(fade), "signal_role": role, "status": p.status,
                      "season_avg": float(p.season_avg), "last": None if pd.isna(p["last"]) else float(p["last"]),
                      "n_prev": int(p.n_prev), "consistency": consistency, "cons_hits": int(sum(hits)), "cons_n": len(hits),

@@ -420,7 +420,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
                 bars=dict(pick=C.PICK_BAR, signal=C.SIGNAL_BAR),
                 grading=dict(bars=C.GRADE_BARS, units=C.GRADE_UNITS, weights=C.LOCK_WEIGHTS, ev_full=C.LOCK_EV_FULL, ev_fade=list(C.LOCK_EV_FADE),
                              model_full=C.LOCK_MODEL_FULL, locks=C.LOCKS_PER_SLATE, line_weight=C.LINE_WEIGHT, clv=C.CLV_BARS,
-                             pick_bar=C.PICK_BAR, pick_bar_over=C.PICK_BAR_OVER, claim_shrink=C.CLAIM_SHRINK, segment_k=C.SEGMENT_CAL["k"], segment_min_n=C.SEGMENT_CAL["min_n"]))
+                             pick_bar=C.PICK_BAR, pick_bar_over=C.PICK_BAR_OVER, pick_min_claim=C.PICK_MIN_CLAIM, claim_shrink=C.CLAIM_SHRINK, segment_k=C.SEGMENT_CAL["k"], segment_min_n=C.SEGMENT_CAL["min_n"]))
     old = SITE / "meta.json"
     if old.exists():
         prev = json.loads(old.read_text())
