@@ -758,6 +758,64 @@ What this changes:
    measured out-of-sample gain (per-snap base, PFR targets, dome corners, the corrector) are the case for a
    selection edge; one graded week with 245 lines cannot show one either way. Judge on lift over 500 lines.
 
+## Research round 6: cornerback quality, opponent passing, and stake size (2026-11-02, 3 am MDT, at the owner's request)
+
+The owner's question after Sunday: "in retrospect I should have put 5 units on Nohl Williams: he's very good and the
+Broncos can't pass." Two hypotheses (a good corner tackles less than the model says; a bad passing offence makes it
+more so) and one stake question. Data: PFR advanced defence 2022-2026 (targets, completions, yards, TDs and
+interceptions allowed, per game; each corner's prior games this season shrunk 30 targets toward last season, then
+the league), nflverse play-by-play 2023-2026 (each offence's prior dropbacks this season: EPA per dropback, yards
+per dropback, completion rate, sack rate). Tested on the current model the usual way: fit 2023-24, check 2025-26
+(28,861 games through 2026 week 7; 3,722 corner games with 10+ prior targets). Scripts: `scratchpad/cbq/` (not in
+the repo).
+
+**1. Corner quality: no effect the model misses. Rejected.** Actual over the model by coverage tier flips sign
+between the halves: yards per target allowed under 6, 1.084 (2023-24) and 0.956 (2025-26); passer rating allowed
+under 80, 1.036 and 0.999; completion rate allowed under 58%, 1.064 and 1.012. As slopes, held-out error got worse
+(+0.13% yards per target, +0.32% rating allowed). Targets per game shows a consistent pattern at the extremes
+(3 or fewer, 1.107 and 1.069; more than 7.5, 0.905 and 0.904), but the existing PFR target factor already carries
+it; a steeper refit gains 0.1% on corners only. Not adopted.
+
+**2. Opponent passing quality: real, but too small for a factor. Rejected, kept as a candidate.** For corners and
+safeties nothing. For linebackers and linemen there is a consistent pattern: against offences well below the
+league that season in EPA per dropback (0.1 or more below), LBs ran 1.056 and 1.026 of the model and DL 1.015 and
+1.012. Against offences 0.1 or more above, LBs ran 0.965 and 0.967 and DL 0.953 and 0.950. A worse passing offence
+means more short completions, scrambles and sacks for the front seven to finish; a good one means more yards after
+the catch for safeties and corners. But as a factor measured against each season's league, it improves the
+whole model's level-matched miss by only 0.06% in both halves (LB and DL 0.11%), and solo tackles slightly worse.
+An absolute (not season-relative) version looked better on held-out games, -0.18%, but only because the league's
+passing improved in 2025-26 and the factor pulled every projection down, which raw MAE rewards on count data. Below
+the 0.1% bar. Reopen if the two-bucket form clears it on a full 2026 season.
+
+**3. Our corner picks by corner quality: no lift.** Corner Unders on good corners (rating allowed under 85) went
+13-8 (62%), on the rest 22-10 (69%). Across every graded corner line on the board, good corners went under 57% and
+the rest 55%.
+
+**4. Nohl Williams, week 8.** Through week 7: 68 passer rating allowed, 6.1 yards per target, 5.2 targets a game
+(top-tier coverage). Denver before week 8: -0.10 EPA per dropback, 5.0 yards per dropback (bottom tier). The model
+had four A-grade Unders on him: solo Under 3.5 (lock score 85, a Sunday lock) and combined Under 4.5. Actual: 1
+solo, 4 combined. All four won. The corner-quality and opponent-passing checks above say that combination does not
+go under more than the model already expects; the model was right about him for the reasons it always uses.
+
+**5. Should the grade scale the stake, and was 5 units right?**
+
+| Grade | Graded | Hit | 95% lower bound | Claimed | Break-even at the average price |
+| --- | --- | --- | --- | --- | --- |
+| A | 18 | 89% | 67% | 65% | 59% |
+| B | 97 | 57% | 47% | 58% | 50% |
+| C | 84 | 52% | 42% | 54% | 48% |
+
+- Only A has a lower bound above its break-even. B and C are not yet shown to be profitable on their own record.
+  The suggested stakes (A 1u, B 0.5u, C 0.25u) already follow that order; they stay until 30 graded A picks, the same
+  rule as the grade weights.
+- Kelly on the model's claimed chance, Williams solo Under 3.5 at -155: claimed 65.5%, full Kelly 12% of bankroll,
+  quarter-Kelly 3%. Combined Under 4.5 at -105: claimed 62%, quarter-Kelly 5.5%. With a unit at 1% of bankroll,
+  quarter-Kelly is 3 to 5 units, so 5 units was not reckless by the model's own numbers.
+- But both claims include +8 points from the corner-Under segment correction, which learned from a corner record
+  that the luck table puts down mostly to the whole board going under. Without it, the solo claim is 57.5%, below
+  the break-even of 60.8% at -155: no bet. The case for a big stake on Williams rested on the part of the model
+  with the least evidence behind it. Stake size follows the grade, not the hindsight.
+
 ## Standing watch: grade order (opened 2026-10-30, evening MDT, at the owner's request)
 
 Live record by grade as of 2026-10-30: A 4-2 (67%), B 13-5 (72%), C 13-13 (50%). A below B on six A picks is not
@@ -917,6 +975,11 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-11-02, 3 am MDT (research round 6: corner quality, opponent passing, stake size)
+- See "Research round 6". Corner quality rejected (flips sign between halves); opponent passing quality consistent
+  for LB and DL at the extremes but 0.06% on the whole model, below the bar, kept as a candidate; no lift from
+  corner quality among our picks; stake order kept until 30 graded A picks. No model change.
 
 ### 2026-11-02, 3 am MDT (Track record rebuilt: pick filters, parlay history)
 - Owner asked for readability on the Track record tab, a filter system (week, rating, Over/Under and the like)
@@ -1424,6 +1487,9 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 - Picks are sorted by lock score on the site.
 
 ## Ideas backlog
+
+- Opponent passing quality (EPA per dropback vs that season's league, two buckets at ±0.1) for LB and DL: consistent
+  in both halves at the extremes, 0.06% on the whole model in research round 6. Re-test on a full 2026 season.
 
 Tried and rejected (do not retry without new evidence):
 - Shrinking the model probability toward the market by 0.25-0.5 on top of the blend: fewer picks and worse results
