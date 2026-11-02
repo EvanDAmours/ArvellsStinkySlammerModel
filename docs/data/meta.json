@@ -2,7 +2,7 @@
  "generated_at": "2026-11-01T18:54+00:00",
  "season": 2026,
  "week": 8,
- "lines_pulled": "20261102T004004Z",
+ "lines_pulled": "20261102T015046Z",
  "next_pull": "2026-11-02T15:00+00:00",
  "stats_source": "2023: nflreadpy; 2024: nflreadpy; 2025: nflreadpy; 2026: nflreadpy",
  "tackle_formula": "solo+with_ast+ast",
@@ -86,5 +86,5 @@
   "ODDS_API_KEY": 418.0,
   "PARLAY_API_KEY": 0.0
  },
- "lines_count": 44
+ "lines_count": 0
 }
