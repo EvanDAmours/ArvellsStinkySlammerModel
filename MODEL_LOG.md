@@ -769,6 +769,27 @@ the suggested stakes stay as they are. Under the 2026-10-30 pricing audit the lo
 saturates at 10%, claimed chance shrunk), so A picks from here on are a different population from the first six;
 the review keeps the two apart.
 
+**Review after week 8 Sunday (2026-11-01, 11:20 pm MDT; graded by a hand-run daily job).**
+
+| Grade | All live | Before the audit | After the audit (Sunday) |
+| --- | --- | --- | --- |
+| A | 16-2 (89%), +9.46 u at stake | 4-2 (67%) | 12-0 (100%) |
+| B | 55-42 (57%), +6.26 u at stake | 13-5 (72%) | 42-37 (53%) |
+| C | 44-40 (52%), +2.46 u at stake | 13-13 (50%) | 31-27 (53%) |
+
+- **A is no longer below B.** The order is A > B > C on the live record. On the post-audit population alone, A is
+  12-0 and B and C are level at 53%: the score separates A from the rest, and does not yet separate B from C.
+  18 graded A picks is still under the 30 the decision rule asks for; no change to `LOCK_WEIGHTS`.
+- **Read the 12-0 with the luck table beside it.** All twelve Sunday A picks were Unders, eleven of them solo,
+  on a day the whole board's solo lines went under 64% of the time (luck table: our solo Unders 63% vs the
+  board 64%, lift -1 pt; beat the close 24%). Twelve straight at a 64% base would happen by chance about 1 time
+  in 200 if they were independent, but they are not: same day, same direction, same crediting drift. It is a
+  real point for the A band and a weak one, until A keeps its lead over the board on a day the board goes over.
+- Sunday: all plays 85-64 (+18.4 u at 1 u each), Overs 5-3, Unders 80-61. Locks 5-0 (Winston, Williams,
+  Marshall, Trader, Styles; all solo Unders), week 8 locks 6-2 with Thursday, 7-2 live. Sunday's parlay
+  (three legs, +346, 0.1 u) won: parlays 1-1 live, +0.25 u.
+- Week 8's full post-mortem waits for Monday's game (Seahawks at Bears) to be graded on Tuesday.
+
 ## Weekly post-mortems
 
 Each post-mortem starts from the luck table (Track record tab; `data/weekly_five.md`): per kind of pick, our hit
@@ -896,6 +917,10 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-11-01, late evening MDT (grade-order review after week 8 Sunday)
+- See "Standing watch: grade order". A 16-2, B 55-42, C 44-40; A no longer trails B; no weight change (18 graded
+  A picks, rule needs 30).
 
 ### 2026-11-01, evening MDT (first real bet-slip links)
 - A pull by hand at 6:40 pm returned links for every DraftKings outcome, in the form
