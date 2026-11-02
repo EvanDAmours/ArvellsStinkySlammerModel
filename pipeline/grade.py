@@ -166,7 +166,7 @@ def choose_parlay(bets, slate):
     one per player, never a side the model dislikes. Returns leg rows with parlay-level fields, or None."""
     if bets is None or len(bets) == 0 or "ev" not in bets:
         return None
-    b = bets[(bets.slate == slate) & bets.proj.notna() & bets.ev.notna() & (bets.ev >= 0)].copy()
+    b = bets[(bets.slate == slate) & bets.proj.notna() & bets.ev.notna() & (bets.ev >= 0) & bets.market.isin(C.PARLAY_MARKETS)].copy()
     b = b[~lock_blocked(b)]
     if b.empty:
         return None

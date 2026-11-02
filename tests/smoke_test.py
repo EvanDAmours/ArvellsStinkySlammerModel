@@ -133,6 +133,7 @@ parlays = pd.read_csv(tmp / "data/parlays.csv") if (tmp / "data/parlays.csv").ex
 check(len(parlays) >= 2 and parlays.parlay_id.nunique() >= 1 and parlays.groupby("parlay_id").size().between(2, 4).all(), f"recommended parlay built ({parlays.parlay_id.nunique() if len(parlays) else 0} parlay, {len(parlays)} legs)")
 check(len(parlays) and parlays.player.nunique() == len(parlays) and parlays.units.between(0.1, 1.0).all(), "parlay legs are distinct players with a stake between 0.1 and 1 unit")
 pj = json.loads((tmp / "docs/data/parlays.json").read_text())
+check(all(l["market"] == "player_tackles_assists" for q in pj for l in q["legs"]), "parlay legs are combined-tackle lines only")
 check(len(pj) >= 1 and pj[0]["n_legs"] == len(pj[0]["legs"]) and sum(1 for b in bets if b.get("parlay")) == len(parlays), "parlay written for the site and marked on the board")
 _wl = json.loads((tmp / "docs/data/lines_week.json").read_text())
 check(len(_wl) >= len(bets) and all({"player", "market", "line", "book", "commence_time"} <= set(r) for r in _wl), f"every line pulled this week written for My board ({len(_wl)} lines)")

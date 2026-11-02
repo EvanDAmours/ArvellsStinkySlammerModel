@@ -1080,6 +1080,13 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, midday MDT (parlay legs: combined tackles only)
+- Owner: the books refuse solo-tackle legs in a same-game parlay, so the recommended parlay must be combined
+  tackles + assists on every leg. `PARLAY_MARKETS` in `config.py`; `choose_parlay` filters on it; the board note,
+  the parlay-history lead and a smoke check say so. Solo picks stay picks and locks; they just never enter the
+  parlay. Note for the record: solo Unders have been the stronger kind (65-38 in week 8 against 25-27 combined),
+  so the parlay gives up some chance for placeability; the parlay record is judged on its own line.
+
 ### 2026-11-02, late morning MDT (the rundown: a templated read-up under every line)
 - Owner asked for a Kyler Gordon-style read-up on every bet every day. `rundown` in `pipeline/model.py` writes one
   from the numbers the pricer already used: who he is (season rate, snap share, last season when it is a full

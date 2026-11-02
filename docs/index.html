@@ -335,7 +335,7 @@ function renderPlays() {
     for (const q of open) box.append(parlayBox(q));
     if (!open.length && all.length) {
       const m = DATA.meta || {}, nxt = m.next_pull ? when(m.next_pull) : "";
-      box.append(el("div", { class: "parlay-box" }, el("h3", {}, "Parlay"), el("p", { class: "note" }, `No open parlay yet. ${all.length} line${all.length === 1 ? "" : "s"} on the board${all.length < 40 ? " (the books post most Sunday tackle lines Saturday evening and Sunday morning)" : ""}; a parlay needs two lock-eligible picks with a 53%+ claimed chance on one slate day, chosen at every line pull until that day's first kickoff.${nxt ? ` Next pull ${nxt}.` : ""}`)));
+      box.append(el("div", { class: "parlay-box" }, el("h3", {}, "Parlay"), el("p", { class: "note" }, `No open parlay yet. ${all.length} line${all.length === 1 ? "" : "s"} on the board${all.length < 40 ? " (the books post most Sunday tackle lines Saturday evening and Sunday morning)" : ""}; a parlay needs two lock-eligible combined-tackle picks with a 53%+ claimed chance on one slate day (solo-tackle legs are not allowed in a same-game parlay), chosen at every line pull until that day's first kickoff.${nxt ? ` Next pull ${nxt}.` : ""}`)));
     }
   }
   const anyPick = all.some((b) => b.pick === "Over" || b.pick === "Under"), showAll = picksOnly && !anyPick;   // nothing clears the bar: show every live line with the model's read rather than an empty board
@@ -699,7 +699,7 @@ function renderRecPicks() {
 
 // ---------------------------------------------------------------- Track record: parlay history
 function parlayHistory(parlays, ps) {
-  if (!parlays.length) return section("Parlay history", "No parlays graded yet. One parlay is recommended per slate day, two or three legs, quarter-Kelly stake between 0.1 and 1 unit.");
+  if (!parlays.length) return section("Parlay history", "No parlays graded yet. One parlay is recommended per slate day, two or three combined-tackle legs (solo legs cannot be parlayed in one game), quarter-Kelly stake between 0.1 and 1 unit.");
   const done = [...parlays].sort((a, b) => String(a.slate).localeCompare(String(b.slate)));
   let rw = 0, rl = 0, ru = 0;
   const running = done.map((q) => { if (q.result === "Win") rw++; else if (q.result === "Loss") rl++; ru += q.units_won || 0; return { rw, rl, ru }; });

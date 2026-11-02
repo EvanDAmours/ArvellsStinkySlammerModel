@@ -144,6 +144,7 @@ CLV_BARS = dict(decent=0.52, good=0.56, great=0.60)
 LOCKS_PER_SLATE = dict(single=3, multi=5)   # one game kicking off that day -> 3 locks; more games -> 5
 LOCK_MIN_SCORE = 55                         # a pick needs at least a B to be a lock; fewer locks beats fake ones
 PARLAY_LEGS = (2, 3)                        # fewest and most legs in the recommended parlay (fewer legs = better chance of hitting)
+PARLAY_MARKETS = ("player_tackles_assists",)  # combined tackles only: the books refuse solo-tackle legs in a same-game parlay (owner, 2026-11-02)
 PARLAY_MIN_PROB = 0.56                      # a leg needs at least this claimed (shrunk) chance of hitting: 0.60 before the claim shrink
 PARLAY_FALLBACK_PROB = 0.53                 # if too few legs clear that, legs down to this chance are allowed; below it, no parlay
 PARLAY_KELLY_FRACTION = 0.25                # stake = this fraction of the Kelly stake for the parlay
