@@ -42,7 +42,7 @@ PULL_SLOTS = {
     3: _hourly(9, 17, "thu_fri") + [(17 * 60 + 30, "thu_fri")],      # Thursday, hourly 9 am-5 pm and 5:30: Thursday and Friday games
     4: _hourly(12, 18, "fri_weekend", step=120),                      # Friday, every two hours noon-6 pm: Saturday and Sunday games as they post
     5: _hourly(9, 21, "sat_sun"),                                     # Saturday, hourly 9 am-9 pm: Saturday and Sunday games
-    6: _hourly(7, 11, "today"),                                       # Sunday, hourly 7-11 am: the Sunday slate; the pre-kickoff pull follows
+    6: _hourly(7, 18, "today"),                                       # Sunday, hourly 7 am-6 pm: the whole slate, the late games and the night game too; the pre-kickoff pull sits among them
     0: _hourly(9, 17, "mon", step=120) + [(17 * 60 + 30, "mon")],     # Monday, every two hours 9 am-5 pm and 5:30: the Monday game
 }
 INTL_WINDOWS_H = (12, 1)           # international games are pulled this many hours before kickoff

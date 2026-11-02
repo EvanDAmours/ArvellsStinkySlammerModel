@@ -897,6 +897,12 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-01, evening MDT (Sunday pulls through 6 pm)
+- Found while pricing a Sunday-night parlay for the owner: the Sunday slots ran hourly 7-11 am plus the
+  pre-kickoff pull at noon, so the 4 pm and night games were priced on lines from 12:36 pm. Sunday is now hourly
+  7 am-6 pm (`PULL_SLOTS`), about seven more pulls a week at 1-2 credits each. Pitfall: a slate with several
+  kickoff waves needs pulls up to the last wave, not the first.
+
 ### 2026-11-01, evening MDT (bet-slip links: tail a pick or a parlay at the book)
 - Owner asked for links that open DraftKings or FanDuel with the parlay ready to tail. The Odds API returns each
   book's own bet-slip link and selection id per outcome when asked (`includeLinks`, `includeSids`; no extra
@@ -1400,6 +1406,7 @@ Open, with what would justify them:
 ## Known pitfalls
 
 - Codespaces secrets are invisible to Actions. Only Actions secrets work.
+- A slate with several kickoff waves (Sunday noon, 2 pm, 6 pm Edmonton) needs pulls up to the last wave; a schedule that stops at the first wave prices the late games on stale lines.
 - A week's hit rate is the market's base rate plus our lift. Judge a kind of pick on lift against every closing
   line of that kind (the luck check), never on the record alone: in week 7 every kind of pick hit at exactly the
   board's rate, and the record looked like skill. The segment correction learns hit rates, so after a week of

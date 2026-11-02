@@ -46,7 +46,7 @@ zone data and pins UTC-6 if that data is stale, so nothing needs editing). The p
 | Pull tackle lines | Thu, hourly 9:00 am-5:00 pm and 5:30 pm | Thursday game, and Friday games on holiday weeks |
 | | Fri, every two hours noon-6:00 pm | Saturday and Sunday games as the books post them |
 | | Sat, hourly 9:00 am-9:00 pm | Saturday and Sunday games |
-| | Sun, hourly 7:00-11:00 am | The Sunday slate (books post many tackle lines late Saturday and Sunday morning) |
+| | Sun, hourly 7:00 am-6:00 pm | The Sunday slate, including the afternoon and night games as their lines move (books post many tackle lines late Saturday and Sunday morning) |
 | | Sun, 1 h before the first kickoff | The whole Sunday slate again, with the inactives known for the early games |
 | | Mon, every two hours 9:00 am-5:00 pm and 5:30 pm | Monday game |
 | | 12 h and 1 h before kickoff | Any international game (neutral-site game overseas), that game only |
