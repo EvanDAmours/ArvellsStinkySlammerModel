@@ -169,7 +169,7 @@ def load_snaps(seasons):
             "week": pd.to_numeric(_col(df, "week")).astype(int),
             "game_type": _col(df, "game_type", default="REG").astype(str),
             "team": _col(df, "team").astype(str),
-            "name_key": _col(df, "player").map(norm_name),
+            "name_key": _canon_names(df, "player", "pfr_player_id"),
             "def_snaps": pd.to_numeric(_col(df, "defense_snaps", default=0), errors="coerce").fillna(0),
             "def_pct": pd.to_numeric(_col(df, "defense_pct", default=0), errors="coerce").fillna(0),
         }))
@@ -238,6 +238,38 @@ def load_injuries(seasons):
     if not frames:
         return pd.DataFrame(columns=["season", "week", "team", "name_key", "player_id", "status", "practice"])
     return pd.concat(frames, ignore_index=True)
+
+
+# ---------------------------------------------------------------- one name per player across feeds
+_PFR_NAMES = None
+
+
+def pfr_name_map():
+    """PFR player id -> the stats feed's name key (via nflverse's players table, pfr_id -> display name). The snap-count
+    and PFR advanced feeds print PFR's names ("Cameron Lewis", "Kamren Curl", "Patrick Surtain"); the stats feed prints
+    the league's ("Cam Lewis", "Kam Curl", "Pat Surtain"). Thirteen regulars had no snaps at all in 2026 for that reason."""
+    global _PFR_NAMES
+    if _PFR_NAMES is None:
+        try:
+            pl = _nflreadpy("load_players")
+            pl = pl[pl.pfr_id.notna() & pl.display_name.notna()]
+            _PFR_NAMES = dict(zip(pl.pfr_id.astype(str), pl.display_name.map(norm_name)))
+        except Exception as e:  # noqa: BLE001
+            print(f"  players table: {type(e).__name__}: {e} (feed names used as printed)")
+            _PFR_NAMES = {}
+    return _PFR_NAMES
+
+
+def _canon_names(df, name_col, id_col):
+    """Name keys for a PFR-named feed: the stats feed's name where the id maps, the printed name otherwise."""
+    printed = _col(df, name_col).map(norm_name)
+    if id_col not in df.columns:
+        return printed
+    m = pfr_name_map()
+    if not m:
+        return printed
+    mapped = df[id_col].astype(str).map(m)
+    return mapped.where(mapped.notna(), printed)
 
 
 # ---------------------------------------------------------------- outside injury feed (ESPN)
@@ -453,7 +485,7 @@ def load_pfr_def(seasons):
             continue
         d = df[_col(df, "game_type", default="REG").astype(str).str.upper().str.startswith("REG")]
         frames.append(pd.DataFrame({"season": pd.to_numeric(_col(d, "season", default=s)).astype(int), "week": pd.to_numeric(d.week).astype(int),
-                                    "team": d.team.astype(str), "name_key": d.pfr_player_name.map(norm_name),
+                                    "team": d.team.astype(str), "name_key": _canon_names(d, "pfr_player_name", "pfr_player_id"),
                                     "targets": pd.to_numeric(d.def_targets, errors="coerce").fillna(0),
                                     "missed": pd.to_numeric(d.def_missed_tackles, errors="coerce").fillna(0),
                                     "pfr_comb": pd.to_numeric(d.def_tackles_combined, errors="coerce").fillna(0),

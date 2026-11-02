@@ -1080,6 +1080,20 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, morning MDT (one name per player: PFR-named feeds matched by id)
+- Owner asked why Cam Lewis (CHI) had no snap counts. The snap-count and PFR advanced feeds print Pro Football
+  Reference's names ("Cameron Lewis"); the stats feed prints the league's ("Cam Lewis"); the join was by name, so
+  thirteen regulars had no snaps at all this season (Pat Surtain II, Kam Curl, Greg Rousseau, Nate Landman, Foley
+  Fatukasi, J.T. Tuimoloau, Que Robinson, Cam Lewis among them): no per-snap base, blind role checks, "snap counts
+  missing" on every line. Now `pfr_name_map` (nflverse players table, pfr_id to display name, 99.8% of ids) gives
+  both feeds the stats feed's name (`_canon_names` in `load_snaps` and `load_pfr_def`); the printed name stays
+  where an id is unknown. After: 2 unmatched (rookies missing from the table), 99.7% of snap rows join a stats
+  row; Cam Lewis carries six games of snaps and his projection moved from 4.0 to 4.55 (share 84%).
+- Validation: smoke test; real-data daily in a scratch copy: backtest 29,352 games (491 more, the recovered
+  players' games), full model 1.6212 / level-matched 1.6192 against 1.6217 / 1.6195 before on 28,861; the
+  per-snap base ablation gap grew (1.6306 without). 2026 fold 1.5975, corrector blend 1.5772.
+- Pitfall: two feeds that both print a name do not print the same name. Join feeds by id wherever one exists.
+
 ### 2026-11-02, 4 am MDT (week 8 review: claimed-chance floor, no lowered signal bar)
 - See the week 8 post-mortem. `PICK_MIN_CLAIM = 0.55` and `SIGNAL_BAR = 0.06` in `config.py`; the pricer computes the
   segment-corrected claim before the pick decision and passes a line with a low claim with its own reason; the
@@ -1640,6 +1654,8 @@ Open, with what would justify them:
 ## Known pitfalls
 
 - Codespaces secrets are invisible to Actions. Only Actions secrets work.
+- Two feeds that both print a player's name do not print the same name (PFR "Cameron Lewis", league "Cam Lewis").
+  Join by id wherever one exists; a name join silently drops the player and the model prices him blind.
 - A game's plays faced cannot be forecast beyond the spread (correlation 0.15, residual 7.7 plays on 50). It is the
   largest explainable cause of misses and is noise to the model; do not spend another round on pace features.
 - Open-Meteo's free APIs share a daily request limit per network; from this machine's network the limit can already
