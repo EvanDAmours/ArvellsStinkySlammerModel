@@ -816,6 +816,50 @@ go under more than the model already expects; the model was right about him for 
   the break-even of 60.8% at -155: no bet. The case for a big stake on Williams rested on the part of the model
   with the least evidence behind it. Stake size follows the grade, not the hindsight.
 
+## Research round 7: rain and linebacker Overs (2026-11-02, 3 am MDT, at the owner's question)
+
+The owner asked, after the Falcons at Buccaneers game on 2026-11-01: "in heavy rain games, is the Over on linebacker
+tackles a lock?" The plan was measured rainfall (Open-Meteo's ERA5 archive, mm per hour at each stadium through the
+game). Open-Meteo refused this machine's requests on the day ("daily API request limit exceeded", shared network),
+so game weather comes from the kickoff weather note in nflverse play-by-play ("Rain, Temp: 78 F, Wind: E 9 mph"),
+parsed into dry, rain, heavy or steady rain, and snow, with the reported wind. Outdoor and open-roof games only:
+2023 to 2026 week 8, 633 games: 586 dry, 37 rain, 2 heavy or steady rain, 8 snow. Scripts: `scratchpad/rain/`.
+
+**1. Sunday's game first.** Falcons at Buccaneers, Raymond James Stadium, "Rain, 78 F, wind E 9 mph". Only two
+linebacker combined lines were up: Josiah Trotter 9.5 (6 tackles, Under) and Alex Anzalone 5.5 (6, Over). One each
+way. Across all eleven combined lines in the game, six went over and five under. Our picks in the game went 5-7, LB
+Unders 2-1. Nothing in it says linebackers out-tackle their lines in the rain.
+
+**2. Every rain game since 2023, against the model** (actual over the model's number, 2023-24 | 2025-26):
+
+| Condition | Games | LB combined | LB solo | DL combined | S combined | CB combined |
+| --- | --- | --- | --- | --- | --- | --- |
+| Dry | 501 | 1.009 / 1.008 | 0.988 / 0.983 | 0.977 / 1.008 | 0.987 / 0.999 | 1.002 / 0.986 |
+| Rain | 29 | 1.042 / 0.978 | 0.990 / 0.998 | 0.947 / 0.907 | 0.978 / 0.940 | 0.999 / 1.069 |
+| Heavy or steady | 2 | 1.134 / 0.947 | 0.969 / 1.200 | 1.132 / 1.171 | 1.528 / 0.888 | 1.401 / 1.147 |
+| Snow | 8 | 0.954 / 0.887 | 0.914 / 0.900 | 1.061 / 1.103 | 1.007 / 1.095 | 0.871 / 1.173 |
+
+Rain flips sign between the halves for linebackers and, as a test of the bet itself, a linebacker Over at a
+half-point line at his season average hit 45.2% in rain against 45.6% when dry (321 and 5,313 games); the model's
+own Over chance on those lines was 44% and 45%. Two heavy-rain games (14 linebacker games, Overs 36%) are too few to
+say anything.
+
+**3. Why rain does not help the Over.** Per offence-game against the same team's season average, rain games had
+the same number of plays (-0.1), 0.6 more runs and 0.8 fewer passes, but 1.4 fewer completions and 0.9 more
+incompletions. The extra runs a linebacker can tackle are cancelled by the completions that never happen: an
+incompletion is a play with no tackle. Snow cuts passing harder (3.9 fewer passes, 3.5 fewer completions).
+
+**4. Wind.** At 18 mph or more (11 games) linemen ran over the model in both halves (1.119, 1.169) and linebackers
+and corners under it in the second; 11 games is too few to act on.
+
+**5. Do the books move linebacker lines for rain?** Lines are collected from 2026 week 7 on; Sunday's game is the
+only rain game with lines, so this cannot be answered yet.
+
+**Verdict: rejected.** Rain is not a lock for linebacker Overs and not an edge: the extra runs are offset by fewer
+completions, and the result flips between the halves. Overs stay ineligible for locks. To reopen: measured
+precipitation (mm) once Open-Meteo answers again, to separate real downpours from drizzle, and the line check once
+a season of rain games with lines exists. Wind at 18 mph or more for linemen is a candidate to watch.
+
 ## Standing watch: grade order (opened 2026-10-30, evening MDT, at the owner's request)
 
 Live record by grade as of 2026-10-30: A 4-2 (67%), B 13-5 (72%), C 13-13 (50%). A below B on six A picks is not
@@ -975,6 +1019,11 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-11-02, 3 am MDT (research round 7: rain and linebacker Overs)
+- See "Research round 7". Rain flips sign between halves for LB; LB Overs at their season-average line hit 45% in
+  rain and 46% dry; mechanism: more runs, fewer completions. Rejected; Overs stay ineligible for locks. Measured
+  rainfall (Open-Meteo) was refused on the day and is the first thing to redo. No model change.
 
 ### 2026-11-02, 3 am MDT (research round 6: corner quality, opponent passing, stake size)
 - See "Research round 6". Corner quality rejected (flips sign between halves); opponent passing quality consistent
@@ -1488,6 +1537,9 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Ideas backlog
 
+- Rain by measured precipitation (Open-Meteo ERA5 archive, mm per game hour at each stadium) to test real downpours
+  separately from drizzle; and high wind (18 mph+) for linemen, which ran over the model in both halves on 11 games.
+
 - Opponent passing quality (EPA per dropback vs that season's league, two buckets at ±0.1) for LB and DL: consistent
   in both halves at the extremes, 0.06% on the whole model in research round 6. Re-test on a full 2026 season.
 
@@ -1519,6 +1571,8 @@ Open, with what would justify them:
 ## Known pitfalls
 
 - Codespaces secrets are invisible to Actions. Only Actions secrets work.
+- Open-Meteo's free APIs share a daily request limit per network; from this machine's network the limit can already
+  be spent by others. Cache every response and treat a refusal as "try tomorrow", not as no data.
 - A slate with several kickoff waves (Sunday noon, 2 pm, 6 pm Edmonton) needs pulls up to the last wave; a schedule that stops at the first wave prices the late games on stale lines.
 - A week's hit rate is the market's base rate plus our lift. Judge a kind of pick on lift against every closing
   line of that kind (the luck check), never on the record alone: in week 7 every kind of pick hit at exactly the
