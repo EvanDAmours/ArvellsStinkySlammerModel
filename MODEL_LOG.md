@@ -897,6 +897,13 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-01, evening MDT (first real bet-slip links)
+- A pull by hand at 6:40 pm returned links for every DraftKings outcome, in the form
+  `https://sportsbook.draftkings.com/?outcomes=<outcome id>` with the id URL-encoded (`#` as `%23`); `over_sid`
+  and `under_sid` hold the raw ids. Several outcomes join with `+` in one `outcomes=` value, which is the
+  one-click parlay link. The combined link on cards, parlays and My board is built from this at the Monday
+  check-in after FanDuel's format is seen too.
+
 ### 2026-11-01, evening MDT (Sunday pulls through 6 pm)
 - Found while pricing a Sunday-night parlay for the owner: the Sunday slots ran hourly 7-11 am plus the
   pre-kickoff pull at noon, so the 4 pm and night games were priced on lines from 12:36 pm. Sunday is now hourly
