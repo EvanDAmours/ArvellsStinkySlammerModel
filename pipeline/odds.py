@@ -125,13 +125,77 @@ def pull(api_keys, hours_ahead=None, days=None, event_ids=None):
     return rows, credits
 
 
+def _parse_books(e, books, keep_books=True):
+    """One row per (book, market, player, line) from an event's bookmaker list, as the live pull stores them."""
+    rows = []
+    if keep_books and C.ODDS_BOOKMAKERS:
+        books = [bk for bk in books if bk.get("key") in C.ODDS_BOOKMAKERS]
+    for bk in books:
+        for m in bk.get("markets", []):
+            sides, links, sids = {}, {}, {}
+            for o in m.get("outcomes", []):
+                key = (o.get("description"), o.get("point")); side = str(o.get("name", "")).lower()
+                sides.setdefault(key, {})[side] = o.get("price")
+                links.setdefault(key, {})[side] = o.get("link"); sids.setdefault(key, {})[side] = o.get("sid")
+            for (player, point), s in sides.items():
+                if player is None or point is None:
+                    continue
+                lk, sd = links.get((player, point), {}), sids.get((player, point), {})
+                rows.append(dict(event_id=e["id"], commence_time=e["commence_time"], home_team=e["home_team"],
+                                 away_team=e["away_team"], book=bk.get("title", bk.get("key")), book_key=bk.get("key"), market=m["key"],
+                                 player=player, line=float(point), over_odds=s.get("over"), under_odds=s.get("under"),
+                                 book_update=m.get("last_update"), over_link=lk.get("over"), under_link=lk.get("under"), over_sid=sd.get("over"), under_sid=sd.get("under"),
+                                 market_link=m.get("link"), book_link=bk.get("link"), event_sid=e.get("sid")))
+    return rows
+
+
+def pull_historical(api_key, season, week, markets, hours_before=1.0, event_ids=None):
+    """Lines for a finished week from The Odds API's historical endpoint, one snapshot per game taken `hours_before`
+    kickoff (a closing line for grading). Games and their event ids come from the week's own live snapshots, so
+    only weeks the live pull covered can be fetched. Cost: 10 credits x markets x regions per game (historical
+    requests cost ten times a live one). Returns (rows, credits_left); each row carries the snapshot time as
+    `pulled_at`, so closing_lines() reads them like any other pull."""
+    s = load_snapshots(season, week)
+    if s.empty:
+        return [], None
+    games = s.drop_duplicates("event_id")[["event_id", "commence_time", "home_team", "away_team"]]
+    if event_ids:
+        games = games[games.event_id.isin(set(event_ids))]
+    rows, left = [], None
+    for g in games.itertuples():
+        start = dt.datetime.fromisoformat(str(g.commence_time).replace("Z", "+00:00"))
+        at = (start - dt.timedelta(hours=hours_before)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        r = requests.get(f"{BASE}/historical/sports/{C.ODDS_SPORT}/events/{g.event_id}/odds", timeout=60, params={
+            "apiKey": api_key, "date": at, "markets": ",".join(markets), "oddsFormat": "american", **_book_params()})
+        label = f"{g.away_team} @ {g.home_team} {g.commence_time}"
+        if r.status_code in (404, 422):
+            print(f"  {label}: HTTP {r.status_code} {r.text[:200].strip()}")
+            continue
+        r.raise_for_status()
+        if r.headers.get("x-requests-remaining") is not None:
+            left = float(r.headers["x-requests-remaining"])
+        body = r.json()
+        data = body.get("data", body)
+        stamp = str(body.get("timestamp") or at).replace("-", "").replace(":", "")
+        stamp = stamp[:15] + "Z" if len(stamp) >= 15 else stamp
+        e = dict(id=g.event_id, commence_time=g.commence_time, home_team=g.home_team, away_team=g.away_team, sid=None)
+        got = _parse_books(e, data.get("bookmakers", []))
+        for row in got:
+            row["pulled_at"] = stamp
+        rows.extend(got)
+        print(f"  {label}: snapshot {body.get('timestamp', at)}, {len(got)} prices, cost {r.headers.get('x-requests-last', '?')}, left {left}")
+    return rows, left
+
+
 def save_snapshot(rows, season, week):
     if not rows:
         return None
     d = ODDS_DIR / str(season) / f"wk{week:02d}"
     d.mkdir(parents=True, exist_ok=True)
     stamp = _utcnow().strftime("%Y%m%dT%H%M%SZ")
-    df = pd.DataFrame(rows).assign(pulled_at=stamp)
+    df = pd.DataFrame(rows)
+    if "pulled_at" not in df.columns:
+        df = df.assign(pulled_at=stamp)
     path = d / f"{stamp}.csv"
     df.to_csv(path, index=False)
     return path

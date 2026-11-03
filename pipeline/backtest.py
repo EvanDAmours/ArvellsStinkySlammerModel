@@ -85,9 +85,11 @@ def run_backtest(H, seasons):
     full = preds["Full model"]
     full_solo = M.project_frame(T)[2]
     phi_by_group, phi_rows = {}, []
-    Tm = T.assign(mu=full, mu_solo=full_solo, _share=M.share_pred(T).fillna(T.pct_prev).fillna(1.0))
+    Tm = T.assign(mu=full, mu_solo=full_solo, mu_ast=(full - full_solo).clip(lower=0.05), _share=M.share_pred(T).fillna(T.pct_prev).fillna(1.0))
+    if "ast_t" not in Tm.columns:
+        Tm["ast_t"] = Tm.comb - Tm.solo_t
     for g, part in Tm.groupby("group"):
-        for stat, col, mucol, floor in (("", "comb", "mu", 0.5), ("|solo", "solo_t", "mu_solo", 0.3)):
+        for stat, col, mucol, floor in (("", "comb", "mu", 0.5), ("|solo", "solo_t", "mu_solo", 0.3), ("|ast", "ast_t", "mu_ast", 0.3)):
             pt = part[part[mucol] > floor]
             if len(pt) < 60:
                 continue
@@ -99,14 +101,17 @@ def run_backtest(H, seasons):
                 corr = float(np.mean(((sub[col] - sub[mucol]) ** 2 - noise) / sub[mucol]))
                 key = g + label + stat
                 phi_by_group[key] = float(np.clip(corr, 0.5, 2.2))
-                phi_rows.append(dict(group=g + (" (expected share under 60%)" if label else "") + (" solo" if stat else ""), n=int(len(sub)), raw=raw, corrected=corr, used=phi_by_group[key]))
+                phi_rows.append(dict(group=g + (" (expected share under 60%)" if label else "") + (" solo" if stat == "|solo" else " assists" if stat == "|ast" else ""), n=int(len(sub)), raw=raw, corrected=corr, used=phi_by_group[key]))
     # solo tackles: level calibration and an error row of their own (half the lines are solo markets)
     ok_s = full_solo.notna()
     phi_by_group["__scale_solo__"] = float(np.clip(T.solo_t[ok_s].sum() / max(1e-9, float(full_solo[ok_s].sum())), 0.9, 1.1))
     for g, part in T[ok_s].assign(_ms=full_solo[ok_s]).groupby("group"):
         if len(part) >= 300:
             phi_by_group[f"{g}|solo_scale"] = float(np.clip(part.solo_t.sum() / max(1e-9, float(part._ms.sum())), 0.9, 1.1))
-    solo_rows = [dict(predictor="Solo tackles: full model (solo share of the projection)", **_metrics(T.solo_t, full_solo)),
+    ast_t = T.comb - T.solo_t
+    solo_rows = [dict(predictor="Assists: full model (combined projection less the solo one)", **_metrics(ast_t[ok_s], (full - full_solo)[ok_s])),
+                 dict(predictor="Assists: season average", **_metrics(ast_t, (T.comb_prev - T.solo_prev) / T.n_prev.clip(lower=1))),
+                 dict(predictor="Solo tackles: full model (solo share of the projection)", **_metrics(T.solo_t, full_solo)),
                  dict(predictor="Solo tackles: full model without league solo drift", **_metrics(T.solo_t, M.project_frame(T, use_solo_drift=False)[2])),
                  dict(predictor="Solo tackles: season average", **_metrics(T.solo_t, T.solo_prev / T.n_prev.clip(lower=1) * T.crew_solo.fillna(1.0)))]
     for g, v in C.DEFAULT_PHI.items():

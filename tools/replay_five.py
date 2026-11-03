@@ -38,7 +38,9 @@ def lines_as_of(snaps, t):
     return s[start.isna() | (start > now)], now
 
 
-def replay(season, week):
+def replay(season, week, markets=None, out=OUT, keep_all=False):
+    """markets: restrict the replay to these market keys (e.g. the assists market); out: where the entry is written;
+    keep_all: list every pick in the entry, not just the locks."""
     seasons, pw, sched, snaps_df, inj, H, status, src = R.load_all()
     from pipeline import backtest as B
     # Calibration and corrector from games finished BEFORE the replayed week only: the daily job that priced this
@@ -52,6 +54,10 @@ def replay(season, week):
     if snaps.empty:
         sys.exit(f"No odds snapshots for {season} week {week}")
     snaps["pulled_at"] = snaps.pulled_at.astype(str)
+    if markets:
+        snaps = snaps[snaps.market.isin(set(markets))]
+        if snaps.empty:
+            sys.exit(f"No {markets} snapshots for {season} week {week}")
     picks, parlays = pd.DataFrame(), pd.DataFrame(columns=G.LEG_COLS)
     all_games = snaps.drop_duplicates("event_id").assign(slate=G.slate_of(snaps.drop_duplicates("event_id").commence_time),
                                                          start=pd.to_datetime(snaps.drop_duplicates("event_id").commence_time, utc=True))
@@ -89,7 +95,7 @@ def replay(season, week):
     picks["name_key"] = picks.player.map(S.norm_name)
     stats = pw[(pw.season == season) & (pw.week == week)].groupby("name_key").agg(comb=("comb", "sum"), solo=("solo_t", "sum"))
     picks = picks.join(stats, on="name_key")
-    picks["actual"] = np.where(picks.market.str.contains("solo"), picks.solo, picks.comb)
+    picks["actual"] = G._actual_for(picks)
     done = picks.actual.notna()
     win = np.where(picks.side == "Over", picks.actual > picks.line, picks.actual < picks.line)
     picks["result"] = np.where(~done, "Pending", np.where(picks.actual == picks.line, "Push", np.where(win, "Win", "Loss")))
@@ -112,12 +118,19 @@ def replay(season, week):
                  picks=[dict(player=r.player, team=r.team, opp=r.opp, market=r.market, side=r.side, line=float(r.line), odds=float(r.odds),
                              book=r.book, lock=float(r.lock), grade=r.grade, proj=float(r.proj), actual=None if pd.isna(r.actual) else float(r.actual),
                              result=r.result, units=float(r.units), commence_time=r.commence_time) for r in five.itertuples()])
-    out = json.loads(OUT.read_text()) if OUT.exists() else dict(weeks=[])
+    if keep_all:
+        entry["all_picks"] = [dict(player=r.player, team=r.team, opp=r.opp, group=getattr(r, "group", None), market=r.market, side=r.side, line=float(r.line), odds=float(r.odds),
+                                   book=r.book, lock=float(r.lock), grade=r.grade, proj=float(r.proj), model_over=float(r.model_over), market_over=float(r.market_over),
+                                   p_claim=None if pd.isna(getattr(r, "p_claim", np.nan)) else float(r.p_claim), lock_eligible=bool(getattr(r, "lock_eligible", True)),
+                                   actual=None if pd.isna(r.actual) else float(r.actual), result=r.result, units=float(r.units), commence_time=r.commence_time)
+                             for r in picks.itertuples()]
+    OUT_PATH = Path(out)
+    out = json.loads(OUT_PATH.read_text()) if OUT_PATH.exists() else dict(weeks=[])
     out["weeks"] = [w for w in out["weeks"] if not (w["season"] == season and w["week"] == week)] + [entry]
     out["weeks"].sort(key=lambda w: (w["season"], w["week"]))
     out["note"] = ("Replayed under the current rules using only what was known at each line pull. Weeks without odds "
                    "snapshots cannot be replayed: line pulling started in week 7 of 2026, and historical lines need a paid Odds API plan.")
-    OUT.write_text(json.dumps(out, indent=1))
+    OUT_PATH.write_text(json.dumps(out, indent=1))
     f, p = entry["five"], entry["plays"]
     print(f"\nweek {week} replay: five {f['wins']}-{f['losses']} ({f['pending']} pending, {f['units']:+.2f}u); "
           f"all plays {p['wins']}-{p['losses']} of {p['n']} ({p['units']:+.2f}u)")
@@ -134,5 +147,8 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--season", type=int, default=C.SEASON)
     ap.add_argument("--week", type=int, required=True)
+    ap.add_argument("--markets", default="", help="comma-separated market keys to replay (default: every market in the snapshots)")
+    ap.add_argument("--out", default=str(OUT), help="where to write the entry (default data/retro_five.json)")
+    ap.add_argument("--all-picks", action="store_true", help="list every pick in the entry, not just the locks")
     a = ap.parse_args()
-    replay(a.season, a.week)
+    replay(a.season, a.week, markets=[m for m in a.markets.split(",") if m.strip()] or None, out=a.out, keep_all=a.all_picks)

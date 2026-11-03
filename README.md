@@ -38,7 +38,7 @@ Everything runs on GitHub's servers on a schedule. You don't run anything by han
 ## When things run
 
 Pull slots are in **Edmonton time** (Alberta Time, UTC-6 all year from November 2026; the job converts from the
-zone data and pins UTC-6 if that data is stale, so nothing needs editing). The pull job runs every quarter hour and serves each slot once; a pull costs 1-2 odds credits (0 when no line is up).
+zone data and pins UTC-6 if that data is stale, so nothing needs editing). The pull job runs every quarter hour and serves each slot once; a pull costs 1-3 odds credits per game (0 when no line is up).
 
 | Job | When (Edmonton) | What it does |
 | --- | --- | --- |
@@ -69,9 +69,18 @@ keep this site alive on their own:
 
 Schedules only run on the default branch, so keep the branch the site deploys from as the default.
 
+## Assists (trial market)
+
+The Assists tab prices the book's assists lines from the combined projection less the solo one, with the same
+bars, grades, checklist and slip links as the tackle board. Assists picks are logged and graded like any pick but
+are never locks or parlay legs. To replay a finished week the market was not pulled live for, run the manual
+workflow "Fetch past lines for a market" (10 credits a game per market, ten times a live pull), then
+`python tools/replay_five.py --week N --markets player_assists --out data/retro_assists.json --all-picks` and
+commit the result; the next daily run shows it on the tab.
+
 ## Odds credits
 
-Each pull costs 2 credits per game (two tackle markets, one region). The Friday and early-Sunday pulls
+Each pull costs 3 credits per game (two tackle markets and the assists market, one region; 2 before the assists market was added on 2026-11-03). The Friday and early-Sunday pulls
 cover the whole slate (about 28 credits), as does the Sunday pre-kickoff pull; later pulls only cover games starting within four hours.
 With the three Saturday pulls that's roughly 175 credits a week, about 700 a month, so it needs a second key
 (see below) or fewer Saturday pulls to stay inside one free 500-credit key. The site shows the balance after each pull,

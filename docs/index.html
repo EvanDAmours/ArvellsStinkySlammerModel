@@ -194,6 +194,7 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
     <button role="tab" data-tab="check" aria-selected="false">Model check</button>
     <button role="tab" data-tab="mine" aria-selected="false">My board</button>
     <button role="tab" data-tab="patch" aria-selected="false">Patch log</button>
+    <button role="tab" data-tab="ast" aria-selected="false">Assists</button>
     <button role="tab" data-tab="gloss" aria-selected="false">Glossary</button>
   </nav>
 
@@ -234,6 +235,18 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
 
   <section id="patch" hidden>
     <div id="patch-body"></div>
+  </section>
+
+  <section id="ast" hidden>
+    <div id="ast-top"></div>
+    <div class="controls toolbar" id="ast-controls" hidden>
+      <label>Book <select id="ast-book"><option value="">Any book</option></select></label>
+      <label>Side <select id="ast-side"><option value="">Both</option><option value="Under">Unders</option><option value="Over">Overs</option></select></label>
+      <label>Sort <select id="ast-sort"><option value="lock">Lock score</option><option value="ev">Expected return</option><option value="kick">Kickoff</option><option value="player">Player</option></select></label>
+      <label><input type="checkbox" id="ast-picks-only" checked> Picks only</label>
+      <label><input type="checkbox" id="ast-best-only" checked> Best price per line</label>
+    </div>
+    <div id="ast-list"></div>
   </section>
 
   <section id="gloss" hidden>
@@ -288,7 +301,10 @@ function recordsBar(s) {
   }
   return bar;
 }
-const MARKET = { player_tackles_assists: "Tackles + assists", player_solo_tackles: "Solo tackles" };
+const MARKET = { player_tackles_assists: "Tackles + assists", player_solo_tackles: "Solo tackles", player_assists: "Assists" };
+const ASSIST = "player_assists";
+const kindOf = (m) => ((m || "").includes("solo") ? "solo" : (m || "").includes("assists") && !(m || "").includes("tackles") ? "assists" : "combined");
+const kindLabel = (m) => ({ solo: "solo", assists: "assists" }[kindOf(m)] || "tackles + assists");
 // a bet stored before numbers existed looks its number up in today's projections
 const jerseyOf = (b) => { if (!b) return null; let j = b.jersey; if (j == null || j === "") j = (DATA.proj || []).find((p) => p.player === b.player && (!b.team || p.team === b.team))?.jersey; return j == null || j === "" || Number.isNaN(+j) ? null : Math.round(+j); };
 const jersey = (b) => { const j = jerseyOf(b); return j == null ? "" : el("span", { class: "jersey", title: "Jersey number" }, `#${j}`); };
@@ -407,7 +423,7 @@ function renderMeta() {
 
 function renderPlays() {
   const top = $("#plays-top"), box = $("#plays-list"); top.replaceChildren(); box.replaceChildren();
-  const all = DATA.bets || [];
+  const all = (DATA.bets || []).filter((b) => b.market !== ASSIST);
   top.append(recordsBar(DATA.results?.summary));
   top.append(legend());
   const haveLines = all.length > 0;
@@ -470,6 +486,7 @@ function legend() {
     el("p", {}, `The lock score is out of 100 and uses the model's own evidence only, never the book's opinion: ${pct(w.ev)} expected return at the posted price (full marks at ${signedPct(g.ev_full ?? 0.10)}; above ${signedPct((g.ev_fade ?? [0.2, 0.4])[0])} it falls away again, because the biggest disagreements with the market are mostly model error), ${pct(w.model)} the model's claimed chance for the side (full marks at ${pct(g.model_full ?? 0.75)}; a pick's claimed chance is shrunk ${pct(1 - (g.claim_shrink ?? 0.6))} of the way toward even first, since selected picks overclaim), ${pct(w.consistency)} how often he cleared this line in his games this season, read at the snap share he is expected to play, ${pct(w.sample)} games of data in his current role, and ${pct(w.signal)} for a role-change or outlier-fade signal behind the pick. A pick needs ${signedPct(g.pick_bar ?? 0.06)} expected return (${signedPct(g.pick_bar_over ?? 0.10)} for an Over, which the model gets wrong more often) and a claimed chance of at least ${pct(g.pick_min_claim ?? 0.55)}: a plus-money side with a coin-flip claim is not a play, whatever its return. The claimed chance is then corrected by how claims for picks of the same kind (side, market, position) have actually resolved, shrunk by n/(n+${g.segment_k ?? 30}); the Track record tab shows those corrections. The projection it prices from is ${pct(1 - (g.line_weight ?? 0.6))} model and ${pct(g.line_weight ?? 0.6)} the posted line, which keeps the model's claimed edges honest.`),
     el("p", {}, "Never a lock or a parlay leg, whatever the score (the lock-eligibility checklist, added after the week 8 Thursday post-mortem): a player in a new role (a part-timer who just played a starter's snaps), in a reduced role (his last game's snaps fell well below his season share), back from absence (a missed game that was not a bye), in his first game for a new team, with fewer than three games in his current role, listed questionable, without snap counts for his last game, or an Over (the model's Over picks have hit 41%; Overs stay plays, never locks, until forty more of them say otherwise). In every one of these the model is on ground where it is biased or blind. Each is tagged on the card, with the reason, and the pick can still be played at its grade."),
     el("p", {}, "Tags on a card say what the model sees behind the number (hover one for the rule): a role change (New role, Reduced role, Promoted, Demoted, Back from absence, New team), the injury report (Questionable, Opp QB out), the lineman's pressure profile (Run-stuffer, Interior, Pass rusher), and Model far from line. The 'Why' box under each pick shows the lock score piece by piece, the checklist, how picks of its kind have resolved, his game log, and an outside expert consensus (FantasyPros, the top players at each position) read relative to its usual relation to this model, for comparison only: it never prices, grades or chooses a pick."),
+    el("p", {}, "Assists lines are priced the same way on their own tab (the Assists tab): a trial market, logged and graded like every pick here but never a lock or a parlay leg until its record earns it."),
     el("p", {}, "Stakes are a guide, not a promise: the grades are being tested on the Track record tab, and if A does not beat B and C over time the formula changes."),
     el("h4", {}, "Beating the closing line"),
     el("p", {}, "A line moves between the time we bet it and kickoff as money comes in and the book sharpens its number. The last number before kickoff, the closing line, is the market's best estimate with everything priced in. If we took Under 3.5 and it closed at Under 2.5, we got a number a point better than the market's considered view: we beat the close. If it closed at 4.5, the market moved against us. One bet's result is mostly luck, but the direction the line moves is the whole market's judgement on whether we were right, and over a few hundred bets the share of picks that beat the close predicts profit better than the win-loss record does."),
@@ -549,7 +566,7 @@ function whyBox(b, isLock) {
   ];
   const seg = (DATA.results?.summary?.segments || []).find((x) => x.segment === b.segment);
   const proj = (DATA.proj || []).find((p) => p.player === b.player && p.team === b.team) || {};
-  const log = (b.market || "").includes("solo") ? proj.log_solo : proj.log_comb;
+  const log = { solo: proj.log_solo, assists: proj.log_ast }[kindOf(b.market)] ?? proj.log_comb;
   const checklist = b.lock_block ? `Not lock-eligible: ${b.lock_block}.` : "Lock checklist clear: settled role, played last game, same team, snap counts in, not on the injury report, an Under.";
   const fpVal = (b.market || "").includes("solo") ? b.fp_solo : b.fp_comb;
   return el("details", { class: "why-box" }, el("summary", {}, isLock ? "Why this is a lock" : "Why this pick"),
@@ -559,7 +576,7 @@ function whyBox(b, isLock) {
     el("ul", {},
       el("li", {}, checklist),
       seg ? el("li", {}, `Picks of this kind (${b.segment}) have gone ${seg.wins}-${seg.losses} against a claimed ${pct(seg.claimed)}; that record feeds the correction above.`) : "",
-      log ? el("li", { class: "log" }, `His games this season (${(b.market || "").includes("solo") ? "solo" : "tackles + assists"}): ${String(log).split("|").join(", ")}.`) : "",
+      log ? el("li", { class: "log" }, `His games this season (${kindLabel(b.market)}): ${String(log).split("|").join(", ")}.`) : "",
       b.fp_rel != null ? el("li", {}, `Outside cross-check: the FantasyPros expert consensus sits ${Math.abs(b.fp_rel) < 0.03 ? "where it usually does" : `${signedPct(b.fp_rel)} from where it usually sits`} against this model for him${Math.abs(b.fp_rel) >= 0.03 ? ((b.fp_rel > 0) === (b.side === "Over") ? ", leaning the same way as this pick" : ", leaning the other way from this pick") : ""}. Their raw figure (${num(fpVal)}) is not a box-score number (their tackles run about a quarter above season averages across the board), so only the relative reading means anything. It is shown to compare, never used to price or choose.`) : "",
       b.why ? el("li", {}, b.why) : ""));
 }
@@ -764,7 +781,7 @@ function recFilterBar(picks) {
     sel("week", "Week", [["", "All"], ...weeks.map((w) => [w, `Week ${w}`])]),
     sel("grade", "Grade", [["", "All"], ["A", "A"], ["B", "B"], ["C", "C"], ["AB", "A + B"], ["BC", "B + C"], ["none", "No grade"]]),
     sel("side", "Side", [["", "Both"], ["Over", "Overs"], ["Under", "Unders"]]),
-    sel("market", "Market", [["", "Both"], ["player_tackles_assists", "Tackles + assists"], ["player_solo_tackles", "Solo tackles"]]),
+    sel("market", "Market", [["", "All"], ["player_tackles_assists", "Tackles + assists"], ["player_solo_tackles", "Solo tackles"], ["player_assists", "Assists"]]),
     sel("pos", "Position", [["", "All"], ["LB", "Linebackers"], ["S", "Safeties"], ["CB", "Corners"], ["DL", "Defensive line"]]),
     sel("result", "Result", [["", "All"], ["Win", "Wins"], ["Loss", "Losses"], ["Push", "Pushes"], ["Void", "Voids"], ["Pending", "Pending"]]),
     sel("book", "Book", [["", "All"], ...uniq((p) => p.book).sort().map((b) => [b, b])]),
@@ -819,7 +836,7 @@ function renderRecPicks() {
       pending ? el("div", {}, el("b", {}, String(pending)), "Pending") : ""),
     (() => {
       const chip = (label, sub) => { const sw = sub.filter((p) => p.result === "Win").length, sl = sub.filter((p) => p.result === "Loss").length; return sw + sl ? el("span", {}, `${label} `, el("b", {}, `${sw}-${sl}`), ` (${pct(sw / (sw + sl))})`) : ""; };
-      return el("div", { class: "chips" }, ...["A", "B", "C"].map((x) => chip(x, g.filter((p) => p.grade === x))), chip("A+B", g.filter((p) => p.grade === "A" || p.grade === "B")), chip("Locks", g.filter((p) => p.five)), chip("Overs", g.filter((p) => p.side === "Over")), chip("Unders", g.filter((p) => p.side === "Under")),
+      return el("div", { class: "chips" }, ...["A", "B", "C"].map((x) => chip(x, g.filter((p) => p.grade === x))), chip("A+B", g.filter((p) => p.grade === "A" || p.grade === "B")), chip("Locks", g.filter((p) => p.five)), chip("Overs", g.filter((p) => p.side === "Over")), chip("Unders", g.filter((p) => p.side === "Under")), chip("Assists", g.filter((p) => p.market === ASSIST)),
         ...["LB", "S", "CB", "DL"].map((x) => chip(x, g.filter((p) => posOf(p) === x))));
     })());
   const [, key, dir] = REC_SORTS[REC_F.sort] || REC_SORTS.week;
@@ -935,7 +952,7 @@ function renderCheck() {
       el("div", { class: "scroll" }, table([["Predictor"], ["Games", "n"], ["Miss", "n"], ["Bias", "n"]], folds.map((r) => [r.predictor, r.n.toLocaleString(), num(m(r), 3), (r.bias >= 0 ? "+" : "") + num(r.bias, 2)])))));
   }
   // benchmarks
-  const bench = P.filter((r) => !r.predictor.startsWith("Full model") && !r.predictor.includes("fold") && !r.predictor.startsWith("Solo"));
+  const bench = P.filter((r) => !r.predictor.startsWith("Full model") && !r.predictor.includes("fold") && !r.predictor.startsWith("Solo") && !r.predictor.startsWith("Assists"));
   if (bench.length) {
     box.append(section("Simple benchmarks", "What a bettor without a model would use. The full model has to beat all of them.",
       el("div", { class: "scroll" }, table([["Predictor"], ["Miss", "n"], ["Bias", "n"]], [...(full ? [full] : []), ...bench].sort((x, y) => m(x) - m(y)).map((r) => [r.predictor === "Full model" ? el("b", {}, "Full model") : r.predictor, num(m(r), 3), (r.bias >= 0 ? "+" : "") + num(r.bias, 2)])))));
@@ -945,6 +962,12 @@ function renderCheck() {
   if (solo.length) {
     box.append(section("Solo tackles", `Half the lines are solo markets. The solo projection is the combined projection times a shrunk solo share, with a league drift factor${b.scale_solo ? ` and a level calibration of ${num(b.scale_solo, 3)}` : ""}.`,
       el("div", { class: "scroll" }, table([["Predictor"], ["Miss", "n"], ["Bias", "n"]], solo.sort((x, y) => m(x) - m(y)).map((r) => [r.predictor.replace("Solo tackles: ", "").replace(/^./, (c) => c.toUpperCase()), num(m(r), 3), (r.bias >= 0 ? "+" : "") + num(r.bias, 2)])))));
+  }
+  // assists
+  const astRows = P.filter((r) => r.predictor.startsWith("Assists"));
+  if (astRows.length) {
+    box.append(section("Assists", "The assists projection is the combined projection less the solo one, priced on the Assists tab against the book's assists lines (a trial market).",
+      el("div", { class: "scroll" }, table([["Predictor"], ["Miss", "n"], ["Bias", "n"]], astRows.sort((x, y) => m(x) - m(y)).map((r) => [r.predictor.replace("Assists: ", "").replace(/^./, (c) => c.toUpperCase()), num(m(r), 3), (r.bias >= 0 ? "+" : "") + num(r.bias, 2)])))));
   }
   // weak spots
   if (b.weak_spots?.length) {
@@ -1072,7 +1095,7 @@ function renderMine() {
   let changed = false;
   const cards = sorted.map((b) => {
     const g = gameOf(b), bx = g ? LIVE.box[g.id] : null, st = bx?.players?.[normName(b.player)];
-    const solo = (b.market || "").includes("solo"); const have = st ? (solo ? st.solo : st.tot) : (bx && g && g.state !== "pre" ? 0 : null);   // in the box score but no row yet means no tackles yet
+    const kind = kindOf(b.market), solo = kind === "solo"; const have = st ? (solo ? st.solo : kind === "assists" ? Math.max(0, st.tot - st.solo) : st.tot) : (bx && g && g.state !== "pre" ? 0 : null);   // in the box score but no row yet means no tackles yet
     const share = elapsedShare(g); const pace = have == null || share <= 0 ? null : have / share;
     const under = b.side === "Under";
     let status, cls = "", verdict = "";
@@ -1103,7 +1126,7 @@ function renderMine() {
       win != null ? el("small", {}, ` to win ${money(win)}`) : "", result != null ? el("b", { class: result > 0 ? "ok" : result < 0 ? "no" : "" }, ` ${result > 0 ? "+" : ""}${money(result)}`) : "");
     const c = el("div", { class: "live" + cls },
       el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}` }, b.grade) : "", b.player, " ", jersey(b), el("small", {}, [b.group, b.team, b.opp ? `vs ${b.opp}` : ""].filter(Boolean).join(" "))),
-      el("div", { class: "now" }, el("b", {}, have == null ? "–" : String(have)), el("span", {}, solo ? "solo so far" : "tackles so far")),
+      el("div", { class: "now" }, el("b", {}, have == null ? "–" : String(have)), el("span", {}, kind === "solo" ? "solo so far" : kind === "assists" ? "assists so far" : "tackles so far")),
       el("div", { class: "bet" }, el("span", { class: under ? "under" : "over" }, `${b.side} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market || "").toLowerCase()}`, el("small", {}, ` · ${odds(b.odds)} at ${b.book}${b.proj != null ? ` · model ${num(b.proj)}` : ""} `), g && g.state === "pre" && b.link ? el("a", { class: "bet-link", href: b.link, target: "_blank", rel: "noopener noreferrer" }, `Open at ${b.book} ↗`) : ""),
       el("div", { class: "trend" }, ...(verdict ? [el("b", { class: cls.includes("good") ? "ok" : "no" }, verdict), " · "] : []), status),
       stakeBox,
@@ -1143,7 +1166,7 @@ function officialGrade(b, weekHint) {
   const wk = DATA.actuals?.weeks?.[String(week)]; if (!wk) return null;
   const row = wk[`${b.team}|${nk}`] || Object.entries(wk).find(([k]) => k.endsWith(`|${nk}`))?.[1];
   if (!row) return null;
-  const actual = (b.market || "").includes("solo") ? row[1] : row[0];
+  const kind = kindOf(b.market); const actual = kind === "solo" ? row[1] : kind === "assists" ? (row[2] ?? row[0] - row[1]) : row[0];
   const result = actual === +b.line ? "Push" : (b.side === "Under" ? actual < +b.line : actual > +b.line) ? "Win" : "Loss";
   return { result, actual };
 }
@@ -1355,6 +1378,52 @@ function renderPatch() {
   }
 }
 
+// ---------------------------------------------------------------- assists: a trial market on its own tab
+function renderAssists() {
+  const top = $("#ast-top"), box = $("#ast-list"); if (!top || !box) return; top.replaceChildren(); box.replaceChildren();
+  const all = (DATA.bets || []).filter((b) => b.market === ASSIST);
+  top.append(el("p", { class: "note" }, "Assists, priced like the tackle board: the combined projection less the solo one against the book's assists line, same bars, grades, checklist, rundown and slip links. A trial market: every pick is logged and graded like a tackle pick, but none can be a lock or a parlay leg until the record earns it. Why assists (research round 8, Patch log): the thinnest defensive market, the one the home scorekeeper decides most, and a projection the model already makes."));
+  // record so far, and the replayed weeks
+  const picks = (DATA.results?.picks || []).filter((p) => p.market === ASSIST);
+  const g = picks.filter((p) => p.result === "Win" || p.result === "Loss" || p.result === "Push");
+  const w = g.filter((p) => p.result === "Win").length, l = g.filter((p) => p.result === "Loss").length, pu = g.filter((p) => p.result === "Push").length, u = g.reduce((a, p) => a + (p.units || 0), 0);
+  const pend = picks.filter((p) => p.result === "Pending").length;
+  top.append(el("div", { class: "stat-line" },
+    el("div", {}, wl(w, l, pu), `Assists record, live picks${pend ? ` (${pend} pending)` : ""}`),
+    el("div", {}, el("b", {}, w + l ? pct(w / (w + l)) : "–"), "Hit rate"),
+    el("div", {}, units(u, 2), "Units, 1 per bet"),
+    el("div", {}, roiCell(g.length ? u / g.length : null), "Return per bet")));
+  const retro = DATA.meta?.retro_assists?.weeks || [];
+  if (retro.length) {
+    const rows = retro.map((x) => [`Week ${x.week}`, x.plays.n, wl(x.plays.wins, x.plays.losses, x.plays.pushes), x.plays.hit == null ? "" : pct(x.plays.hit), units(x.plays.units, 2),
+      (x.by_grade || []).map((gr) => `${gr.grade} ${gr.wins}-${gr.losses}`).join(", ")]);
+    const sec = section("What the model would have picked in past weeks", "The weeks before the market was pulled live, replayed under the current rules from the book's closing assists lines and the projections of the time (the historical lines are the last before kickoff, so there is no line shopping and no early price). Theoretical: nothing here was bet.",
+      el("div", { class: "scroll" }, table([["Week"], ["Picks", "n"], ["Record"], ["Hit", "n"], ["Units, 1 per bet", "n"], ["By grade"]], rows)));
+    for (const x of retro) if (x.all_picks?.length) {
+      const d = el("details", { class: "more" }, el("summary", {}, `Week ${x.week}: every pick`));
+      d.append(el("div", { class: "scroll" }, table([["Player"], ["Pick"], ["Price", "n"], ["Grade"], ["Score", "n"], ["Claimed", "n"], ["Actual", "n"], ["Result"]],
+        x.all_picks.slice().sort((a, b) => b.lock - a.lock).map((p) => [`${p.player} (${p.team})`, `${p.side} ${p.line}`, odds(p.odds), el("span", { class: `grade ${p.grade}` }, p.grade), Math.round(p.lock), p.p_claim == null ? "" : pct(p.p_claim), p.actual == null ? "" : String(p.actual), el("b", { class: p.result === "Win" ? "pos" : p.result === "Loss" ? "neg" : "" }, p.result)]))));
+      sec.append(d);
+    }
+    top.append(sec);
+  }
+  $("#ast-controls").hidden = !all.length;
+  if (!all.length) { box.append(el("div", { class: "empty" }, "No assists lines on the board yet. They arrive with the tackle pulls (Thursday 9 am onward for a Thursday game, Saturday and Sunday for the main slate).")); return; }
+  const bookSel = $("#ast-book"), books = [...new Set(all.map((b) => b.book).filter(Boolean))].sort();
+  if (bookSel.options.length !== books.length + 1 || books.some((b, i) => bookSel.options[i + 1].value !== b)) {
+    const keep = bookSel.value; bookSel.replaceChildren(el("option", { value: "" }, "Any book"), ...books.map((b) => el("option", { value: b }, b))); bookSel.value = books.includes(keep) ? keep : "";
+  }
+  const picksOnly = $("#ast-picks-only").checked, bookF = $("#ast-book").value, best = $("#ast-best-only").checked && !bookF, sideF = $("#ast-side").value, sortBy = $("#ast-sort").value;
+  const nPicks = all.filter((b) => b.pick === "Over" || b.pick === "Under").length, showAll = picksOnly && nPicks === 0;
+  let rows = all.filter((b) => (!picksOnly || showAll || b.pick === "Over" || b.pick === "Under") && (!bookF || b.book === bookF) && (!best || b.best_price !== false) && (!sideF || (b.side || b.pick) === sideF));
+  const key = { lock: (b) => -(b.lock ?? -1), ev: (b) => -(b.ev ?? -9), kick: (b) => +(betKick(b) || 0), player: (b) => b.player }[sortBy] || ((b) => -(b.lock ?? -1));
+  rows.sort((x, y) => { const a = key(x), c = key(y); return typeof a === "string" ? a.localeCompare(c) : a - c; });
+  box.append(el("div", { class: "count" }, `${rows.length} shown of ${nPicks} assists picks on ${all.length} priced lines.`));
+  if (showAll) box.append(el("div", { class: "count" }, "No assists line clears the bar yet, so every live line is shown with the model's read of both sides."));
+  if (!rows.length) { box.append(el("div", { class: "empty" }, "No assists line matches these filters.")); return; }
+  for (const b of rows) box.append(card(b, false));
+}
+
 // ---------------------------------------------------------------- glossary
 function glossTerms() {
   const g = DATA.meta?.grading || {};
@@ -1365,6 +1434,7 @@ function glossTerms() {
       ["Over / Under", "A tackle prop is a number (the line) and two sides. Over wins if the player's official total ends above the line, Under if it ends below. A half-point line (5.5) always settles one way; a whole-number line (6) can land exactly and the bet is a push."],
       ["Line", "The number the book posts for a player, such as Under 5.5 combined tackles. Lines move between opening and kickoff as money comes in and news lands; the site logs the line at the time of the pick and the last one before kickoff (the closing line)."],
       ["Combined tackles (tackles + assists) and solo tackles", "Two markets per player. The official scorer credits a solo tackle when one player makes the stop and an assist when he shares it; combined is solo plus assists. The site's parlay legs are combined only, because the books do not allow solo-tackle legs in a same-game parlay."],
+      ["Assists (the market)", "The book's line on a player's assisted tackles alone. Priced on the Assists tab from the combined projection less the solo one, with the same bars, grades, checklist and links as the tackle board. A trial market since week 9 of 2026: every pick is logged and graded, none can be a lock or a parlay leg until the record earns it, and the Track record tab filters it on its own."],
       ["American odds (+ and −)", "The price. −110 means risk 110 to win 100; +120 means risk 100 to win 120. The number after the sign is always measured against 100."],
       ["Decimal odds", "The same price as a multiplier on the stake, winnings and stake together: −110 is 1.91, +120 is 2.20. Parlay payouts multiply the decimal odds of the legs."],
       ["Implied chance (implied probability)", "What the price says the chance of winning is, assuming no margin. For a minus price it is odds ÷ (odds + 100): −110 implies 52.4%. For a plus price it is 100 ÷ (odds + 100): +120 implies 45.5%. A bet is worth making only if the real chance is above the implied one."],
@@ -1446,7 +1516,7 @@ function renderGloss() {
 }
 
 function show(id) {
-  for (const s of ["plays", "proj", "record", "check", "mine", "patch", "gloss"]) { $("#" + s).hidden = s !== id; }
+  for (const s of ["plays", "proj", "record", "check", "mine", "patch", "gloss", "ast"]) { $("#" + s).hidden = s !== id; }
   if (id === "mine") renderMine();
   document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === id)));
   history.replaceState(null, "", "#" + id);
@@ -1454,13 +1524,14 @@ function show(id) {
 
 (async () => {
   [DATA.meta, DATA.bets, DATA.proj, DATA.results, DATA.backtest, DATA.parlays, DATA.week_lines, DATA.patch, DATA.actuals] = await Promise.all(["meta", "bets", "projections", "results", "backtest", "parlays", "lines_week", "patchlog", "actuals"].map(load));
-  renderMeta(); renderPlays(); renderDaybar(); renderProj(); renderRecord(); renderCheck(); renderPatch(); renderGloss();
+  renderMeta(); renderPlays(); renderDaybar(); renderProj(); renderRecord(); renderCheck(); renderPatch(); renderGloss(); renderAssists();
+  ["#ast-book", "#ast-side", "#ast-sort", "#ast-picks-only", "#ast-best-only"].forEach((s) => $(s).addEventListener("change", renderAssists));
   ["#picks-only", "#market", "#best-only", "#slate", "#pos", "#side", "#sort", "#book"].forEach((s) => $(s).addEventListener("change", renderPlays));
   $("#q").addEventListener("input", renderProj);
   $("#proj-slate").addEventListener("change", renderProj);
   document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => show(b.dataset.tab)));
   if (location.hash.startsWith("#import=")) { await importFromHash(); show("mine"); }
-  const h = location.hash.slice(1); if (["plays", "proj", "record", "check", "mine", "patch", "gloss"].includes(h)) show(h);
+  const h = location.hash.slice(1); if (["plays", "proj", "record", "check", "mine", "patch", "gloss", "ast"].includes(h)) show(h);
   renderMine(); liveLoop();
 })();
 </script>

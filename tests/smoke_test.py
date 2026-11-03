@@ -88,7 +88,7 @@ check(all(any(k in r["predictor"] for r in bt["predictors"]) for k in ("per-snap
 check(any(p.get("group") == "DL" and p.get("press_pg") is not None for p in proj) and all(p.get("press_pg") is None for p in proj if p.get("group") != "DL")
       and not any("pressure" in r["predictor"] for r in bt["predictors"]), "lineman pressure profile carried for the card, DL only, with no model row (rejected in round 5)")
 _ac = json.loads((tmp / "docs/data/actuals.json").read_text())
-check(_ac.get("weeks") and all(len(v) == 2 for w in _ac["weeks"].values() for v in w.values()), f"official box scores published for every defender-game ({sum(len(w) for w in _ac['weeks'].values())} rows)")
+check(_ac.get("weeks") and all(len(v) == 3 for w in _ac["weeks"].values() for v in w.values()), f"official box scores published for every defender-game ({sum(len(w) for w in _ac['weeks'].values())} rows)")
 _pl = json.loads((tmp / "docs/data/patchlog.json").read_text())
 check(len(_pl) >= 20 and {"change", "research", "post-mortem"} <= {e["kind"] for e in _pl} and all(e["title"] and "body" in e for e in _pl) and _pl == sorted(_pl, key=lambda e: e["date"], reverse=True), f"patch log built from the model log ({len(_pl)} entries, newest first)")
 check(all("fp_comb" in p and "fp_rel_comb" in p for p in proj) and meta.get("fantasypros_rows") == 0 and "espn_injury_rows" in meta, "outside consensus and outside injury feed wired through (empty on synthetic data)")
@@ -126,7 +126,7 @@ check(picks.drop_duplicates(["player", "market", "side", "line"]).shape[0] == le
 check({"lock", "grade", "consistency", "payout"} <= set(picks.columns) and picks.grade.isin(["A", "B", "C"]).all(), "logged picks carry their grade, lock score, consistency and payout")
 five = picks[picks.five.fillna(False).astype(bool)] if "five" in picks.columns else pd.DataFrame()
 flagged = G.lock_blocked(picks)               # never locks, whatever their score
-others = picks[~picks.player.isin(five.player) & ~flagged] if len(five) else picks[~flagged]
+others = picks[~picks.player.isin(five.player) & ~flagged & picks.market.isin(C.LOCK_MARKETS)] if len(five) else picks[~flagged & picks.market.isin(C.LOCK_MARKETS)]   # assists are never locks
 _segs = G.segment_key(five) if len(five) else pd.Series([], dtype=str)
 _full = {k for k, v in _segs.value_counts().items() if v >= C.LOCKS_PER_SEGMENT}
 _better = others[(others.lock > five.lock.min() + 1e-9) & ~G.segment_key(others).isin(_full)] if len(five) and len(others) else others.iloc[0:0]
@@ -167,6 +167,15 @@ pd.DataFrame(rows).to_csv("data/picks.csv", index=False)
 pd.DataFrame(snap).to_csv("data/odds/2026/wk06/20261018T165500Z.csv", index=False)
 graded, summary = G.grade(pw)
 check(list(graded.result) == ["Win", "Loss", "Win"], f"picks graded correctly ({list(graded.result)})")
+# an assists pick settles on assists (combined less solo), not on tackles
+_r0 = week6.iloc[0]; _ast_line = float(_r0.comb - _r0.solo_t) - 0.5
+_pa = pd.concat([pd.DataFrame(rows), pd.DataFrame([dict(season=2026, week=6, player=_r0.player, team=_r0.team, opp="", market="player_assists", side="Over", line=_ast_line,
+                                                      book="DraftKings", odds=-110, event_id="X0", commence_time="2026-10-18T17:00:00Z", pulled_at="20261018T120000Z", five=False, lock=50.0, grade="C")])], ignore_index=True)
+_pa.to_csv("data/picks.csv", index=False)
+_ga, _ = G.grade(pw)
+check(list(_ga.result) == ["Win", "Loss", "Win", "Win"] and float(_ga.actual.iloc[3]) == float(_r0.comb - _r0.solo_t) and _ga.side_market.iloc[3] == "Over assists",
+      f"an assists pick is graded on assists ({_ga.result.iloc[3]}, actual {_ga.actual.iloc[3]} vs line {_ast_line})")
+pd.DataFrame(rows).to_csv("data/picks.csv", index=False)
 # a pick on a player with no stat row in a game that is in the books is void, not pending; a game not yet played stays pending
 _v = pd.read_csv(G.PICKS); _v = pd.concat([_v, _v.iloc[[0]].assign(player="Nobody Atall", event_id="void_test")], ignore_index=True); _v.to_csv(G.PICKS, index=False)
 _gv, _ = G.grade(pw)
@@ -182,7 +191,22 @@ check(summary["close_moved"] == 3 and abs(summary["beat_close_share"] - 2 / 3) <
 _nv = list(graded.clv_novig)
 check(all(np.isfinite(v) for v in _nv) and all((v > 0) == (lm > 0) for v, lm in zip(_nv, graded.clv_line)) and all(abs(v) < 0.5 for v in _nv) and summary.get("clv_novig_n") == 3 and summary.get("avg_clv_novig") is not None,
       f"no-vig closing-line value computed per pick and follows the line move ({[round(v, 3) for v in _nv]})")
-_html = (ROOT / "docs" / "index.html").read_text() if "ROOT" in globals() else Path(__file__).resolve().parents[1].joinpath("docs", "index.html").read_text()
+_html = (ROOT / "docs" / "index.html").read_text()
+check('data-tab="ast"' in _html and "function renderAssists" in _html and "player_assists" in _html, "site has the Assists tab")
+check(C.market_kind("player_assists") == "assists" and C.market_kind("player_tackles_assists") == "combined" and C.market_kind("player_solo_tackles") == "solo"
+      and C.market_kind("player_assists_alternate") == "assists" and C.market_kind("player_tackles_assists_alternate") == "combined", "market kinds: solo, assists, combined")
+_pa = pd.read_csv(tmp / "data" / "cache" / "projections.csv")
+check({"proj_ast", "phi_ast", "fair_line_ast"} <= set(_pa.columns) and (_pa.proj_ast > 0).all() and ((_pa.proj_ast - (_pa.proj - _pa.proj_solo)).abs() < 0.06).all(), "assists projection: combined less solo, with its own dispersion and fair line")
+_ba = json.loads((tmp / "docs" / "data" / "bets.json").read_text())
+_ast = [b for b in _ba if b["market"] == "player_assists"]
+check(len(_ast) >= 10 and all(b.get("proj") is not None and b.get("under_link") for b in _ast) and not any(b.get("five") for b in _ast) and any(b["pick"] in ("Over", "Under") for b in _ast) or len(_ast) >= 10 and all(b.get("proj") is not None for b in _ast) and not any(b.get("five") for b in _ast),
+      f"assists lines priced on the board with slip links and never a lock ({len(_ast)} lines, {sum(b['pick'] in ('Over', 'Under') for b in _ast)} picks)")
+_pl = json.loads((tmp / "docs" / "data" / "parlays.json").read_text()) if (tmp / "docs" / "data" / "parlays.json").exists() else {}
+_legs = [l for p in (_pl.get("parlays") or _pl.get("open") or []) for l in (p.get("legs") or [])] if isinstance(_pl, dict) else []
+check(not any(l.get("market") == "player_assists" for l in _legs), "no parlay leg is an assists line")
+_ac = json.loads((tmp / "docs" / "data" / "actuals.json").read_text())
+check(all(len(v) == 3 for wk in _ac["weeks"].values() for v in wk.values()), "actuals carry combined, solo and assists")
+
 check('data-tab="gloss"' in _html and "function renderGloss" in _html and "No-vig CLV" in _html and "clv_pct" in _html, "site has the glossary tab and the no-vig CLV tile")
 from pipeline.grade import no_vig_clv
 check(abs(no_vig_clv(-110, "Under", 5.5, 5.5, -110, -110) - (0.5 - 110 / 210)) < 1e-9 and no_vig_clv(-110, "Under", 5.5, 4.5, -110, -110) > 0.03 and no_vig_clv(-110, "Under", 5.5, 6.5, -110, -110) < -0.03

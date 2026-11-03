@@ -874,6 +874,12 @@ def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
     F.loc[F.new_role, "phi"] = F.phi + C.NEW_ROLE["phi_bump"]     # his count is far more spread than a settled player's
     F["fair_line"] = [fair_line(m, p) for m, p in zip(F.proj, F.phi)]
     F["fair_line_solo"] = [fair_line(m, p) for m, p in zip(F.proj_solo, F.phi_solo)]
+    # assists: the combined projection less the solo one; their own dispersion from the backtest when it has one
+    F["proj_ast"] = (F.proj - F.proj_solo).clip(lower=0.05)
+    F["phi_ast"] = F.group.map({g: phi_by_group.get(f"{g}|ast") for g in F.group.unique()}) if isinstance(phi_by_group, dict) else np.nan
+    F["phi_ast"] = F.phi_ast.fillna(F.phi)
+    F.loc[F.venue == "NEUTRAL", "phi_ast"] = F.phi_ast + 0.15
+    F["fair_line_ast"] = [fair_line(m, p) for m, p in zip(F.proj_ast, F.phi_ast)]
     F["season_avg"] = F.comb_prev_raw / F.n_prev.clip(lower=1)
     return F
 
@@ -895,13 +901,14 @@ def claimed_prob(p_side, adj=0.0):
     return float(np.clip(0.5 + C.CLAIM_SHRINK * (float(p_side) - 0.5) + float(adj), 0.05, 0.95))
 
 
-def segment_adjust(segments, side, solo, group):
+def segment_adjust(segments, side, kind, group):
     """Correction to a pick's claimed chance from the graded record of picks like it: finest segment with enough
-    picks (side x market x position, then side x market, then side). Returns (adjustment, segment name)."""
+    picks (side x market x position, then side x market, then side). `kind` is 'solo', 'assists' or 'combined'
+    (True/False still read as solo/combined). Returns (adjustment, segment name)."""
     if not segments:
         return 0.0, ""
     c = C.SEGMENT_CAL
-    mk = "solo" if solo else "combined"
+    mk = kind if isinstance(kind, str) else ("solo" if kind else "combined")
     for key in (f"{side} {mk} {group}", f"{side} {mk}", f"{side}"):
         seg = segments.get(key)
         if seg and seg.get("n", 0) >= c["min_n"]:
@@ -938,13 +945,15 @@ def _num(v, d=np.nan):
     return d if np.isnan(v) else v
 
 
-def rundown(p, line, side, solo, mu_model, mu, p_side, claim, ev, pick, why, fl, new_role, in_role_n, log_raw):
+def rundown(p, line, side, kind, mu_model, mu, p_side, claim, ev, pick, why, fl, new_role, in_role_n, log_raw):
     """A templated read-up of one line from the numbers the pricer used: who he is, his recent games, the model's
     read, what the book's line implies about his snaps, what decides it, and the nudges. Every sentence is a
-    number restated; nothing here is a view the data does not hold."""
-    stat = "solo tackles" if solo else "tackles + assists"
+    number restated; nothing here is a view the data does not hold. `kind`: 'solo', 'assists' or 'combined'."""
+    kind = kind if isinstance(kind, str) else ("solo" if kind else "combined")
+    solo = kind == "solo"; ast = kind == "assists"
+    stat = {"solo": "solo tackles", "assists": "assists"}.get(kind, "tackles + assists")
     n = int(_num(p.get("n_prev"), 0)); grp = str(p.get("group", "")); team = str(p.get("team", "")); opp = str(p.get("opp_team", ""))
-    avg = _num(p.get("solo_prev") if solo else p.get("comb_prev_raw")) / max(n, 1) if n else np.nan
+    avg = (_num(p.get("solo_prev")) if solo else (_num(p.get("comb_prev_raw")) - _num(p.get("solo_prev"))) if ast else _num(p.get("comb_prev_raw"))) / max(n, 1) if n else np.nan
     share = _num(p.get("pct_prev")); last_sh = _num(p.get("pct_last")); exp_sh = _num(p.get("share_pred")); rate = _num(p.get("rate_clean")); tsn = _num(p.get("tsnaps_exp"))
     ps_g = int(_num(p.get("ps_games"), 0)); ps_avg = _num(p.get("ps_avg_raw"))
     out = []
@@ -954,7 +963,7 @@ def rundown(p, line, side, solo, mu_model, mu, p_side, claim, ev, pick, why, fl,
         who += f": {avg:.1f} {stat} a game over {n} game{'s' if n != 1 else ''} this season"
         if not np.isnan(share):
             who += f" at {share:.0%} of the defensive snaps"
-    if ps_g >= 4 and not np.isnan(ps_avg) and not solo:
+    if ps_g >= 4 and not np.isnan(ps_avg) and not solo and not ast:
         who += f"; last season {ps_avg:.1f} a game over {ps_g} games"
     out.append(who + ".")
     lp = _log(p, "log_pct"); lg = log_raw or []
@@ -1033,7 +1042,8 @@ def price_lines(lines, P, segments=None):
         if len(cand) > 1:
             cand2 = cand[cand.team_name.isin([getattr(r, "home_team", None), getattr(r, "away_team", None)])]
             cand = cand2 if len(cand2) else cand
-        solo = "solo" in str(r.market)
+        kind = C.market_kind(r.market)
+        solo, ast = kind == "solo", kind == "assists"
         clean = lambda v: None if v is None or (isinstance(v, float) and pd.isna(v)) else v
         base = dict(player=r.player, book=r.book, market=r.market, line=float(r.line), over_odds=r.over_odds,
                     under_odds=r.under_odds, commence_time=getattr(r, "commence_time", ""), event_id=getattr(r, "event_id", ""),
@@ -1043,8 +1053,9 @@ def price_lines(lines, P, segments=None):
             rows.append({**base, "pick": "No projection", "why": "Player not in the model (no defensive snaps logged)"})
             continue
         p = cand.iloc[0]
-        mu_model = p.proj_solo if solo else p.proj
-        phi_use = float(p.get("phi_solo", p.phi)) if solo and pd.notna(p.get("phi_solo", np.nan)) else float(p.phi)
+        mu_model = p.proj_solo if solo else p.get("proj_ast", max(0.05, p.proj - p.proj_solo)) if ast else p.proj
+        phi_col = "phi_solo" if solo else "phi_ast" if ast else "phi"
+        phi_use = float(p.get(phi_col, p.phi)) if pd.notna(p.get(phi_col, np.nan)) else float(p.phi)
         mu = (1 - C.LINE_WEIGHT) * mu_model + C.LINE_WEIGHT * float(r.mkt_line)
         po_model = p_over(mu, phi_use, float(r.line))
         # informational only, never part of the grade: the model and the consensus line far apart means one of them
@@ -1063,8 +1074,8 @@ def price_lines(lines, P, segments=None):
         # half of each side's segment correction (how our claims for picks of this kind have resolved) moves the
         # probability that decides whether this line is a pick; the full correction reaches the claim and the score
         wv = C.SEGMENT_CAL.get("ev_weight", 0.0)
-        adj_o = segment_adjust(segments, "Over", solo, p.group)[0] if wv else 0.0
-        adj_u = segment_adjust(segments, "Under", solo, p.group)[0] if wv else 0.0
+        adj_o = segment_adjust(segments, "Over", kind, p.group)[0] if wv else 0.0
+        adj_u = segment_adjust(segments, "Under", kind, p.group)[0] if wv else 0.0
         po_o = float(np.clip(po + wv * adj_o, 0.02, 0.98)); pu_u = float(np.clip(1 - po + wv * adj_u, 0.02, 0.98))
         ev_o = po_o * (d_o - 1) - (1 - po_o) if d_o else -9
         ev_u = pu_u * (d_u - 1) - (1 - pu_u) if d_u else -9
@@ -1072,7 +1083,7 @@ def price_lines(lines, P, segments=None):
         fl = {k: _flag(p.get(k, False)) for k in ("new_role", "reduced_role", "absence", "missed_game", "new_team")}
         new_role = fl["new_role"]
         shifted = any(fl.values())
-        log = _log(p, "log_solo" if solo else "log_comb")
+        log = _log(p, "log_solo" if solo else "log_ast" if ast else "log_comb")
         log_raw = list(log)
         # consistency counts in-role games only: games where he played at least 70% of the snap share he played last game
         lp = _log(p, "log_pct")
@@ -1102,7 +1113,7 @@ def price_lines(lines, P, segments=None):
         thin = p.n_prev < C.MIN_GAMES_FOR_PICK and not role
         bar = C.SIGNAL_BAR if (fade or role) else (C.PICK_BAR_OVER if side == "Over" else C.PICK_BAR)
         p_side = po if side == "Over" else 1 - po
-        seg_adj, seg_key = segment_adjust(segments, side, solo, p.group)
+        seg_adj, seg_key = segment_adjust(segments, side, kind, p.group)
         claim = claimed_prob(p_side, seg_adj)
         low_claim = claim < C.PICK_MIN_CLAIM
         pick = side if (ev >= bar and not flagged and not thin and not low_claim) else "Pass"
@@ -1154,11 +1165,11 @@ def price_lines(lines, P, segments=None):
                      "vacancy": _flag(p.get("vacancy_rule", False)), "share_pred": None if pd.isna(p.get("share_pred", np.nan)) else float(p.get("share_pred")),
                      "opp_qb_out": bool(p.get("opp_qb_out", False)), "opp_rb_out": bool(p.get("opp_rb_out", False)),
                      "rest": None if pd.isna(p.get("rest", np.nan)) else int(p.get("rest")),
-                     "rundown": rundown(p, float(r.line), side, solo, float(mu_model), float(mu), float(p_side), float(claim), float(ev), pick, why, fl, new_role, in_role_n, log_raw),
+                     "rundown": rundown(p, float(r.line), side, kind, float(mu_model), float(mu), float(p_side), float(claim), float(ev), pick, why, fl, new_role, in_role_n, log_raw),
                      "press_pg": None if pd.isna(p.get("press_pg", np.nan)) else float(p.get("press_pg")),
                      "fp_comb": None if pd.isna(p.get("fp_comb", np.nan)) else float(p.get("fp_comb")),
                      "fp_solo": None if pd.isna(p.get("fp_solo", np.nan)) else float(p.get("fp_solo")),
-                     "fp_rel": None if pd.isna(p.get("fp_rel_solo" if solo else "fp_rel_comb", np.nan)) else float(p.get("fp_rel_solo" if solo else "fp_rel_comb")),
+                     "fp_rel": None if ast or pd.isna(p.get("fp_rel_solo" if solo else "fp_rel_comb", np.nan)) else float(p.get("fp_rel_solo" if solo else "fp_rel_comb")),
                      "lock": lock, "grade": grade_of(lock)})
     out = pd.DataFrame(rows)
     if "ev" in out:

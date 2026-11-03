@@ -241,8 +241,10 @@ def attach_game_logs(P, H, season, week):
     solo = done.groupby("player_id").solo_t.apply(lambda x: "|".join(str(int(v)) for v in x))
     P = P.copy()
     pct = done.groupby("player_id").def_pct.apply(lambda x: "|".join(f"{v:.2f}" for v in x.fillna(0)))
+    ast = done.groupby("player_id").apply(lambda d: "|".join(str(int(v)) for v in (d.comb - d.solo_t)), include_groups=False)
     P["log_comb"] = P.player_id.map(comb).fillna("")
     P["log_solo"] = P.player_id.map(solo).fillna("")
+    P["log_ast"] = P.player_id.map(ast).fillna("")
     P["log_pct"] = P.player_id.map(pct).fillna("")      # snap share per game, so consistency can count in-role games only
     return P
 
@@ -297,7 +299,7 @@ def cmd_daily():
     hs = H[(H.season == C.SEASON) & H.comb.notna()]
     actuals = {}
     for r in hs.itertuples():
-        actuals.setdefault(str(int(r.week)), {})[f"{r.team}|{r.name_key}"] = [int(r.comb), int(r.solo_t)]
+        actuals.setdefault(str(int(r.week)), {})[f"{r.team}|{r.name_key}"] = [int(r.comb), int(r.solo_t), int(r.comb - r.solo_t)]   # combined, solo, assists
     _json(SITE / "actuals.json", dict(season=C.SEASON, weeks=actuals))   # H has zero-tackle games from snap counts, so "played, no tackles" is not "did not play"
     parlays, psum = G.grade_parlays(pw)
     summary["parlays"] = psum
@@ -390,6 +392,21 @@ def cmd_odds(hours=None, auto=False):
     print(f"odds: {len(rows)} prices pulled, {len(lines)} current lines, {n_new} new picks logged, credits left {remaining}")
 
 
+def cmd_history(weeks, markets):
+    """Fetch a finished week's lines for extra markets from the historical endpoint (10 credits a game per market)
+    and store them as snapshots, so the replay can price and grade them as if they had been pulled live."""
+    key = os.environ.get("ODDS_API_KEY")
+    if not key:
+        sys.exit("ODDS_API_KEY is not set")
+    if not weeks:
+        sys.exit("history: give --weeks, e.g. --weeks 7,8")
+    for wk in weeks:
+        print(f"history: season {C.SEASON} week {wk}, markets {markets}")
+        rows, left = O.pull_historical(key, C.SEASON, wk, markets)
+        path = O.save_snapshot(rows, C.SEASON, wk)
+        print(f"history: week {wk}: {len(rows)} prices saved to {path}, credits left {left}")
+
+
 WEEK_LINE_COLS = ["player", "jersey", "team", "opp", "group", "market", "line", "book", "over_odds", "under_odds", "over_link", "under_link", "side", "pick", "proj", "model_over", "grade", "lock", "commence_time", "event_id", "rundown"]
 
 
@@ -440,7 +457,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
             "fair_line", "fair_line_solo", "crew_comb", "crew_solo", "spread_dog", "role_signal", "venue", "gameday", "gametime", "phi", "phi_solo",
             "dc_status", "opp_qb_out", "opp_rb_out", "rest", "pct_last3", "pct_prev", "pct_last", "gap_weeks", "team_changed", "new_role", "reduced_role",
             "absence", "missed_game", "new_team", "snap_jump", "vacancy", "vacancy_rule", "share_pred", "rate_clean", "tsnaps_exp", "allowed_rel", "roof", "solo_drift", "proj_factor", "proj_gbm",
-            "log_comb", "log_solo", "press_pg", "fp_comb", "fp_solo", "fp_rel_comb", "fp_rel_solo", "jersey"]
+            "log_comb", "log_solo", "log_ast", "proj_ast", "phi_ast", "fair_line_ast", "press_pg", "fp_comb", "fp_solo", "fp_rel_comb", "fp_rel_solo", "jersey"]
     _json(SITE / "projections.json", records(P, [c for c in cols if c in P.columns]) if len(P) else [])
     _json(SITE / "bets.json", records(bets))
     _json(SITE / "backtest.json", bt)
@@ -449,17 +466,25 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
     except Exception as e:  # noqa: BLE001
         print(f"patch log skipped ({type(e).__name__}: {e})")
     retro = Path("data/retro_five.json")
+    retro_ast = Path("data/retro_assists.json")
+    if retro_ast.exists():
+        meta["retro_assists"] = json.loads(retro_ast.read_text())
     _json(SITE / "results.json", dict(summary=summary, picks=records(graded), parlays=records(parlays) if parlays is not None and len(parlays) else [],
                                       retro=json.loads(retro.read_text()) if retro.exists() else None))
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["daily", "odds", "seal"])
+    ap.add_argument("cmd", choices=["daily", "odds", "seal", "history"])
     ap.add_argument("--hours", type=float, default=None)
     ap.add_argument("--auto", action="store_true")
+    ap.add_argument("--weeks", default="", help="history: comma-separated finished weeks to fetch, e.g. 7,8")
+    ap.add_argument("--markets", default=C.ASSIST_MARKET, help="history: comma-separated market keys")
     a = ap.parse_args()
     if a.cmd == "seal":
         SEAL.cmd_seal(SITE)
     else:
-        cmd_daily() if a.cmd == "daily" else cmd_odds(a.hours, a.auto)
+        if a.cmd == "history":
+            cmd_history([int(w) for w in a.weeks.split(",") if w.strip()], [m for m in a.markets.split(",") if m.strip()])
+        else:
+            cmd_daily() if a.cmd == "daily" else cmd_odds(a.hours, a.auto)

@@ -4,7 +4,19 @@ HISTORY_SEASONS = [2023, 2024, 2025]   # used for priors, stat crews and the bac
 
 # --- odds feed (The Odds API) ---
 ODDS_SPORT = "americanfootball_nfl"
-ODDS_MARKETS = ["player_tackles_assists", "player_solo_tackles"]
+ODDS_MARKETS = ["player_tackles_assists", "player_solo_tackles", "player_assists"]   # assists added 2026-11-03 (scoping, research round 8): +1 credit per game
+ASSIST_MARKET = "player_assists"
+LOCK_MARKETS = ("player_tackles_assists", "player_solo_tackles")   # assists are tracked as theoretical picks: never a lock or a parlay leg until their record earns it
+
+
+def market_kind(market):
+    """'solo', 'assists' or 'combined' for a market key (alternate-line keys included)."""
+    m = str(market)
+    if "solo" in m:
+        return "solo"
+    if "assists" in m and "tackles" not in m:
+        return "assists"
+    return "combined"
 ODDS_REGIONS = "us"                # only used if ODDS_BOOKMAKERS is empty
 # Books licensed in Alberta's regulated market (AGLC / Alberta iGaming Corporation roster, Oct 13 2026) that
 # The Odds API carries. The API has no Alberta-specific feeds: brands with a Canadian (Ontario) feed use it,

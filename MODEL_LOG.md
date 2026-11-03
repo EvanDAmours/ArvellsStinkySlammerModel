@@ -1238,6 +1238,49 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-03, midday MDT (assists: a trial market on its own tab)
+- Owner, after research round 8: build a separate tab for assists, replay past weeks to see where the model's
+  theoretical assists picks would have landed, and give every assists pick the same slip links as the tackle
+  picks. Done as a third market through the existing pipeline, never as a second model:
+  - `config.ODDS_MARKETS` now pulls `player_assists` with the two tackle markets (one more credit per game per
+    pull; the pull job is otherwise unchanged). `config.market_kind()` names a market key solo, assists or
+    combined (alternate-line keys included); every place that used to test `"solo" in market` reads the kind.
+  - Projection: `proj_ast = proj - proj_solo` (floored at 0.05), `phi_ast` from the backtest (`<group>|ast`,
+    same corrected-dispersion estimate as solo), `fair_line_ast`. The pricer prices an assists line from it with
+    the same bars, claim floor, segment correction (new segments "Under assists <pos>" and so on), lock score,
+    grade, checklist, rundown ("assists" wording, average from combined less solo) and the book's links and
+    selection ids. The game log for consistency is the per-game assists (`log_ast`).
+  - Grading: the box-score number an assists pick settles on is combined less solo (`_actual_for`); the luck
+    table, market watch, segment calibration, side-market records ("Over assists", "Under assists") and the
+    weekly log all carry the third kind. `actuals.json` now holds [combined, solo, assists] per defender-game so
+    My board grades an assists bet officially; the live tracker reads assists as ESPN's total less solo.
+  - **Never a lock or a parlay leg** (`config.LOCK_MARKETS`): assists picks are theoretical until their record
+    earns more. The tackle board (Plays tab) hides them; the Assists tab shows them with the same cards, book
+    filter, best-price toggle, picks-only toggle and sort. The Track record market filter and a chip cover them.
+  - Backtest adds "Assists: full model" and "Assists: season average" rows (Model check tab, own section).
+  - Past weeks: no assists line was ever pulled, so the replay needs the book's historical lines. New
+    `run.py history --weeks 7,8 --markets player_assists` fetches, for each game of a finished week (event ids
+    from that week's live snapshots), the historical snapshot one hour before kickoff from The Odds API's
+    historical endpoint and stores it as a snapshot with that timestamp, so `closing_lines()` and the replay read
+    it like a live pull. The manual workflow "Fetch past lines for a market" (`history.yml`) runs it with the
+    secret. Then `python tools/replay_five.py --week 7 --markets player_assists --out data/retro_assists.json
+    --all-picks` prices those lines with the week's projections (calibration from games before the week, as the
+    tackle replay does), grades every pick, and the daily job carries the result into the site as
+    `meta.retro_assists`, shown on the Assists tab as "What the model would have picked in past weeks", every pick
+    listed. Caveat built into the tab's wording: a historical snapshot is a closing line, so the replay has no
+    early price and no line shopping; it tests the model's read, not the timing.
+  - **Not run yet: the historical fetch costs 10 credits a game per market (ten times a live pull), about 290
+    credits for weeks 7 and 8, against 410 left on the key at Monday's pull; the owner decides.**
+- Validation: smoke test passes (assists lines priced on the synthetic board with links, never a lock, no
+  assists parlay leg, an assists pick graded on assists, actuals with three numbers, market kinds). Real-data
+  daily run in a scratch copy (29,391 games): full model miss 1.6212, unchanged to the fourth decimal (the tackle
+  pricing is untouched); assists full model miss 1.057 against 1.107 for the assists season average (4.5%
+  better, bias +0.05), solo 1.128 vs 1.179 for comparison. Assists dispersion by position: CB 1.21, DL 1.03,
+  LB 1.40, S 1.30 (1.4 to 1.6 for expected shares under 60%). Week 9 projections: 768 defenders, assists
+  projection 0.3 to 5.8, mean 1.5; fair assists lines 0.5 to 5.5.
+- Revert: drop `player_assists` from `ODDS_MARKETS` to stop the pull (everything else is inert without lines);
+  the tab then shows "no assists lines" and the record keeps what was graded.
+
 ### 2026-11-03, morning MDT (no-vig closing-line value, in points; glossary tab)
 - Owner sent the bettors' definition of CLV: the fair (no-vig) closing chance of the side taken minus the chance
   implied by the price taken, in probability points, with +1 to +2 good and +3 to +5 excellent. The grader now

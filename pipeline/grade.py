@@ -117,7 +117,7 @@ def mark_locks(P, season, week, now=None):
         slots = max(0, locks_for(games.get(slate, 1)) - kept.player.nunique())
         if slots and "lock" in P.columns:
             cand = P[open_ & ~P.player.isin(set(kept.player))].sort_values("lock", ascending=False)
-            cand = cand[cand.lock.notna() & (cand.lock >= C.LOCK_MIN_SCORE)]
+            cand = cand[cand.lock.notna() & (cand.lock >= C.LOCK_MIN_SCORE) & cand.market.isin(C.LOCK_MARKETS)]
             cand = cand[~lock_blocked(cand)]
             cand = cand.drop_duplicates("player")
             # no more than LOCKS_PER_SEGMENT of the same kind of pick a day, counting the ones already kept
@@ -140,7 +140,7 @@ def segment_key(df):
     """The kind of pick, for the per-kind caps: the pricer's segment when it has one, else side x market."""
     if df is None or len(df) == 0:
         return pd.Series([], dtype=str)
-    mk = np.where(df.market.astype(str).str.contains("solo"), "solo", "combined")
+    mk = df.market.map(C.market_kind).astype(str)
     base = df.side.astype(str) + " " + mk
     if "segment" in df.columns:
         seg = df.segment.fillna("").astype(str)
@@ -235,7 +235,7 @@ def grade_parlay_legs(L, stats):
     L = L.copy()
     L["name_key"] = L.player.map(norm_name)
     L = L.merge(stats, on=["season", "week", "name_key"], how="left")
-    L["actual"] = np.where(L.market.str.contains("solo"), L.solo, L.comb)
+    L["actual"] = _actual_for(L)
     done = L.actual.notna()
     win = np.where(L.side == "Over", L.actual > L.line, L.actual < L.line)
     L["result"] = np.where(~done, "Pending", np.where(L.actual == L.line, "Push", np.where(win, "Win", "Loss")))
@@ -261,12 +261,13 @@ def grade_parlay_legs(L, stats):
 
 
 def grade_parlays(pw_comb):
+    pw_comb = _with_ast(pw_comb)
     if not PARLAYS.exists():
         return pd.DataFrame(), {}
     L = pd.read_csv(PARLAYS)
     if L.empty:
         return pd.DataFrame(), {}
-    stats = pw_comb.groupby(["season", "week", "name_key"]).agg(comb=("comb", "sum"), solo=("solo_t", "sum")).reset_index()
+    stats = pw_comb.groupby(["season", "week", "name_key"]).agg(comb=("comb", "sum"), solo=("solo_t", "sum"), ast=("ast_t", "sum")).reset_index()
     P = grade_parlay_legs(L, stats)
     g = P[P.result.isin(["Win", "Loss"])]
     summary = dict(parlays=int(len(P)), wins=int((g.result == "Win").sum()), losses=int((g.result == "Loss").sum()),
@@ -284,6 +285,20 @@ def weekly_five_keys(season, week):
         return set()
     P = P[(P.season == season) & (P.week == week) & P.five.fillna(False).astype(bool)]
     return {(r.player, r.market, r.side, float(r.line), r.book) for r in P.itertuples()}
+
+
+def _with_ast(pw_comb):
+    """The player-week table with an assists column (combined less solo), for grading the assists market."""
+    if pw_comb is None or len(pw_comb) == 0 or "ast_t" in pw_comb.columns:
+        return pw_comb
+    return pw_comb.assign(ast_t=pw_comb.comb - pw_comb.solo_t)
+
+
+def _actual_for(df):
+    """The box-score number each row's market settles on: solo, assists or combined."""
+    kind = df.market.map(C.market_kind)
+    ast = df["ast"] if "ast" in df.columns else df["comb"] - df["solo"]
+    return pd.Series(np.select([kind == "solo", kind == "assists"], [df["solo"], ast], df["comb"]), index=df.index)
 
 
 def _no_vig_side(over, under, side):
@@ -356,7 +371,7 @@ def segment_calibration(P):
         except (OSError, ValueError):
             g["group"] = ""
     g["group"] = g.group.fillna("").astype(str)
-    g["mk"] = np.where(g.market.str.contains("solo"), "solo", "combined")
+    g["mk"] = g.market.map(C.market_kind)
     mo = pd.to_numeric(g["model_over"], errors="coerce") if "model_over" in g.columns else pd.Series(np.nan, index=g.index)
     p_side = pd.Series(np.where(g.side == "Over", mo, 1 - mo), index=g.index)
     claimed = pd.to_numeric(g["p_claim"], errors="coerce") if "p_claim" in g.columns else pd.Series(np.nan, index=g.index)
@@ -380,6 +395,7 @@ def segment_calibration(P):
 def market_watch(pw_comb):
     """How the whole board resolved, week by week and market by market: every closing line (consensus across books)
     against the box score, with the market's own no-vig chance of the over. Shows where the market itself is off."""
+    pw_comb = _with_ast(pw_comb)
     out = []
     weeks = sorted({(int(s), int(w)) for s, w in zip(pw_comb.season, pw_comb.week)}) if len(pw_comb) else []
     for s_, w_ in weeks:
@@ -390,12 +406,12 @@ def market_watch(pw_comb):
         dec_o = cl.over_odds.map(lambda a: american_to_decimal(a) if pd.notna(a) else np.nan); dec_u = cl.under_odds.map(lambda a: american_to_decimal(a) if pd.notna(a) else np.nan)
         cl["p_over"] = np.where(dec_o.notna() & dec_u.notna(), (1 / dec_o) / (1 / dec_o + 1 / dec_u), np.nan)
         agg = cl.groupby(["event_id", "name_key", "market"]).agg(line=("line", "median"), p_over=("p_over", "mean")).reset_index()
-        st = pw_comb[(pw_comb.season == s_) & (pw_comb.week == w_)].groupby("name_key").agg(comb=("comb", "sum"), solo=("solo_t", "sum"))
-        agg = agg.join(st, on="name_key"); agg["actual"] = np.where(agg.market.str.contains("solo"), agg.solo, agg.comb)
+        st = pw_comb[(pw_comb.season == s_) & (pw_comb.week == w_)].groupby("name_key").agg(comb=("comb", "sum"), solo=("solo_t", "sum"), ast=("ast_t", "sum"))
+        agg = agg.join(st, on="name_key"); agg["actual"] = _actual_for(agg)
         agg = agg[agg.actual.notna() & (agg.actual != agg.line)]
         if agg.empty:
             continue
-        agg["mk"] = np.where(agg.market.str.contains("solo"), "solo", "combined"); agg["over"] = (agg.actual > agg.line).astype(float)
+        agg["mk"] = agg.market.map(C.market_kind); agg["over"] = (agg.actual > agg.line).astype(float)
         for mk, part in agg.groupby("mk"):
             out.append(dict(season=s_, week=w_, market=mk, lines=int(len(part)), over_rate=float(part.over.mean()), market_p_over=float(part.p_over.mean()) if part.p_over.notna().any() else None))
     return out
@@ -406,6 +422,7 @@ def luck_check(P, pw_comb):
     position), the picks' hit rate against the share of EVERY closing line in that segment that resolved the same
     way (the market's base rate that week). lift = hit - base: what our choice of lines added on top of the way the
     whole market went. A week where the whole board went under is not a week the model saw coming."""
+    pw_comb = _with_ast(pw_comb)
     if P is None or len(P) == 0 or "result" not in P.columns:
         return []
     g = P[P.result.isin(["Win", "Loss"])].copy()
@@ -417,7 +434,7 @@ def luck_check(P, pw_comb):
             g["group"] = g.get("group", pd.Series(index=g.index, dtype=object)).fillna(g.player.map(pr))
         except (OSError, KeyError, ValueError):
             g["group"] = g.get("group", "")
-    g["mk"] = np.where(g.market.str.contains("solo"), "solo", "combined"); g["hit"] = (g.result == "Win").astype(float)
+    g["mk"] = g.market.map(C.market_kind); g["hit"] = (g.result == "Win").astype(float)
     mo = pd.to_numeric(g["model_over"], errors="coerce") if "model_over" in g.columns else pd.Series(np.nan, index=g.index)
     g["claimed"] = np.where(g.side == "Under", 1 - mo, mo)
     if "clv_pos" in g.columns:
@@ -429,12 +446,12 @@ def luck_check(P, pw_comb):
             continue
         cl = cl.copy(); cl["name_key"] = cl.player.map(norm_name)
         agg = cl.groupby(["event_id", "name_key", "market"]).agg(line=("line", "median")).reset_index()
-        st = pw_comb[(pw_comb.season == sn) & (pw_comb.week == wk)].groupby("name_key").agg(comb=("comb", "sum"), solo=("solo_t", "sum"))
-        agg = agg.join(st, on="name_key"); agg["actual"] = np.where(agg.market.str.contains("solo"), agg.solo, agg.comb)
+        st = pw_comb[(pw_comb.season == sn) & (pw_comb.week == wk)].groupby("name_key").agg(comb=("comb", "sum"), solo=("solo_t", "sum"), ast=("ast_t", "sum"))
+        agg = agg.join(st, on="name_key"); agg["actual"] = _actual_for(agg)
         agg = agg[agg.actual.notna() & (agg.actual != agg.line)].copy()
         if agg.empty:
             continue
-        agg["mk"] = np.where(agg.market.str.contains("solo"), "solo", "combined"); agg["under"] = (agg.actual < agg.line).astype(float)
+        agg["mk"] = agg.market.map(C.market_kind); agg["under"] = (agg.actual < agg.line).astype(float)
         if "group" in pw_comb.columns:
             agg["group"] = agg.name_key.map(pw_comb[(pw_comb.season == sn) & (pw_comb.week == wk)].drop_duplicates("name_key").set_index("name_key").group)
         else:
@@ -505,15 +522,16 @@ def record_by_grade(P):
 
 def grade(pw_comb):
     """pw_comb: player-week rows with name_key, season, week, comb, solo_t (official formula applied)."""
+    pw_comb = _with_ast(pw_comb)
     if not PICKS.exists():
         return pd.DataFrame(), {}
     P = pd.read_csv(PICKS)
     if P.empty:
         return P, {}
     P["name_key"] = P.player.map(norm_name)
-    stats = pw_comb.groupby(["season", "week", "name_key"]).agg(comb=("comb", "sum"), solo=("solo_t", "sum")).reset_index()
+    stats = pw_comb.groupby(["season", "week", "name_key"]).agg(comb=("comb", "sum"), solo=("solo_t", "sum"), ast=("ast_t", "sum")).reset_index()
     P = P.merge(stats, on=["season", "week", "name_key"], how="left")
-    P["actual"] = np.where(P.market.str.contains("solo"), P.solo, P.comb)
+    P["actual"] = _actual_for(P)
     # a game that is in the books (the team has stat rows) but the player has none: he did not play, the bet is void
     if "team" in pw_comb.columns and "team" in P.columns:
         teams_done = set(zip(pw_comb.season, pw_comb.week, pw_comb.team))
@@ -569,7 +587,7 @@ def grade(pw_comb):
         weeks.append(dict(season=int(sn), week=int(wk), picks=int(len(part)), wins=w, losses=l, pushes=pu,
                           pending=int((part.result == "Pending").sum()), units=float(part.units.sum()),
                           running_wins=cw, running_losses=cl))
-    P["side_market"] = P.side.fillna("") + " " + np.where(P.market.str.contains("solo"), "solo", "combined")
+    P["side_market"] = P.side.fillna("") + " " + P.market.map(C.market_kind)
     segs, seg_rows = segment_calibration(P)
     try:
         SEGMENTS.parent.mkdir(parents=True, exist_ok=True)
@@ -585,7 +603,7 @@ def grade(pw_comb):
     except Exception as e:  # noqa: BLE001
         print(f"grade: luck check skipped ({type(e).__name__}: {e})"); luck = []
     summary = dict(by_grade=by_grade, by_side=record_by(P, "side", ["Over", "Under"]), segments=seg_rows, market_watch=watch, luck=luck,
-                   by_side_market=record_by(P, "side_market", ["Over combined", "Over solo", "Under combined", "Under solo"]),
+                   by_side_market=record_by(P, "side_market", ["Over combined", "Over solo", "Over assists", "Under combined", "Under solo", "Under assists"]),
                    five=dict(bets=int(len(five)), wins=int((five.result == "Win").sum()), losses=int((five.result == "Loss").sum()),
                              pushes=int((five.result == "Push").sum()), units=float(five.units.sum()) if len(five) else 0.0,
                              hit=float((five.result == "Win").sum() / max(1, (five.result != "Push").sum())) if len(five) else None,
@@ -627,7 +645,7 @@ def write_five_log(P, summary, path, parlays=None):
     for (sn, wk), part in (five.groupby(["season", "week"]) if len(five) else []):
         lines += ["", f"## {sn} week {wk}", "", "| Pick | Price | Book | Grade | Lock | Actual | Result |", "| --- | --- | --- | --- | --- | --- | --- |"]
         for r in part.sort_values("lock", ascending=False).itertuples():
-            market = "solo" if "solo" in str(r.market) else "tackles + assists"
+            market = {"solo": "solo", "assists": "assists"}.get(C.market_kind(r.market), "tackles + assists")
             price = ("+" if r.odds > 0 else "") + str(int(r.odds)) if pd.notna(r.odds) else ""
             actual = "" if pd.isna(r.actual) else str(int(r.actual))
             lock = "" if pd.isna(getattr(r, "lock", np.nan)) else str(int(round(r.lock)))

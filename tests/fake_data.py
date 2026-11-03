@@ -141,6 +141,13 @@ def fake_odds_rows():
                              over_odds=int(rng.choice([-125, -115, -110, -105, 100])), under_odds=int(rng.choice([-115, -110, -105, -120])),
                              book_update=start, over_link=f"https://example.test/{book}/{r.team}/{norm_name(r.player)}/over", under_link=f"https://example.test/{book}/{r.team}/{norm_name(r.player)}/under",
                              over_sid=f"o-{r.team}-{i}", under_sid=f"u-{r.team}-{i}"))
+        # an assists line at DraftKings for the same player (the books post them for the regulars)
+        aline = float(np.floor(r.season_avg * 0.43 + rng.normal(0, 0.4))) + 0.5
+        rows.append(dict(event_id=f"E{r.team}", commence_time=start, home_team=TEAM_NAMES.get(r.team), away_team=TEAM_NAMES.get(r.opp_team),
+                         book="DraftKings", market="player_assists", player=r.player, line=max(0.5, aline),
+                         over_odds=int(rng.choice([-130, -115, -110, 100, 110])), under_odds=int(rng.choice([-150, -120, -110, -105])),
+                         book_update=start, over_link=f"https://example.test/DraftKings/{r.team}/{norm_name(r.player)}/ast/over", under_link=f"https://example.test/DraftKings/{r.team}/{norm_name(r.player)}/ast/under",
+                         over_sid=f"ao-{r.team}-{i}", under_sid=f"au-{r.team}-{i}"))
     return rows
 
 

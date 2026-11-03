@@ -1,0 +1,45 @@
+name: Fetch past lines for a market
+# Manual only. Pulls a finished week's lines for extra markets (assists by default) from The Odds API's historical
+# endpoint and stores them as snapshots, so tools/replay_five.py can price and grade them as if they had been
+# pulled live. Costs 10 credits per game per market (ten times a live pull): check the balance first.
+on:
+  workflow_dispatch:
+    inputs:
+      weeks:
+        description: "Finished weeks to fetch, comma-separated (e.g. 7,8)"
+        required: true
+        default: "7,8"
+      markets:
+        description: "Market keys, comma-separated"
+        required: true
+        default: "player_assists"
+permissions:
+  contents: write
+concurrency:
+  group: pipeline
+  cancel-in-progress: false
+jobs:
+  history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python run.py history --weeks "${{ github.event.inputs.weeks }}" --markets "${{ github.event.inputs.markets }}"
+      - name: Save snapshots
+        run: |
+          git config user.name "tackle-bot"
+          git config user.email "tackle-bot@users.noreply.github.com"
+          git add data/odds
+          git diff --cached --quiet || git commit -m "Past lines: ${{ github.event.inputs.markets }} weeks ${{ github.event.inputs.weeks }}"
+          for i in 1 2 3 4; do
+            git pull --rebase -X theirs && git push && break
+            git rebase --abort 2>/dev/null || true
+            sleep $((i * 5))
+          done
