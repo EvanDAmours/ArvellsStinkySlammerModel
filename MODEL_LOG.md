@@ -1080,6 +1080,19 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, night MDT (site sealed live; the post-mortem is now a standing scheduled task)
+- The owner set `SITE_PASSWORDS`; the daily job sealed the site at 8:50 pm and the live site serves only the
+  sealed files (plain `meta.json` answers 404, `meta.json.enc` 200). The first attempt had failed on the missing
+  library (entry above).
+- Owner: "after every slate of games we are re-evaluating the model and internally validating." That is now a
+  scheduled task that starts a fresh session on Friday, Monday and Tuesday at 6:20 am Edmonton, two hours after
+  the daily job has graded the slate, and runs the post-mortem protocol in CLAUDE.md rule 4: record and units,
+  grade order, locks and parlays, calibration by claimed chance, the luck table, miss anatomy (snaps, plays
+  faced, variance, missed role flags), the backtest's "without X" rows on level-matched miss, segment corrections
+  at their caps; a rule change only on evidence across weeks or both halves, under the validation protocol; the
+  write-up appended here and a short report to the owner. It reads the plain data under `data/` (picks, parlays,
+  weekly log, segments, cache), since the site files are sealed and no secret is available to it.
+
 ### 2026-11-02, night MDT (seal: the runner lacked the crypto library; unsealed files never published again)
 - The first sealed run failed: `cryptography` was installed on this machine but not in `requirements.txt`, so the
   runner could not seal and the save step published the plain files anyway. Fixed both: the library is a
