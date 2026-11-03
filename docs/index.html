@@ -101,6 +101,8 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 .md p { margin: 6px 0; max-width: 90ch; } .md ul, .md ol { margin: 6px 0 6px 20px; padding: 0; } .md li { margin: 3px 0; max-width: 88ch; } .md h4 { margin: 10px 0 4px; font: 700 1rem var(--cond); }
 .md table { font-size: 0.86rem; } .md td, .md th { white-space: normal; } .md code { font-size: 0.85em; background: var(--bg, #eef0f3); padding: 1px 4px; border-radius: 4px; }
 .rec-filters .reset.on { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+#mine-body .chips .reset { font: 600 0.85rem var(--cond); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; color: var(--ink); }
+#mine-body textarea.code { width: 100%; font: 0.78rem/1.3 ui-monospace, Menlo, monospace; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; margin: 4px 0 8px; word-break: break-all; }
 .lead { color: var(--muted); font-size: 0.9rem; max-width: 80ch; margin: 0 0 10px; }
 .more { margin: 8px 0 0; font-size: 0.9rem; color: var(--muted); max-width: 80ch; } .more summary { cursor: pointer; color: var(--ink); font-weight: 600; } .more p { margin: 6px 0; }
 .indent { padding-left: 18px; } small.muted { color: var(--muted); font-weight: 400; }
@@ -949,7 +951,7 @@ function toggleMine(b) {
   if (i >= 0) list.splice(i, 1);
   else list.push({ key: k, player: b.player, team: b.team, opp: b.opp, group: b.group, market: b.market, side: b.side || b.pick, line: b.line, book: b.book,
                    odds: (b.side || b.pick) === "Under" ? b.under_odds : b.over_odds, proj: b.proj, model_p: (b.side || b.pick) === "Under" ? 1 - b.model_over : b.model_over,
-                   grade: b.grade, lock: b.lock, commence_time: b.commence_time, link: sideLink(b, b.side || b.pick), added: new Date().toISOString() });
+                   grade: b.grade, lock: b.lock, commence_time: b.commence_time, link: sideLink(b, b.side || b.pick), season: DATA.meta?.season, week: DATA.meta?.week, added: new Date().toISOString() });
   saveMine(list); renderPlays(); renderMine(); liveLoop(true);
 }
 // the book's own bet-slip link for a side, when The Odds API passed one through (DraftKings and FanDuel do)
@@ -1020,11 +1022,12 @@ function renderMine() {
   const box = $("#mine-body"); if (!box) return; box.replaceChildren();
   const list = mine();
   box.append(el("p", { class: "lead" }, "The bets you took, tracked live, with your stakes. Press \"+ My board\" on any card on the Plays tab; it is kept in this browser only. While a game is on, each bet refreshes from ESPN's box score every minute: tackles so far, the pace for the full game, and whether the bet is trending the right way. The official box score the books settle on can differ by a tackle from the live feed."));
-  if (!list.length) { box.append(el("div", { class: "empty" }, "Nothing on your board yet. Add bets from the Plays tab, or find one below."), addPicker()); return; }
+  if (!list.length) { box.append(el("div", { class: "empty" }, "Nothing on your board yet. Add bets from the Plays tab, or find one below."), addPicker(), ledgerSection()); return; }
   let w = 0, l = 0, p = 0, onTrack = 0, live = 0, staked = 0, toWin = 0, settled = 0, pendingStake = 0, paced = 0, pacedN = 0, unstarted = 0, unstartedStake = 0;
   const GR = { A: 0, B: 1, C: 2 };
   const sorted = [...list].sort((a, b) => (GR[a.grade] ?? 3) - (GR[b.grade] ?? 3) || (b.lock ?? 0) - (a.lock ?? 0) || String(a.commence_time || "").localeCompare(String(b.commence_time || "")));
   const groups = { in: [], pre: [], post: [] };
+  let changed = false;
   const cards = sorted.map((b) => {
     const g = gameOf(b), bx = g ? LIVE.box[g.id] : null, st = bx?.players?.[normName(b.player)];
     const solo = (b.market || "").includes("solo"); const have = st ? (solo ? st.solo : st.tot) : (bx && g && g.state !== "pre" ? 0 : null);   // in the box score but no row yet means no tackles yet
@@ -1033,13 +1036,19 @@ function renderMine() {
     let status, cls = "", verdict = "";
     if (!g) status = "Game not found on ESPN yet";
     else if (g.state === "pre") status = `Kicks off ${kickoffLocal(new Date(g.date))}`;
-    else if (g.state === "post") { const hit = have == null ? null : have === b.line ? "Push" : (under ? have < b.line : have > b.line) ? "Win" : "Loss"; status = `Final · ${hit || "no box score"}`; cls = hit === "Win" ? " good done" : hit === "Loss" ? " bad done" : " done"; if (hit === "Win") w++; else if (hit === "Loss") l++; else p++; }
+    else if (g.state === "post") { const hit = have == null ? null : have === b.line ? "Push" : (under ? have < b.line : have > b.line) ? "Win" : "Loss"; status = `Final · ${hit || "no box score"}`; cls = hit === "Win" ? " good done" : hit === "Loss" ? " bad done" : " done"; }
     else { live++; const ok = have != null && (under ? have < b.line && (pace == null || pace < b.line) : have > b.line || (pace != null && pace > b.line)); const clinched = have != null && (under ? false : have > b.line); const dead = have != null && under && have > b.line;
       status = `${g.detail || `Q${g.period} ${g.clock}`} · ${g.teams[0]} ${g.score[g.teams[0]]}-${g.score[g.teams[1]]} ${g.teams[1]}`; cls = dead ? " bad" : clinched || ok ? " good" : " bad"; if (!dead && (clinched || ok)) onTrack++;
       const early = share < 0.25 ? "early, " : "";
       verdict = dead ? `Lost: already past ${b.line}` : clinched ? `Won: past ${b.line}` : ok ? `On track (${early}pace ${pace.toFixed(1)} for the game)` : `Behind (${early}pace ${pace == null ? "?" : pace.toFixed(1)} for the game)`; }
     const stake = b.stake == null ? null : +b.stake, dec = toDec(b.odds), win = stake != null && dec ? stake * (dec - 1) : null;
     let result = null;
+    // a final result is written on the bet once, so the ledger keeps it after the week closes: the official grade when
+    // the grader has one, the live box score otherwise
+    const off = officialGrade(b);
+    if (off) { if (!b.settled || b.settled.source !== "official") { b.settled = { ...off, source: "official" }; changed = true; } if (g && g.state !== "post") status = `Final · ${off.result}`; cls = off.result === "Win" ? " good done" : off.result === "Loss" ? " bad done" : " done"; if (!status.startsWith("Final")) status = `Final · ${off.result}`; }
+    else if (status.startsWith("Final") && have != null && !b.settled) { b.settled = { result: status.includes("Win") ? "Win" : status.includes("Loss") ? "Loss" : "Push", actual: have, source: "live", at: new Date().toISOString() }; changed = true; }
+    else if (!g && b.settled && b.settled.result) { status = `Final · ${b.settled.result}`; cls = b.settled.result === "Win" ? " good done" : b.settled.result === "Loss" ? " bad done" : " done"; }
     // money counts once the game has kicked off; before that a bet can still be withdrawn, so it sits in its own column
     const started = g && g.state !== "pre";
     if (stake != null) {
@@ -1047,6 +1056,7 @@ function renderMine() {
       else { unstarted++; unstartedStake += stake; }
       if (status.startsWith("Final")) { result = status.includes("Win") ? win : status.includes("Loss") ? -stake : 0; settled += result; paced += result; pacedN++; }
       else if (started) { pendingStake += stake; paced += cls.includes("good") ? (win ?? 0) : -stake; pacedN++; } }
+    if (status.startsWith("Final")) { if (status.includes("Win")) w++; else if (status.includes("Loss")) l++; else p++; }
     const stakeBox = el("label", { class: "stake" }, "$ ", (() => { const i = el("input", { type: "number", min: "0", step: "1", inputmode: "decimal", placeholder: "stake", value: stake == null ? "" : String(stake) }); i.addEventListener("change", () => setStake(b.key, i.value)); return i; })(),
       win != null ? el("small", {}, ` to win ${money(win)}`) : "", result != null ? el("b", { class: result > 0 ? "ok" : result < 0 ? "no" : "" }, ` ${result > 0 ? "+" : ""}${money(result)}`) : "");
     const c = el("div", { class: "live" + cls },
@@ -1056,9 +1066,10 @@ function renderMine() {
       el("div", { class: "trend" }, ...(verdict ? [el("b", { class: cls.includes("good") ? "ok" : "no" }, verdict), " · "] : []), status),
       stakeBox,
       (() => { const r = el("button", { type: "button", class: "rm" }, "Remove"); r.onclick = () => toggleMine({ ...b, pick: b.side, side: b.side }); return r; })());
-    groups[!g || g.state === "pre" ? "pre" : g.state === "post" ? "post" : "in"].push(c);
+    groups[status.startsWith("Final") ? "post" : !g || g.state === "pre" ? "pre" : "in"].push(c);
     return c;
   });
+  if (changed) saveMine(list);
   box.append(el("div", { class: "mine-bar" }, el("div", {}, el("b", {}, `${w}-${l}${p ? `-${p}` : ""}`), el("span", {}, "settled")), el("div", {}, el("b", {}, String(live)), el("span", {}, "in play")), el("div", {}, el("b", {}, `${onTrack} of ${live}`), el("span", {}, "trending right")),
     el("div", { title: "Stakes on games that have kicked off. A bet on a game that has not started can still be withdrawn, so it is not in yet." }, el("b", {}, money(staked) || "$0"), el("span", {}, "in play or settled")), el("div", {}, el("b", {}, money(toWin) || "$0"), el("span", {}, "to win if every started bet hits")),
     unstarted ? el("div", {}, el("b", {}, money(unstartedStake) || "$0"), el("span", {}, `on ${unstarted} bet${unstarted === 1 ? "" : "s"} not started (can still be withdrawn)`)) : "",
@@ -1073,8 +1084,116 @@ function renderMine() {
     box.append(el("h3", { class: "mine-h" }, `${title} · ${groups[key].length}`, el("small", {}, " sorted by grade")));
     groups[key].forEach((c) => box.append(c));
   }
-  const clr = el("button", { type: "button", class: "rm" }, "Clear my board"); clr.onclick = () => { if (confirm("Remove every bet from My board?")) { saveMine([]); MINE = []; renderPlays(); renderMine(); } }; box.append(clr);
+  const clr = el("button", { type: "button", class: "rm" }, "Clear this week's board"); clr.onclick = () => { if (confirm("Remove every bet from this week's board?")) { saveMine([]); MINE = []; renderPlays(); renderMine(); } }; box.append(clr);
   box.append(addPicker());
+  box.append(ledgerSection());
+}
+
+// ---------------------------------------------------------------- the ledger: every week's board, kept on this device, with backup and transfer
+const WEEK_RE = /^mine-(\d+)-wk(\d+)$/;
+function officialGrade(b) {
+  // the grader's result for this exact bet (player, market, side, line, week), from the Track record data
+  if (!b.week || !DATA.results?.picks) return null;
+  const nk = normName(b.player);
+  const hit = DATA.results.picks.find((p) => p.week === b.week && normName(p.player) === nk && p.market === b.market && p.side === b.side && +p.line === +b.line && p.result && p.result !== "Pending");
+  return hit ? { result: hit.result, actual: hit.actual } : null;
+}
+function allWeeks() {
+  const out = [];
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i), m = k && k.match(WEEK_RE); if (m) { try { out.push({ key: k, season: +m[1], week: +m[2], list: JSON.parse(localStorage.getItem(k) || "[]") }); } catch (e) { /* skip */ } } } } catch (e) { /* storage off */ }
+  return out.sort((a, b) => b.season - a.season || b.week - a.week);
+}
+function betMoney(b) {
+  const stake = b.stake == null ? null : +b.stake, dec = toDec(b.odds); const r = b.settled?.result;
+  if (stake == null || !dec) return { stake, profit: null, result: r || null };
+  if (!r) return { stake, profit: null, result: null };
+  return { stake, profit: r === "Win" ? stake * (dec - 1) : r === "Loss" ? -stake : 0, result: r };
+}
+let showClosed = false; try { showClosed = localStorage.getItem("ledger-show-closed") === "1"; } catch (e) { /* fine */ }
+function ledgerSection() {
+  const weeks = allWeeks(); const cur = { season: DATA.meta?.season, week: DATA.meta?.week };
+  const sec = el("div", { class: "section", id: "ledger" }, el("h3", {}, "Season ledger"), el("p", { class: "lead" }, "Every week's board, kept on this device, with the result written on each bet once it is final (the grader's official result when there is one). Closed weeks fold away so the screen stays clean; the running total at the top is what you are up or down for the season."));
+  if (!weeks.length) { sec.append(el("div", { class: "empty" }, "No weeks yet.")); sec.append(backupBox()); return sec; }
+  let W = 0, L = 0, P = 0, staked = 0, profit = 0, open = 0;
+  const rows = weeks.map((wk) => {
+    // older weeks settle from the grader's official results too, written on the bet once
+    let dirty = false;
+    for (const b of wk.list) { if (!b.settled || b.settled.source !== "official") { const off = officialGrade(b); if (off) { b.settled = { ...off, source: "official" }; dirty = true; } } }
+    if (dirty) { try { localStorage.setItem(wk.key, JSON.stringify(wk.list)); } catch (e) { /* fine */ } if (wk.key === MINE_KEY()) MINE = wk.list; }
+    let w = 0, l = 0, p = 0, st = 0, pr = 0, pend = 0;
+    for (const b of wk.list) { const m = betMoney(b); if (m.result === "Win") w++; else if (m.result === "Loss") l++; else if (m.result === "Push") p++; else pend++; if (m.stake != null && m.result) { st += m.stake; pr += m.profit; } }
+    W += w; L += l; P += p; staked += st; profit += pr;
+    const closed = wk.season < cur.season || (wk.season === cur.season && wk.week < cur.week);   // the current week stays open until the week rolls
+    if (!closed) open++;
+    return { ...wk, w, l, p, st, pr, pend, closed };
+  });
+  sec.append(el("div", { class: "mine-bar" }, el("div", {}, el("b", {}, `${W}-${L}${P ? `-${P}` : ""}`), el("span", {}, "season record")), el("div", {}, el("b", {}, money(staked) || "$0"), el("span", {}, "settled stakes")),
+    el("div", {}, el("b", { class: profit > 0 ? "pos" : profit < 0 ? "neg" : "" }, (profit > 0 ? "+" : "") + (money(profit) || "$0")), el("span", {}, "up or down")), el("div", {}, el("b", {}, staked ? signedPct(profit / staked) : "–"), el("span", {}, "return on stakes")),
+    el("div", {}, el("b", {}, String(weeks.length)), el("span", {}, `week${weeks.length === 1 ? "" : "s"} on this device`))));
+  const closedN = rows.filter((r) => r.closed).length;
+  if (closedN) { const t = el("button", { type: "button", class: "reset" }, showClosed ? `Hide ${closedN} closed week${closedN === 1 ? "" : "s"}` : `Show ${closedN} closed week${closedN === 1 ? "" : "s"}`); t.onclick = () => { showClosed = !showClosed; try { localStorage.setItem("ledger-show-closed", showClosed ? "1" : "0"); } catch (e) { /* fine */ } renderMine(); }; sec.append(el("div", { class: "chips" }, t)); }
+  for (const r of rows) {
+    if (r.closed && !showClosed) continue;
+    const d = el("details", { class: "ph" + (r.pr > 0 ? " win" : r.pr < 0 ? " loss" : "") });
+    if (!r.closed) d.open = true;
+    d.append(el("summary", {}, el("div", { class: "t" }, `Week ${r.week}`, el("small", {}, `${r.list.length} bet${r.list.length === 1 ? "" : "s"}${r.closed ? " · closed" : " · open"}${r.pend ? ` · ${r.pend} pending` : ""}`)),
+      el("div", { class: "res" }, el("b", { class: r.pr > 0 ? "pos" : r.pr < 0 ? "neg" : "" }, r.st ? (r.pr > 0 ? "+" : "") + (money(r.pr) || "$0") : "–"), el("span", {}, `${r.w}-${r.l}${r.p ? `-${r.p}` : ""} · ${money(r.st) || "$0"} staked`)),
+      el("div", { class: "legs-line" }, r.list.slice(0, 6).map((b) => `${b.player.split(" ").slice(-1)[0]} ${b.side === "Under" ? "U" : "O"}${num(b.line)}${b.settled?.result === "Win" ? " ✓" : b.settled?.result === "Loss" ? " ✗" : ""}`).join(" · ") + (r.list.length > 6 ? ` · +${r.list.length - 6}` : ""))));
+    const tb = table([["Bet"], ["Price"], ["Stake", "n"], ["Actual", "n"], ["Result"], ["Profit", "n"], ["Graded by"]], [...r.list].sort((a, b) => String(a.commence_time || "").localeCompare(String(b.commence_time || ""))).map((b) => { const m = betMoney(b); return [`${b.player} ${b.side} ${num(b.line)} ${(MARKET[b.market] || b.market || "").toLowerCase()}`, `${odds(b.odds)} ${b.book || ""}`, m.stake == null ? "" : money(m.stake), b.settled?.actual == null ? "" : num(b.settled.actual, 0), m.result || "Pending", m.profit == null ? "" : units(m.profit, 2), b.settled ? (b.settled.source === "official" ? "official box score" : "live feed") : ""]; }));
+    const rmw = el("button", { type: "button", class: "rm" }, `Delete week ${r.week} from this device`); rmw.onclick = () => { if (confirm(`Delete week ${r.week}'s board from this device?`)) { try { localStorage.removeItem(r.key); } catch (e) { /* fine */ } if (r.key === MINE_KEY()) MINE = []; renderMine(); } };
+    d.append(el("div", { class: "patch-body" }, el("div", { class: "scroll" }, tb), rmw));
+    sec.append(d);
+  }
+  sec.append(backupBox());
+  return sec;
+}
+// ---- backup and transfer: a file, a code, or a link that imports on another device
+const b64u = { enc: (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""), dec: (t) => Uint8Array.from(atob(t.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - t.length % 4) % 4)), (c) => c.charCodeAt(0)) };
+async function pack(obj) {
+  const raw = new TextEncoder().encode(JSON.stringify(obj));
+  if (typeof CompressionStream === "undefined") return "r" + b64u.enc(raw);
+  const buf = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream("deflate-raw"))).arrayBuffer());
+  return "z" + b64u.enc(buf);
+}
+async function unpack(code) {
+  code = String(code || "").trim(); if (!code) throw new Error("empty");
+  const body = b64u.dec(code.slice(1));
+  const raw = code[0] === "z" ? new Uint8Array(await new Response(new Blob([body]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer()) : body;
+  return JSON.parse(new TextDecoder().decode(raw));
+}
+function ledgerExport() { return { v: 1, exported: new Date().toISOString(), weeks: Object.fromEntries(allWeeks().map((w) => [w.key, w.list])) }; }
+function ledgerImport(obj) {
+  if (!obj || obj.v !== 1 || !obj.weeks) throw new Error("not a ledger backup");
+  let added = 0, weeks = 0;
+  for (const [k, list] of Object.entries(obj.weeks)) {
+    if (!WEEK_RE.test(k) || !Array.isArray(list)) continue;
+    let cur = []; try { cur = JSON.parse(localStorage.getItem(k) || "[]"); } catch (e) { /* fine */ }
+    const have = new Map(cur.map((b) => [b.key, b]));
+    for (const b of list) { if (!b || !b.key) continue; const mine = have.get(b.key); if (!mine) { cur.push(b); added++; } else { if (mine.stake == null && b.stake != null) mine.stake = b.stake; if (!mine.settled && b.settled) mine.settled = b.settled; } }
+    try { localStorage.setItem(k, JSON.stringify(cur)); weeks++; } catch (e) { /* fine */ }
+  }
+  MINE = null; return { added, weeks };
+}
+function backupBox() {
+  const wrap = el("div", { class: "section" }, el("h3", {}, "Back up or move this ledger"), el("p", { class: "lead" }, "The ledger lives in this browser only. Back it up as a file, copy it as a code, or send a transfer link to another device; opening the link there imports every week into that device's ledger (merging, never duplicating). A backup is the only way to keep it if this browser's storage is cleared."));
+  const out = el("textarea", { class: "code", rows: "3", readonly: "", placeholder: "Press one of the buttons", "aria-label": "Backup code or link" });
+  const bFile = el("button", { type: "button", class: "reset" }, "Download backup file"); bFile.onclick = () => { const a = el("a", { href: URL.createObjectURL(new Blob([JSON.stringify(ledgerExport(), null, 1)], { type: "application/json" })), download: `my-board-ledger-${new Date().toISOString().slice(0, 10)}.json` }); document.body.append(a); a.click(); a.remove(); };
+  const bCode = el("button", { type: "button", class: "reset" }, "Backup code"); bCode.onclick = async () => { out.value = await pack(ledgerExport()); out.select(); };
+  const bLink = el("button", { type: "button", class: "reset" }, "Transfer link"); bLink.onclick = async () => { out.value = `${location.href.split("#")[0]}#import=${await pack(ledgerExport())}`; out.select(); };
+  const bCopy = el("button", { type: "button", class: "reset" }, "Copy"); bCopy.onclick = async () => { try { await navigator.clipboard.writeText(out.value); bCopy.textContent = "Copied"; setTimeout(() => { bCopy.textContent = "Copy"; }, 1500); } catch (e) { out.select(); } };
+  const inp = el("textarea", { class: "code", rows: "2", placeholder: "Paste a backup code or transfer link here to restore", "aria-label": "Restore code" });
+  const bRestore = el("button", { type: "button", class: "reset" }, "Restore from code"); bRestore.onclick = async () => { try { const t = inp.value.includes("#import=") ? inp.value.split("#import=")[1] : inp.value; const r = ledgerImport(await unpack(t)); msg.textContent = `Restored: ${r.added} bet${r.added === 1 ? "" : "s"} added across ${r.weeks} week${r.weeks === 1 ? "" : "s"}.`; renderPlays(); renderMine(); } catch (e) { msg.textContent = "That code did not restore (" + (e.message || e) + ")."; } };
+  const file = el("input", { type: "file", accept: "application/json,.json", "aria-label": "Restore from a backup file" }); file.addEventListener("change", async () => { try { const r = ledgerImport(JSON.parse(await file.files[0].text())); msg.textContent = `Restored: ${r.added} bet${r.added === 1 ? "" : "s"} added across ${r.weeks} week${r.weeks === 1 ? "" : "s"}.`; renderPlays(); renderMine(); } catch (e) { msg.textContent = "That file did not restore (" + (e.message || e) + ")."; } });
+  const msg = el("div", { class: "count" });
+  wrap.append(el("div", { class: "chips" }, bFile, bCode, bLink, bCopy), out, el("div", { class: "chips" }, el("label", {}, "Restore from file ", file), bRestore), inp, msg);
+  return wrap;
+}
+async function importFromHash() {
+  const m = location.hash.match(/^#import=(.+)$/); if (!m) return;
+  try { const obj = await unpack(decodeURIComponent(m[1])); const n = Object.values(obj.weeks || {}).reduce((a, l) => a + (l?.length || 0), 0);
+    if (confirm(`Import a ledger with ${n} bet${n === 1 ? "" : "s"} into this device? Existing bets are kept; new ones are added.`)) { const r = ledgerImport(obj); alert(`Imported ${r.added} new bet${r.added === 1 ? "" : "s"} across ${r.weeks} week${r.weeks === 1 ? "" : "s"}.`); }
+  } catch (e) { alert("That transfer link did not import (" + (e.message || e) + ")."); }
+  history.replaceState(null, "", location.pathname + "#mine");
 }
 let pickerQuery = "";
 function addPicker() {
@@ -1188,6 +1307,7 @@ function show(id) {
   $("#q").addEventListener("input", renderProj);
   $("#proj-slate").addEventListener("change", renderProj);
   document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => show(b.dataset.tab)));
+  if (location.hash.startsWith("#import=")) { await importFromHash(); show("mine"); }
   const h = location.hash.slice(1); if (["plays", "proj", "record", "check", "mine", "patch"].includes(h)) show(h);
   renderMine(); liveLoop();
 })();

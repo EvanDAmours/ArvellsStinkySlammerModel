@@ -1080,6 +1080,22 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, late night MDT (My board: season ledger, backup and transfer)
+- Owner wants his picks kept across weeks so the site keeps saying how much he is up or down, with a backup, and
+  closed weeks hidden so the screen stays clean. Each week's board already lived in the browser under its own
+  key; now every board is read into a "Season ledger" under My board: season record, settled stakes, up or down,
+  return on stakes, and one collapsible row per week (record, staked, profit, the bets with the result written on
+  each). A result is written on a bet once and kept: the grader's official box-score result when the Track
+  record has one (older weeks are graded this way too), the live feed's final otherwise. Closed weeks (any week
+  before the current one) fold away behind "Show N closed weeks"; the current week stays open. "Clear" now clears
+  one week; a week can be deleted from the device.
+- Backup: a JSON file download; a compact backup code (deflate + base64); a transfer link that imports the whole
+  ledger on another device when opened (merge by bet, never duplicate; existing stakes and results kept); restore
+  from file or code. The QR idea: a QR code is a link in a picture, so the transfer link is the same move; the QR
+  library could not be vetted in this environment, so the link is sent as text for now. Checked in a browser:
+  two seeded weeks graded officially, closed week folded, transfer link opened on a fresh device restored both
+  weeks. Site only.
+
 ### 2026-11-02, late night MDT (Patch log tab)
 - Owner asked for a place to see, every time a calibration or evaluation happens, what was investigated and what
   was found. `pipeline/patchlog.py` reads this file at each daily run into `docs/data/patchlog.json`: every
