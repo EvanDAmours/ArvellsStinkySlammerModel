@@ -951,9 +951,11 @@ function loadMine() { try { return JSON.parse(localStorage.getItem(MINE_KEY()) |
 function saveMine(list) { try { localStorage.setItem(MINE_KEY(), JSON.stringify(list)); } catch (e) { /* private window or storage off: the board lives for this page view only */ } }
 let MINE = null;
 const mine = () => (MINE ??= loadMine());
+const board = () => mine().filter((b) => !b.archived);     // the live board; a cleared bet stays in the ledger as archived
 function toggleMine(b) {
   const list = mine(), k = betKey(b), i = list.findIndex((x) => x.key === k);
-  if (i >= 0) list.splice(i, 1);
+  if (i >= 0 && list[i].archived) { list[i].archived = false; }            // cleared earlier: back onto the board, history kept
+  else if (i >= 0) list.splice(i, 1);
   else list.push({ key: k, player: b.player, team: b.team, opp: b.opp, group: b.group, market: b.market, side: b.side || b.pick, line: b.line, book: b.book,
                    odds: (b.side || b.pick) === "Under" ? b.under_odds : b.over_odds, proj: b.proj, model_p: (b.side || b.pick) === "Under" ? 1 - b.model_over : b.model_over,
                    grade: b.grade, lock: b.lock, commence_time: b.commence_time, link: sideLink(b, b.side || b.pick), season: DATA.meta?.season, week: DATA.meta?.week, jersey: b.jersey ?? null, added: new Date().toISOString() });
@@ -975,7 +977,7 @@ function tailLink(links) {
 }
 function addButton(b) {
   if (!(b.pick === "Over" || b.pick === "Under") && b.proj == null) return "";
-  const on = mine().some((x) => x.key === betKey(b));
+  const on = board().some((x) => x.key === betKey(b));
   const btn = el("button", { type: "button", class: "add" + (on ? " on" : ""), title: on ? "Remove from My board" : "Add to My board to track it live" }, on ? "On my board ✓" : "+ My board");
   btn.onclick = (e) => { e.stopPropagation(); toggleMine(b); };
   return btn;
@@ -989,7 +991,7 @@ function gameOf(bet) {
   return (LIVE.events || []).find((e) => e.teams.some((t) => want.has(t)));
 }
 async function refreshLive() {
-  const list = mine();
+  const list = board();
   if (!list.length) return;
   try {
     const sb = await espn("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard");
@@ -1012,7 +1014,7 @@ async function refreshLive() {
 }
 function liveLoop(now) {
   clearTimeout(LIVE.timer);
-  const list = mine();
+  const list = board();
   if (!list.length) return;
   const run = async () => { await refreshLive(); const live = (LIVE.events || []).some((g) => g.state === "in" && list.some((b) => gameOf(b)?.id === g.id)); const soon = list.some((b) => { const g = gameOf(b); return g && g.state === "pre" && new Date(g.date) - Date.now() < 30 * 60000; });
     LIVE.timer = setTimeout(run, live ? 60000 : soon ? 120000 : 600000); };
@@ -1025,7 +1027,7 @@ function elapsedShare(g) {
 }
 function renderMine() {
   const box = $("#mine-body"); if (!box) return; box.replaceChildren();
-  const list = mine();
+  const list = board();
   box.append(el("p", { class: "lead" }, "The bets you took, tracked live, with your stakes. Press \"+ My board\" on any card on the Plays tab; it is kept in this browser only. While a game is on, each bet refreshes from ESPN's box score every minute: tackles so far, the pace for the full game, and whether the bet is trending the right way. The official box score the books settle on can differ by a tackle from the live feed."));
   if (!list.length) { box.append(el("div", { class: "empty" }, "Nothing on your board yet. Add bets from the Plays tab, or find one below."), addPicker(), ledgerSection()); return; }
   let w = 0, l = 0, p = 0, onTrack = 0, live = 0, staked = 0, toWin = 0, settled = 0, pendingStake = 0, paced = 0, pacedN = 0, unstarted = 0, unstartedStake = 0;
@@ -1074,7 +1076,7 @@ function renderMine() {
     groups[status.startsWith("Final") ? "post" : !g || g.state === "pre" ? "pre" : "in"].push(c);
     return c;
   });
-  if (changed) saveMine(list);
+  if (changed) saveMine(mine());
   box.append(el("div", { class: "mine-bar" }, el("div", {}, el("b", {}, `${w}-${l}${p ? `-${p}` : ""}`), el("span", {}, "settled")), el("div", {}, el("b", {}, String(live)), el("span", {}, "in play")), el("div", {}, el("b", {}, `${onTrack} of ${live}`), el("span", {}, "trending right")),
     el("div", { title: "Stakes on games that have kicked off. A bet on a game that has not started can still be withdrawn, so it is not in yet." }, el("b", {}, money(staked) || "$0"), el("span", {}, "in play or settled")), el("div", {}, el("b", {}, money(toWin) || "$0"), el("span", {}, "to win if every started bet hits")),
     unstarted ? el("div", {}, el("b", {}, money(unstartedStake) || "$0"), el("span", {}, `on ${unstarted} bet${unstarted === 1 ? "" : "s"} not started (can still be withdrawn)`)) : "",
@@ -1089,7 +1091,7 @@ function renderMine() {
     box.append(el("h3", { class: "mine-h" }, `${title} · ${groups[key].length}`, el("small", {}, " sorted by grade")));
     groups[key].forEach((c) => box.append(c));
   }
-  const clr = el("button", { type: "button", class: "rm" }, "Clear this week's board"); clr.onclick = () => { if (confirm("Remove every bet from this week's board?")) { saveMine([]); MINE = []; renderPlays(); renderMine(); } }; box.append(clr);
+  const clr = el("button", { type: "button", class: "rm", title: "Takes every bet off the live board; the season ledger keeps them with their results" }, "Clear this week's board (the ledger keeps it)"); clr.onclick = () => { if (confirm("Take every bet off this week's board? They stay in the season ledger with their results.")) { const all = mine(); all.forEach((b) => { b.archived = true; }); saveMine(all); renderPlays(); renderMine(); } }; box.append(clr);
   box.append(addPicker());
   box.append(ledgerSection());
 }
@@ -1158,7 +1160,7 @@ function ledgerSection() {
       el("div", { class: "res" }, el("b", { class: r.pr > 0 ? "pos" : r.pr < 0 ? "neg" : "" }, r.st ? (r.pr > 0 ? "+" : "") + (money(r.pr) || "$0") : "–"), el("span", {}, `${r.w}-${r.l}${r.p ? `-${r.p}` : ""} · ${money(r.st) || "$0"} staked`)),
       el("div", { class: "legs-line" }, gradeChips(r.list), " · ", r.list.slice(0, 6).map((b) => `${b.grade ? b.grade + " " : ""}${b.player.split(" ").slice(-1)[0]} ${b.side === "Under" ? "U" : "O"}${num(b.line)}${b.settled?.result === "Win" ? " ✓" : b.settled?.result === "Loss" ? " ✗" : ""}`).join(" · ") + (r.list.length > 6 ? ` · +${r.list.length - 6}` : ""))));
     const tb = table([["Grade"], ["Bet"], ["Price"], ["Stake", "n"], ["Actual", "n"], ["Result"], ["Profit", "n"], ["Graded by"]], [...r.list].sort((a, b) => (GRADE_ORDER[a.grade] ?? 3) - (GRADE_ORDER[b.grade] ?? 3) || String(a.commence_time || "").localeCompare(String(b.commence_time || ""))).map((b) => { const m = betMoney(b); return [b.grade ? el("span", { class: `grade ${b.grade}`, title: b.lock != null ? `Lock score ${Math.round(b.lock)}` : "" }, b.grade) : el("span", { class: "muted" }, "no grade"), `${b.player}${jerseyOf(b) != null ? ` #${jerseyOf(b)}` : ""} ${b.side} ${num(b.line)} ${(MARKET[b.market] || b.market || "").toLowerCase()}`, `${odds(b.odds)} ${b.book || ""}`, m.stake == null ? "" : money(m.stake), b.settled?.actual == null ? "" : num(b.settled.actual, 0), m.result || "Pending", m.profit == null ? "" : units(m.profit, 2), b.settled ? (b.settled.source === "official" ? "official box score" : "live feed") : ""]; }));
-    const rmw = el("button", { type: "button", class: "rm" }, `Delete week ${r.week} from this device`); rmw.onclick = () => { if (confirm(`Delete week ${r.week}'s board from this device?`)) { try { localStorage.removeItem(r.key); } catch (e) { /* fine */ } if (r.key === MINE_KEY()) MINE = []; renderMine(); } };
+    const rmw = el("button", { type: "button", class: "rm", title: "Removes the week from the ledger on this device for good" }, `Delete week ${r.week} from the ledger on this device`); rmw.onclick = () => { if (confirm(`Delete week ${r.week}'s board from this device?`)) { try { localStorage.removeItem(r.key); } catch (e) { /* fine */ } if (r.key === MINE_KEY()) MINE = []; renderMine(); } };
     d.append(el("div", { class: "patch-body" }, el("div", { class: "scroll" }, tb), rmw));
     sec.append(d);
   }

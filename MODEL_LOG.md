@@ -1080,6 +1080,13 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, late night MDT (clearing the board keeps the ledger)
+- Owner: clearing the board must not clear the season ledger. "Clear this week's board" now marks the bets
+  archived: they leave the live board and stay in the ledger with their stakes and results; adding one of them
+  again from the Plays tab brings it back rather than duplicating it. "Remove" on a single card still deletes a bet
+  (a bet added by mistake does not belong in the ledger), and the ledger's "Delete week" is the only way to erase a
+  week. Live refresh, tail links and totals read the board; the ledger reads everything.
+
 ### 2026-11-02, late night MDT (ledger: grades on every bet; numbers on My board)
 - Owner wants the grade of each pick he took visible in the ledger. Each ledger row leads with the grade badge
   (lock score on hover), rows sort A to C, and each week's line and the season bar carry a record and profit by
