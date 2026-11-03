@@ -892,6 +892,88 @@ the review keeps the two apart.
   (three legs, +346, 0.1 u) won: parlays 1-1 live, +0.25 u.
 - Week 8's full post-mortem waits for Monday's game (Seahawks at Bears) to be graded on Tuesday.
 
+## Research round 8: could the same data price other markets? (2026-11-03, morning MDT, scoping at the owner's request)
+
+Question: which other player props, priced from the same nflverse data the tackle model uses, could produce picks
+like the A tier? Method, so every stat is judged the same way: four seasons (2023-2026, regular season, 65,476
+player-games), one generic walk-forward projection per stat (per-snap rate shrunk to the population, times the
+snaps expected from the last three games' share and the team's snaps, times the opponent's allowed rate
+shrunk over 6 games), against a book-style season average shrunk toward the population. Population per stat:
+players a book would post (season-to-date mean above a floor, three or more prior games). Two readings per stat:
+the projection's gain in miss over the season average, and, where the projection disagrees with the
+season-average line by 10 or more probability points (an A-size edge), how often its side hit, against its hit
+rate on every game. The market list is The Odds API's (player props per event; alternate-line markets exist
+for every one of these). No credits spent; no lines for any new market have been pulled, so market efficiency is
+untested for all of them.
+
+| Stat | Games | Mean | Gain over season average | Dispersion | Games with a 10-pt disagreement | Hit on those | Hit on all | Disagreement adds |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Tackles + assists (reference) | 11,391 | 4.7 | -0.3% | 1.42 | 40% | 63.0% | 56.4% | +6.6 |
+| Solo tackles | 9,987 | 2.9 | -0.1% | 1.25 | 39% | 64.6% | 58.2% | +6.4 |
+| Assists | 15,348 | 1.8 | +0.3% | 1.32 | 47% | 65.2% | 59.9% | +5.3 |
+| Sacks | 4,305 | 0.4 | +1.3% | 1.04 | 59% | 74.6% | 68.1% | +6.5 |
+| QB hits | 3,956 | 1.0 | +0.3% | 1.13 | 60% | 71.2% | 65.0% | +6.2 |
+| Tackles for loss | 6,133 | 0.5 | +0.5% | 1.09 | 40% | 66.8% | 58.9% | +7.9 |
+| Passes defended | 4,476 | 0.5 | +0.7% | 1.17 | 32% | 65.8% | 57.1% | +8.7 |
+| Interceptions | 2,708 | 0.1 | +2.0% | 1.14 | 98% | 90.1% | 89.8% | +0.3 |
+| Receptions | 4,943 | 3.9 | +0.2% | 1.35 | 43% | 64.3% | 59.4% | +4.9 |
+| Targets | 5,097 | 5.8 | +1.1% | 1.50 | 44% | 62.7% | 57.6% | +5.1 |
+| Receiving yards | 4,070 | 49.6 | -0.4% | | 26% | 54.8% | 53.5% | +1.3 |
+| Carries | 1,933 | 12.7 | -2.0% | 2.62 | 57% | 57.7% | 55.4% | +2.3 |
+| Rushing yards | 1,978 | 54.5 | -1.9% | | 47% | 56.0% | 53.2% | +2.8 |
+| Completions | 1,333 | 20.1 | -0.7% | 2.25 | 35% | 56.2% | 55.4% | +0.8 |
+| Pass attempts | 1,339 | 30.8 | -2.0% | 3.08 | 34% | 55.9% | 52.7% | +3.2 |
+| Passing yards | 1,279 | 224 | -1.1% | | 32% | 55.1% | 52.5% | +2.6 |
+| Passing TDs | 1,162 | 1.5 | -0.1% | 0.96 | 43% | 58.6% | 55.9% | +2.7 |
+| Field goals made | 1,381 | 1.7 | -0.6% | 0.97 | 37% | 61.4% | 54.9% | +6.5 |
+| Kicking points | 1,396 | 7.2 | -0.5% | 2.01 | 31% | 57.2% | 55.6% | +1.6 |
+
+Reading the table. The generic projection beats the season average by nothing anywhere, tackles included (the
+real tackle model's gain comes from the pieces this scan leaves out: role flags, crews, the line blend). The
+column that separates the stats is the last one: how much the model's disagreement with the season-average
+line is worth. The defensive count stats and the receiving counts behave like tackles (+5 to +9 points);
+volume and yardage stats for quarterbacks and backs do not (+1 to +3; dispersion 2 to 3 times the mean, which
+is game script, and no data set forecasts game script beyond the spread, as the plays-faced test showed). The
+"hit on those" figures for sacks, QB hits and interceptions are inflated by the base rate: a 0.37-a-game player
+against a 0.5 line is an Under most of the time whatever the model says, and the book prices that in (Under
+-200), so those rows say the stat is predictable, not that the market is beatable.
+
+Where the tackle edge really came from matters more than this table: the A tier won because the books posted
+solo lines 0.4 too high, a market-level mispricing in a thin, formula-set market, plus selection on top. The
+candidates are therefore ranked by how much they look like that, not by the table alone.
+
+1. **Alternate tackle lines** (`player_tackles_assists_alternate`, `player_solo_tackles_alternate`). Same
+   players, same model, same data, more lines: the book's ladder of alternate numbers is derived from its own
+   distribution assumption, and ours (position dispersion, the crew, the role flags) differs from it. Where the
+   solo line is 0.4 too high, the alternate Under one point lower at plus money is the same edge at a longer
+   price. No new model; a market pull and a pricing pass over the ladder. First to test.
+2. **Assists** (`player_assists`). Combined minus solo, which the model already projects; the thinnest of the
+   defensive markets and the one the home scorekeeper decides most: assists per team-game run from 23 to 30 by
+   stadium (coefficient of variation 0.057, against 0.021 for combined and 0.025 for solo), though a stadium's
+   assist share correlates only 0.2 between 2023-24 and 2025-26, so it must be read from recent games, which is
+   what the crew model does. If the books derive assist lines by formula, the crew is the edge they miss. Second
+   to test.
+3. **Sacks** (`player_sacks`). The one market where a data set we already load and do not use for pricing
+   (PFR pressures; sacks per QB hit 0.43) carries the signal: expected pass plays faced (the opponent's pass
+   rate and the pace the model already has) times pressure rate. Low counts (0.37 a game) mean most lines are
+   0.5 with the price doing the work, so the edge is in the price, not the side, and it is capped. Third.
+4. **Receptions** (`player_receptions`). Structurally the closest offensive analogue (target share times team
+   attempts times catch rate; +4.9 points on disagreement; the data is richer than for tackles). The market is
+   not: receptions is among the most bet player props and lines move, so the formula-mispricing that made the
+   solo edge is unlikely to be there. Worth a closing-line pull to measure, not worth a model before that.
+5. **Not worth pursuing from this data:** yards of any kind, pass attempts and completions, carries (game
+   script, dispersion 2 to 3), interceptions (a coin toss at 0.11 a game), kicking (field goals look predictable
+   in the table, but it is the team's drives, not the kicker, and the book prices the team), touchdowns
+   (binary, heavily bet, efficient).
+
+**Recommended next step, before any model work:** pull the closing lines for markets 1 to 4 (and the alternate
+ladders) at DraftKings and theScore Bet for two or three weeks, one per-event request with the extra markets
+added to the tackle pull (cost: each market is charged per request; check `odds_credits_remaining` first), and
+run the blind-board test on each (every Under, every Over, at the close, mean line minus mean actual). The
+solo-tackle mispricing showed at p = 0.004 in one week; a market with a bias of that size declares itself in
+two. Build only where a bias shows or where the model disagrees with the book and wins. Nothing in the pipeline
+changes for this round. Revert condition: none (no change).
+
 ## Weekly post-mortems
 
 Each post-mortem starts from the luck table (Track record tab; `data/weekly_five.md`): per kind of pick, our hit
