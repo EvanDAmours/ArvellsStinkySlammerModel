@@ -1,14 +1,14 @@
 # Locks and parlays: running tally
 
 The locks: the highest-confidence picks of each slate day (3 on a one-game day, 5 on a multi-game day), named before kickoff and tracked here. Target: 70% hits. Then the recommended parlay for each slate day.
-Generated 2026-11-03 04:36 UTC by the daily job. Do not edit by hand.
+Generated 2026-11-03 13:14 UTC by the daily job. Do not edit by hand.
 
-**Locks record: 7-2 (78%), +3.57 units, 1 pending.**
+**Locks record: 8-2 (80%), +4.21 units, 0 pending.**
 
 | Week | Picks | Record | Units | Running record |
 | --- | --- | --- | --- | --- |
 | 2026 wk 7 | 1 | 1-0 | +0.99 | 1-0 |
-| 2026 wk 8 | 9 | 6-2 (1 pending) | +2.58 | 7-2 |
+| 2026 wk 8 | 9 | 7-2 | +3.22 | 8-2 |
 
 ## 2026 week 7
 
@@ -28,7 +28,7 @@ Generated 2026-11-03 04:36 UTC by the daily job. Do not edit by hand.
 | Sonny Styles Under 4.5 solo | -135 | theScore Bet | A | 75 | 4 | Win |
 | Xavier McKinney Under 2.5 solo | +135 | DraftKings | B | 70 | 2 | Win |
 | Bobby Okereke Over 6.5 tackles + assists | +112 | DraftKings | B | 65 | 5 | Loss |
-| Dillon Thieneman Under 4.5 solo | -155 | theScore Bet | B | 61 |  | Pending |
+| Dillon Thieneman Under 4.5 solo | -155 | theScore Bet | B | 61 | 3 | Win |
 
 ## Luck or skill, week by week
 
@@ -38,8 +38,8 @@ All plays by side: our hit rate against the share of every closing line on the b
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2026 wk 7 | Over | 65 | 43% | 60% | 42% of 245 lines | +1% | 38% | nothing added |
 | 2026 wk 7 | Under | 165 | 56% | 62% | 58% of 245 lines | -1% | 25% | the market went our way |
-| 2026 wk 8 | Over | 11 | 45% | 62% | 43% of 245 lines | +2% | 45% | nothing added |
-| 2026 wk 8 | Under | 155 | 58% | 56% | 57% of 245 lines | +1% | 24% | the market went our way |
+| 2026 wk 8 | Over | 11 | 45% | 62% | 43% of 264 lines | +2% | 45% | nothing added |
+| 2026 wk 8 | Under | 156 | 58% | 56% | 57% of 264 lines | +2% | 24% | the market went our way |
 
 ## Parlays
 
