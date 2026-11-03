@@ -974,6 +974,72 @@ solo-tackle mispricing showed at p = 0.004 in one week; a market with a bias of 
 two. Build only where a bias shows or where the model disagrees with the book and wins. Nothing in the pipeline
 changes for this round. Revert condition: none (no change).
 
+## Research round 9: the math the model was missing (2026-11-03, evening MDT, at the owner's request)
+
+Nine candidates, worked in the order given, each tested walk-forward before anything was adopted. Harness:
+four seasons of history (30,919 backtest games with the playoffs), and weeks 7 and 8 of 2026 projected as of
+the time (calibration from earlier games only) against 512 consensus closing lines with box scores.
+
+### Adopted
+
+**1. The pricing blend per market, estimated from closing-line errors** (`pipeline/blend.py`, `config.BLEND`).
+Before: 40% model, 60% line, one weight for every market, from a least-squares fit on week 7. That fit is
+unstable (the line's coefficient was 0.69 on week 7 and 0.08 on week 8); the inverse-variance weight is not
+(0.50 and 0.48 on combined, 0.50 and 0.48 on solo), so the line's weight is now mse_model / (mse_model +
+mse_line), shrunk toward 0.5 by n / (n + 100). The bigger finding is the levels: the solo line ran 0.48 and 0.32
+high in the two weeks and the model's own solo number 0.38 and 0.25 high; the combined line 0.12 and 0.10 low,
+the model 0.17 and 0.16 low. Both sides get a level correction (mean error, shrunk the same way). Walk-forward:
+fit on week 7, test on week 8: solo error 3.418 to 3.309 (-3.2%), combined 6.634 to 6.550 (-1.3%); fit on
+8, test on 7: solo 3.488 to 3.373 (-3.3%), combined 6.762 to 6.757. The model's number for every line is now
+logged at each pull (`data/lines_log.csv`, latest per player-market-week; weeks 7 and 8 seeded from the
+walk-forward projections), and the daily job re-estimates the blend after grading. `LINE_WEIGHT` is 0.5 (the
+no-data default). Expect the solo Under claims to rise toward their hit rate (claimed 58.8%, hit 63.7%).
+
+Validation of the blend on the real data (daily in a scratch copy): estimated from weeks 7 and 8, 255 combined
+and 257 solo lines: line weight 0.49 on both; combined line +0.12 and model +0.16; solo line -0.27 and model
+-0.21. The lines log and the estimate are live from the next daily run; the first picks priced with it are week 9's.
+
+**2. Parlay chance with a shared plays draw** (`model.parlay_corr_ratio`, `config.PARLAY_CORR`). Two legs on
+one defence are not independent: both face the same number of plays. A simulation that draws the game's plays
+once (sd 7.6 around expectation) and each leg's count around its mean scaled by that draw, with the within-game
+dispersion (the leg's dispersion less the plays' share of it), gives the joint chance against the product. On
+every pair of the four most-tackled lined players per defence in weeks 7-8 (270 pairs): two Unders 1.053 times
+the product (range 1.02-1.08), an Under with an Over 0.936 (0.86-0.97); the recommended three-Under parlay of
+November 1 was 0.155 joint against 0.140 as a product. Small, systematic, and in the direction the books price
+their same-game parlays, so the parlay's claimed chance is now the product times that ratio (clipped 0.8-1.3;
+legs in different games stay independent), and the ratio is written on the parlay. Tackle sharing between the
+two (one man's tackle is not the other's) pulls the other way and is not modelled; it is second order at these
+counts.
+
+### Measured and not adopted
+
+**5. A plays-faced mixture for the distribution shape.** Plays faced vary with an sd of 7.6 around expectation,
+shared by everyone on the defence, so the count distribution should be a mixture over plays. Tested on 12,000
+backtest games by randomised PIT and at 504 posted lines: the single negative binomial is already calibrated
+(5.1% of actuals below its 5th percentile, 4.8% above its 95th; deciles 0.092 to 0.110), and the mixture
+changes nothing that matters (tails 4.9%/4.8%, Brier 0.2413 in both at the posted lines, log-loss 0.6754 in
+both). The empirical dispersion already absorbs the plays variance; the shape difference is invisible at these
+counts. Rejected as a pricing change; the decomposition is kept for the parlay test below. Side finding worth
+keeping: at the posted lines the model's probability scores Brier 0.2413 against 0.2539 for the market's own
+no-vig price (log-loss 0.675 against 0.730).
+
+**3. The team tackle budget.** Scaling a defence's projections so they sum to the plays it should face times the
+league's tackles per play (1.28) looked like a clear win on raw miss (1.6216 to 1.6089, better in every season,
+and the factor correlates 0.44 with the team's actual-to-projected ratio). It is not: on level-matched miss, the
+measure the protocol says pieces are judged on, the gain is 0.0007 (1.6185 to 1.6178) with the population
+the backtest sees, and it turns negative (1.6194) once the players counted are the ones expected to play, which
+is the only definition that works live. The raw gain was the factor lowering the level by 4%, which the
+backtest's own level calibration already does. Live the factor pinned at the 0.9 floor for every team, because
+the projection frame carries more bench players than a game's box score. Built, measured, removed the same
+evening; the research script is `research/team_budget.py`. Pitfall added: judge a piece on level-matched miss
+first; a raw-miss gain with a bias change is a level change, not information.
+
+### Not yet done (next in the order given)
+
+4 (one calibration map instead of three devices), 7 (probability scoring in the backtest), 6 (snap-share
+variance), 8 (Kelly stakes with exposure caps), 9 (opponent target distribution): worked next, each under the
+same protocol.
+
 ## Weekly post-mortems
 
 Each post-mortem starts from the luck table (Track record tab; `data/weekly_five.md`): per kind of pick, our hit
@@ -2214,6 +2280,10 @@ Open, with what would justify them:
 - The Odds API historical endpoint (`/v4/historical/...`) is a paid-tier feature: the key in use gets 401 there,
   with nothing charged. A past week can only be replayed for a market that was pulled live at the time, so a
   new market's record starts the week it is added to `ODDS_MARKETS`.
+- Judge a projection piece on level-matched miss (`mae_cal`) before raw miss. The team-budget factor cut raw
+  miss by 0.013 and level-matched miss by 0.0007: it had lowered the level by 4%, which the backtest's level
+  calibration already does, and live it would have pinned at its clip because the projection frame holds more
+  bench players than a box score. A factor whose mean is not 1 is a level change until proven otherwise.
 - A profitable record on one market is not selection skill until the whole board is tested blind: every solo
   Under at the close made +21% per bet in weeks 7 and 8 with no model at all. Compare each kind of pick with the
   blind board before crediting the model (lift), and expect a market-level mispricing to be corrected by the

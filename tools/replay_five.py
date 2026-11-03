@@ -38,7 +38,7 @@ def lines_as_of(snaps, t):
     return s[start.isna() | (start > now)], now
 
 
-def replay(season, week, markets=None, out=OUT, keep_all=False):
+def replay(season, week, markets=None, out=OUT, keep_all=False, blend_weeks=None):
     """markets: restrict the replay to these market keys (e.g. the assists market); out: where the entry is written;
     keep_all: list every pick in the entry, not just the locks."""
     seasons, pw, sched, snaps_df, inj, H, status, src = R.load_all()
@@ -50,6 +50,10 @@ def replay(season, week, markets=None, out=OUT, keep_all=False):
     P = M.finalize_projections(M.upcoming_rows(H, sched, inj, season, week, vol=src["vol"], dc=src["dc"], pbp_starters=src["pbp"]["starters"]),
                                phi, scale=scale, gbm=gbm)
     P = R.attach_game_logs(P, H, season, week)
+    from pipeline import blend as BL
+    blend = BL.estimate(H[["season", "week", "name_key", "comb", "solo_t"]], season, weeks=blend_weeks) if blend_weeks else None
+    if blend:
+        print("blend from weeks", blend_weeks, {k: (round(v["w"], 2), round(v["bias_line"], 2), round(v["bias_model"], 2)) for k, v in blend.items()})
     snaps = O.load_snapshots(season, week)
     if snaps.empty:
         sys.exit(f"No odds snapshots for {season} week {week}")
@@ -63,7 +67,7 @@ def replay(season, week, markets=None, out=OUT, keep_all=False):
                                                          start=pd.to_datetime(snaps.drop_duplicates("event_id").commence_time, utc=True))
     for t in sorted(snaps.pulled_at.unique()):
         lines, now = lines_as_of(snaps, t)
-        bets = M.price_lines(lines, P)
+        bets = M.price_lines(lines, P, blend=blend)
         if bets.empty or "pick" not in bets:
             continue
         # recommended parlay per slate day, re-chosen until the day's first kickoff
@@ -150,5 +154,7 @@ if __name__ == "__main__":
     ap.add_argument("--markets", default="", help="comma-separated market keys to replay (default: every market in the snapshots)")
     ap.add_argument("--out", default=str(OUT), help="where to write the entry (default data/retro_five.json)")
     ap.add_argument("--all-picks", action="store_true", help="list every pick in the entry, not just the locks")
+    ap.add_argument("--blend-weeks", default="", help="estimate the per-market blend from these graded weeks (walk-forward: earlier weeks only)")
     a = ap.parse_args()
-    replay(a.season, a.week, markets=[m for m in a.markets.split(",") if m.strip()] or None, out=a.out, keep_all=a.all_picks)
+    replay(a.season, a.week, markets=[m for m in a.markets.split(",") if m.strip()] or None, out=a.out, keep_all=a.all_picks,
+           blend_weeks=[int(w) for w in a.blend_weeks.split(",") if w.strip()] or None)

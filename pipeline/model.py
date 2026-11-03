@@ -1027,8 +1027,53 @@ def rundown(p, line, side, kind, mu_model, mu, p_side, claim, ev, pick, why, fl,
     return " ".join(out)
 
 
-def price_lines(lines, P, segments=None):
-    """Evaluate every posted line against the projection; return one row per line with EV, pick and confidence grade."""
+def parlay_corr_ratio(legs):
+    """How much a parlay's chance differs from the product of its legs' chances because legs on the same defence
+    share the plays it faces. legs: iterable of dicts with mu, phi, exp_opps, line, side, event_id (and team).
+    Simulated: one plays draw per game, each leg's count drawn around its mean scaled by that draw, with the
+    within-game dispersion (the leg's dispersion less the plays' share of it). Returns the ratio P(all) / prod P,
+    clipped (config.PARLAY_CORR); 1.0 when the legs are in different games or anything is missing."""
+    c = C.PARLAY_CORR
+    legs = [dict(l) for l in legs]
+    if len(legs) < 2 or any(l.get(k) is None or pd.isna(l.get(k)) for l in legs for k in ("mu", "phi", "exp_opps", "line", "side")):
+        return 1.0
+    keys = [(l.get("event_id"), l.get("team")) for l in legs]
+    if len(set(keys)) == len(legs):
+        return 1.0          # no two legs on one defence
+    rng = np.random.default_rng(7)
+    n, sd = int(c["sims"]), float(c["sd_plays"])
+    plays = {k: None for k in set(keys)}
+    hit_all, prod = np.ones(n, dtype=bool), 1.0
+    for l, k in zip(legs, keys):
+        eo = max(10.0, float(l["exp_opps"]))
+        if plays[k] is None:
+            plays[k] = np.clip(rng.normal(eo, sd, n), 0.3 * eo, None)
+        mu, phi = max(0.05, float(l["mu"])), float(l["phi"])
+        phi_w = max(c["phi_floor"], phi - mu * (sd / eo) ** 2)
+        m = mu * plays[k] / eo
+        if phi_w <= 1.02:
+            x = rng.poisson(m)
+        else:
+            r = m / (phi_w - 1); x = rng.negative_binomial(r, 1 / phi_w)
+        h = (x < float(l["line"])) if l["side"] == "Under" else (x > float(l["line"]))
+        hit_all &= h; prod *= max(1e-9, float(h.mean()))
+    return float(np.clip(hit_all.mean() / prod, *c["clip"]))
+
+
+def blend_mean(mu_model, mkt_line, kind, blend=None):
+    """The pricing mean: the model's number and the consensus line, each level-corrected, weighted by the market's
+    estimated blend (pipeline/blend.py) or the default line weight."""
+    b = (blend or {}).get(kind) if blend else None
+    if b:
+        w, bm, bl = float(b.get("w", C.LINE_WEIGHT)), float(b.get("bias_model", 0.0)), float(b.get("bias_line", 0.0))
+    else:
+        w, bm, bl = C.LINE_WEIGHT, 0.0, 0.0
+    return max(0.05, (1 - w) * (float(mu_model) + bm) + w * (float(mkt_line) + bl))
+
+
+def price_lines(lines, P, segments=None, blend=None):
+    """Evaluate every posted line against the projection; return one row per line with EV, pick and confidence grade.
+    blend: per-market line weights and level corrections (pipeline/blend.py), else the default line weight."""
     if lines is None or len(lines) == 0 or P is None or len(P) == 0:
         return pd.DataFrame()
     from pipeline.sources import norm_name
@@ -1057,7 +1102,7 @@ def price_lines(lines, P, segments=None):
         mu_model = p.proj_solo if solo else p.get("proj_ast", max(0.05, p.proj - p.proj_solo)) if ast else p.proj
         phi_col = "phi_solo" if solo else "phi_ast" if ast else "phi"
         phi_use = float(p.get(phi_col, p.phi)) if pd.notna(p.get(phi_col, np.nan)) else float(p.phi)
-        mu = (1 - C.LINE_WEIGHT) * mu_model + C.LINE_WEIGHT * float(r.mkt_line)
+        mu = blend_mean(mu_model, r.mkt_line, kind, blend)
         po_model = p_over(mu, phi_use, float(r.line))
         # informational only, never part of the grade: the model and the consensus line far apart means one of them
         # knows something; the card says so and the reader checks
@@ -1154,6 +1199,7 @@ def price_lines(lines, P, segments=None):
                 why += "; not lock-eligible: " + ", ".join(block)
         rows.append({**base, "team": p.team, "opp": p.opp_team, "group": p.group, "jersey": None if pd.isna(p.get("jersey", np.nan)) else int(p.get("jersey")), "proj": float(mu), "proj_model": float(mu_model),
                      "player_id": None if pd.isna(p.get("player_id", np.nan)) else str(p.get("player_id")), "espn_id": None if pd.isna(p.get("espn_id", np.nan)) else str(p.get("espn_id")).split(".")[0],
+                     "exp_opps": None if pd.isna(p.get("exp_opps", np.nan)) else float(p.get("exp_opps")),
                      "mkt_line": float(r.mkt_line), "phi": phi_use, "model_over": po, "market_over": mkt, "ev": ev, "side": side, "far_from_line": bool(far_from_line),
                      "p_claim": claim, "segment": seg_key, "segment_adj": float(seg_adj),
                      "pick": pick, "why": why, "signal_fade": bool(fade), "signal_role": role, "status": p.status,

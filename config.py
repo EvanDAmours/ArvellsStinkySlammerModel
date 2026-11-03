@@ -119,7 +119,13 @@ DEFAULT_PHI = {"LB": 0.75, "S": 1.0, "CB": 1.0, "DL": 1.0}  # variance / mean; r
 # --- pricing: how much to trust the market ---
 # The posted line is itself a forecast, and in week 7 of 2026 it predicted tackles better than the raw projection
 # (actual = 0.44 x projection + 0.60 x line). The mean used for pricing is a blend of the two.
-LINE_WEIGHT = 0.6                  # weight on the consensus line (median across books); 0 = pure model, 1 = pure market
+LINE_WEIGHT = 0.5                  # default weight on the consensus line (0 = pure model, 1 = pure market); the live weight per market is
+                                   # estimated from closing-line errors (BLEND below) and shrunk toward this
+# Per-market blend, estimated from graded weeks' closing lines (pipeline/blend.py): the line's weight is the
+# inverse-variance weight mse_model / (mse_model + mse_line), and both the line and the model get a level correction
+# (their average error against the box score), each shrunk by n / (n + k) lines. Weeks 7-8 of 2026: the solo line
+# ran 0.3-0.5 high and the model 0.2-0.4 high; correcting both cut the solo error 3% on each held-out week.
+BLEND = dict(k=100, max_bias=1.0, min_lines=30)
 PROB_SHRINK = 1.0                  # 1 = use the blended model probability as is; <1 pulls it further toward the market's no-vig probability
 
 # --- betting rules ---
@@ -162,6 +168,11 @@ LOCKS_PER_SLATE = dict(single=3, multi=5)   # at most this many locks: 3 on a on
 # A-grade score; a slate with no A has no lock. Live: locks at 72+ went 5-1, locks at 55-72 went 2-1 on three picks.
 LOCK_MIN_SCORE = GRADE_BARS["A"]
 PARLAY_LEGS = (2, 3)                        # fewest and most legs in the recommended parlay (fewer legs = better chance of hitting)
+# Legs on one defence share the plays it faces (sd 7.6 around expectation): two Unders rise or fall together, an
+# Under and an Over pull apart. The parlay's chance is the product of the legs' claimed chances times the ratio a
+# simulation with a shared plays draw gives over independence (weeks 7-8: 1.05 for two Unders, 0.94 for an
+# Under and an Over, 1.10 for three Unders). Research round 9.
+PARLAY_CORR = dict(sd_plays=7.6, sims=20000, phi_floor=0.55, clip=(0.8, 1.3))
 PARLAY_MARKETS = ("player_tackles_assists",)  # combined tackles only: the books refuse solo-tackle legs in a same-game parlay (owner, 2026-11-02)
 PARLAY_MIN_PROB = 0.56                      # a leg needs at least this claimed (shrunk) chance of hitting: 0.60 before the claim shrink
 PARLAY_FALLBACK_PROB = 0.53                 # if too few legs clear that, legs down to this chance are allowed; below it, no parlay

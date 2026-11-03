@@ -154,7 +154,7 @@ mark_weekly_five = mark_locks   # old name
 # ---------------------------------------------------------------- parlays
 PARLAYS = Path("data/parlays.csv")
 LEG_COLS = ["season", "week", "slate", "parlay_id", "leg", "player", "jersey", "team", "opp", "market", "side", "line", "book", "odds", "link", "sid",
-            "p_side", "mkt_side", "lock", "grade", "event_id", "commence_time", "n_legs", "combined_decimal", "combined_prob", "units", "chosen_at"]
+            "p_side", "mkt_side", "lock", "grade", "event_id", "commence_time", "n_legs", "combined_decimal", "combined_prob", "corr_ratio", "units", "chosen_at"]
 
 
 def american(dec):
@@ -193,10 +193,14 @@ def choose_parlay(bets, slate):
     if len(legs) < lo:
         return None   # not enough confident legs on this slate yet: no parlay rather than a bad one
     dec, prob = float(legs.dec.prod()), float(legs.p_side.prod())
+    # legs on one defence share the plays it faces: the joint chance is not the product (model.parlay_corr_ratio)
+    from pipeline.model import parlay_corr_ratio
+    corr = parlay_corr_ratio([dict(mu=r.proj, phi=getattr(r, "phi", None), exp_opps=getattr(r, "exp_opps", None), line=r.line, side=r.side, event_id=getattr(r, "event_id", None), team=getattr(r, "team", None)) for r in legs.itertuples()])
+    prob = float(min(0.99, prob * corr))
     edge = dec - 1
     kelly = (prob * edge - (1 - prob)) / edge if edge > 0 else 0.0
     units = float(np.clip(round(C.PARLAY_KELLY_FRACTION * kelly, 1), *C.PARLAY_UNITS)) if kelly > 0 else C.PARLAY_UNITS[0]
-    out = legs.drop(columns=["_seg"]).assign(leg=range(1, len(legs) + 1), n_legs=len(legs), combined_decimal=dec, combined_prob=prob, units=units)
+    out = legs.drop(columns=["_seg"]).assign(leg=range(1, len(legs) + 1), n_legs=len(legs), combined_decimal=dec, combined_prob=prob, corr_ratio=corr, units=units)
     return out
 
 
