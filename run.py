@@ -36,16 +36,18 @@ if dt.datetime(2026, 11, 2, 12, 0, tzinfo=EDMONTON).utcoffset() != dt.timedelta(
     EDMONTON = dt.timezone(dt.timedelta(hours=-6), "Alberta")
 
 # Scheduled pull slots, Edmonton local time (minutes after midnight) by weekday (Mon=0), and which games each covers.
-# The job runs every quarter hour; each slot is served once by the first run after its time. A pull costs 1-2 credits
-# (0 when no line is up), so the windows in which books post and move tackle lines are covered hourly.
+# The job runs every quarter hour; each slot is served once by the first run after its time. A pull costs 3 credits
+# per game (0 when no line is up). Trimmed on 2026-11-03 to stay inside one free 500-credit key a month (about 105
+# credits a week): the Saturday hourly pulls went (68 credits in week 8 for lines that mostly sit until Sunday), the
+# Friday pulls went, and Thursday, Sunday and Monday keep a morning look, a midday look and a pre-kickoff look.
 def _hourly(start, end, what, step=60):
     return [(m, what) for m in range(start * 60, end * 60 + 1, step)]
 PULL_SLOTS = {
-    3: _hourly(9, 17, "thu_fri") + [(17 * 60 + 30, "thu_fri")],      # Thursday, hourly 9 am-5 pm and 5:30: Thursday and Friday games
-    4: _hourly(12, 18, "fri_weekend", step=120),                      # Friday, every two hours noon-6 pm: Saturday and Sunday games as they post
-    5: _hourly(9, 21, "sat_sun"),                                     # Saturday, hourly 9 am-9 pm: Saturday and Sunday games
-    6: _hourly(7, 18, "today"),                                       # Sunday, hourly 7 am-6 pm: the whole slate, the late games and the night game too; the pre-kickoff pull sits among them
-    0: _hourly(9, 17, "mon", step=120) + [(17 * 60 + 30, "mon")],     # Monday, every two hours 9 am-5 pm and 5:30: the Monday game
+    3: [(9 * 60, "thu_fri"), (13 * 60, "thu_fri"), (17 * 60 + 30, "thu_fri")],   # Thursday 9 am, 1 pm, 5:30 pm: Thursday and Friday games
+    4: [],                                                                        # Friday: nothing (the books post most Sunday lines Saturday evening)
+    5: [(20 * 60, "sat_sun")],                                                    # Saturday 8 pm: Saturday and Sunday games, the whole slate once it is posted
+    6: [(10 * 60, "today"), (13 * 60, "today"), (17 * 60 + 30, "today")],         # Sunday 10 am (ties with the pre-kickoff pull on a normal week), 1 pm for the afternoon games, 5:30 pm for the night game
+    0: [(9 * 60, "mon"), (13 * 60, "mon"), (17 * 60 + 30, "mon")],                # Monday 9 am, 1 pm, 5:30 pm: the Monday game
 }
 INTL_WINDOWS_H = (12, 1)           # international games are pulled this many hours before kickoff
 SUNDAY_PRE_KICK_MIN = 60           # Sunday: one pull this many minutes before the day's first kickoff (Edmonton time), the whole Sunday slate

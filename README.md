@@ -43,11 +43,10 @@ zone data and pins UTC-6 if that data is stale, so nothing needs editing). The p
 | Job | When (Edmonton) | What it does |
 | --- | --- | --- |
 | Daily model update | Every day, early morning | New stats, backtest, projections, grading, parlay grading |
-| Pull tackle lines | Thu, hourly 9:00 am-5:00 pm and 5:30 pm | Thursday game, and Friday games on holiday weeks |
-| | Fri, every two hours noon-6:00 pm | Saturday and Sunday games as the books post them |
-| | Sat, hourly 9:00 am-9:00 pm | Saturday and Sunday games |
-| | Sun, hourly 7:00 am-6:00 pm | The Sunday slate, including the afternoon and night games as their lines move (books post many tackle lines late Saturday and Sunday morning) |
-| | Sun, 1 h before the first kickoff | The whole Sunday slate again, with the inactives known for the early games |
+| Pull tackle lines | Thu 9:00 am, 1:00 pm, 5:30 pm | Thursday game, and Friday games on holiday weeks |
+| | Sat 8:00 pm | Saturday and Sunday games, once the books have posted the slate (most Sunday tackle lines go up Saturday evening) |
+| | Sun 10:00 am, 1:00 pm, 5:30 pm | The Sunday slate in the morning, the afternoon games at 1 pm, the night game at 5:30 pm |
+| | Sun, 1 h before the first kickoff | The whole Sunday slate, with the inactives known for the early games (on a normal week this is the 10 am look) |
 | | Mon, every two hours 9:00 am-5:00 pm and 5:30 pm | Monday game |
 | | 12 h and 1 h before kickoff | Any international game (neutral-site game overseas), that game only |
 
@@ -80,10 +79,10 @@ commit the result; the next daily run shows it on the tab.
 
 ## Odds credits
 
-Each pull costs 3 credits per game (two tackle markets and the assists market, one region; 2 before the assists market was added on 2026-11-03). The Friday and early-Sunday pulls
-cover the whole slate (about 28 credits), as does the Sunday pre-kickoff pull; later pulls only cover games starting within four hours.
-With the three Saturday pulls that's roughly 175 credits a week, about 700 a month, so it needs a second key
-(see below) or fewer Saturday pulls to stay inside one free 500-credit key. The site shows the balance after each pull,
+Each pull costs 3 credits per game (two tackle markets and the assists market, one region; 2 before the assists market was added on 2026-11-03). A whole-slate pull (Saturday
+evening, Sunday morning) costs about 36 credits; the later looks only cover games not yet kicked off. The schedule above
+spends about 105 credits a week (Thursday 9, Saturday 36, Sunday 51, Monday 9), about 450 a month, inside one free
+500-credit key with a margin for international games. Before 2026-11-03 the Saturday hourly pulls alone cost 68 a week. The site shows the balance after each pull,
 and pulling stops automatically below 25. More pulls, or historical lines, need a paid plan.
 
 You can add more keys: each secret named in `ODDS_KEY_ENV` in `config.py` (by default `ODDS_API_KEY` and

@@ -1238,6 +1238,19 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-03, early afternoon MDT (pull schedule trimmed to one free key a month)
+- Owner: cut the Saturday pulls to stay inside 500 credits a month. Measured from the stored snapshots, week 8
+  cost 162 credits at two markets (Thursday 4, Saturday 68 over 9 pulls, Sunday 80 over 4, Monday 10); at three
+  markets that is about 240 a week, 1,000 a month. Cutting Saturday alone leaves about 140 a week, 600 a month,
+  still over, so the whole schedule is trimmed to a morning, midday and pre-kickoff look each game day: Thursday
+  9 am, 1 pm, 5:30 pm; no Friday pulls (they found nothing in week 8); Saturday 8 pm only (the books post most
+  Sunday lines Saturday evening); Sunday 10 am (ties with the pull an hour before the first kickoff on a normal
+  week), 1 pm, 5:30 pm; Monday 9 am, 1 pm, 5:30 pm. About 105 credits a week, 450 a month. The cron is unchanged
+  (the job still runs every quarter hour and serves each slot once). Smoke test checks rewritten for the new
+  slots; README schedule and credits section updated. Cost: fewer in-week line updates on Saturday and early
+  Sunday; the board still refreshes before every kickoff.
+- Revert: put the hourly Saturday and Sunday slots back in `run.py` `PULL_SLOTS` if the key is upgraded.
+
 ### 2026-11-03, midday MDT (assists: a trial market on its own tab)
 - Owner, after research round 8: build a separate tab for assists, replay past weeks to see where the model's
   theoretical assists picks would have landed, and give every assists pick the same slip links as the tackle
