@@ -1140,7 +1140,7 @@ def price_lines(lines, P, segments=None):
                 why += f"; a regular at his position is out or gone and he played {float(pct_last):.0%} of the snaps: projected at that share"
             if block:
                 why += "; not lock-eligible: " + ", ".join(block)
-        rows.append({**base, "team": p.team, "opp": p.opp_team, "group": p.group, "proj": float(mu), "proj_model": float(mu_model),
+        rows.append({**base, "team": p.team, "opp": p.opp_team, "group": p.group, "jersey": None if pd.isna(p.get("jersey", np.nan)) else int(p.get("jersey")), "proj": float(mu), "proj_model": float(mu_model),
                      "mkt_line": float(r.mkt_line), "phi": phi_use, "model_over": po, "market_over": mkt, "ev": ev, "side": side, "far_from_line": bool(far_from_line),
                      "p_claim": claim, "segment": seg_key, "segment_adj": float(seg_adj),
                      "pick": pick, "why": why, "signal_fade": bool(fade), "signal_role": role, "status": p.status,

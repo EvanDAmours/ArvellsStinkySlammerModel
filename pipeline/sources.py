@@ -272,6 +272,21 @@ def _canon_names(df, name_col, id_col):
     return mapped.where(mapped.notna(), printed)
 
 
+# ---------------------------------------------------------------- jersey numbers (nflverse weekly rosters)
+def load_jerseys(season):
+    """gsis player id -> jersey number from the latest weekly roster of the season; empty on synthetic data or failure."""
+    if os.environ.get("TACKLE_FAKE_DATA"):
+        return {}
+    try:
+        r = _nflreadpy("load_rosters_weekly", seasons=[season])
+        r = r[r.gsis_id.notna() & r.jersey_number.notna()].sort_values("week")
+        latest = r.groupby("gsis_id").tail(1)
+        return {str(g): int(j) for g, j in zip(latest.gsis_id, latest.jersey_number)}
+    except Exception as e:  # noqa: BLE001
+        print(f"  jersey numbers: {type(e).__name__}: {e}")
+        return {}
+
+
 # ---------------------------------------------------------------- outside injury feed (ESPN)
 ESPN_INJURIES = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/injuries"
 ESPN_TEAM = {"WSH": "WAS", "LAR": "LA", "JAC": "JAX"}     # ESPN codes that differ from nflverse's

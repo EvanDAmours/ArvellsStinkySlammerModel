@@ -283,6 +283,8 @@ def cmd_daily():
     P = M.finalize_projections(F, phi, scale=scale, gbm=gbm)
     P = attach_game_logs(P, H, C.SEASON, week)
     P, status["fantasypros_rows"] = attach_consensus(P, C.SEASON, week)
+    jerseys = S.load_jerseys(C.SEASON)
+    P["jersey"] = P.player_id.astype(str).map(jerseys) if len(P) else None
     CACHE.mkdir(parents=True, exist_ok=True)
     if len(P):
         P.to_csv(CACHE / "projections.csv", index=False)
@@ -382,7 +384,7 @@ def cmd_odds(hours=None, auto=False):
     print(f"odds: {len(rows)} prices pulled, {len(lines)} current lines, {n_new} new picks logged, credits left {remaining}")
 
 
-WEEK_LINE_COLS = ["player", "team", "opp", "group", "market", "line", "book", "over_odds", "under_odds", "over_link", "under_link", "side", "pick", "proj", "model_over", "grade", "lock", "commence_time", "event_id", "rundown"]
+WEEK_LINE_COLS = ["player", "jersey", "team", "opp", "group", "market", "line", "book", "over_odds", "under_odds", "over_link", "under_link", "side", "pick", "proj", "model_over", "grade", "lock", "commence_time", "event_id", "rundown"]
 
 
 def write_week_lines(P, season, week):
@@ -411,7 +413,7 @@ def write_parlays(season, week):
                             units=float(first.units), chosen_at=first.chosen_at, placed=bool((start <= now).any()),
                             finished=bool(start.notna().all() and (start + dt.timedelta(hours=4, minutes=30) <= now).all()),   # every leg's game is over: it belongs to the Track record tab, not the board
                             first_kickoff=None if start.isna().all() else start.min().isoformat(),
-                            legs=records(legs[[c for c in ["leg", "player", "team", "opp", "market", "side", "line", "book", "odds", "link", "sid", "p_side", "mkt_side", "lock", "grade", "commence_time"] if c in legs.columns]])))
+                            legs=records(legs[[c for c in ["leg", "player", "jersey", "team", "opp", "market", "side", "line", "book", "odds", "link", "sid", "p_side", "mkt_side", "lock", "grade", "commence_time"] if c in legs.columns]])))
     _json(SITE / "parlays.json", out)
 
 
@@ -432,7 +434,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
             "fair_line", "fair_line_solo", "crew_comb", "crew_solo", "spread_dog", "role_signal", "venue", "gameday", "gametime", "phi", "phi_solo",
             "dc_status", "opp_qb_out", "opp_rb_out", "rest", "pct_last3", "pct_prev", "pct_last", "gap_weeks", "team_changed", "new_role", "reduced_role",
             "absence", "missed_game", "new_team", "snap_jump", "vacancy", "vacancy_rule", "share_pred", "rate_clean", "tsnaps_exp", "allowed_rel", "roof", "solo_drift", "proj_factor", "proj_gbm",
-            "log_comb", "log_solo", "press_pg", "fp_comb", "fp_solo", "fp_rel_comb", "fp_rel_solo"]
+            "log_comb", "log_solo", "press_pg", "fp_comb", "fp_solo", "fp_rel_comb", "fp_rel_solo", "jersey"]
     _json(SITE / "projections.json", records(P, [c for c in cols if c in P.columns]) if len(P) else [])
     _json(SITE / "bets.json", records(bets))
     _json(SITE / "backtest.json", bt)

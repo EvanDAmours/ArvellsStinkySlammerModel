@@ -153,7 +153,7 @@ mark_weekly_five = mark_locks   # old name
 
 # ---------------------------------------------------------------- parlays
 PARLAYS = Path("data/parlays.csv")
-LEG_COLS = ["season", "week", "slate", "parlay_id", "leg", "player", "team", "opp", "market", "side", "line", "book", "odds", "link", "sid",
+LEG_COLS = ["season", "week", "slate", "parlay_id", "leg", "player", "jersey", "team", "opp", "market", "side", "line", "book", "odds", "link", "sid",
             "p_side", "mkt_side", "lock", "grade", "event_id", "commence_time", "n_legs", "combined_decimal", "combined_prob", "units", "chosen_at"]
 
 

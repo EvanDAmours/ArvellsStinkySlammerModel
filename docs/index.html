@@ -42,6 +42,7 @@ select, input[type="search"] { font: inherit; padding: 6px 8px; border: 1px soli
 .play.pick { border-left-color: var(--flag); }
 .play .who { font-weight: 600; }
 .play .who small { font-weight: 400; color: var(--muted); margin-left: 6px; }
+.jersey { font: 700 0.78rem var(--cond); color: var(--muted); border: 1px solid var(--line); border-radius: 5px; padding: 0 5px; margin-left: 2px; vertical-align: middle; }
 .play .bet { font: 600 1.15rem var(--cond); }
 .play .bet .over { color: var(--over); } .play .bet .under { color: var(--under); }
 .play .ev { grid-row: 1 / span 3; grid-column: 2; text-align: right; align-self: center; }
@@ -279,6 +280,7 @@ function recordsBar(s) {
   return bar;
 }
 const MARKET = { player_tackles_assists: "Tackles + assists", player_solo_tackles: "Solo tackles" };
+const jersey = (b) => (b && b.jersey != null && b.jersey !== "" && !Number.isNaN(+b.jersey) ? el("span", { class: "jersey", title: "Jersey number" }, `#${Math.round(+b.jersey)}`) : "");
 // Slates in Edmonton time: early = kickoffs before noon (11 am, plus London games), afternoon = noon to 5 pm, prime time = 5 pm onward (incl. Thu/Mon night).
 const TZ = "Etc/GMT+6";   // Edmonton: Alberta Time is UTC-6 all year from 2026-11-01, and was UTC-6 (MDT) before it; a fixed offset so a browser with stale zone data cannot show kickoffs an hour early
 const localHour = (d) => Number(new Intl.DateTimeFormat("en-CA", { timeZone: TZ, hour: "numeric", hour12: false }).format(d));
@@ -480,7 +482,7 @@ function parlayBox(q, graded) {
   const legs = el("ol", {}, ...q.legs.map((l) => {
     const book = l.mkt_side ?? (decimalOf(l.odds) ? 1 / decimalOf(l.odds) : null);
     const edge = book == null ? null : l.p_side - book;
-    return el("li", {}, `${l.player} ${l.side} ${num(l.line)} ${(MARKET[l.market] || l.market).toLowerCase()} (${odds(l.odds)} at ${l.book}) · model ${pct(l.p_side)} vs book ${pct(book)} `,
+    return el("li", {}, `${l.player}${l.jersey != null ? ` #${Math.round(+l.jersey)}` : ""} ${l.side} ${num(l.line)} ${(MARKET[l.market] || l.market).toLowerCase()} (${odds(l.odds)} at ${l.book}) · model ${pct(l.p_side)} vs book ${pct(book)} `,
       el("span", { class: edge == null ? "" : edge >= 0 ? "pos" : "neg" }, edge == null ? "" : `(${pts(edge)})`),
       l.result ? el("span", { class: l.result === "Win" ? "w" : l.result === "Loss" ? "l" : "" }, ` · ${l.result}${l.actual == null ? "" : ` (${num(l.actual, 0)})`}`) : "");
   }));
@@ -558,7 +560,7 @@ function card(b, isLock) {
     b.group === "DL" && b.press_pg != null ? tag("tag", `${b.press_pg.toFixed(1)} pressures a game over his prior games (Pro Football Reference). A profile to read the line by, not a model adjustment: linemen of each profile land on the model's number.`, b.press_pg <= 1 ? "Run-stuffer" : b.press_pg <= 2 ? "Interior" : "Pass rusher") : "",
   ].filter(Boolean);
   const card = el("div", { class: "play" + (isPick ? " pick" : "") + (b.five ? " five" : "") },
-    el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}`, title: "Confidence grade" }, b.grade) : "", b.five ? el("span", { class: "star", title: "Lock" }, "★") : "", b.player,
+    el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}`, title: "Confidence grade" }, b.grade) : "", b.five ? el("span", { class: "star", title: "Lock" }, "★") : "", b.player, " ", jersey(b),
       el("small", {}, [b.group, b.team, b.opp ? `vs ${b.opp}` : "", kickoffLocal(betKick(b)) ? `· ${kickoffLocal(betKick(b))}` : ""].filter(Boolean).join(" ")),
       b.lock == null ? "" : el("div", { class: "lock" }, `Lock score ${Math.round(b.lock)}/100`)),
     el("div", { class: "ev" }, el("b", {}, b.ev == null ? "" : signedPct(b.ev)), el("span", {}, "expected return")),
@@ -592,7 +594,7 @@ function renderDaybar() {
 function renderProj() {
   const t = $("#proj-table"); t.replaceChildren();
   const q = $("#q").value.trim().toLowerCase();
-  const cols = [["Player", "player"], ["Team", "team"], ["Opp", "opp_team"], ["Pos", "group"], ["Status", "status"], ["Games", "n_prev", "n"],
+  const cols = [["Player", "player"], ["No.", "jersey", "n"], ["Team", "team"], ["Opp", "opp_team"], ["Pos", "group"], ["Status", "status"], ["Games", "n_prev", "n"],
                 ["Season avg", "season_avg", "n"], ["Last game", "last", "n"], ["Projection", "proj", "n"], ["Solo proj", "proj_solo", "n"], ["Outside vs model", "fp_rel_comb", "n"],
                 ["Fair line", "fair_line", "n"], ["Stat crew", "crew_comb", "n"], ["Role up", "role_signal"]];
   const slate = projDay === "Sun" ? $("#proj-slate").value : "";
@@ -602,7 +604,7 @@ function renderProj() {
   cols.forEach(([label, key, cls]) => { const btn = el("button", {}, label + (projSort.key === key ? (projSort.dir < 0 ? " ↓" : " ↑") : "")); btn.onclick = () => { projSort = { key, dir: projSort.key === key ? -projSort.dir : (typeof rows[0]?.[key] === "number" ? -1 : 1) }; renderProj(); }; head.append(el("th", { class: cls || "" }, btn)); });
   t.append(el("thead", {}, head));
   const tb = el("tbody");
-  for (const p of rows) tb.append(el("tr", {}, ...[p.player, p.team, p.opp_team, p.group, p.status || "", p.n_prev, num(p.season_avg), p.last == null ? "" : num(p.last, 0), num(p.proj), num(p.proj_solo), p.fp_rel_comb == null ? "" : signedPct(p.fp_rel_comb), num(p.fair_line),
+  for (const p of rows) tb.append(el("tr", {}, ...[p.player, p.jersey == null ? "" : `#${Math.round(+p.jersey)}`, p.team, p.opp_team, p.group, p.status || "", p.n_prev, num(p.season_avg), p.last == null ? "" : num(p.last, 0), num(p.proj), num(p.proj_solo), p.fp_rel_comb == null ? "" : signedPct(p.fp_rel_comb), num(p.fair_line),
     p.crew_comb == null || Math.abs(p.crew_comb - 1) < 0.005 ? "" : signedPct(p.crew_comb - 1), p.role_signal ? "Yes" : ""].map((c, i) => el("td", { class: cols[i][2] || "" }, String(c ?? "")))));
   t.append(tb);
 }
@@ -951,7 +953,7 @@ function toggleMine(b) {
   if (i >= 0) list.splice(i, 1);
   else list.push({ key: k, player: b.player, team: b.team, opp: b.opp, group: b.group, market: b.market, side: b.side || b.pick, line: b.line, book: b.book,
                    odds: (b.side || b.pick) === "Under" ? b.under_odds : b.over_odds, proj: b.proj, model_p: (b.side || b.pick) === "Under" ? 1 - b.model_over : b.model_over,
-                   grade: b.grade, lock: b.lock, commence_time: b.commence_time, link: sideLink(b, b.side || b.pick), season: DATA.meta?.season, week: DATA.meta?.week, added: new Date().toISOString() });
+                   grade: b.grade, lock: b.lock, commence_time: b.commence_time, link: sideLink(b, b.side || b.pick), season: DATA.meta?.season, week: DATA.meta?.week, jersey: b.jersey ?? null, added: new Date().toISOString() });
   saveMine(list); renderPlays(); renderMine(); liveLoop(true);
 }
 // the book's own bet-slip link for a side, when The Odds API passed one through (DraftKings and FanDuel do)
@@ -1060,7 +1062,7 @@ function renderMine() {
     const stakeBox = el("label", { class: "stake" }, "$ ", (() => { const i = el("input", { type: "number", min: "0", step: "1", inputmode: "decimal", placeholder: "stake", value: stake == null ? "" : String(stake) }); i.addEventListener("change", () => setStake(b.key, i.value)); return i; })(),
       win != null ? el("small", {}, ` to win ${money(win)}`) : "", result != null ? el("b", { class: result > 0 ? "ok" : result < 0 ? "no" : "" }, ` ${result > 0 ? "+" : ""}${money(result)}`) : "");
     const c = el("div", { class: "live" + cls },
-      el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}` }, b.grade) : "", b.player, el("small", {}, [b.group, b.team, b.opp ? `vs ${b.opp}` : ""].filter(Boolean).join(" "))),
+      el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}` }, b.grade) : "", b.player, " ", jersey(b), el("small", {}, [b.group, b.team, b.opp ? `vs ${b.opp}` : ""].filter(Boolean).join(" "))),
       el("div", { class: "now" }, el("b", {}, have == null ? "–" : String(have)), el("span", {}, solo ? "solo so far" : "tackles so far")),
       el("div", { class: "bet" }, el("span", { class: under ? "under" : "over" }, `${b.side} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market || "").toLowerCase()}`, el("small", {}, ` · ${odds(b.odds)} at ${b.book}${b.proj != null ? ` · model ${num(b.proj)}` : ""} `), g && g.state === "pre" && b.link ? el("a", { class: "bet-link", href: b.link, target: "_blank", rel: "noopener noreferrer" }, `Open at ${b.book} ↗`) : ""),
       el("div", { class: "trend" }, ...(verdict ? [el("b", { class: cls.includes("good") ? "ok" : "no" }, verdict), " · "] : []), status),
@@ -1139,7 +1141,7 @@ function ledgerSection() {
     d.append(el("summary", {}, el("div", { class: "t" }, `Week ${r.week}`, el("small", {}, `${r.list.length} bet${r.list.length === 1 ? "" : "s"}${r.closed ? " · closed" : " · open"}${r.pend ? ` · ${r.pend} pending` : ""}`)),
       el("div", { class: "res" }, el("b", { class: r.pr > 0 ? "pos" : r.pr < 0 ? "neg" : "" }, r.st ? (r.pr > 0 ? "+" : "") + (money(r.pr) || "$0") : "–"), el("span", {}, `${r.w}-${r.l}${r.p ? `-${r.p}` : ""} · ${money(r.st) || "$0"} staked`)),
       el("div", { class: "legs-line" }, r.list.slice(0, 6).map((b) => `${b.player.split(" ").slice(-1)[0]} ${b.side === "Under" ? "U" : "O"}${num(b.line)}${b.settled?.result === "Win" ? " ✓" : b.settled?.result === "Loss" ? " ✗" : ""}`).join(" · ") + (r.list.length > 6 ? ` · +${r.list.length - 6}` : ""))));
-    const tb = table([["Bet"], ["Price"], ["Stake", "n"], ["Actual", "n"], ["Result"], ["Profit", "n"], ["Graded by"]], [...r.list].sort((a, b) => String(a.commence_time || "").localeCompare(String(b.commence_time || ""))).map((b) => { const m = betMoney(b); return [`${b.player} ${b.side} ${num(b.line)} ${(MARKET[b.market] || b.market || "").toLowerCase()}`, `${odds(b.odds)} ${b.book || ""}`, m.stake == null ? "" : money(m.stake), b.settled?.actual == null ? "" : num(b.settled.actual, 0), m.result || "Pending", m.profit == null ? "" : units(m.profit, 2), b.settled ? (b.settled.source === "official" ? "official box score" : "live feed") : ""]; }));
+    const tb = table([["Bet"], ["Price"], ["Stake", "n"], ["Actual", "n"], ["Result"], ["Profit", "n"], ["Graded by"]], [...r.list].sort((a, b) => String(a.commence_time || "").localeCompare(String(b.commence_time || ""))).map((b) => { const m = betMoney(b); return [`${b.player}${b.jersey != null ? ` #${Math.round(+b.jersey)}` : ""} ${b.side} ${num(b.line)} ${(MARKET[b.market] || b.market || "").toLowerCase()}`, `${odds(b.odds)} ${b.book || ""}`, m.stake == null ? "" : money(m.stake), b.settled?.actual == null ? "" : num(b.settled.actual, 0), m.result || "Pending", m.profit == null ? "" : units(m.profit, 2), b.settled ? (b.settled.source === "official" ? "official box score" : "live feed") : ""]; }));
     const rmw = el("button", { type: "button", class: "rm" }, `Delete week ${r.week} from this device`); rmw.onclick = () => { if (confirm(`Delete week ${r.week}'s board from this device?`)) { try { localStorage.removeItem(r.key); } catch (e) { /* fine */ } if (r.key === MINE_KEY()) MINE = []; renderMine(); } };
     d.append(el("div", { class: "patch-body" }, el("div", { class: "scroll" }, tb), rmw));
     sec.append(d);
@@ -1211,7 +1213,7 @@ function addPicker() {
     const hits = all.filter((b) => `${b.player} ${b.team} ${b.opp}`.toLowerCase().includes(t)).slice(0, 40);
     if (!hits.length) { list.append(el("div", { class: "empty" }, "No line matches.")); return; }
     for (const b of hits) {
-      const row = el("div", { class: "nums" }, el("span", {}, el("b", {}, b.player), ` ${b.group || ""} ${b.team}${b.opp ? ` vs ${b.opp}` : ""} · ${(MARKET[b.market] || b.market).toLowerCase()} ${num(b.line)} at ${b.book}${b.proj != null ? ` · model ${num(b.proj)}` : ""}`));
+      const row = el("div", { class: "nums" }, el("span", {}, el("b", {}, b.player), " ", jersey(b), ` ${b.group || ""} ${b.team}${b.opp ? ` vs ${b.opp}` : ""} · ${(MARKET[b.market] || b.market).toLowerCase()} ${num(b.line)} at ${b.book}${b.proj != null ? ` · model ${num(b.proj)}` : ""}`));
       for (const side of ["Over", "Under"]) {
         const price = side === "Over" ? b.over_odds : b.under_odds; if (price == null) continue;
         const key = betKey({ ...b, side }); const on = have.has(key);

@@ -1080,6 +1080,12 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, late night MDT (jersey numbers on every bet)
+- Owner asked for player numbers on the slip. `load_jerseys` (nflverse weekly rosters, latest week, 99.9% of
+  players) puts `jersey` on each projection; the pricer, the week's line file, parlay legs and My board carry
+  it, and the site shows "#3" beside the name on cards, parlay legs, the picker, the ledger and the Projections
+  tab. Site and data plumbing only.
+
 ### 2026-11-02, late night MDT (My board: season ledger, backup and transfer)
 - Owner wants his picks kept across weeks so the site keeps saying how much he is up or down, with a backup, and
   closed weeks hidden so the screen stays clean. Each week's board already lived in the browser under its own
