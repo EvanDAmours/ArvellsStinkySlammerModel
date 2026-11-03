@@ -774,6 +774,14 @@ function renderRecPicks() {
   // same rule as the grader: a line counts once the close moved off it (line or price); beat means it moved our way
   const moved = picks.filter((p) => p.clv_line != null && (p.clv_line !== 0 || Math.abs(p.clv_prob ?? 0) > 0.005)), beat = moved.filter((p) => p.clv_pos === true || p.clv_pos === 1 || p.clv_pos === "True").length;
   const pending = picks.filter((p) => p.result === "Pending").length;
+  // implied-probability edge: the model's claimed chance for the side against the book's implied chance at the price
+  // taken (claimed edge), and the hit rate against that same implied chance (realised edge)
+  const bookP = (p) => (p.market_over == null ? null : p.side === "Under" ? 1 - p.market_over : p.market_over);
+  const claimP = (p) => (p.p_claim != null ? p.p_claim : p.model_over == null ? null : p.side === "Under" ? 1 - p.model_over : p.model_over);
+  const withP = g.filter((p) => bookP(p) != null && claimP(p) != null);
+  const avgBook = withP.length ? withP.reduce((a, p) => a + bookP(p), 0) / withP.length : null;
+  const claimedEdge = withP.length ? withP.reduce((a, p) => a + (claimP(p) - bookP(p)), 0) / withP.length : null;
+  const realisedEdge = withP.length ? withP.filter((p) => p.result === "Win").length / withP.filter((p) => p.result !== "Push").length - avgBook : null;
   sumBox.replaceChildren(
     el("div", { class: "filter-sum" },
       el("div", {}, wl(w, l, pu), `Record (${picks.length} picks)`),
@@ -782,6 +790,8 @@ function renderRecPicks() {
       el("div", {}, roiCell(g.length ? u / g.length : null), "Return per bet"),
       el("div", {}, units(us, 2), "Units at suggested stake"),
       el("div", {}, el("b", { class: clvClass(moved.length ? beat / moved.length : null) }, moved.length ? pct(beat / moved.length) : "–"), `Beat the close (${moved.length} moved)`),
+      el("div", { title: "Average of the model's claimed chance minus the book's implied chance at the price taken: the edge we said we had" }, el("b", {}, claimedEdge == null ? "–" : pts(claimedEdge)), "Claimed edge vs the price"),
+      el("div", { title: "Hit rate minus the book's average implied chance on these picks: the edge that actually showed up" }, el("b", { class: realisedEdge == null ? "" : realisedEdge >= 0 ? "pos" : "neg" }, realisedEdge == null ? "–" : pts(realisedEdge)), `Realised edge vs the price${avgBook == null ? "" : ` (book said ${pct(avgBook)})`}`),
       pending ? el("div", {}, el("b", {}, String(pending)), "Pending") : ""),
     (() => {
       const chip = (label, sub) => { const sw = sub.filter((p) => p.result === "Win").length, sl = sub.filter((p) => p.result === "Loss").length; return sw + sl ? el("span", {}, `${label} `, el("b", {}, `${sw}-${sl}`), ` (${pct(sw / (sw + sl))})`) : ""; };

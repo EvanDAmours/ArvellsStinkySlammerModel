@@ -1080,6 +1080,12 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-03, early morning MDT (implied-probability edge on the Track record)
+- Owner asked to track the average implied-probability edge. Two tiles under the pick filters, following every
+  slice: "Claimed edge vs the price" (the model's claimed chance for the side minus the book's implied chance at
+  the price taken, averaged) and "Realised edge vs the price" (hit rate minus that same implied chance; the book's
+  average implied chance is shown beside it). The gap between the two is the overclaim, read per slice. Site only.
+
 ### 2026-11-03, early morning MDT (Track record: A + B and B + C grade filters)
 - Owner asked to review the record of A and B picks together. The grade filter on "Every pick" has "A + B" and
   "B + C", and the chips under the totals carry an A+B record and a Locks record for the slice. Site only.
