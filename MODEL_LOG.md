@@ -898,6 +898,82 @@ Each post-mortem starts from the luck table (Track record tab; `data/weekly_five
 rate against the whole board's base rate and the beat-the-close share. Only where lift and the close agree with
 the record is the week evidence about the model.
 
+### Week 8 final, 2026, and the season to date (graded 2026-11-03; written 8 am MDT at the owner's question "are we beating the books or getting lucky")
+
+Monday night (CHI and SEA; the one graded pick): Dillon Thieneman Under 4.5 solo at -155, B, 3 solo, win. Week 8
+closes 96-71 (57.5%), +23.6 u at 1 u each; locks 7-2 for the week, 8-2 on the season; parlays 1-1.
+
+**Season to date, every pick regraded against the official box scores (394 decided, weeks 7 and 8):**
+
+| Slice | Record | Hit | Book's implied | Claimed | Units | Chance luck alone does this |
+| --- | --- | --- | --- | --- | --- | --- |
+| All | 217-177 | 55.1% | 51.1% | 57.5% | +31.0 | 6.5% |
+| Grade A | 16-2 | 88.9% | 58.6% | 64.6% | +9.5 | 0.6% |
+| Grade B | 56-42 | 57.1% | 50.1% | 58.1% | +13.2 | 10% |
+| Grade C | 44-40 | 52.4% | 47.9% | 55.2% | +9.8 | 24% |
+| Ungraded (week 7, before grades) | 101-93 | 52.1% | 52.4% | | -1.4 | 56% |
+| Locks | 8-2 | 80% | 55.9% | 63.7% | +4.2 | 11% |
+| Under solo | 128-73 | 63.7% | 51.6% | 58.8% | +47.8 | <0.1% |
+| Under combined | 56-64 | 46.7% | 50.8% | 55.3% | -8.9 | 84% |
+| Over combined | 24-23 | 51.1% | 50.8% | 59.0% | +0.2 | 54% |
+| Over solo | 9-17 | 34.6% | 50.1% | 42.8% | -8.1 | 96% |
+
+"Chance luck alone does this" is the one-sided binomial chance of at least that many wins at the book's own
+average implied chance. Grade order holds (A > B > C), and A is the only tier that is clearly ahead of luck;
+it is 18 picks.
+
+**Where the edge actually is: the book's solo lines, not our selection.** The luck table said "the market went
+our way" on Unders both weeks, so the whole board was tested blind: one line per player-market at the close,
+every Under taken, no model.
+
+| Blind "every solo Under at the close" | Record | Hit | Book's implied | Units | Per bet | Chance luck does this |
+| --- | --- | --- | --- | --- | --- | --- |
+| Week 7 | 82-41 | 66.7% | 54.5% | +28.6 | +23% | 0.4% |
+| Week 8 | 85-49 | 63.4% | 53.5% | +25.5 | +19% | 1.3% |
+| Solo CB, both weeks | 43-18 | 70.5% | 53.6% | +21.2 | +35% | 0.5% |
+| Solo S | 52-29 | 64.2% | 53.7% | +16.5 | +20% | 3.7% |
+| Solo DL | 15-6 | 71.4% | 53.5% | +7.9 | +38% | 7.5% |
+| Solo LB | 57-37 | 60.6% | 54.5% | +8.5 | +9% | 14% |
+| Every combined Under | 127-128 | 49.8% | 53.2% | -86.3 | -34% | |
+| Every Over, any market | | | | -99.4 | | |
+
+Solo lines ran 3.16 on average against 2.79 actual (CB 2.75 vs 2.15; DL 1.69 vs 1.24; LB 3.63 vs 3.23; S 3.31 vs
+3.15), while combined lines were about right or slightly low (LB 7.07 vs 7.28; S 5.62 vs 6.07). The books have
+been posting solo-tackle lines about four tenths of a tackle too high for two weeks running, at every position,
+and a bettor with no model who took every solo Under did as well per bet as our solo Unders (ours: +24% per bet
+on 201; blind: +21% on 257). Our lift over the board on Under solo is -2.5 and -0.7 points in the two weeks:
+the model's choice of which solo Unders added nothing. The model is profitable because it leans on the one
+mispriced market, and it leans there because its solo projection (combined times a shrunk solo share with the
+league drift) sits below the book's solo lines. That is a real edge against the book, not luck, but it is the
+market's edge, not the selection's, and it ends the week the books lower their solo lines.
+
+Within the mispriced market the A grade does add selection: the 16-2 A picks are nearly all solo Unders at CB
+and S whose board base rate was 58-69%, and they hit 89%. Lift of +20 to +30 points on 18 picks is the only
+selection skill the record shows so far. B and C add nothing over the board.
+
+**Closing-line value says nothing here, and why.** No-vig CLV in points is -2.6 on 396 closes: 352 picks closed
+on the line taken and the book barely re-prices a held tackle line (price moved our way on 22%, against on 15%,
+average +0.3 points, which is less than the 3.1-point vig paid at the time of the bet). The 44 lines that
+moved split 21-23. The owner's reading was that locks and A picks "beat the line" because they won; the two
+measures differ: CLV is what the market did before kickoff, the record is what the field did. In a market the
+book does not move, CLV cannot see an edge that exists, and the blind test above is the right instrument.
+
+**Under combined LB: 3-10 on the season**, eight of the ten losses within two tackles and the board itself 44-50
+on combined LB Unders. The segment correction already sits at -6.1 points on 13 picks; it stays a watch, no
+rule.
+
+**Decisions.**
+- No model change. The edge is a market-level mispricing of solo lines; the model already prices from the
+  league solo drift and the segment corrections (+4.7 points on Under solo, -6.6 on Under combined) carry the
+  rest. Fitting anything further to two weeks of one mispriced market would be fitting the bookmaker's mistake.
+- New standing watch, **"Is the solo line still too high?"**: each post-mortem reports the blind every-solo-Under
+  result at the close for the slate (record, per-bet return, mean line minus mean actual by position). The day
+  it goes to zero the model's claimed solo edges are stale and the claim shrink or the solo level needs a look
+  before any pick is trusted; the day it flips the solo Unders are a fade.
+- The grade-order watch stands: judged at 30 A picks (18 now).
+- The standing post-mortem task fired at 6:20 am before Monday's grading had landed (the daily run drifted to
+  7:14 am) and pushed nothing; it now fires at 8:20 am Edmonton and carries the blind solo-Under benchmark.
+
 ### Week 8 through Sunday, 2026 (graded 2026-11-02; Monday's game pending; review at the owner's request, 4 am MDT)
 
 **Record:** 95-71 (57%), +23.0 u at 1 u each; locks 6-2; parlays 1-1. Claimed 57.2%, hit 57.2%: calibrated in total,
@@ -1915,5 +1991,9 @@ Open, with what would justify them:
   replayed week. Training on "all finished games" silently includes the week under test once it is graded.
 - Any second model must be reported walk-forward (trained on earlier seasons, scored on the latest). In-sample
   numbers for a boosted model are 3x the honest ones.
+- A profitable record on one market is not selection skill until the whole board is tested blind: every solo
+  Under at the close made +21% per bet in weeks 7 and 8 with no model at all. Compare each kind of pick with the
+  blind board before crediting the model (lift), and expect a market-level mispricing to be corrected by the
+  books without notice.
 - `picks.csv` gains columns over time (`uncertain` added 2026-10-27); older rows read back as empty, so every use
   of a newer column must `fillna` a neutral value.
