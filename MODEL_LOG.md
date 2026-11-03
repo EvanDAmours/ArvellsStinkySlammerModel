@@ -1269,8 +1269,11 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
     `meta.retro_assists`, shown on the Assists tab as "What the model would have picked in past weeks", every pick
     listed. Caveat built into the tab's wording: a historical snapshot is a closing line, so the replay has no
     early price and no line shopping; it tests the model's read, not the timing.
-  - **Not run yet: the historical fetch costs 10 credits a game per market (ten times a live pull), about 290
-    credits for weeks 7 and 8, against 410 left on the key at Monday's pull; the owner decides.**
+  - **Tried for week 8 at the owner's call (2026-11-03, 11:10 am MDT): the historical endpoint answered 401 on
+    the first game. The key's plan has no historical access (The Odds API sells past lines on its paid tiers);
+    nothing was charged. So the replay of weeks 7 and 8 cannot be done with this key, and the assists record
+    starts with week 9's live pulls. The command now stops with that message instead of a traceback. If the plan
+    is ever upgraded, the workflow and replay are ready as written.**
 - Validation: smoke test passes (assists lines priced on the synthetic board with links, never a lock, no
   assists parlay leg, an assists pick graded on assists, actuals with three numbers, market kinds). Real-data
   daily run in a scratch copy (29,391 games): full model miss 1.6212, unchanged to the fourth decimal (the tackle
@@ -2116,6 +2119,9 @@ Open, with what would justify them:
   replayed week. Training on "all finished games" silently includes the week under test once it is graded.
 - Any second model must be reported walk-forward (trained on earlier seasons, scored on the latest). In-sample
   numbers for a boosted model are 3x the honest ones.
+- The Odds API historical endpoint (`/v4/historical/...`) is a paid-tier feature: the key in use gets 401 there,
+  with nothing charged. A past week can only be replayed for a market that was pulled live at the time, so a
+  new market's record starts the week it is added to `ODDS_MARKETS`.
 - A profitable record on one market is not selection skill until the whole board is tested blind: every solo
   Under at the close made +21% per bet in weeks 7 and 8 with no model at all. Compare each kind of pick with the
   blind board before crediting the model (lift), and expect a market-level mispricing to be corrected by the

@@ -168,6 +168,10 @@ def pull_historical(api_key, season, week, markets, hours_before=1.0, event_ids=
         r = requests.get(f"{BASE}/historical/sports/{C.ODDS_SPORT}/events/{g.event_id}/odds", timeout=60, params={
             "apiKey": api_key, "date": at, "markets": ",".join(markets), "oddsFormat": "american", **_book_params()})
         label = f"{g.away_team} @ {g.home_team} {g.commence_time}"
+        if r.status_code == 401:
+            raise SystemExit("history: the key's plan does not include historical odds (HTTP 401 on the historical endpoint; "
+                             "The Odds API sells past lines on its paid tiers). Nothing was charged. Past weeks cannot be replayed "
+                             "with this key; the market builds its record from the live pulls instead.")
         if r.status_code in (404, 422):
             print(f"  {label}: HTTP {r.status_code} {r.text[:200].strip()}")
             continue
