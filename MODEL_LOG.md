@@ -1080,6 +1080,35 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-03, morning MDT (no-vig closing-line value, in points; glossary tab)
+- Owner sent the bettors' definition of CLV: the fair (no-vig) closing chance of the side taken minus the chance
+  implied by the price taken, in probability points, with +1 to +2 good and +3 to +5 excellent. The grader now
+  writes `clv_novig` on every pick with a closing price (`no_vig_clv` in `pipeline/grade.py`). On a held line it
+  is exactly that difference. When the close is on a different line, the closing no-vig over chance is carried
+  to our line through the market's own expected tackles (the mean that reproduces the closing chance at the
+  closing line, with the position's default dispersion), so a line that moved our way counts as value and one
+  that moved against us as its loss. Summary carries `avg_clv_novig`, `clv_novig_n`, `clv_held`; the site shows
+  the average as a tile under the pick filters (per slice) and on "By side", with the benchmarks in the legend
+  and `CLV_PCT_BARS` in `config.py` (good 0.01, excellent 0.03, elite 0.05). The old "beat the close" share
+  (moved lines only) stays; the two answer different questions.
+- Evidence, weeks 7 and 8 (398 picks, every one with a close at the same book): average no-vig CLV **-2.6
+  points**. 352 picks closed on the line we took, averaging -2.8 (the vig, with the price barely moving: the
+  books do not re-price tackle props between pulls); 21 lines moved our way (+5.5 average) and 23 against
+  (-7.1). By grade: A -2.1 on 18, B -2.0 on 99, C -2.2 on 84. By side: Overs -2.2, Unders -2.7. Read plainly:
+  by the market's own measure we have no closing-line value yet; the positive record so far is not something
+  the closing line saw coming. This agrees with the week 7 luck table (selection lift about zero). It is also
+  the expected reading of a market that rarely moves: a held -110 line can only ever score -2.4, so the
+  measure can only turn positive through the few lines that move, and 44 moved lines is far too few to judge.
+  Judge it on a few hundred moved lines; until then the record, calibration and lift carry more information.
+- Glossary tab on the site (`renderGloss`): every term the site uses, from the bet itself (odds, implied
+  chance, vig, no-vig price, push, unit, hit rate, parlay) through the projection (dispersion, snap share, stat
+  crew, claimed chance, calibration), choosing picks (expected return, bars, lock score, grades, lock, the
+  checklist, "an A in yellow", consistency, signal, thin, tags, rundown, consensus) to judging the record
+  (closing line, beat the close, no-vig CLV, claimed and realised edge, whole board, lift, luck table, segment,
+  market watch, backtest, walk-forward) and My board. Thresholds are read live from `meta.grading`; searchable.
+- Revert: drop `clv_novig` if the translation through the market mean proves unstable on lines that moved two
+  or more points (none yet); the held-line value needs no revert, it is the definition.
+
 ### 2026-11-03, early morning MDT (implied-probability edge on the Track record)
 - Owner asked to track the average implied-probability edge. Two tiles under the pick filters, following every
   slice: "Claimed edge vs the price" (the model's claimed chance for the side minus the book's implied chance at

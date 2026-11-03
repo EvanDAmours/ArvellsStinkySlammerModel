@@ -106,6 +106,9 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 .grade-chips .gchip { margin-right: 12px; white-space: nowrap; } .grade-chips .grade { margin-right: 3px; }
 #mine-body textarea.code { width: 100%; font: 0.78rem/1.3 ui-monospace, Menlo, monospace; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; margin: 4px 0 8px; word-break: break-all; }
 .lead { color: var(--muted); font-size: 0.9rem; max-width: 80ch; margin: 0 0 10px; }
+.gloss h3 { margin: 22px 0 6px; } .gloss dl { margin: 0; max-width: 80ch; } .gloss dt { font: 700 1.05rem var(--cond); margin: 12px 0 2px; } .gloss dt small { font: 0.82rem var(--sans, inherit); color: var(--muted); margin-left: 8px; }
+.gloss dd { margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.45; } .gloss dd b { color: var(--ink); } .gloss mark { background: var(--warn-bg); color: inherit; padding: 0 2px; border-radius: 3px; }
+.gloss .toc { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.88rem; margin: 0 0 8px; }
 .more { margin: 8px 0 0; font-size: 0.9rem; color: var(--muted); max-width: 80ch; } .more summary { cursor: pointer; color: var(--ink); font-weight: 600; } .more p { margin: 6px 0; }
 .indent { padding-left: 18px; } small.muted { color: var(--muted); font-weight: 400; }
 .verdict.ok { color: #1f8a4c; font-weight: 600; } .verdict.no { color: #8a8f98; } .verdict.bad { color: #c0392b; font-weight: 600; }
@@ -191,6 +194,7 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
     <button role="tab" data-tab="check" aria-selected="false">Model check</button>
     <button role="tab" data-tab="mine" aria-selected="false">My board</button>
     <button role="tab" data-tab="patch" aria-selected="false">Patch log</button>
+    <button role="tab" data-tab="gloss" aria-selected="false">Glossary</button>
   </nav>
 
   <section id="plays">
@@ -230,6 +234,10 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
 
   <section id="patch" hidden>
     <div id="patch-body"></div>
+  </section>
+
+  <section id="gloss" hidden>
+    <div id="gloss-body"></div>
   </section>
 </div>
 
@@ -450,7 +458,7 @@ function renderPlays() {
 const slateDate = (b) => { const d = betKick(b); return !d || isNaN(d) ? "" : new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d); };
 function legend() {
   const g = DATA.meta?.grading || {};
-  const bars = g.bars || { A: 72, B: 55 }, u = g.units || { A: 1, B: 0.5, C: 0.25 }, w = g.weights || { ev: 0.35, model: 0.25, consistency: 0.2, sample: 0.1, signal: 0.1 }, cl = g.clv || { decent: 0.52, good: 0.56, great: 0.6 };
+  const bars = g.bars || { A: 72, B: 55 }, u = g.units || { A: 1, B: 0.5, C: 0.25 }, w = g.weights || { ev: 0.35, model: 0.25, consistency: 0.2, sample: 0.1, signal: 0.1 }, cl = g.clv || { decent: 0.52, good: 0.56, great: 0.6 }, cp = g.clv_pct || { good: 0.01, excellent: 0.03, elite: 0.05 };
   const row = (grade, cut, stake, what) => el("tr", {}, el("td", {}, el("span", { class: `grade ${grade}` }, grade)), el("td", {}, cut), el("td", {}, stake), el("td", {}, what));
   return el("details", { class: "legend" },
     el("summary", {}, "How to read this board: grades, stakes, what can be a lock, beating the close"),
@@ -472,11 +480,25 @@ function legend() {
         el("tr", {}, el("td", {}, `${pct(cl.decent)} to ${pct(cl.good)}`), el("td", {}, "Decent: a real but small edge, the kind that survives the vig only at good prices.")),
         el("tr", {}, el("td", {}, `${pct(cl.good)} to ${pct(cl.great)}`), el("td", {}, "Good: what sharp bettors sustain. Profitable over a season if stakes follow the grades.")),
         el("tr", {}, el("td", {}, `${pct(cl.great)} and up`), el("td", {}, "Great: rare, and usually means the books have not caught up to something the model sees. Enjoy it while it lasts, because they will.")))),
-    el("p", {}, "Judge it on a few hundred moved lines, not a weekend: with 100 picks the share swings 10 points on luck alone, with 300 about 6."));
+    el("p", {}, "Judge it on a few hundred moved lines, not a weekend: with 100 picks the share swings 10 points on luck alone, with 300 about 6."),
+    el("h4", {}, "No-vig closing-line value, in points"),
+    el("p", {}, `The measure bettors quote: the fair (no-vig) closing chance of our side minus the chance implied by the price we took, in probability points, averaged over every pick with a closing price, held lines included. Take Under 5.5 at -110 (52.4% implied). If it closes -110 both ways, the fair chance is 50% and the pick scores -2.4 points: the vig, which is what a bet with no information costs. If the price closes -130 on our side, the fair chance is about 54% and the pick scores +1.6. If the line itself moves to 4.5, the closing price is carried to our line through the market's own expected tackles, so a line that moved our way counts as value and one that moved against us as its loss. Tackle lines move in whole points and most never move, so most picks score near the vig and the average is driven by the few that do.`),
+    el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Average no-vig CLV"), el("th", {}, "Read it as"))),
+      el("tbody", {},
+        el("tr", {}, el("td", {}, "below 0"), el("td", {}, "The market is not moving toward our side; the record, good or bad, is not something the closing line saw coming.")),
+        el("tr", {}, el("td", {}, `0 to ${signedPct(cp.good)}`), el("td", {}, "Beating the vig, barely: real only over a season.")),
+        el("tr", {}, el("td", {}, `${signedPct(cp.good)} to ${signedPct(cp.excellent)}`), el("td", {}, "Good: what sustained winners show.")),
+        el("tr", {}, el("td", {}, `${signedPct(cp.excellent)} to ${signedPct(cp.elite)}`), el("td", {}, "Excellent: the books are consistently late to what the model sees.")),
+        el("tr", {}, el("td", {}, `${signedPct(cp.elite)} and up`), el("td", {}, "Elite, and short-lived: the books will move first next time.")))));
 }
 const clvBars = () => DATA.meta?.grading?.clv || { decent: 0.52, good: 0.56, great: 0.6 };
 const clvWord = (x) => { const c = clvBars(); return x == null ? "no moved lines graded yet" : x >= c.great ? "great so far" : x >= c.good ? "good so far" : x >= c.decent ? "decent so far" : "no edge visible yet"; };
 const clvClass = (x) => { const c = clvBars(); return x == null ? "" : x >= c.good ? "pos" : x < c.decent ? "neg" : ""; };
+// no-vig closing-line value in probability points: fair closing chance of our side minus the chance implied by the price we took
+const clvPctBars = () => DATA.meta?.grading?.clv_pct || { good: 0.01, excellent: 0.03, elite: 0.05 };
+const clvPctWord = (x) => { const c = clvPctBars(); return x == null ? "no closes graded yet" : x >= c.elite ? "elite" : x >= c.excellent ? "excellent" : x >= c.good ? "good" : x >= 0 ? "beating the vig, barely" : x >= -0.03 ? "the market is not moving our way" : "the market moves against us"; };
+const clvPctClass = (x) => { const c = clvPctBars(); return x == null ? "" : x >= c.good ? "pos" : x < 0 ? "neg" : ""; };
+const clvNovigOf = (list) => { const v = list.filter((p) => p.clv_novig != null && isFinite(p.clv_novig)); return v.length ? [v.reduce((a, p) => a + p.clv_novig, 0) / v.length, v.length] : [null, 0]; };
 const slateName = (iso) => { const d = new Date(iso + "T12:00:00"); return isNaN(d) ? iso : d.toLocaleDateString("en-CA", { weekday: "long" }); };
 const decimalOf = (a) => (a == null ? null : a > 0 ? 1 + a / 100 : 1 + 100 / Math.abs(a));
 const pts = (x) => (x == null ? "" : (x >= 0 ? "+" : "") + (x * 100).toFixed(0) + " pts");
@@ -685,7 +707,8 @@ function renderRecord() {
       el("div", { class: "scroll" }, table([["Side"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Units, 1 per bet", "n"], ["Return per bet", "n"]], rows)),
       el("div", { class: "stat-line" },
         el("div", {}, roiCell(s.roi), "Return per bet, all plays"),
-        el("div", {}, el("b", { class: clvClass(s.beat_close_share) }, s.beat_close_share == null ? "" : pct(s.beat_close_share)), `Beat the close${s.close_moved ? ` (${s.close_moved} moved lines)` : ""}: "${clvWord(s.beat_close_share)}"`)));
+        el("div", {}, el("b", { class: clvClass(s.beat_close_share) }, s.beat_close_share == null ? "" : pct(s.beat_close_share)), `Beat the close${s.close_moved ? ` (${s.close_moved} moved lines)` : ""}: "${clvWord(s.beat_close_share)}"`),
+        el("div", { title: "Fair closing chance of our side minus the chance implied by the price we took, averaged over every pick with a closing price" }, el("b", { class: clvPctClass(s.avg_clv_novig) }, s.avg_clv_novig == null ? "" : (s.avg_clv_novig >= 0 ? "+" : "") + (s.avg_clv_novig * 100).toFixed(1) + " pts"), `No-vig CLV${s.clv_novig_n ? ` (${s.clv_novig_n} closes, ${s.clv_held ?? 0} held)` : ""}: "${clvPctWord(s.avg_clv_novig)}"`)));
     sec.id = "rec-side"; box.append(sec);
   }
 
@@ -790,6 +813,7 @@ function renderRecPicks() {
       el("div", {}, roiCell(g.length ? u / g.length : null), "Return per bet"),
       el("div", {}, units(us, 2), "Units at suggested stake"),
       el("div", {}, el("b", { class: clvClass(moved.length ? beat / moved.length : null) }, moved.length ? pct(beat / moved.length) : "–"), `Beat the close (${moved.length} moved)`),
+      (() => { const [v, n] = clvNovigOf(picks); return el("div", { title: "Average, over every pick with a closing price, of the fair (no-vig) closing chance of our side minus the chance implied by the price we took. +1 to +2 points is good, +3 to +5 excellent. A -110 price that closes unchanged scores -2.4 (the vig); see the glossary." }, el("b", { class: clvPctClass(v) }, v == null ? "–" : (v * 100 >= 0 ? "+" : "") + (v * 100).toFixed(1) + " pts"), `No-vig CLV (${n} closes): ${clvPctWord(v)}`); })(),
       el("div", { title: "Average of the model's claimed chance minus the book's implied chance at the price taken: the edge we said we had" }, el("b", {}, claimedEdge == null ? "–" : pts(claimedEdge)), "Claimed edge vs the price"),
       el("div", { title: "Hit rate minus the book's average implied chance on these picks: the edge that actually showed up" }, el("b", { class: realisedEdge == null ? "" : realisedEdge >= 0 ? "pos" : "neg" }, realisedEdge == null ? "–" : pts(realisedEdge)), `Realised edge vs the price${avgBook == null ? "" : ` (book said ${pct(avgBook)})`}`),
       pending ? el("div", {}, el("b", {}, String(pending)), "Pending") : ""),
@@ -1331,8 +1355,98 @@ function renderPatch() {
   }
 }
 
+// ---------------------------------------------------------------- glossary
+function glossTerms() {
+  const g = DATA.meta?.grading || {};
+  const bars = g.bars || { A: 72, B: 55 }, u = g.units || { A: 1, B: 0.5, C: 0.25 }, cl = g.clv || { decent: 0.52, good: 0.56, great: 0.6 }, cp = g.clv_pct || { good: 0.01, excellent: 0.03, elite: 0.05 };
+  const pickBar = g.pick_bar ?? 0.06, overBar = g.pick_bar_over ?? 0.10, claimMin = g.pick_min_claim ?? 0.55, lw = g.line_weight ?? 0.6, segK = g.segment_k ?? 30, shrink = g.claim_shrink ?? 0.6;
+  return [
+    ["The bet itself", [
+      ["Over / Under", "A tackle prop is a number (the line) and two sides. Over wins if the player's official total ends above the line, Under if it ends below. A half-point line (5.5) always settles one way; a whole-number line (6) can land exactly and the bet is a push."],
+      ["Line", "The number the book posts for a player, such as Under 5.5 combined tackles. Lines move between opening and kickoff as money comes in and news lands; the site logs the line at the time of the pick and the last one before kickoff (the closing line)."],
+      ["Combined tackles (tackles + assists) and solo tackles", "Two markets per player. The official scorer credits a solo tackle when one player makes the stop and an assist when he shares it; combined is solo plus assists. The site's parlay legs are combined only, because the books do not allow solo-tackle legs in a same-game parlay."],
+      ["American odds (+ and −)", "The price. −110 means risk 110 to win 100; +120 means risk 100 to win 120. The number after the sign is always measured against 100."],
+      ["Decimal odds", "The same price as a multiplier on the stake, winnings and stake together: −110 is 1.91, +120 is 2.20. Parlay payouts multiply the decimal odds of the legs."],
+      ["Implied chance (implied probability)", "What the price says the chance of winning is, assuming no margin. For a minus price it is odds ÷ (odds + 100): −110 implies 52.4%. For a plus price it is 100 ÷ (odds + 100): +120 implies 45.5%. A bet is worth making only if the real chance is above the implied one."],
+      ["Vig (juice, hold)", "The book's margin. The two sides' implied chances add to more than 100%; at −110 both ways they add to 104.8%, so the book keeps about 4.5% of what is bet on that line over time. It is why a coin-flip bet loses money and why a hit rate of 52.4% at −110 only breaks even."],
+      ["No-vig (fair) price", "The two implied chances scaled so they add to 100%: the market's own estimate of the chance, with the margin stripped out. −110 both ways is 50/50 no-vig; −130/+110 is about 54/46. Used everywhere the site compares the model with the market, so the margin never counts as market opinion."],
+      ["Push and void", "A push is a bet that lands exactly on a whole-number line: the stake is returned. A void is a bet cancelled by the book, here almost always because the player did not play; the Track record counts neither as a win or a loss."],
+      ["Unit", "A fixed stake the record is kept in, so a bettor with a $10 unit and one with a $100 unit read the same page. The suggested stake is " + u.A + " unit on an A, " + u.B + " on a B, " + u.C + " on a C. 'Units, 1 per bet' is the record if every pick were one unit; 'Units at suggested stake' follows the grades."],
+      ["Hit rate", "Wins divided by wins plus losses (pushes and voids left out). The break-even hit rate at −110 is 52.4%, so a 55% hit rate on −110 prices is a profit and a 51% one is a loss."],
+      ["Return per bet (ROI)", "Units won or lost divided by bets made. +5% means five cents of profit for every dollar staked over the sample. The best sustained numbers in any market are single digits."],
+      ["Parlay, same-game parlay", "Two or more legs that must all win; the payout multiplies the decimal odds, so the price is long and the chance is the product of the legs' chances (two 60% legs together hit 36%). A same-game parlay has legs from one game; the books restrict which markets can go in one, which is why the site's parlay is two combined-tackle legs."],
+      ["Slip link", "The 'tail on DraftKings' and theScore Bet links on a pick or parlay open the book's app with that selection already on the slip. Prices there can differ from the ones pulled here; the pick stands on the price shown on the site."]]],
+    ["The projection", [
+      ["Projection", "The model's expected tackles for the player in this game: his per-snap tackle rate in his current role, times the snaps he is expected to play, times the game's adjustments (the opponent's pace and run rate, the home scorekeepers, the point spread, rest). It is an average, not a prediction of one number: a 6.0 projection means 6 is the centre of a wide range."],
+      ["Priced projection, line weight", "The number the picks are priced from. The posted line is itself a forecast, and it has predicted tackles better than the raw projection on its own, so the pricing mean is " + pct(1 - lw) + " model and " + pct(lw) + " the consensus line. It keeps the model's claimed edges honest; the raw projection is on the Projections tab."],
+      ["Fair line", "The half-point line the model puts closest to a coin flip for the player. Comparing it with the posted line is the quickest read of where the model and the market disagree."],
+      ["Dispersion", "How wide the range around the projection is, as variance divided by mean. 1.0 is Poisson (the spread of a plain count); linebackers run tighter than that, corners and linemen wider. It sets the chance of each side, so the same one-tackle gap is worth more on a tight player than a loose one."],
+      ["Snap share, implied snap share", "The share of the defence's plays he was on the field for. His tackles scale with it, so a role change moves the projection more than anything else. The implied snap share in a pick's rundown is the share he would have to play for the posted line to be the fair line: an easy sanity check against his recent games."],
+      ["Stat crew", "The home stadium's scorekeepers, who decide what counts as a tackle and an assist. Crews differ by a few percent on combined tackles, consistently enough to price; the Projections tab shows each game's crew effect."],
+      ["Model chance", "The model's probability that the side wins, from the priced projection and the dispersion. It overstates the edge on the picks it chooses (a pick is chosen partly because the model happened to lean its way), which is why the claimed chance is corrected before it is used."],
+      ["Claimed chance", "The model chance after two corrections. It is shrunk " + pct(1 - shrink) + " of the way toward even, because selected picks overclaim, and then adjusted by how picks of its kind (side, market, position) have actually resolved, shrunk by n/(n+" + segK + ") so a handful of results cannot swing it. This is the number the site stands behind; the Track record tab checks it against what happened."],
+      ["Calibration (claimed vs hit)", "Whether claimed chances come true at the rate claimed. A slice claimed at 58% that hits 58% is calibrated; one that hits 50% overclaims by 8 points. The Track record tab shows it by grade, side, market and position, and the segment corrections feed back into the claimed chance."]]],
+    ["Choosing picks", [
+      ["Expected return (EV)", "Profit per unit staked if the claimed chance is right: claimed chance × what a win pays, minus the chance of losing. A 58% claim at −110 is +10.5%. It is the model's own number and never the book's; a pick needs " + signedPct(pickBar) + " (" + signedPct(overBar) + " for an Over) and a claimed chance of at least " + pct(claimMin) + "."],
+      ["Pick bar, Over bar, claim floor", "The three thresholds a line must clear to be a play: expected return of " + signedPct(pickBar) + ", " + signedPct(overBar) + " for Overs (the model's Overs have hit well under half, so they carry a higher bar), and a claimed chance of " + pct(claimMin) + " (a plus-money side with a coin-flip claim is not a play, however long the price)."],
+      ["Pass", "A line that is priced but does not clear the bars. The board shows every live line with the model's read of both sides when no pick clears the bar, so a Pass is still a read, not a blank."],
+      ["Lock score", "A 0 to 100 score from the model's own evidence: expected return, claimed chance, how often he has cleared this line this season (at his expected snap share), games of data in his current role, and a role or outlier signal behind the pick. It never uses whether the book agrees. " + bars.A + " and up is an A, " + bars.B + " to " + (bars.A - 1) + " a B, below that a C."],
+      ["Grade (A, B, C)", "The lock score in three bands. A: the model is confident and the price is wrong by a lot, backed by his game log. B: a real edge with one weak spot. C: clears the bar on price alone. The Track record tab tests whether A beats B beats C; the stakes follow the grades."],
+      ["Lock", "A pick the model strongly believes in: an A-grade score on a lock-eligible pick. There are at most a few per slate day, and a day with no A has no lock, because a lock is never the best of a thin board. Locks are the green-edged cards and the 'Locks' record on the Track record tab."],
+      ["Lock-eligible, the checklist", "The situations in which the model is biased or blind, so a pick can never be a lock or a parlay leg whatever its score: a new or reduced role, back from absence, first game for a new team, fewer than three games in his current role, listed questionable, missing snap counts, or an Over. Each is a tag on the card; the pick can still be played at its grade."],
+      ["An A in yellow", "A card's left edge is yellow when it is a pick and green when it is a lock. An A-grade pick with a yellow edge is an A that is not a lock: either the checklist blocks it (the tag says why) or the slate already has its allowed number of locks."],
+      ["Consistency", "How often he has cleared this line in his games this season, read at the snap share he is expected to play, so a game he sat half of does not count against him. It is a fifth of the lock score."],
+      ["Signal", "A reason behind the number beyond the projection: a role change the market may be slow to price, or an outlier last game the market may have over-reacted to (an outlier fade). A pick with a signal scores higher; a pick with the signal against it is 'flagged' and sits out."],
+      ["Thin", "Too few games in his current role for the model to trust its own number. A thin pick cannot be a lock and scores lower; the rundown says how many games it has."],
+      ["Tags", "The short labels on a card: role changes (New role, Reduced role, Promoted, Demoted, Back from absence, New team), the injury report (Questionable, Opp QB out), a lineman's pressure profile (Run-stuffer, Interior, Pass rusher, a read of the line, not a model adjustment) and Model far from line (the model's own number and the market are 25%+ apart, so one of them knows something). Hover a tag for its rule."],
+      ["Rundown", "The paragraph in the 'Why' box under every priced line: the projection against the line, the implied snap share, his game log at this line, the role and injury reads, the checklist, how picks of its kind have resolved, and the outside consensus. Written from the pricer's own numbers, so it is always the same read the grade is."],
+      ["Consensus (FantasyPros)", "An outside expert projection, shown relative to its usual relation with this model (it runs about a quarter above box scores, so its raw number means little). For comparison only: it never prices, grades or chooses a pick."],
+      ["Best price per line", "Books post the same line at different prices. With the box ticked the board shows each line once at its best price; untick it to see every book. The book filter narrows the board to one book's lines."]]],
+    ["Judging the record", [
+      ["Closing line", "The last line and price before kickoff, with everything the market knows priced in. It is the best single estimate of the true chance available, better than the result of one game, which is mostly luck."],
+      ["Beat the close", "Among picks whose closing number differed from the one we took, the share that moved our way (a better line, or the same line at a price that moved toward our side). Picks whose number never moved are left out. " + pct(cl.decent) + " or below is noise, " + pct(cl.good) + " and up is what sharp bettors sustain, " + pct(cl.great) + " and up is rare."],
+      ["No-vig CLV (closing-line value, in points)", "The measure bettors quote: the fair (no-vig) closing chance of our side minus the chance implied by the price we took, averaged over every pick with a closing price, in probability points. A −110 price that closes unchanged scores −2.4 (the vig). " + signedPct(cp.good) + " to " + signedPct(cp.excellent) + " sustained is good, " + signedPct(cp.excellent) + " to " + signedPct(cp.elite) + " excellent, above " + signedPct(cp.elite) + " elite and short-lived. When the line itself moved, the closing price is carried to our line through the market's own expected tackles. Tackle lines rarely move, so most picks score near the vig and the few that move drive the average."],
+      ["Claimed edge vs the price", "The model's claimed chance minus the book's implied chance at the price taken, averaged over a slice: the edge we said we had."],
+      ["Realised edge vs the price", "The slice's hit rate minus the book's average implied chance on it: the edge that actually showed up. The gap between claimed and realised is the overclaim; read it per slice, because it differs by side, market and position."],
+      ["Whole board, market base rate", "How every closing line of a kind resolved, picked or not: if 74% of all Unders on the board hit in a week, a 74% hit rate on our Unders was the market, not the model."],
+      ["Lift over the board", "Our hit rate on a kind of pick minus the whole-board rate for that kind: what choosing these lines added. A kind of pick is evidence for the model only where lift and beating the close agree with the record."],
+      ["Luck or skill (the luck table)", "The weekly table that puts hit rate, the whole-board rate, lift and beat-the-close side by side, with a verdict: 'we picked well' when the lift is real, 'the market went our way' when the board as a whole resolved our way, and a note when there were too few picks to say. Every post-mortem starts from it."],
+      ["Segment", "A kind of pick: side × market × position (Under combined LB, Over solo CB and so on). Claimed chances are corrected per segment, and the record is read per segment, because the model is not equally right everywhere."],
+      ["Market watch", "Every closing line on the board, not just our picks: how often the over hit against what the market's own price implied. It says whether the market itself was biased that week."],
+      ["Backtest, miss, held-out season", "On the Model check tab. Every past defender-game predicted using only what was known before it; 'miss' is the average error in tackles. The held-out season is trained on earlier seasons and scored on the latest only, nothing tuned on the games it is scored on: the honest number. Each piece of the model stays only while the model is worse without it."],
+      ["Walk-forward", "Scoring a model only on games after everything it learned from. In-sample numbers (scored on the games it trained on) flatter a model several times over; nothing on this site is reported in-sample without saying so."]]],
+    ["My board", [
+      ["Live and official", "While a game is on, a bet on My board is tracked from ESPN's live box score; the morning after, the official stat line replaces it. The two can differ by an assist here and there; only the official one settles the ledger."],
+      ["On current pace", "Where his total would land if his tackle rate so far in the game held to the end, with the money that would mean. A read, not a prediction; tackles come in bunches."],
+      ["In play", "Money counts toward the day's total only once the game has kicked off, because a bet can still be withdrawn before then. The unstarted column shows what is queued."],
+      ["Ledger", "Every week's board kept on this device, with the official result and the grade on each bet, and the running total for the season. Closed weeks fold away; clearing the board archives the week, it never deletes it. Back it up: the ledger lives in the browser only."]]]];
+}
+let GLOSS_Q = "";
+function renderGloss() {
+  const box = $("#gloss-body"); if (!box) return;
+  box.replaceChildren();
+  const wrap = el("div", { class: "gloss" });
+  wrap.append(el("p", { class: "lead" }, "What the words on this site mean, from the bet itself to how the record is judged. The thresholds quoted are the live ones from the model's settings."));
+  const q = el("input", { type: "search", placeholder: "Search a term", value: GLOSS_Q, "aria-label": "Search the glossary" });
+  q.addEventListener("input", () => { GLOSS_Q = q.value; renderGloss(); const n = $("#gloss-body input"); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } });
+  wrap.append(el("div", { class: "controls" }, q));
+  const groups = glossTerms(), needle = GLOSS_Q.trim().toLowerCase();
+  const hit = (t, d) => !needle || t.toLowerCase().includes(needle) || d.toLowerCase().includes(needle);
+  const mark = (text) => { if (!needle) return text; const out = [], re = new RegExp(needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "ig"); let last = 0, m; while ((m = re.exec(text))) { out.push(text.slice(last, m.index), el("mark", {}, m[0])); last = m.index + m[0].length; } out.push(text.slice(last)); return out; };
+  if (!needle) wrap.append(el("div", { class: "toc" }, ...groups.map(([h]) => { const a = el("a", { href: "#gloss" }, h); a.onclick = (e) => { e.preventDefault(); const t = wrap.querySelector(`[data-group="${h}"]`); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); }; return a; })));
+  let shown = 0;
+  for (const [h, terms] of groups) {
+    const rows = terms.filter(([t, d]) => hit(t, d)); if (!rows.length) continue;
+    const dl = el("dl", {});
+    for (const [t, d] of rows) { dl.append(el("dt", {}, ...mark(t)), el("dd", {}, ...mark(d))); shown++; }
+    wrap.append(el("h3", { "data-group": h }, h), dl);
+  }
+  if (!shown) wrap.append(el("div", { class: "empty" }, "No term matches."));
+  box.append(wrap);
+}
+
 function show(id) {
-  for (const s of ["plays", "proj", "record", "check", "mine", "patch"]) { $("#" + s).hidden = s !== id; }
+  for (const s of ["plays", "proj", "record", "check", "mine", "patch", "gloss"]) { $("#" + s).hidden = s !== id; }
   if (id === "mine") renderMine();
   document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === id)));
   history.replaceState(null, "", "#" + id);
@@ -1340,13 +1454,13 @@ function show(id) {
 
 (async () => {
   [DATA.meta, DATA.bets, DATA.proj, DATA.results, DATA.backtest, DATA.parlays, DATA.week_lines, DATA.patch, DATA.actuals] = await Promise.all(["meta", "bets", "projections", "results", "backtest", "parlays", "lines_week", "patchlog", "actuals"].map(load));
-  renderMeta(); renderPlays(); renderDaybar(); renderProj(); renderRecord(); renderCheck(); renderPatch();
+  renderMeta(); renderPlays(); renderDaybar(); renderProj(); renderRecord(); renderCheck(); renderPatch(); renderGloss();
   ["#picks-only", "#market", "#best-only", "#slate", "#pos", "#side", "#sort", "#book"].forEach((s) => $(s).addEventListener("change", renderPlays));
   $("#q").addEventListener("input", renderProj);
   $("#proj-slate").addEventListener("change", renderProj);
   document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => show(b.dataset.tab)));
   if (location.hash.startsWith("#import=")) { await importFromHash(); show("mine"); }
-  const h = location.hash.slice(1); if (["plays", "proj", "record", "check", "mine", "patch"].includes(h)) show(h);
+  const h = location.hash.slice(1); if (["plays", "proj", "record", "check", "mine", "patch", "gloss"].includes(h)) show(h);
   renderMine(); liveLoop();
 })();
 </script>

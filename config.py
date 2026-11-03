@@ -139,6 +139,10 @@ GRADE_UNITS = dict(A=1.0, B=0.5, C=0.25)   # suggested stake per grade, in units
 # ~52% is indistinguishable from noise over a few hundred bets (standard error ~3% at 300); sharp bettors sustain
 # 55-60% and 60%+ is rare. Shown in the site legend.
 CLV_BARS = dict(decent=0.52, good=0.56, great=0.60)
+# No-vig closing-line value, the way bettors quote it: the fair (vig-free) closing chance of our side minus the
+# chance implied by the price we took, averaged in probability points. A -110 price that closes -110/-110 is -2.4
+# points (the vig). Sustained +1 to +2 points is good, +3 to +5 excellent, above +5 is rare. Shown on the site.
+CLV_PCT_BARS = dict(good=0.01, excellent=0.03, elite=0.05)
 
 # --- locks per slate day (Edmonton time) and the recommended parlay ---
 LOCKS_PER_SLATE = dict(single=3, multi=5)   # at most this many locks: 3 on a one-game day, 5 on a multi-game day

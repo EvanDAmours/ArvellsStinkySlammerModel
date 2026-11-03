@@ -179,6 +179,14 @@ check(summary["by_grade"] and summary["by_grade"][0]["grade"] == "A" and all({"h
 check(abs(summary["units"] - (2 * (100 / 110) - 1)) < 1e-6, f"units computed ({summary['units']:.3f})")
 check(list(graded.clv_line) == [1.0, -1.0, 1.0], f"closing line value computed ({list(graded.clv_line)})")
 check(summary["close_moved"] == 3 and abs(summary["beat_close_share"] - 2 / 3) < 1e-9, f"beat-the-close share counts only moved lines ({summary['beat_close_share']:.3f} of {summary['close_moved']})")
+_nv = list(graded.clv_novig)
+check(all(np.isfinite(v) for v in _nv) and all((v > 0) == (lm > 0) for v, lm in zip(_nv, graded.clv_line)) and all(abs(v) < 0.5 for v in _nv) and summary.get("clv_novig_n") == 3 and summary.get("avg_clv_novig") is not None,
+      f"no-vig closing-line value computed per pick and follows the line move ({[round(v, 3) for v in _nv]})")
+_html = (ROOT / "docs" / "index.html").read_text() if "ROOT" in globals() else Path(__file__).resolve().parents[1].joinpath("docs", "index.html").read_text()
+check('data-tab="gloss"' in _html and "function renderGloss" in _html and "No-vig CLV" in _html and "clv_pct" in _html, "site has the glossary tab and the no-vig CLV tile")
+from pipeline.grade import no_vig_clv
+check(abs(no_vig_clv(-110, "Under", 5.5, 5.5, -110, -110) - (0.5 - 110 / 210)) < 1e-9 and no_vig_clv(-110, "Under", 5.5, 4.5, -110, -110) > 0.03 and no_vig_clv(-110, "Under", 5.5, 6.5, -110, -110) < -0.03
+      and no_vig_clv(-110, "Over", 5.5, 5.5, -130, +110) > 0, "no-vig CLV: the vig on a held line, a move our way positive, against negative, a price move our way positive")
 f5 = summary["five"]
 check(f5["wins"] == 1 and f5["losses"] == 1 and len(f5["weeks"]) == 1 and f5["weeks"][0]["running_wins"] == 1, f"weekly five tally ({f5['wins']}-{f5['losses']}, {len(f5['weeks'])} week)")
 # a fake two-leg parlay on the same finished games: both legs cashed

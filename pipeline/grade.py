@@ -7,7 +7,7 @@ import pandas as pd
 
 import config as C
 from pipeline import odds as O
-from pipeline.model import american_to_decimal
+from pipeline.model import american_to_decimal, p_over
 from pipeline.sources import norm_name
 
 PICKS = Path("data/picks.csv")
@@ -293,6 +293,36 @@ def _no_vig_side(over, under, side):
     return (po if side == "Over" else pu) / (po + pu)
 
 
+def _market_mean(p_over_close, line, phi):
+    """The mean of a count with dispersion phi whose chance of clearing `line` is the closing no-vig over price:
+    the market's own expectation, read off its closing number. Bisection; the chance of clearing a line falls as
+    the mean falls."""
+    lo, hi = 0.05, 40.0
+    for _ in range(60):
+        mid = (lo + hi) / 2
+        if p_over(mid, phi, line) < p_over_close:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2
+
+
+def no_vig_clv(odds, side, line, close_line, close_over, close_under, phi=1.0):
+    """Closing-line value as bettors quote it: the no-vig (fair) closing chance of our side minus the chance implied
+    by the price we took (vig included). Positive means the market closed on our side of our price. When the
+    close is on a different line, the closing price is carried to our line through the market's own mean (the
+    mean that reproduces the closing no-vig chance at the closing line, with the group's dispersion), so a line
+    that moved our way counts as value and one that moved against us as its loss."""
+    if pd.isna(odds) or pd.isna(close_line) or pd.isna(close_over) or pd.isna(close_under):
+        return np.nan
+    taken = 1 / american_to_decimal(odds)
+    nv_over = _no_vig_side(close_over, close_under, "Over")
+    if close_line != line:
+        nv_over = p_over(_market_mean(nv_over, close_line, phi), phi, line)
+    fair = nv_over if side == "Over" else 1 - nv_over
+    return float(fair - taken)
+
+
 def lock_blocked(df):
     """Rows that can never be a lock or a parlay leg: the pricer's checklist (`lock_block`), or, for rows priced before
     it existed, the questionable and new-role flags."""
@@ -498,7 +528,7 @@ def grade(pw_comb):
         for r in part.itertuples():
             c = cl[(cl.book == r.book) & (cl.market == r.market) & (cl.player == r.player)] if len(cl) else cl
             if c is None or len(c) == 0:
-                clv.append((r.Index, np.nan, np.nan))
+                clv.append((r.Index, np.nan, np.nan, np.nan))
                 continue
             c = c.iloc[0]
             line_move = (c.line - r.line) if r.side == "Over" else (r.line - c.line)   # positive = we beat the close
@@ -509,10 +539,15 @@ def grade(pw_comb):
                 mo = getattr(r, "market_over", np.nan)
                 open_side = (mo if r.side == "Over" else 1 - mo) if pd.notna(mo) else 1 / american_to_decimal(r.odds)
                 prob_gain = _no_vig_side(c.over_odds, c.under_odds, r.side) - open_side
-            clv.append((r.Index, line_move, prob_gain))
-    for idx, lm, pg in clv:
+            phi = C.DEFAULT_PHI.get(str(getattr(r, "group", "")), 1.0)
+            clv.append((r.Index, line_move, prob_gain, no_vig_clv(r.odds, r.side, r.line, c.line, c.over_odds, c.under_odds, phi)))
+    for idx, lm, pg, nv in clv:
         P.loc[idx, "clv_line"] = lm
         P.loc[idx, "clv_prob"] = pg
+        P.loc[idx, "clv_novig"] = nv
+    for col in ("clv_line", "clv_prob", "clv_novig"):
+        if col not in P.columns:
+            P[col] = np.nan
     # closing-line value: the line moved our way, or the line held and the no-vig price moved our way (0.5 pt tolerance)
     moved = P.clv_line.notna() & ((P.clv_line != 0) | (P.clv_prob.abs() > 0.005))
     P["clv_pos"] = np.where(P.clv_line.notna(), (P.clv_line > 0) | ((P.clv_line == 0) & (P.clv_prob > 0.005)), False)
@@ -559,6 +594,8 @@ def grade(pw_comb):
                    roi=float(g.units.sum() / len(g)) if len(g) else None,
                    avg_clv_line=float(P.clv_line.mean()) if P.clv_line.notna().any() else None,
                    avg_clv_prob=float(P.clv_prob.mean()) if P.clv_prob.notna().any() else None,
+                   avg_clv_novig=float(P.clv_novig.mean()) if P.clv_novig.notna().any() else None,
+                   clv_novig_n=int(P.clv_novig.notna().sum()), clv_held=int((P.clv_line == 0).sum()),
                    beat_close_share=float(P.clv_pos[moved].mean()) if moved.any() else None,
                    close_moved=int(moved.sum()), close_known=int(P.clv_line.notna().sum()),
                    pending=int((P.result == "Pending").sum()))
