@@ -22,7 +22,7 @@ def log_picks(bets, season, week, pulled_at):
         return 0
     new = new.assign(season=season, week=week, pulled_at=pulled_at, side=new.pick,
                      odds=np.where(new.pick == "Over", new.over_odds, new.under_odds))
-    cols = KEY + ["team", "opp", "group", "odds", "proj", "proj_model", "mkt_line", "model_over", "market_over", "ev", "why", "p_claim", "segment", "segment_adj",
+    cols = KEY + ["player_id", "team", "opp", "group", "odds", "proj", "proj_model", "mkt_line", "model_over", "market_over", "ev", "why", "p_claim", "segment", "segment_adj",
                   "lock", "grade", "consistency", "cons_hits", "cons_n", "payout", "uncertain", "new_role", "reduced_role", "absence", "new_team",
                   "in_role_games", "lock_block", "lock_eligible", "press_pg", "fp_comb", "fp_solo", "fp_rel", "event_id", "commence_time", "pulled_at"]
     new = new[[c for c in cols if c in new.columns]]
@@ -377,6 +377,11 @@ def segment_calibration(P):
     claimed = pd.to_numeric(g["p_claim"], errors="coerce") if "p_claim" in g.columns else pd.Series(np.nan, index=g.index)
     g["claimed"] = claimed.fillna(0.5 + C.CLAIM_SHRINK * (p_side - 0.5)).fillna(0.5)
     g["hit"] = (g.result == "Win").astype(float)
+    # recent weeks weigh more: a pick's weight halves every `half_life_weeks`, so a book that re-prices a market shows
+    # in the correction within a couple of weeks instead of after it has been outvoted by the old record
+    stamp = pd.to_numeric(g.season, errors="coerce").fillna(0) * 100 + pd.to_numeric(g.week, errors="coerce").fillna(0)
+    age = (stamp.max() - stamp).clip(lower=0)
+    g["w"] = 0.5 ** (age / float(c.get("half_life_weeks", 3)))
     segs, rows = {}, []
     for keys in (["side", "mk", "group"], ["side", "mk"], ["side"]):
         for vals, part in g.groupby(keys):
@@ -384,9 +389,11 @@ def segment_calibration(P):
             if "group" in keys and vals[-1] == "":        # position unknown: counts in the coarser segments only
                 continue
             key = " ".join(str(v) for v in vals if v != "")
-            n = int(len(part)); hit = float(part.hit.mean()); cl = float(part.claimed.mean())
-            w = n / (n + c["k"]); adj = float(np.clip(w * (hit - cl), -c["cap"], c["cap"]))
-            segs[key] = dict(n=n, hit=hit, claimed=cl, delta=hit - cl, adj=adj, wins=int(part.hit.sum()), losses=int(n - part.hit.sum()), units=float(part.units.sum()))
+            n = int(len(part)); n_eff = float(part.w.sum())
+            hit = float((part.hit * part.w).sum() / n_eff); cl = float((part.claimed * part.w).sum() / n_eff)
+            w = n_eff / (n_eff + c["k"]); adj = float(np.clip(w * (hit - cl), -c["cap"], c["cap"]))
+            segs[key] = dict(n=n, n_eff=n_eff, hit=hit, claimed=cl, delta=hit - cl, adj=adj, wins=int(part.hit.sum()), losses=int(n - part.hit.sum()), units=float(part.units.sum()),
+                             hit_raw=float(part.hit.mean()), claimed_raw=float(part.claimed.mean()))
             rows.append(dict(segment=key, level=len(keys), **segs[key]))
     rows.sort(key=lambda r: (r["level"], -r["n"]))
     return segs, rows
@@ -531,6 +538,16 @@ def grade(pw_comb):
     P["name_key"] = P.player.map(norm_name)
     stats = pw_comb.groupby(["season", "week", "name_key"]).agg(comb=("comb", "sum"), solo=("solo_t", "sum"), ast=("ast_t", "sum")).reset_index()
     P = P.merge(stats, on=["season", "week", "name_key"], how="left")
+    # picks logged with the league player id (since 2026-11-03) grade on it, so a duplicate name or a book's spelling
+    # cannot grade the wrong man; the name match stays for older picks
+    if "player_id" in P.columns and "player_id" in pw_comb.columns and P.player_id.notna().any():
+        sid = pw_comb[pw_comb.player_id.notna()].assign(player_id=lambda d: d.player_id.astype(str)).groupby(["season", "week", "player_id"]).agg(
+            comb_id=("comb", "sum"), solo_id=("solo_t", "sum"), ast_id=("ast_t", "sum")).reset_index()
+        P["player_id"] = P.player_id.where(P.player_id.notna(), None).astype(object)
+        P = P.merge(sid, on=["season", "week", "player_id"], how="left")
+        for c in ("comb", "solo", "ast"):
+            P[c] = P[f"{c}_id"].where(P[f"{c}_id"].notna(), P[c])
+        P = P.drop(columns=["comb_id", "solo_id", "ast_id"])
     P["actual"] = _actual_for(P)
     # a game that is in the books (the team has stat rows) but the player has none: he did not play, the bet is void
     if "team" in pw_comb.columns and "team" in P.columns:

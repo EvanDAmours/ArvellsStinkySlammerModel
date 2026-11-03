@@ -171,6 +171,13 @@ check(list(graded.result) == ["Win", "Loss", "Win"], f"picks graded correctly ({
 _r0 = week6.iloc[0]; _ast_line = float(_r0.comb - _r0.solo_t) - 0.5
 _pa = pd.concat([pd.DataFrame(rows), pd.DataFrame([dict(season=2026, week=6, player=_r0.player, team=_r0.team, opp="", market="player_assists", side="Over", line=_ast_line,
                                                       book="DraftKings", odds=-110, event_id="X0", commence_time="2026-10-18T17:00:00Z", pulled_at="20261018T120000Z", five=False, lock=50.0, grade="C")])], ignore_index=True)
+# a pick that carries the league id grades on it even when the logged name is misspelled
+_pid = pw[(pw.season == 2026) & (pw.week == 6) & (pw.player == _r0.player)].player_id.iloc[0]
+_pb = pd.concat([pd.DataFrame(rows), pd.DataFrame([dict(season=2026, week=6, player=_r0.player + "x", player_id=str(_pid), team=_r0.team, opp="", market="player_tackles_assists", side="Over", line=float(_r0.comb) - 0.5,
+                                                      book="DraftKings", odds=-110, event_id="X0", commence_time="2026-10-18T17:00:00Z", pulled_at="20261018T120000Z", five=False, lock=50.0, grade="C")])], ignore_index=True)
+_pb.to_csv("data/picks.csv", index=False)
+_gb, _ = G.grade(pw.assign(player_id=pw.player_id.astype(str)))
+check(_gb.result.iloc[3] == "Win" and float(_gb.actual.iloc[3]) == float(_r0.comb), f"a pick grades on its league id when the name does not match ({_gb.result.iloc[3]}, actual {_gb.actual.iloc[3]})")
 _pa.to_csv("data/picks.csv", index=False)
 _ga, _ = G.grade(pw)
 check(list(_ga.result) == ["Win", "Loss", "Win", "Win"] and float(_ga.actual.iloc[3]) == float(_r0.comb - _r0.solo_t) and _ga.side_market.iloc[3] == "Over assists",
@@ -205,7 +212,12 @@ _pl = json.loads((tmp / "docs" / "data" / "parlays.json").read_text()) if (tmp /
 _legs = [l for p in (_pl.get("parlays") or _pl.get("open") or []) for l in (p.get("legs") or [])] if isinstance(_pl, dict) else []
 check(not any(l.get("market") == "player_assists" for l in _legs), "no parlay leg is an assists line")
 _ac = json.loads((tmp / "docs" / "data" / "actuals.json").read_text())
-check(all(len(v) == 3 for wk in _ac["weeks"].values() for v in wk.values()), "actuals carry combined, solo and assists")
+check(all(len(v) == 3 for wk in _ac["weeks"].values() for v in wk.values()) and any(k.startswith("id:") for wk in _ac["weeks"].values() for k in wk), "actuals carry combined, solo and assists, by name and by league id")
+check(all(b.get("player_id") for b in _ba) and all("espn_id" in b for b in _ba), "every priced line carries the league player id (and an ESPN id slot)")
+_mt = json.loads((tmp / "docs" / "data" / "meta.json").read_text())
+check(_mt.get("season_over") is False, "meta says the season is not over while games remain")
+_sg = json.loads((tmp / "data" / "cache" / "segments.json").read_text()) if (tmp / "data" / "cache" / "segments.json").exists() else {}
+check(all("n_eff" in v and v["n_eff"] <= v["n"] + 1e-9 for v in _sg.values()) if _sg else True, f"segment calibration carries the recency-weighted count ({len(_sg)} segments)")
 
 check('data-tab="gloss"' in _html and "function renderGloss" in _html and "No-vig CLV" in _html and "clv_pct" in _html, "site has the glossary tab and the no-vig CLV tile")
 from pipeline.grade import no_vig_clv

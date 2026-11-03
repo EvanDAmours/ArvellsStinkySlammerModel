@@ -1,7 +1,9 @@
-pandas>=2.2
-numpy>=1.26
-requests>=2.31
-pyarrow>=15
-nflreadpy>=0.1
-scikit-learn>=1.5
-cryptography>=42
+# Pinned on 2026-11-03 to the versions the smoke test passes with; bump on purpose, with the smoke test as the gate.
+pandas==3.0.5
+numpy==2.5.3
+requests==2.34.2
+pyarrow==26.0.0
+polars==2.0.0
+nflreadpy==0.1.5
+scikit-learn==1.9.1
+cryptography==50.0.1

@@ -104,7 +104,7 @@ SOLO_SHARE_PSEUDO = 25             # tackles of position prior mixed into a play
 # Segment calibration (2026-10-31): a pick's claimed chance is corrected by how the model's claims have actually
 # resolved for picks like it (side x market x position), shrunk by n/(n+k) toward no correction. Our own results only,
 # never the book's. Finest segment with min_n graded picks wins; the correction is capped.
-SEGMENT_CAL = dict(k=40, min_n=10, cap=0.08, ev_weight=0.5)   # tightened 2026-10-31 evening: 15 picks were moving claims 10 points; now at most 8, and n/(n+40)
+SEGMENT_CAL = dict(k=40, min_n=10, cap=0.08, ev_weight=0.5, half_life_weeks=3)   # tightened 2026-10-31 evening: 15 picks were moving claims 10 points; now at most 8, and n/(n+40)
 LOCKS_PER_SEGMENT = 2            # risk control: no more than two locks a day of the same kind (side x market x position); if the market corrects one kind, not every lock falls with it
 PARLAY_LEGS_PER_SEGMENT = 2      # same for parlay legs   # ev_weight: how much of the correction also moves the probability that decides whether a line is a pick
 # After an outlier game in a settled role the season average still leans toward it: actual ran 5.5% under the model

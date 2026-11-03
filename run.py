@@ -297,25 +297,33 @@ def cmd_daily(auto=False):
     seasons, pw, sched, snaps, inj, H, status, src = load_all()
     week = upcoming_week(sched, C.SEASON)
     bt, phi, k, scale, gbm = B.run_backtest(H, seasons)
-    F = M.upcoming_rows(H, sched, inj, C.SEASON, week, vol=src["vol"], dc=src["dc"], pbp_starters=src["pbp"]["starters"])
-    P = M.finalize_projections(F, phi, scale=scale, gbm=gbm)
-    P = attach_game_logs(P, H, C.SEASON, week)
-    P, status["fantasypros_rows"] = attach_consensus(P, C.SEASON, week)
-    jerseys = S.load_jerseys(C.SEASON)
+    games = week_games(sched, C.SEASON, week)
+    status["season_over"] = not games           # every game of the season (playoffs included) is in the books: grade, keep the record, project nothing
+    if games:
+        F = M.upcoming_rows(H, sched, inj, C.SEASON, week, vol=src["vol"], dc=src["dc"], pbp_starters=src["pbp"]["starters"])
+        P = M.finalize_projections(F, phi, scale=scale, gbm=gbm)
+        P = attach_game_logs(P, H, C.SEASON, week)
+        P, status["fantasypros_rows"] = attach_consensus(P, C.SEASON, week)
+    else:
+        print(f"daily: no game left on the {C.SEASON} schedule (week {week}); the season is over, so the record is graded and nothing is projected")
+        P, status["fantasypros_rows"] = pd.DataFrame(), 0
+    jerseys = S.load_jerseys(C.SEASON) if len(P) else {}
+    espn_ids = S.load_espn_ids() if len(P) else {}
     P["jersey"] = P.player_id.astype(str).map(jerseys) if len(P) else None
+    P["espn_id"] = P.player_id.astype(str).map(espn_ids) if len(P) else None
     CACHE.mkdir(parents=True, exist_ok=True)
     if len(P):
         P.to_csv(CACHE / "projections.csv", index=False)
     json.dump(dict(phi=phi, k=k, scale=scale, week=week), open(CACHE / "model_state.json", "w"))
-    games = week_games(sched, C.SEASON, week)
     json.dump(games, open(CACHE / "games.json", "w"), indent=1)
     status["international_games"] = [f"{g['away']} at {g['home']}, {g['edmonton']} Edmonton" for g in games if g["international"]]
-    graded, summary = G.grade(H[["season", "week", "team", "name_key", "group", "comb", "solo_t"]])
+    graded, summary = G.grade(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]])
     # the official box score for every defender-game this season, so the owner's own board can grade any bet (not only the model's picks)
     hs = H[(H.season == C.SEASON) & H.comb.notna()]
     actuals = {}
     for r in hs.itertuples():
         actuals.setdefault(str(int(r.week)), {})[f"{r.team}|{r.name_key}"] = [int(r.comb), int(r.solo_t), int(r.comb - r.solo_t)]   # combined, solo, assists
+        actuals[str(int(r.week))][f"id:{r.player_id}"] = actuals[str(int(r.week))][f"{r.team}|{r.name_key}"]                    # the same row by league id, for bets that carry one
     _json(SITE / "actuals.json", dict(season=C.SEASON, weeks=actuals))   # H has zero-tackle games from snap counts, so "played, no tackles" is not "did not play"
     parlays, psum = G.grade_parlays(pw)
     summary["parlays"] = psum
@@ -423,7 +431,7 @@ def cmd_history(weeks, markets):
         print(f"history: week {wk}: {len(rows)} prices saved to {path}, credits left {left}")
 
 
-WEEK_LINE_COLS = ["player", "jersey", "team", "opp", "group", "market", "line", "book", "over_odds", "under_odds", "over_link", "under_link", "side", "pick", "proj", "model_over", "grade", "lock", "commence_time", "event_id", "rundown"]
+WEEK_LINE_COLS = ["player", "player_id", "espn_id", "jersey", "team", "opp", "group", "market", "line", "book", "over_odds", "under_odds", "over_link", "under_link", "side", "pick", "status", "proj", "model_over", "grade", "lock", "commence_time", "event_id", "rundown"]
 
 
 def write_week_lines(P, season, week):
@@ -473,7 +481,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
             "fair_line", "fair_line_solo", "crew_comb", "crew_solo", "spread_dog", "role_signal", "venue", "gameday", "gametime", "phi", "phi_solo",
             "dc_status", "opp_qb_out", "opp_rb_out", "rest", "pct_last3", "pct_prev", "pct_last", "gap_weeks", "team_changed", "new_role", "reduced_role",
             "absence", "missed_game", "new_team", "snap_jump", "vacancy", "vacancy_rule", "share_pred", "rate_clean", "tsnaps_exp", "allowed_rel", "roof", "solo_drift", "proj_factor", "proj_gbm",
-            "log_comb", "log_solo", "log_ast", "proj_ast", "phi_ast", "fair_line_ast", "press_pg", "fp_comb", "fp_solo", "fp_rel_comb", "fp_rel_solo", "jersey"]
+            "player_id", "log_comb", "log_solo", "log_ast", "proj_ast", "phi_ast", "fair_line_ast", "press_pg", "fp_comb", "fp_solo", "fp_rel_comb", "fp_rel_solo", "jersey", "espn_id"]
     _json(SITE / "projections.json", records(P, [c for c in cols if c in P.columns]) if len(P) else [])
     _json(SITE / "bets.json", records(bets))
     _json(SITE / "backtest.json", bt)

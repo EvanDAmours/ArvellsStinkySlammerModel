@@ -1238,6 +1238,48 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-03, late afternoon MDT (six things that would have broken later, fixed now)
+Owner asked what would cause trouble down the line and picked six of the ten named. Each in turn:
+1. **Dependencies pinned.** `requirements.txt` now pins pandas 3.0.5, numpy 2.5.3, requests 2.34.2, pyarrow 26.0.0,
+   polars 2.0.0, nflreadpy 0.1.5, scikit-learn 1.9.1, cryptography 50.0.1 (the versions the smoke test passes
+   with). The runner used to install whatever was newest each run; pandas 3 already broke a groupby once. Bump on
+   purpose, smoke test as the gate.
+2. **The season no longer ends at week 18 for the code.** Every loader kept regular-season rows only, and after the
+   last regular game the week counter would roll to 19 with no games behind it and the daily job would fail every
+   morning through the playoffs. `sources._season_game()` now keeps REG and POST rows (schedules: WC, DIV, CON,
+   SB; nflverse numbers playoff weeks 19-22), so the playoffs are projected, priced and graded like any week and
+   playoff games join the history. After the Super Bowl `cmd_daily` sees no game left on the schedule, grades
+   what is there, writes the site with `season_over` in the meta (the header says so) and projects nothing; the
+   pull job's planner has no kickoffs and does nothing. Validation (real-data daily in a scratch copy): the backtest now covers 30,919 defender-games
+   (1,528 playoff games added); full model miss 1.6216 against 1.6212 without them (level-matched 1.6185),
+   season average 1.6855, held-out 2026 fold 1.6023: the playoff games neither help nor hurt the model, and
+   every piece keeps its place. 768 week-9 projections, 99.7% with an ESPN id, all with a league id.
+5. **Picks carry the league player id and grade on it.** Every priced row has `player_id` (gsis) and `espn_id`
+   (from the players table); the pick log keeps `player_id`; the grader matches box scores by id first and by
+   name only for older picks; `actuals.json` carries each row by id as well as by name. On the site, a bet on My
+   board stores both ids, the live tracker matches ESPN's box score by athlete id before falling back to the
+   name, and the official grade looks the id up first. A pick on a misspelled name now grades (smoke-tested).
+6. **Segment calibration weighs recent weeks more.** A pick's weight halves every three weeks
+   (`SEGMENT_CAL["half_life_weeks"] = 3`): the correction, its n/(n+k) weight and the hit and claimed rates use the
+   weighted count (`n_eff`); the raw count still gates `min_n` and is what the site shows. Reason: the Under solo
+   correction was earned entirely from the books' high solo lines; when the books re-price, the old record would
+   outvote the new one for about 30 picks (a losing week or two). With weeks 7 and 8 only, the change is small (old to new, points):
+   Under solo +4.7 to +4.6 (201 picks, 181 weighted), Under combined -6.6 to -6.2, Over -8.0 to -7.5, Over solo
+   -8.0 to -7.2, Over combined -4.4 to -4.0; the position-level segments (all from week 8) are unchanged. No pick
+   on the current board changes, because there is none yet; the week 9 picks will be the first priced with it.
+7. **My board says when the live feed is down.** A warning at the top when ESPN's scoreboard or a game's box
+   score is not answering during games, and a per-bet line ("live feed unavailable, graded from the official box
+   score tomorrow") instead of a misleading "behind" verdict with no data.
+8. **Late scratches show.** Week lines carry the player's status from the last pull; a card for a player ruled out
+   since the morning report gets a "Ruled out" tag; a bet on My board on such a player reads "Void, ruled out
+   before kickoff (stake refunded)", its money leaves the day's totals, and once the game is in the books without
+   him the official grade is a Void rather than pending forever (any bet whose team has box-score rows and whose
+   player has none).
+Not done, by the owner's choice: 3 (credit budget in December), 4 (the dead second key), 9 (private repo), 10
+(snapshot archive).
+- Revert: `half_life_weeks` very large restores the unweighted calibration; `SEASON_GAME_TYPES = ("REG",)` restores
+  the regular-season-only history (then the stand-down fires at week 19 instead of after the Super Bowl).
+
 ### 2026-11-03, afternoon MDT (stalled pulls: every hole closed that can be closed from here)
 - Owner: go through the site and model so stalled pulls are never an issue again. GitHub's scheduler is the one
   thing that cannot be fixed from the repository (it stalled two hours on 2026-10-31 and the 11:15 UTC daily

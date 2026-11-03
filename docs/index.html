@@ -301,6 +301,7 @@ function recordsBar(s) {
   }
   return bar;
 }
+const OUT_STATUSES = new Set(["out", "doubtful", "ir", "injured reserve", "pup", "suspended"]);
 const MARKET = { player_tackles_assists: "Tackles + assists", player_solo_tackles: "Solo tackles", player_assists: "Assists" };
 const ASSIST = "player_assists";
 const kindOf = (m) => ((m || "").includes("solo") ? "solo" : (m || "").includes("assists") && !(m || "").includes("tackles") ? "assists" : "combined");
@@ -410,7 +411,7 @@ function renderMeta() {
   const m = DATA.meta;
   if (!m) { $("#meta").append("Waiting for the first run. Start it from the Actions tab (see README)."); return; }
   $("#title").textContent = "Arvell's Stinky Slammer Model";
-  $("#meta").append(el("span", {}, `Week ${m.week} board`));
+  $("#meta").append(el("span", {}, m.season_over ? `Season ${m.season} over: every game graded` : `Week ${m.week} board`));
   if (m.international_games && m.international_games.length) $("#meta").append(el("span", { class: "intl" }, `International: ${m.international_games.join("; ")}`));
   $("#meta").append(el("span", {}, `Model updated ${when(m.generated_at)}`),
                     el("span", {}, m.lines_pulled ? `Lines pulled ${when(m.lines_pulled)}` : "No lines pulled yet this week"),
@@ -599,6 +600,7 @@ function card(b, isLock) {
     b.depth === "promoted" ? tag("tag ok", "Listed as a starter on the latest depth chart; was not before his last game", "Promoted") : b.depth === "demoted" ? tag("tag warn", "No longer listed as a starter on the latest depth chart", "Demoted") : "",
     b.opp_qb_out ? tag("tag", "The opponent's starting quarterback is listed out or doubtful", "Opp QB out") : "", b.opp_rb_out ? tag("tag", "The opponent's lead rusher is listed out or doubtful", "Opp RB out") : "",
     b.rest != null && b.rest >= 10 ? tag("tag", "Defence coming off a bye week", "Off a bye") : b.rest != null && b.rest <= 4 ? tag("tag", "Short week", "Short week") : "",
+    OUT_STATUSES.has(String(b.status || "").toLowerCase()) ? tag("tag warn", `Ruled ${b.status} since the last report: never a pick, and the book voids a bet already placed`, "Ruled out") : "",
     b.uncertain ? tag("tag warn", "Listed questionable: priced 8% under his average; never a lock or parlay leg; the bet voids if he sits", "Questionable") : "",
     b.new_role ? tag("tag warn", `New role: a part-timer who just played a starter's snaps${b.snap_jump ? ` (${b.snap_jump.toFixed(1)}x his season share)` : ""}. Priced at that role with a wider range; never a lock until his history catches up.`, "New role") : "",
     b.reduced_role ? tag("tag warn", "Reduced role: his last game's snap share was well below his season share. Priced down; never a lock or parlay leg.", "Reduced role") : "",
@@ -1023,7 +1025,8 @@ function toggleMine(b) {
   else if (i >= 0) list.splice(i, 1);
   else list.push({ key: k, player: b.player, team: b.team, opp: b.opp, group: b.group, market: b.market, side: b.side || b.pick, line: b.line, book: b.book,
                    odds: (b.side || b.pick) === "Under" ? b.under_odds : b.over_odds, proj: b.proj, model_p: (b.side || b.pick) === "Under" ? 1 - b.model_over : b.model_over,
-                   grade: b.grade, lock: b.lock, commence_time: b.commence_time, link: sideLink(b, b.side || b.pick), season: DATA.meta?.season, week: DATA.meta?.week, jersey: b.jersey ?? null, added: new Date().toISOString() });
+                   grade: b.grade, lock: b.lock, commence_time: b.commence_time, link: sideLink(b, b.side || b.pick), season: DATA.meta?.season, week: DATA.meta?.week, jersey: b.jersey ?? null,
+                   player_id: b.player_id ?? null, espn_id: b.espn_id ?? null, added: new Date().toISOString() });
   saveMine(list); renderPlays(); renderMine(); liveLoop(true);
 }
 // the book's own bet-slip link for a side, when The Odds API passed one through (DraftKings and FanDuel do)
@@ -1068,7 +1071,7 @@ async function refreshLive() {
       const players = {};
       for (const team of d.boxscore?.players || []) for (const st of team.statistics || []) if (st.name === "defensive") {
         const ti = st.keys.indexOf("totalTackles"), si = st.keys.indexOf("soloTackles");
-        for (const a of st.athletes || []) players[normName(a.athlete?.displayName)] = { tot: +a.stats[ti] || 0, solo: +a.stats[si] || 0 };
+        for (const a of st.athletes || []) { const row = { tot: +a.stats[ti] || 0, solo: +a.stats[si] || 0 }; players[normName(a.athlete?.displayName)] = row; if (a.athlete?.id) players[`id:${a.athlete.id}`] = row; }   // by name and by ESPN id
       }
       const g = LIVE.events.find((e) => e.id === id);
       LIVE.box[id] = { players, final: g?.state === "post", at: Date.now() };
@@ -1093,6 +1096,8 @@ function elapsedShare(g) {
 function renderMine() {
   const box = $("#mine-body"); if (!box) return; box.replaceChildren();
   const list = board();
+  if (LIVE.error && (LIVE.events || []).some((g) => g.state === "in")) box.append(el("div", { class: "warn" }, `ESPN's live feed is not answering (${LIVE.error}). Live tackles and pace are paused; every bet is still settled from the official box score the morning after, and nothing on the ledger is lost.`));
+  else if (LIVE.error && !LIVE.events) box.append(el("div", { class: "warn" }, `ESPN's scoreboard is not answering (${LIVE.error}), so kickoff times and live tracking are unavailable for now. Official grading still settles every bet.`));
   box.append(el("p", { class: "lead" }, "The bets you took, tracked live, with your stakes. Press \"+ My board\" on any card on the Plays tab; it is kept in this browser only. While a game is on, each bet refreshes from ESPN's box score every minute: tackles so far, the pace for the full game, and whether the bet is trending the right way. The official box score the books settle on can differ by a tackle from the live feed."));
   if (!list.length) { box.append(el("div", { class: "empty" }, "Nothing on your board yet. Add bets from the Plays tab, or find one below."), addPicker(), ledgerSection()); return; }
   let w = 0, l = 0, p = 0, onTrack = 0, live = 0, staked = 0, toWin = 0, settled = 0, pendingStake = 0, paced = 0, pacedN = 0, unstarted = 0, unstartedStake = 0;
@@ -1101,13 +1106,17 @@ function renderMine() {
   const groups = { in: [], pre: [], post: [] };
   let changed = false;
   const cards = sorted.map((b) => {
-    const g = gameOf(b), bx = g ? LIVE.box[g.id] : null, st = bx?.players?.[normName(b.player)];
+    const g = gameOf(b), bx = g ? LIVE.box[g.id] : null, st = (b.espn_id && bx?.players?.[`id:${b.espn_id}`]) || bx?.players?.[normName(b.player)];
+    // ruled out since the bet was placed: the last pull's line carries the status, and the book refunds the stake
+    const lastLine = (DATA.week_lines || []).find((l) => (b.player_id && l.player_id === b.player_id) || (normName(l.player) === normName(b.player) && l.team === b.team));
+    const scratched = !!lastLine && OUT_STATUSES.has(String(lastLine.status || "").toLowerCase());
     const kind = kindOf(b.market), solo = kind === "solo"; const have = st ? (solo ? st.solo : kind === "assists" ? Math.max(0, st.tot - st.solo) : st.tot) : (bx && g && g.state !== "pre" ? 0 : null);   // in the box score but no row yet means no tackles yet
     const share = elapsedShare(g); const pace = have == null || share <= 0 ? null : have / share;
     const under = b.side === "Under";
     let status, cls = "", verdict = "";
-    if (!g) status = "Game not found on ESPN yet";
+    if (!g) status = LIVE.error ? `Live feed unavailable (${LIVE.error}); graded from the official box score tomorrow` : "Game not found on ESPN yet";
     else if (g.state === "pre") status = `Kicks off ${kickoffLocal(new Date(g.date))}`;
+    else if (g.state === "in" && !bx) { live++; status = `Live feed unavailable${LIVE.error ? ` (${LIVE.error})` : ""}: tackles so far unknown; graded from the official box score tomorrow`; }
     else if (g.state === "post") { const hit = have == null ? null : have === b.line ? "Push" : (under ? have < b.line : have > b.line) ? "Win" : "Loss"; status = `Final · ${hit || "no box score"}`; cls = hit === "Win" ? " good done" : hit === "Loss" ? " bad done" : " done"; }
     else { live++; const ok = have != null && (under ? have < b.line && (pace == null || pace < b.line) : have > b.line || (pace != null && pace > b.line)); const clinched = have != null && (under ? false : have > b.line); const dead = have != null && under && have > b.line;
       status = `${g.detail || `Q${g.period} ${g.clock}`} · ${g.teams[0]} ${g.score[g.teams[0]]}-${g.score[g.teams[1]]} ${g.teams[1]}`; cls = dead ? " bad" : clinched || ok ? " good" : " bad"; if (!dead && (clinched || ok)) onTrack++;
@@ -1117,13 +1126,14 @@ function renderMine() {
     let result = null;
     // a final result is written on the bet once, so the ledger keeps it after the week closes: the official grade when
     // the grader has one, the live box score otherwise
+    if (scratched && !b.settled && (!g || g.state !== "post")) { status = "Void · ruled out before kickoff at the last report (the book refunds the stake)"; cls = " done"; verdict = ""; }
     const off = officialGrade(b, DATA.meta?.week);
     if (off) { if (!b.settled || b.settled.source !== "official") { b.settled = { ...off, source: "official" }; changed = true; } if (g && g.state !== "post") status = `Final · ${off.result}`; cls = off.result === "Win" ? " good done" : off.result === "Loss" ? " bad done" : " done"; if (!status.startsWith("Final")) status = `Final · ${off.result}`; }
     else if (status.startsWith("Final") && have != null && !b.settled) { b.settled = { result: status.includes("Win") ? "Win" : status.includes("Loss") ? "Loss" : "Push", actual: have, source: "live", at: new Date().toISOString() }; changed = true; }
     else if (!g && b.settled && b.settled.result) { status = `Final · ${b.settled.result}`; cls = b.settled.result === "Win" ? " good done" : b.settled.result === "Loss" ? " bad done" : " done"; }
     // money counts once the game has kicked off; before that a bet can still be withdrawn, so it sits in its own column
-    const started = g && g.state !== "pre";
-    if (stake != null) {
+    const started = g && g.state !== "pre" && !(scratched && !b.settled);
+    if (stake != null && !(scratched && !b.settled)) {
       if (started) { staked += stake; if (win != null) toWin += win; }
       else { unstarted++; unstartedStake += stake; }
       if (status.startsWith("Final")) { result = status.includes("Win") ? win : status.includes("Loss") ? -stake : 0; settled += result; paced += result; pacedN++; }
@@ -1171,8 +1181,8 @@ function officialGrade(b, weekHint) {
   const hit = (DATA.results?.picks || []).find((p) => p.week === week && normName(p.player) === nk && p.market === b.market && p.side === b.side && +p.line === +b.line && p.result && p.result !== "Pending");
   if (hit) return { result: hit.result, actual: hit.actual };
   const wk = DATA.actuals?.weeks?.[String(week)]; if (!wk) return null;
-  const row = wk[`${b.team}|${nk}`] || Object.entries(wk).find(([k]) => k.endsWith(`|${nk}`))?.[1];
-  if (!row) return null;
+  const row = (b.player_id && wk[`id:${b.player_id}`]) || wk[`${b.team}|${nk}`] || Object.entries(wk).find(([k]) => k.endsWith(`|${nk}`))?.[1];
+  if (!row) { const played = b.team && Object.keys(wk).some((k) => k.startsWith(`${b.team}|`)); return played ? { result: "Void", actual: null } : null; }   // his team's game is in the books and he has no row: he did not play, the book voids the bet
   const kind = kindOf(b.market); const actual = kind === "solo" ? row[1] : kind === "assists" ? (row[2] ?? row[0] - row[1]) : row[0];
   const result = actual === +b.line ? "Push" : (b.side === "Under" ? actual < +b.line : actual > +b.line) ? "Win" : "Loss";
   return { result, actual };
@@ -1488,7 +1498,7 @@ function glossTerms() {
       ["Whole board, market base rate", "How every closing line of a kind resolved, picked or not: if 74% of all Unders on the board hit in a week, a 74% hit rate on our Unders was the market, not the model."],
       ["Lift over the board", "Our hit rate on a kind of pick minus the whole-board rate for that kind: what choosing these lines added. A kind of pick is evidence for the model only where lift and beating the close agree with the record."],
       ["Luck or skill (the luck table)", "The weekly table that puts hit rate, the whole-board rate, lift and beat-the-close side by side, with a verdict: 'we picked well' when the lift is real, 'the market went our way' when the board as a whole resolved our way, and a note when there were too few picks to say. Every post-mortem starts from it."],
-      ["Segment", "A kind of pick: side × market × position (Under combined LB, Over solo CB and so on). Claimed chances are corrected per segment, and the record is read per segment, because the model is not equally right everywhere."],
+      ["Segment", "A kind of pick: side × market × position (Under combined LB, Over solo CB and so on). Claimed chances are corrected per segment, with recent weeks weighing more (a pick's weight halves every three weeks, so a book that re-prices a market shows in the correction within a couple of weeks), and the record is read per segment, because the model is not equally right everywhere."],
       ["Market watch", "Every closing line on the board, not just our picks: how often the over hit against what the market's own price implied. It says whether the market itself was biased that week."],
       ["Backtest, miss, held-out season", "On the Model check tab. Every past defender-game predicted using only what was known before it; 'miss' is the average error in tackles. The held-out season is trained on earlier seasons and scored on the latest only, nothing tuned on the games it is scored on: the honest number. Each piece of the model stays only while the model is worse without it."],
       ["Walk-forward", "Scoring a model only on games after everything it learned from. In-sample numbers (scored on the games it trained on) flatter a model several times over; nothing on this site is reported in-sample without saying so."]]],

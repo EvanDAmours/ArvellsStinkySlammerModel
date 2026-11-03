@@ -912,7 +912,8 @@ def segment_adjust(segments, side, kind, group):
     for key in (f"{side} {mk} {group}", f"{side} {mk}", f"{side}"):
         seg = segments.get(key)
         if seg and seg.get("n", 0) >= c["min_n"]:
-            w = seg["n"] / (seg["n"] + c["k"])
+            n = float(seg.get("n_eff", seg["n"]))      # recency-weighted count when the calibration carries one
+            w = n / (n + c["k"])
             return float(np.clip(w * (seg["hit"] - seg["claimed"]), -c["cap"], c["cap"])), key
     return 0.0, ""
 
@@ -1152,6 +1153,7 @@ def price_lines(lines, P, segments=None):
             if block:
                 why += "; not lock-eligible: " + ", ".join(block)
         rows.append({**base, "team": p.team, "opp": p.opp_team, "group": p.group, "jersey": None if pd.isna(p.get("jersey", np.nan)) else int(p.get("jersey")), "proj": float(mu), "proj_model": float(mu_model),
+                     "player_id": None if pd.isna(p.get("player_id", np.nan)) else str(p.get("player_id")), "espn_id": None if pd.isna(p.get("espn_id", np.nan)) else str(p.get("espn_id")).split(".")[0],
                      "mkt_line": float(r.mkt_line), "phi": phi_use, "model_over": po, "market_over": mkt, "ev": ev, "side": side, "far_from_line": bool(far_from_line),
                      "p_claim": claim, "segment": seg_key, "segment_adj": float(seg_adj),
                      "pick": pick, "why": why, "signal_fade": bool(fade), "signal_role": role, "status": p.status,

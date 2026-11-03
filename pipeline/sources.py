@@ -74,6 +74,15 @@ def pos_group(position, group=""):
 
 
 # ---------------------------------------------------------------- player stats
+SEASON_GAME_TYPES = ("REG", "POST", "WC", "DIV", "CON", "SB")   # regular season and the playoffs; preseason stays out
+
+
+def _season_game(kind):
+    """True for regular-season and playoff rows (nflverse codes them REG and POST, or WC/DIV/CON/SB in schedules)."""
+    k = kind.astype(str).str.upper().str.strip()
+    return k.isin(SEASON_GAME_TYPES) | k.str.startswith("REG") | k.str.startswith("POST")
+
+
 def load_player_week(seasons):
     if os.environ.get("TACKLE_FAKE_DATA"):
         from tests.fake_data import fake_player_week
@@ -106,7 +115,7 @@ def normalize_player_week(df, season):
         "ast": pd.to_numeric(_col(df, "def_tackle_assists", "def_tackles_assists", default=0), errors="coerce").fillna(0),
         "with_ast": pd.to_numeric(_col(df, "def_tackles_with_assist", default=0), errors="coerce").fillna(0),
     })
-    out = out[out.season_type.str.upper().str.startswith("REG")].copy()
+    out = out[_season_game(out.season_type)].copy()
     out["group"] = [pos_group(p, g) for p, g in zip(out.position, out.position_group)]
     out = out[out.group != ""].copy()
     out["name_key"] = out.player.map(norm_name)
@@ -176,7 +185,7 @@ def load_snaps(seasons):
     if not frames:
         return pd.DataFrame(columns=["season", "week", "team", "name_key", "def_snaps", "def_pct"])
     sn = pd.concat(frames, ignore_index=True)
-    sn = sn[sn.game_type.str.upper().str.startswith("REG")].drop(columns=["game_type"])
+    sn = sn[_season_game(sn.game_type)].drop(columns=["game_type"])
     sn.loc[sn.def_pct > 1.5, "def_pct"] = sn.def_pct / 100.0
     return sn
 
@@ -208,7 +217,7 @@ def load_schedule(seasons):
         "home_rest": pd.to_numeric(_col(df, "home_rest", default=7), errors="coerce").fillna(7),
         "away_rest": pd.to_numeric(_col(df, "away_rest", default=7), errors="coerce").fillna(7),
     })
-    sc = sc[sc.season.isin(list(seasons)) & sc.game_type.str.upper().str.startswith("REG")]
+    sc = sc[sc.season.isin(list(seasons)) & _season_game(sc.game_type)]
     return sc.drop(columns=["game_type"]).reset_index(drop=True)
 
 
@@ -284,6 +293,20 @@ def load_jerseys(season):
         return {str(g): int(j) for g, j in zip(latest.gsis_id, latest.jersey_number)}
     except Exception as e:  # noqa: BLE001
         print(f"  jersey numbers: {type(e).__name__}: {e}")
+        return {}
+
+
+def load_espn_ids():
+    """gsis player id -> ESPN athlete id, from the players table; empty on synthetic data or failure. Lets the site's
+    live tracker match a bet to ESPN's box score by id instead of by name."""
+    if os.environ.get("TACKLE_FAKE_DATA"):
+        return {}
+    try:
+        pl = _nflreadpy("load_players")
+        pl = pl[pl.gsis_id.notna() & pl.espn_id.notna()]
+        return {str(g): str(e).split(".")[0] for g, e in zip(pl.gsis_id, pl.espn_id)}
+    except Exception as e:  # noqa: BLE001
+        print(f"  espn ids: {type(e).__name__}: {e}")
         return {}
 
 
@@ -431,7 +454,7 @@ def load_team_volume(seasons):
                    + pd.to_numeric(_col(df, "completions", default=0), errors="coerce").fillna(0)
                    + pd.to_numeric(_col(df, "sacks_suffered", default=0), errors="coerce").fillna(0),
         })
-        frames.append(d[d.season_type.str.upper().str.startswith("REG")].drop(columns=["season_type"]))
+        frames.append(d[_season_game(d.season_type)].drop(columns=["season_type"]))
     if not frames:
         return pd.DataFrame(columns=["season", "week", "team", "opp_team", "gen", "faced"])
     v = pd.concat(frames, ignore_index=True)
@@ -498,7 +521,7 @@ def load_pfr_def(seasons):
             df, _ = _first_working([("nflreadpy", lambda s=s: _nflreadpy("load_pfr_advstats", seasons=[s], stat_type="def", summary_level="week"))])
         except RuntimeError:
             continue
-        d = df[_col(df, "game_type", default="REG").astype(str).str.upper().str.startswith("REG")]
+        d = df[_season_game(_col(df, "game_type", default="REG"))]
         frames.append(pd.DataFrame({"season": pd.to_numeric(_col(d, "season", default=s)).astype(int), "week": pd.to_numeric(d.week).astype(int),
                                     "team": d.team.astype(str), "name_key": _canon_names(d, "pfr_player_name", "pfr_player_id"),
                                     "targets": pd.to_numeric(d.def_targets, errors="coerce").fillna(0),
@@ -538,7 +561,7 @@ def load_pbp_tackles(seasons):
     if not frames:
         return empty
     pbp = pd.concat(frames, ignore_index=True)
-    pbp = pbp[pbp.season_type.astype(str).str.upper().str.startswith("REG") & pbp.play_type.isin(["run", "pass"])]
+    pbp = pbp[_season_game(pbp.season_type) & pbp.play_type.isin(["run", "pass"])]
     rows = []
     for c in PBP_COLS[10:]:
         if c in pbp.columns:
