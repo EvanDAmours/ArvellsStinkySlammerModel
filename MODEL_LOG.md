@@ -1080,6 +1080,20 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, evening MDT (the gate: the site sealed behind a shared password)
+- Owner does not want the board public yet but wants a few people to see it. GitHub Pages serves every file to
+  anyone with the link, so `pipeline/seal.py` encrypts each site JSON after every job (AES-256-GCM, key from the
+  password by PBKDF2-SHA256 at 200,000 rounds, one salt per run, a nonce per file), deletes the plaintext, and the
+  page decrypts in the browser (WebCrypto) after asking for the password once per device; wrong password, ask
+  again; "Lock this device" forgets it. `run.py seal` runs in both workflows with the `SITE_PASSWORD` secret; the
+  jobs read the sealed meta back with the same secret so credits and the week carry over. No secret set: the site
+  stays open and says so in the log. Smoke checks: files sealed and plaintext gone, decrypts with the password and
+  not without, a pull after sealing still works, no secret leaves the site open. Checked in a headless browser:
+  gate shown, wrong password refused, right password opens the board, remembered on reload.
+- What it does not do: the repository is public, so the picks log, odds snapshots and projections are readable on
+  GitHub. README says how to make the repository private (Pages needs a paid plan for that). The owner sets the
+  secret; nothing in this session can.
+
 ### 2026-11-02, evening MDT (a lock needs an A)
 - Owner, after asking whether Monday's lone lock (Thieneman Under 4.5 solo, score 61, grade B) was a true lock or
   just the best of a thin night: "locks should only be a lock if the model strongly believes it will happen, not

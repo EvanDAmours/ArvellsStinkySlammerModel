@@ -19,6 +19,7 @@ import pandas as pd
 
 import config as C
 from pipeline import backtest as B
+from pipeline import seal as SEAL
 from pipeline import grade as G
 from pipeline import model as M
 from pipeline import odds as O
@@ -371,7 +372,7 @@ def cmd_odds(hours=None, auto=False):
     bets = mark_five(bets, C.SEASON, week)
     write_parlays(C.SEASON, week)
     meta_path = SITE / "meta.json"
-    meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
+    meta = SEAL.read_json(meta_path) or {}          # the previous meta may be sealed (SITE_PASSWORD) or plain
     games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
     meta.update(odds_credits_remaining=remaining, odds_credits_by_key=credits, lines_pulled=stamp, lines_count=int(len(lines)), next_pull=next_pull(games=games))
     _json(meta_path, meta)
@@ -421,9 +422,8 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
                 grading=dict(bars=C.GRADE_BARS, units=C.GRADE_UNITS, weights=C.LOCK_WEIGHTS, ev_full=C.LOCK_EV_FULL, ev_fade=list(C.LOCK_EV_FADE),
                              model_full=C.LOCK_MODEL_FULL, locks=C.LOCKS_PER_SLATE, lock_min=C.LOCK_MIN_SCORE, line_weight=C.LINE_WEIGHT, clv=C.CLV_BARS,
                              pick_bar=C.PICK_BAR, pick_bar_over=C.PICK_BAR_OVER, pick_min_claim=C.PICK_MIN_CLAIM, claim_shrink=C.CLAIM_SHRINK, segment_k=C.SEGMENT_CAL["k"], segment_min_n=C.SEGMENT_CAL["min_n"]))
-    old = SITE / "meta.json"
-    if old.exists():
-        prev = json.loads(old.read_text())
+    prev = SEAL.read_json(SITE / "meta.json")
+    if prev:
         meta.setdefault("odds_credits_remaining", prev.get("odds_credits_remaining"))
         meta.setdefault("odds_credits_by_key", prev.get("odds_credits_by_key"))
     _json(SITE / "meta.json", meta)
@@ -442,8 +442,11 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["daily", "odds"])
+    ap.add_argument("cmd", choices=["daily", "odds", "seal"])
     ap.add_argument("--hours", type=float, default=None)
     ap.add_argument("--auto", action="store_true")
     a = ap.parse_args()
-    cmd_daily() if a.cmd == "daily" else cmd_odds(a.hours, a.auto)
+    if a.cmd == "seal":
+        SEAL.cmd_seal(SITE)
+    else:
+        cmd_daily() if a.cmd == "daily" else cmd_odds(a.hours, a.auto)

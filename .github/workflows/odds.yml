@@ -26,6 +26,7 @@ jobs:
       # Must be an Actions secret (Settings -> Secrets and variables -> Actions).
       # Codespaces secrets are a separate store and are not visible to workflows.
       ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}   # lets a pull read the sealed meta written by the morning run
       PARLAY_API_KEY: ${{ secrets.PARLAY_API_KEY }}   # optional second key; credits are pooled
     steps:
       - uses: actions/checkout@v4
@@ -36,6 +37,10 @@ jobs:
       - run: pip install -r requirements.txt
       - run: |
           if [ -n "${{ github.event.inputs.hours }}" ]; then python run.py odds --hours "${{ github.event.inputs.hours }}"; else python run.py odds --auto; fi
+      - name: Seal the site behind the shared password (no SITE_PASSWORD secret: the site stays open)
+        env:
+          SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
+        run: python run.py seal
       - name: Save results
         env:
           GH_TOKEN: ${{ github.token }}

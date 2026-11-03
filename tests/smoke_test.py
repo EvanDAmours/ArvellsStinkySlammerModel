@@ -193,6 +193,24 @@ log = (tmp / "data/weekly_five.md").read_text()
 check(isinstance(summary.get("luck"), list) and all({"hit", "market_base", "lift", "verdict"} <= set(r) for r in summary["luck"]) and "Luck or skill" in (tmp / "data/weekly_five.md").read_text(), f"luck check computed against the whole market ({len(summary.get('luck') or [])} rows) and written to the weekly log")
 check("Locks record: 1-1" in log and "| 2026 wk 6 | 2 | 1-1 |" in log and "Parlays record: 1-0" in log, "locks and parlays log written with records, week line and parlay line")
 
+# the gate: sealing the site behind a password, and a pull that still reads the sealed meta
+_r = subprocess.run([sys.executable, "run.py", "seal"], cwd=tmp, env=dict(env, SITE_PASSWORD="smoke-pw"), capture_output=True, text=True)
+_enc = sorted(p.name for p in (tmp / "docs/data").glob("*.json.enc")); _plain = sorted(p.name for p in (tmp / "docs/data").glob("*.json"))
+check(_r.returncode == 0 and len(_enc) >= 6 and not _plain, f"site sealed: {len(_enc)} files encrypted, no plaintext left ({_plain})")
+from pipeline import seal as _SEAL
+_meta_back = json.loads(_SEAL.unseal_bytes((tmp / "docs/data/meta.json.enc").read_text(), "smoke-pw"))
+_bad = True
+try:
+    _SEAL.unseal_bytes((tmp / "docs/data/meta.json.enc").read_text(), "wrong"); _bad = False
+except Exception:
+    pass
+check(_meta_back.get("week") == 7 and _bad, "sealed meta decrypts with the password and not without it")
+_r2 = subprocess.run([sys.executable, "run.py", "odds"], cwd=tmp, env=dict(env, SITE_PASSWORD="smoke-pw"), capture_output=True, text=True)
+_m2 = json.loads((tmp / "docs/data/meta.json").read_text()) if (tmp / "docs/data/meta.json").exists() else {}
+check(_r2.returncode == 0 and _m2.get("week") == 7 and _m2.get("lines_pulled"), "a pull after sealing still reads the sealed meta and writes the board")
+_r3 = subprocess.run([sys.executable, "run.py", "seal"], cwd=tmp, env=dict(env, SITE_PASSWORD=""), capture_output=True, text=True)
+check(_r3.returncode == 0 and "stays open" in _r3.stdout and (tmp / "docs/data/meta.json").exists(), "no password set: the site stays open")
+
 # scheduled pull slots and international windows, in Edmonton time
 import datetime as _dt
 from zoneinfo import ZoneInfo as _Z

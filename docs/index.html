@@ -61,6 +61,13 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 .play > * { min-width: 0; } .play .why-box table { margin: 6px 0; font-size: 0.86rem; } .play .why-box td, .play .why-box th { padding: 2px 10px 2px 0; white-space: normal; position: static; } .play .why-box p { margin: 6px 0; }
 .play .why-box ul { margin: 4px 0 4px 18px; padding: 0; } .play .why-box li { margin: 2px 0; }
 .play .log { font-variant-numeric: tabular-nums; }
+#gate { position: fixed; inset: 0; background: var(--bg, #f3f4f6); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; }
+#gate[hidden] { display: none; }
+.gate-box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 22px 20px; width: min(100%, 380px); display: grid; gap: 10px; }
+.gate-box h2 { margin: 0; font: 700 1.3rem/1.2 var(--cond); } .gate-box p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+.gate-box input { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; } .gate-box button { font: 600 1rem var(--cond); padding: 9px 12px; border: none; border-radius: 8px; background: #1f8a4c; color: #fff; cursor: pointer; }
+.gate-err { color: #c0392b; font-size: 0.88rem; min-height: 1.2em; }
+.lock-site { font-size: 0.8rem; color: var(--muted); background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0; margin-left: 10px; }
 .play .rundown { margin: 6px 0 8px; color: var(--ink); font-size: 0.92rem; line-height: 1.45; max-width: 90ch; } .play .rundown b { color: var(--muted); }
 .legend:not([open]) { padding: 6px 12px; }
 @media (max-width: 640px) { .play { grid-template-columns: 1fr; } .play .ev { grid-row: auto; grid-column: 1; text-align: left; } .play .ev b { display: inline; font-size: 1.3rem; margin-right: 6px; } .play .why-box { grid-column: 1; } .toolbar { position: static; } }
@@ -269,9 +276,69 @@ const etOffset = (gameday) => { const m = Number(gameday.slice(5, 7)); return m 
 const projKick = (p) => (p.gameday && p.gametime ? new Date(`${p.gameday}T${p.gametime}:00${etOffset(p.gameday)}`) : null);
 const when = (iso) => { if (!iso) return ""; const d = new Date(iso.length === 16 && iso.includes("T") && !iso.includes("-") ? iso.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2}).*/, "$1-$2-$3T$4:$5Z") : iso); return isNaN(d) ? iso : d.toLocaleString([], { timeZone: TZ, weekday: "short", hour: "numeric", minute: "2-digit" }); };
 
-async function load(name) {
-  try { const r = await fetch(`data/${name}.json`, { cache: "no-store" }); return r.ok ? await r.json() : null; } catch { return null; }
+// ---------------------------------------------------------------- the gate: sealed data files need the shared password
+const KEYS = {};   // derived key per salt, so one password derivation serves every file of a sealing run
+const GATE = { pw: null };
+try { GATE.pw = localStorage.getItem("site-pw"); } catch (e) { /* storage off: asked every visit */ }
+const b64 = (t) => Uint8Array.from(atob(t), (c) => c.charCodeAt(0));
+async function keyFor(pw, saltB64, iter) {
+  const id = `${pw}|${saltB64}|${iter}`;   // a wrong password must not leave its key behind for the right one
+  if (!KEYS[id]) {
+    const raw = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+    KEYS[id] = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b64(saltB64), iterations: iter, hash: "SHA-256" }, raw, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+  }
+  return KEYS[id];
 }
+async function unseal(blob, pw) {
+  const key = await keyFor(pw, blob.salt, blob.iter || 200000);
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(blob.iv) }, key, b64(blob.ct));
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+function askPassword(wrong) {
+  // a full-screen gate; resolves with the password typed (kept on this device once a file decrypts with it)
+  return new Promise((resolve) => {
+    let g = $("#gate");
+    if (!g) {
+      g = el("div", { id: "gate" }, el("form", { class: "gate-box" }, el("h2", {}, "Arvell's Stinky Slammer Model"), el("p", {}, "This board is private. Enter the password you were given; this device remembers it."),
+        el("input", { type: "password", id: "gate-pw", autocomplete: "current-password", "aria-label": "Password", autofocus: "" }), el("div", { class: "gate-err", id: "gate-err" }), el("button", { type: "submit" }, "Open the board")));
+      document.body.append(g);
+    }
+    $("#gate-err").textContent = wrong ? "That password did not open the board. Try again." : "";
+    g.hidden = false; $("#gate-pw").value = ""; $("#gate-pw").focus();
+    g.querySelector("form").onsubmit = (e) => { e.preventDefault(); const v = $("#gate-pw").value; if (v) resolve(v); };
+  });
+}
+// every data file loads at once, so one prompt serves all of them: callers share the pending prompt
+function getPassword(wrong) {
+  if (!GATE.pending) GATE.pending = askPassword(wrong).then((v) => { GATE.pending = null; return v; });
+  return GATE.pending;
+}
+async function unlock(blob) {
+  let wrong = false;
+  for (;;) {
+    const pw = GATE.pw || await getPassword(wrong);
+    try {
+      const out = await unseal(blob, pw);
+      GATE.pw = pw;
+      try { localStorage.setItem("site-pw", pw); } catch (err) { /* fine */ }
+      const g = $("#gate"); if (g) g.hidden = true;
+      return out;
+    } catch (err) {
+      if (GATE.pw === pw) { GATE.pw = null; try { localStorage.removeItem("site-pw"); } catch (e2) { /* fine */ } }
+      wrong = true;
+    }
+  }
+}
+async function load(name) {
+  try {
+    const r = await fetch(`data/${name}.json`, { cache: "no-store" });
+    if (r.ok) return await r.json();
+    const e = await fetch(`data/${name}.json.enc`, { cache: "no-store" });
+    if (!e.ok) return null;
+    return await unlock(await e.json());
+  } catch { return null; }
+}
+function lockSite() { try { localStorage.removeItem("site-pw"); } catch (e) { /* fine */ } location.reload(); }
 
 function table(headers, rows) {
   // a cell value that is "Win"/"Loss" is coloured
@@ -294,6 +361,7 @@ function renderMeta() {
   $("#meta").append(el("span", {}, `Model updated ${when(m.generated_at)}`),
                     el("span", {}, m.lines_pulled ? `Lines pulled ${when(m.lines_pulled)}` : "No lines pulled yet this week"),
                     m.next_pull ? el("span", {}, `Next pull ${when(m.next_pull)}`) : "",
+                    GATE.pw ? (() => { const b = el("button", { type: "button", class: "lock-site", title: "Forget the password on this device" }, "Lock this device"); b.onclick = lockSite; return b; })() : "",
                     el("span", {}, m.odds_credits_remaining != null ? `${m.odds_credits_remaining} odds credits left this month` : ""));
   if (m.formula_check_ok === false)
     $("#warnings").append(el("div", { class: "warn" }, "Tackle totals didn’t match the official numbers this run. Picks may be off until the data source is fixed; check the Actions log."));

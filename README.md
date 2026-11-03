@@ -84,8 +84,17 @@ low. The site shows the pooled balance.
 
 ## Keeping it private
 
-Odds providers' terms often restrict republishing their prices. A private repo plus a login
-(Cloudflare Access, free) is the safe setup. Check The Odds API's terms before making anything public.
+Set an Actions secret named `SITE_PASSWORD` (Settings, Secrets and variables, Actions). From the next run, every
+data file the site reads is encrypted with it before it is published (AES-256-GCM, key from the password), the
+plaintext is deleted, and the page asks for the password once per device and decrypts in the browser. Give the
+password to the people who should see the board; change the secret to lock everyone out at the next run. Without
+the secret the site stays open.
+
+That protects the published site only. The repository itself is public: `data/picks.csv`, the odds snapshots and
+the projections are readable on GitHub by anyone. To close that too, make the repository private (Settings,
+General, Danger Zone); GitHub Pages keeps publishing from a private repository on a paid personal plan (Pro).
+Odds providers' terms often restrict republishing their prices, so a private repository is the right setting
+either way.
 
 ## Is the data right? The self-check
 
