@@ -23,11 +23,13 @@ jobs:
       - id: run
         env:
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
+          SITE_PASSWORDS: ${{ secrets.SITE_PASSWORDS }}
         run: python run.py daily
       - name: Seal the site behind the shared password (no SITE_PASSWORD secret: the site stays open)
         if: steps.run.outcome == 'success'
         env:
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
+          SITE_PASSWORDS: ${{ secrets.SITE_PASSWORDS }}
         run: python run.py seal
       - name: Save results
         # Runs even when the update failed: GitHub switches off every schedule in a public repository after 60 days

@@ -84,7 +84,10 @@ low. The site shows the pooled balance.
 
 ## Keeping it private
 
-Set an Actions secret named `SITE_PASSWORD` (Settings, Secrets and variables, Actions). From the next run, every
+Set an Actions secret named `SITE_PASSWORDS` (Settings, Secrets and variables, Actions) with one line per person,
+`name: password` (the name is only a label; a line of just a password works too). A single `SITE_PASSWORD` secret
+also works. Any of the passwords opens the site; delete a line to shut one person out at the next run; change a
+password to make that person enter the new one. From the next run, every
 data file the site reads is encrypted with it before it is published (AES-256-GCM, key from the password), the
 plaintext is deleted, and the page asks for the password once per device and decrypts in the browser. Give the
 password to the people who should see the board; change the secret to lock everyone out at the next run. Without

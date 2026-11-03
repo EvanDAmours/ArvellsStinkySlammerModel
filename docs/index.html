@@ -290,9 +290,20 @@ async function keyFor(pw, saltB64, iter) {
   return KEYS[id];
 }
 async function unseal(blob, pw) {
-  const key = await keyFor(pw, blob.salt, blob.iter || 200000);
-  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(blob.iv) }, key, b64(blob.ct));
-  return JSON.parse(new TextDecoder().decode(plain));
+  if (blob.v === 1) {
+    const key = await keyFor(pw, blob.salt, blob.iter || 200000);
+    return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(blob.iv) }, key, b64(blob.ct))));
+  }
+  // several passwords: the data key is wrapped once per password; the first wrapping this password opens is the one
+  for (const k of blob.keys || []) {
+    try {
+      const wrapKey = await keyFor(pw, k.salt, blob.iter || 200000);
+      const raw = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(k.iv) }, wrapKey, b64(k.wk));
+      const dataKey = await crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, ["decrypt"]);
+      return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(blob.iv) }, dataKey, b64(blob.ct))));
+    } catch (e) { /* not this entry */ }
+  }
+  throw new Error("no key entry opens with this password");
 }
 function askPassword(wrong) {
   // a full-screen gate; resolves with the password typed (kept on this device once a file decrypts with it)

@@ -194,7 +194,7 @@ check(isinstance(summary.get("luck"), list) and all({"hit", "market_base", "lift
 check("Locks record: 1-1" in log and "| 2026 wk 6 | 2 | 1-1 |" in log and "Parlays record: 1-0" in log, "locks and parlays log written with records, week line and parlay line")
 
 # the gate: sealing the site behind a password, and a pull that still reads the sealed meta
-_r = subprocess.run([sys.executable, "run.py", "seal"], cwd=tmp, env=dict(env, SITE_PASSWORD="smoke-pw"), capture_output=True, text=True)
+_r = subprocess.run([sys.executable, "run.py", "seal"], cwd=tmp, env=dict(env, SITE_PASSWORD="smoke-pw", SITE_PASSWORDS="evan: second-pw\n# a comment\nfriend: third-pw"), capture_output=True, text=True)
 _enc = sorted(p.name for p in (tmp / "docs/data").glob("*.json.enc")); _plain = sorted(p.name for p in (tmp / "docs/data").glob("*.json"))
 check(_r.returncode == 0 and len(_enc) >= 6 and not _plain, f"site sealed: {len(_enc)} files encrypted, no plaintext left ({_plain})")
 from pipeline import seal as _SEAL
@@ -204,7 +204,8 @@ try:
     _SEAL.unseal_bytes((tmp / "docs/data/meta.json.enc").read_text(), "wrong"); _bad = False
 except Exception:
     pass
-check(_meta_back.get("week") == 7 and _bad, "sealed meta decrypts with the password and not without it")
+_meta2 = json.loads(_SEAL.unseal_bytes((tmp / "docs/data/meta.json.enc").read_text(), "third-pw"))
+check(_meta_back.get("week") == 7 and _meta2.get("week") == 7 and _bad and "for 3 passwords" in _r.stdout, "sealed meta opens with any of the three passwords and not with another")
 _r2 = subprocess.run([sys.executable, "run.py", "odds"], cwd=tmp, env=dict(env, SITE_PASSWORD="smoke-pw"), capture_output=True, text=True)
 _m2 = json.loads((tmp / "docs/data/meta.json").read_text()) if (tmp / "docs/data/meta.json").exists() else {}
 check(_r2.returncode == 0 and _m2.get("week") == 7 and _m2.get("lines_pulled"), "a pull after sealing still reads the sealed meta and writes the board")

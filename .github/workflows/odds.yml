@@ -27,6 +27,7 @@ jobs:
       # Codespaces secrets are a separate store and are not visible to workflows.
       ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
       SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}   # lets a pull read the sealed meta written by the morning run
+      SITE_PASSWORDS: ${{ secrets.SITE_PASSWORDS }}
       PARLAY_API_KEY: ${{ secrets.PARLAY_API_KEY }}   # optional second key; credits are pooled
     steps:
       - uses: actions/checkout@v4
@@ -40,6 +41,7 @@ jobs:
       - name: Seal the site behind the shared password (no SITE_PASSWORD secret: the site stays open)
         env:
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
+          SITE_PASSWORDS: ${{ secrets.SITE_PASSWORDS }}
         run: python run.py seal
       - name: Save results
         env:

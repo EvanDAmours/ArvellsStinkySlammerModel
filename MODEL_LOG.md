@@ -1080,6 +1080,13 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, late evening MDT (several passwords)
+- Owner asked what it would take to have more than one password. The sealed files now carry one random data key
+  wrapped once per password (`SITE_PASSWORDS`, one `name: password` per line; `SITE_PASSWORD` still works);
+  the browser tries each wrapping with the password typed. Removing a line shuts that person out at the next run
+  without touching anyone else's password. Smoke check with three passwords and a wrong one; browser check with
+  two. The sealed format is versioned (v2); v1 files still open.
+
 ### 2026-11-02, evening MDT (the gate: the site sealed behind a shared password)
 - Owner does not want the board public yet but wants a few people to see it. GitHub Pages serves every file to
   anyone with the link, so `pipeline/seal.py` encrypts each site JSON after every job (AES-256-GCM, key from the
