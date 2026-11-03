@@ -1080,6 +1080,12 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, late night MDT (ledger: grades on every bet; numbers on My board)
+- Owner wants the grade of each pick he took visible in the ledger. Each ledger row leads with the grade badge
+  (lock score on hover), rows sort A to C, and each week's line and the season bar carry a record and profit by
+  grade, so the owner can see how the model's confidence has paid on his own board. Jersey numbers show on every
+  My board card and ledger row; a bet stored before numbers existed looks its number up in the day's projections.
+
 ### 2026-11-02, late night MDT (jersey numbers on every bet)
 - Owner asked for player numbers on the slip. `load_jerseys` (nflverse weekly rosters, latest week, 99.9% of
   players) puts `jersey` on each projection; the pricer, the week's line file, parlay legs and My board carry

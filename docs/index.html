@@ -103,6 +103,7 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 .md table { font-size: 0.86rem; } .md td, .md th { white-space: normal; } .md code { font-size: 0.85em; background: var(--bg, #eef0f3); padding: 1px 4px; border-radius: 4px; }
 .rec-filters .reset.on { background: var(--ink); color: var(--panel); border-color: var(--ink); }
 #mine-body .chips .reset { font: 600 0.85rem var(--cond); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; color: var(--ink); }
+.grade-chips .gchip { margin-right: 12px; white-space: nowrap; } .grade-chips .grade { margin-right: 3px; }
 #mine-body textarea.code { width: 100%; font: 0.78rem/1.3 ui-monospace, Menlo, monospace; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; margin: 4px 0 8px; word-break: break-all; }
 .lead { color: var(--muted); font-size: 0.9rem; max-width: 80ch; margin: 0 0 10px; }
 .more { margin: 8px 0 0; font-size: 0.9rem; color: var(--muted); max-width: 80ch; } .more summary { cursor: pointer; color: var(--ink); font-weight: 600; } .more p { margin: 6px 0; }
@@ -280,7 +281,9 @@ function recordsBar(s) {
   return bar;
 }
 const MARKET = { player_tackles_assists: "Tackles + assists", player_solo_tackles: "Solo tackles" };
-const jersey = (b) => (b && b.jersey != null && b.jersey !== "" && !Number.isNaN(+b.jersey) ? el("span", { class: "jersey", title: "Jersey number" }, `#${Math.round(+b.jersey)}`) : "");
+// a bet stored before numbers existed looks its number up in today's projections
+const jerseyOf = (b) => { if (!b) return null; let j = b.jersey; if (j == null || j === "") j = (DATA.proj || []).find((p) => p.player === b.player && (!b.team || p.team === b.team))?.jersey; return j == null || j === "" || Number.isNaN(+j) ? null : Math.round(+j); };
+const jersey = (b) => { const j = jerseyOf(b); return j == null ? "" : el("span", { class: "jersey", title: "Jersey number" }, `#${j}`); };
 // Slates in Edmonton time: early = kickoffs before noon (11 am, plus London games), afternoon = noon to 5 pm, prime time = 5 pm onward (incl. Thu/Mon night).
 const TZ = "Etc/GMT+6";   // Edmonton: Alberta Time is UTC-6 all year from 2026-11-01, and was UTC-6 (MDT) before it; a fixed offset so a browser with stale zone data cannot show kickoffs an hour early
 const localHour = (d) => Number(new Intl.DateTimeFormat("en-CA", { timeZone: TZ, hour: "numeric", hour12: false }).format(d));
@@ -482,7 +485,7 @@ function parlayBox(q, graded) {
   const legs = el("ol", {}, ...q.legs.map((l) => {
     const book = l.mkt_side ?? (decimalOf(l.odds) ? 1 / decimalOf(l.odds) : null);
     const edge = book == null ? null : l.p_side - book;
-    return el("li", {}, `${l.player}${l.jersey != null ? ` #${Math.round(+l.jersey)}` : ""} ${l.side} ${num(l.line)} ${(MARKET[l.market] || l.market).toLowerCase()} (${odds(l.odds)} at ${l.book}) · model ${pct(l.p_side)} vs book ${pct(book)} `,
+    return el("li", {}, `${l.player}${jerseyOf(l) != null ? ` #${jerseyOf(l)}` : ""} ${l.side} ${num(l.line)} ${(MARKET[l.market] || l.market).toLowerCase()} (${odds(l.odds)} at ${l.book}) · model ${pct(l.p_side)} vs book ${pct(book)} `,
       el("span", { class: edge == null ? "" : edge >= 0 ? "pos" : "neg" }, edge == null ? "" : `(${pts(edge)})`),
       l.result ? el("span", { class: l.result === "Win" ? "w" : l.result === "Loss" ? "l" : "" }, ` · ${l.result}${l.actual == null ? "" : ` (${num(l.actual, 0)})`}`) : "");
   }));
@@ -1112,6 +1115,18 @@ function betMoney(b) {
   return { stake, profit: r === "Win" ? stake * (dec - 1) : r === "Loss" ? -stake : 0, result: r };
 }
 let showClosed = false; try { showClosed = localStorage.getItem("ledger-show-closed") === "1"; } catch (e) { /* fine */ }
+const GRADE_ORDER = { A: 0, B: 1, C: 2 };
+function gradeChips(list) {
+  // record and profit by grade for a list of bets: how the model's own confidence has paid on your board
+  const out = el("span", { class: "grade-chips" });
+  for (const g of ["A", "B", "C", "none"]) {
+    const sub = list.filter((b) => (g === "none" ? !b.grade : b.grade === g)); if (!sub.length) continue;
+    let w = 0, l = 0, pr = 0, st = 0;
+    for (const b of sub) { const m = betMoney(b); if (m.result === "Win") w++; else if (m.result === "Loss") l++; if (m.stake != null && m.result) { st += m.stake; pr += m.profit; } }
+    out.append(el("span", { class: "gchip" }, g === "none" ? el("span", { class: "muted" }, "no grade") : el("span", { class: `grade ${g}` }, g), ` ${w}-${l}`, st ? el("b", { class: pr > 0 ? "pos" : pr < 0 ? "neg" : "" }, ` ${pr > 0 ? "+" : ""}${money(pr)}`) : ""));
+  }
+  return out;
+}
 function ledgerSection() {
   const weeks = allWeeks(); const cur = { season: DATA.meta?.season, week: DATA.meta?.week };
   const sec = el("div", { class: "section", id: "ledger" }, el("h3", {}, "Season ledger"), el("p", { class: "lead" }, "Every week's board, kept on this device, with the result written on each bet once it is final (the grader's official result when there is one). Closed weeks fold away so the screen stays clean; the running total at the top is what you are up or down for the season."));
@@ -1132,6 +1147,7 @@ function ledgerSection() {
   sec.append(el("div", { class: "mine-bar" }, el("div", {}, el("b", {}, `${W}-${L}${P ? `-${P}` : ""}`), el("span", {}, "season record")), el("div", {}, el("b", {}, money(staked) || "$0"), el("span", {}, "settled stakes")),
     el("div", {}, el("b", { class: profit > 0 ? "pos" : profit < 0 ? "neg" : "" }, (profit > 0 ? "+" : "") + (money(profit) || "$0")), el("span", {}, "up or down")), el("div", {}, el("b", {}, staked ? signedPct(profit / staked) : "–"), el("span", {}, "return on stakes")),
     el("div", {}, el("b", {}, String(weeks.length)), el("span", {}, `week${weeks.length === 1 ? "" : "s"} on this device`))));
+  sec.append(el("div", { class: "chips" }, el("span", {}, "By grade, season: "), gradeChips(weeks.flatMap((w) => w.list))));
   const closedN = rows.filter((r) => r.closed).length;
   if (closedN) { const t = el("button", { type: "button", class: "reset" }, showClosed ? `Hide ${closedN} closed week${closedN === 1 ? "" : "s"}` : `Show ${closedN} closed week${closedN === 1 ? "" : "s"}`); t.onclick = () => { showClosed = !showClosed; try { localStorage.setItem("ledger-show-closed", showClosed ? "1" : "0"); } catch (e) { /* fine */ } renderMine(); }; sec.append(el("div", { class: "chips" }, t)); }
   for (const r of rows) {
@@ -1140,8 +1156,8 @@ function ledgerSection() {
     if (!r.closed) d.open = true;
     d.append(el("summary", {}, el("div", { class: "t" }, `Week ${r.week}`, el("small", {}, `${r.list.length} bet${r.list.length === 1 ? "" : "s"}${r.closed ? " · closed" : " · open"}${r.pend ? ` · ${r.pend} pending` : ""}`)),
       el("div", { class: "res" }, el("b", { class: r.pr > 0 ? "pos" : r.pr < 0 ? "neg" : "" }, r.st ? (r.pr > 0 ? "+" : "") + (money(r.pr) || "$0") : "–"), el("span", {}, `${r.w}-${r.l}${r.p ? `-${r.p}` : ""} · ${money(r.st) || "$0"} staked`)),
-      el("div", { class: "legs-line" }, r.list.slice(0, 6).map((b) => `${b.player.split(" ").slice(-1)[0]} ${b.side === "Under" ? "U" : "O"}${num(b.line)}${b.settled?.result === "Win" ? " ✓" : b.settled?.result === "Loss" ? " ✗" : ""}`).join(" · ") + (r.list.length > 6 ? ` · +${r.list.length - 6}` : ""))));
-    const tb = table([["Bet"], ["Price"], ["Stake", "n"], ["Actual", "n"], ["Result"], ["Profit", "n"], ["Graded by"]], [...r.list].sort((a, b) => String(a.commence_time || "").localeCompare(String(b.commence_time || ""))).map((b) => { const m = betMoney(b); return [`${b.player}${b.jersey != null ? ` #${Math.round(+b.jersey)}` : ""} ${b.side} ${num(b.line)} ${(MARKET[b.market] || b.market || "").toLowerCase()}`, `${odds(b.odds)} ${b.book || ""}`, m.stake == null ? "" : money(m.stake), b.settled?.actual == null ? "" : num(b.settled.actual, 0), m.result || "Pending", m.profit == null ? "" : units(m.profit, 2), b.settled ? (b.settled.source === "official" ? "official box score" : "live feed") : ""]; }));
+      el("div", { class: "legs-line" }, gradeChips(r.list), " · ", r.list.slice(0, 6).map((b) => `${b.grade ? b.grade + " " : ""}${b.player.split(" ").slice(-1)[0]} ${b.side === "Under" ? "U" : "O"}${num(b.line)}${b.settled?.result === "Win" ? " ✓" : b.settled?.result === "Loss" ? " ✗" : ""}`).join(" · ") + (r.list.length > 6 ? ` · +${r.list.length - 6}` : ""))));
+    const tb = table([["Grade"], ["Bet"], ["Price"], ["Stake", "n"], ["Actual", "n"], ["Result"], ["Profit", "n"], ["Graded by"]], [...r.list].sort((a, b) => (GRADE_ORDER[a.grade] ?? 3) - (GRADE_ORDER[b.grade] ?? 3) || String(a.commence_time || "").localeCompare(String(b.commence_time || ""))).map((b) => { const m = betMoney(b); return [b.grade ? el("span", { class: `grade ${b.grade}`, title: b.lock != null ? `Lock score ${Math.round(b.lock)}` : "" }, b.grade) : el("span", { class: "muted" }, "no grade"), `${b.player}${jerseyOf(b) != null ? ` #${jerseyOf(b)}` : ""} ${b.side} ${num(b.line)} ${(MARKET[b.market] || b.market || "").toLowerCase()}`, `${odds(b.odds)} ${b.book || ""}`, m.stake == null ? "" : money(m.stake), b.settled?.actual == null ? "" : num(b.settled.actual, 0), m.result || "Pending", m.profit == null ? "" : units(m.profit, 2), b.settled ? (b.settled.source === "official" ? "official box score" : "live feed") : ""]; }));
     const rmw = el("button", { type: "button", class: "rm" }, `Delete week ${r.week} from this device`); rmw.onclick = () => { if (confirm(`Delete week ${r.week}'s board from this device?`)) { try { localStorage.removeItem(r.key); } catch (e) { /* fine */ } if (r.key === MINE_KEY()) MINE = []; renderMine(); } };
     d.append(el("div", { class: "patch-body" }, el("div", { class: "scroll" }, tb), rmw));
     sec.append(d);
