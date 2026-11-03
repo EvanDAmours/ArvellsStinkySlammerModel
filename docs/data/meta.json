@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-11-02T20:46+00:00",
+ "generated_at": "2026-11-03T02:47+00:00",
  "season": 2026,
  "week": 8,
- "lines_pulled": "20261102T215141Z",
- "next_pull": "2026-11-02T23:00+00:00",
+ "lines_pulled": null,
+ "next_pull": "2026-11-05T15:00+00:00",
  "stats_source": "2023: nflreadpy; 2024: nflreadpy; 2025: nflreadpy; 2026: nflreadpy",
  "tackle_formula": "solo+with_ast+ast",
  "formula_check_ok": true,
@@ -30,8 +30,8 @@
   "snaps_lag": false
  },
  "snaps_rows": 87322,
- "injury_rows": 20436,
- "espn_injury_rows": 197,
+ "injury_rows": 20450,
+ "espn_injury_rows": 213,
  "volume_rows": 1872,
  "pbp_rows": 31319,
  "pfr_rows": 25849,
@@ -69,6 +69,7 @@
    "single": 3,
    "multi": 5
   },
+  "lock_min": 72,
   "line_weight": 0.6,
   "clv": {
    "decent": 0.52,
@@ -86,6 +87,5 @@
  "odds_credits_by_key": {
   "ODDS_API_KEY": 410.0,
   "PARLAY_API_KEY": 0.0
- },
- "lines_count": 47
+ }
 }
