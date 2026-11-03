@@ -465,7 +465,7 @@ def write_parlays(season, week):
             first = legs.iloc[0]
             start = pd.to_datetime(legs.commence_time, utc=True, errors="coerce")
             out.append(dict(parlay_id=pid, slate=first.slate, n_legs=int(len(legs)), combined_decimal=float(first.combined_decimal),
-                            combined_american=G.american(float(first.combined_decimal)), combined_prob=float(first.combined_prob),
+                            combined_american=G.american(float(first.combined_decimal)), combined_prob=float(first.combined_prob), corr_ratio=None if pd.isna(getattr(first, "corr_ratio", np.nan)) else float(first.corr_ratio),
                             units=float(first.units), chosen_at=first.chosen_at, placed=bool((start <= now).any()),
                             finished=bool(start.notna().all() and (start + dt.timedelta(hours=4, minutes=30) <= now).all()),   # every leg's game is over: it belongs to the Track record tab, not the board
                             first_kickoff=None if start.isna().all() else start.min().isoformat(),

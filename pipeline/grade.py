@@ -255,7 +255,7 @@ def grade_parlay_legs(L, stats):
         first = legs.iloc[0]
         rows.append(dict(parlay_id=pid, season=int(first.season), week=int(first.week), slate=first.slate, n_legs=int(len(legs)),
                          combined_decimal=float(first.combined_decimal), combined_american=american(float(first.combined_decimal)),
-                         combined_prob=float(first.combined_prob), units=units, chosen_at=first.chosen_at, result=result, units_won=won,
+                         combined_prob=float(first.combined_prob), corr_ratio=None if pd.isna(getattr(first, "corr_ratio", np.nan)) else float(first.corr_ratio), units=units, chosen_at=first.chosen_at, result=result, units_won=won,
                          legs=[dict(player=r.player, team=r.team, opp=r.opp, market=r.market, side=r.side, line=float(r.line), book=r.book,
                                     odds=None if pd.isna(r.odds) else float(r.odds), p_side=float(r.p_side),
                                     mkt_side=None if pd.isna(getattr(r, "mkt_side", np.nan)) else float(r.mkt_side), lock=None if pd.isna(r.lock) else float(r.lock),
