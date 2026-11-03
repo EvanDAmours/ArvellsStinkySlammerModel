@@ -1238,6 +1238,43 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-03, afternoon MDT (stalled pulls: every hole closed that can be closed from here)
+- Owner: go through the site and model so stalled pulls are never an issue again. GitHub's scheduler is the one
+  thing that cannot be fixed from the repository (it stalled two hours on 2026-10-31 and the 11:15 UTC daily
+  drifted to 13:14 on 2026-11-03), so every dependency on it running on time is removed:
+  - **Pre-kickoff pulls come from the schedule, any day.** `kickoff_slots()` gives every game day one pull an hour
+    before each cluster of kickoffs (kickoffs within 30 minutes share one). Before, only Sunday had one; a Friday
+    game (Black Friday, Christmas Day 2026 is a Friday), a Saturday game in weeks 16-17 or a holiday Thursday
+    kickoff relied on fixed weekday slots that no longer existed after the credit trim. The fixed slots are now
+    only the extra looks (Thursday 9 am and 1 pm, Saturday 8 pm, Sunday 10 am, Monday 9 am and 1 pm); the
+    Thursday, Sunday and Monday 5:30 pm looks and Sunday 1 pm are replaced by the kickoff pulls (5:15 pm, 1:05 pm,
+    1:25 pm, 5:20 pm as the schedule says). The international 1-hour window is now the same rule; the 12-hour one
+    stays. Credits unchanged, about 105 a week.
+  - **A late run still serves the missed pull.** Slots are served by the first run after their time and each
+    exactly once, so when the scheduler wakes after a stall it pulls every game that has not kicked off; nothing
+    is lost that can still be bet. (Already true for fixed slots; now true for every pre-kickoff pull.)
+  - **Two schedules, off the hour.** The pull job's crons move to :07/:37 and :22/:52: GitHub's own guidance is
+    that runs queued at the top of the hour are delayed most, and both stalls so far were at those minutes.
+  - **The daily job has a fallback.** A second cron 85 minutes after the first; scheduled runs pass `--auto`,
+    which does nothing when a run already succeeded in the last 8 hours (`daily_is_fresh()`, from the run log the
+    workflow writes). A by-hand run never skips. The standing post-mortem already fires at 8:20 am, after both.
+  - **The site says when a pull is overdue.** A warning at the top when the published next pull time is more than
+    45 minutes past (with the time of the lines on the board and how to force a pull from the Actions tab), and
+    another when the model has not been updated in 30 hours. Stale lines are never shown as current without a
+    notice.
+  - Checked and sound: a pull that fails before saving leaves its slot unserved (the served list is only
+    committed by a successful job); a save-step push conflict retries four times with the job's own version of
+    generated files; credits are checked before every game and pulling stops at the floor; the keepalive and the
+    daily run log keep both schedules enabled; the odds job falls back to a daily run when the cache is missing.
+  - Not closable from here: GitHub stalling for longer than a kickoff window. A pull that the scheduler misses
+    entirely until after kickoff cannot be bet, and the site now says so. The only remedy beyond this is an
+    external trigger (a cron service calling the workflow with a token), which needs a token the owner would
+    create; not done.
+- Smoke test: the slot checks rewritten (pre-kickoff pulls on Thursday, Sunday clusters, a Friday game, the
+  stalled-run case, the international morning kickoff, next-pull walking any day). README schedule updated.
+- Revert: `INTL_WINDOWS_H = (12, 1)` and the fixed 5:30 pm slots if the kickoff rule misbehaves; the fallback
+  daily cron is harmless either way.
+
 ### 2026-11-03, early afternoon MDT (pull schedule trimmed to one free key a month)
 - Owner: cut the Saturday pulls to stay inside 500 credits a month. Measured from the stored snapshots, week 8
   cost 162 credits at two markets (Thursday 4, Saturday 68 over 9 pulls, Sunday 80 over 4, Monday 10); at three

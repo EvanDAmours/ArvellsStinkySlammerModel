@@ -42,15 +42,37 @@ if dt.datetime(2026, 11, 2, 12, 0, tzinfo=EDMONTON).utcoffset() != dt.timedelta(
 # Friday pulls went, and Thursday, Sunday and Monday keep a morning look, a midday look and a pre-kickoff look.
 def _hourly(start, end, what, step=60):
     return [(m, what) for m in range(start * 60, end * 60 + 1, step)]
+# Fixed looks. Every game, on any weekday, also gets a pull an hour before its kickoff from the schedule (see
+# kickoff_slots): that is what makes a Friday, Saturday or holiday game safe without a slot for its weekday.
 PULL_SLOTS = {
-    3: [(9 * 60, "thu_fri"), (13 * 60, "thu_fri"), (17 * 60 + 30, "thu_fri")],   # Thursday 9 am, 1 pm, 5:30 pm: Thursday and Friday games
-    4: [],                                                                        # Friday: nothing (the books post most Sunday lines Saturday evening)
-    5: [(20 * 60, "sat_sun")],                                                    # Saturday 8 pm: Saturday and Sunday games, the whole slate once it is posted
-    6: [(10 * 60, "today"), (13 * 60, "today"), (17 * 60 + 30, "today")],         # Sunday 10 am (ties with the pre-kickoff pull on a normal week), 1 pm for the afternoon games, 5:30 pm for the night game
-    0: [(9 * 60, "mon"), (13 * 60, "mon"), (17 * 60 + 30, "mon")],                # Monday 9 am, 1 pm, 5:30 pm: the Monday game
+    3: [(9 * 60, "thu_fri"), (13 * 60, "thu_fri")],   # Thursday 9 am and 1 pm: Thursday and Friday games (the pre-kickoff pull follows from the schedule)
+    4: [],                                            # Friday: pre-kickoff pulls only, when there is a Friday game
+    5: [(20 * 60, "sat_sun")],                        # Saturday 8 pm: Saturday and Sunday games, the whole slate once it is posted
+    6: [(10 * 60, "today")],                          # Sunday 10 am: the slate with the inactives known (ties with the pre-kickoff pull on a normal week, so one pull)
+    0: [(9 * 60, "mon"), (13 * 60, "mon")],           # Monday 9 am and 1 pm: the Monday game
 }
-INTL_WINDOWS_H = (12, 1)           # international games are pulled this many hours before kickoff
-SUNDAY_PRE_KICK_MIN = 60           # Sunday: one pull this many minutes before the day's first kickoff (Edmonton time), the whole Sunday slate
+INTL_WINDOWS_H = (12,)             # international games (early-morning kickoffs) also get a pull this many hours before kickoff; the hour-before pull comes from the schedule
+PRE_KICK_MIN = 60                  # every game: one pull this many minutes before its kickoff (Edmonton time), covering every game that day not yet started
+PRE_KICK_CLUSTER_MIN = 30          # kickoffs within this many minutes of each other share one pre-kickoff pull
+
+
+def kickoff_slots(games, day):
+    """(slot minutes, key) of the pre-kickoff pulls on `day` (an Edmonton date): one per cluster of kickoffs."""
+    kicks = []
+    for g in games or []:
+        try:
+            k = dt.datetime.fromisoformat(g["kickoff"]).astimezone(EDMONTON)
+        except (KeyError, ValueError, TypeError):
+            continue
+        if k.date() == day:
+            kicks.append(k)
+    out, start = [], None
+    for k in sorted(kicks):
+        if start is None or (k - start).total_seconds() > PRE_KICK_CLUSTER_MIN * 60:
+            start = k
+            slot = start.hour * 60 + start.minute - PRE_KICK_MIN
+            out.append((slot, f"{day} prekick-{max(slot, 0) // 60:02d}:{max(slot, 0) % 60:02d}"))
+    return out
 SERVED = CACHE / "pull_slots.json"  # slots already served, so a late run still pulls once and an on-time run doesn't pull twice
 
 
@@ -107,22 +129,11 @@ def auto_plan(now=None, games=None, served=None):
         if local.hour * 60 + local.minute >= slot and key not in served:
             days = {"thu_fri": [d(0), d(1)], "sat": [d(1)], "sat_sun": [d(0), d(1)], "fri_weekend": [d(1), d(2)], "sun": [d(1)], "mon": [d(0)], "today": [d(0)]}[what]
             due.append((slot, dict(days=days, key=key, reason=f"{local.strftime('%A')} {slot // 60:02d}:{slot % 60:02d} slot (run at {local.strftime('%H:%M')}): games on {days}")))
-    # Sunday: one pull an hour before the day's first kickoff, from the schedule, covering every game that day
-    if local.weekday() == 6 and games:
-        kicks = []
-        for g in games:
-            try:
-                k = dt.datetime.fromisoformat(g["kickoff"]).astimezone(EDMONTON)
-            except (KeyError, ValueError):
-                continue
-            if k.date() == today:
-                kicks.append(k)
-        if kicks:
-            first = min(kicks)
-            slot = first.hour * 60 + first.minute - SUNDAY_PRE_KICK_MIN
-            key = f"{today} sunday-1h"
-            if local.hour * 60 + local.minute >= slot and key not in served:
-                due.append((slot, dict(days=[d(0)], key=key, reason=f"Sunday slot an hour before the first kickoff ({first.strftime('%H:%M')}; run at {local.strftime('%H:%M')}): games on {d(0)}")))
+    # every game day: one pull an hour before each cluster of kickoffs, from the schedule, covering every game that day
+    # not yet started (a run that comes late because GitHub stalled still serves it; started games are simply skipped)
+    for slot, key in kickoff_slots(games, today):
+        if local.hour * 60 + local.minute >= slot and key not in served:
+            due.append((slot, dict(days=[d(0)], key=key, reason=f"pre-kickoff slot {key.split()[-1][8:]} (run at {local.strftime('%H:%M')}): games on {d(0)}")))
     if due:
         due.sort(key=lambda x: x[0])            # by slot time only (two plans can share a time: the fixed 10 am and a pre-kickoff slot)
         plan = due[-1][1]                       # the latest slot that is due; earlier unserved ones today are stale
@@ -145,19 +156,9 @@ def next_pull(now=None, games=None):
     """When the next scheduled line pull is due (UTC ISO), from the fixed slots and Sunday's pre-kickoff slot."""
     now = now or dt.datetime.now(dt.timezone.utc)
     local = now.astimezone(EDMONTON)
-    kicks = {}
-    for g in games or []:
-        try:
-            k = dt.datetime.fromisoformat(g["kickoff"]).astimezone(EDMONTON)
-        except (KeyError, ValueError, TypeError):
-            continue
-        kicks.setdefault(k.date(), []).append(k)
     for n in range(8):
         day = local.date() + dt.timedelta(days=n)
-        slots = [m for m, _ in PULL_SLOTS.get(day.weekday(), [])]
-        if day.weekday() == 6 and kicks.get(day):
-            first = min(kicks[day])
-            slots.append(first.hour * 60 + first.minute - SUNDAY_PRE_KICK_MIN)
+        slots = [m for m, _ in PULL_SLOTS.get(day.weekday(), [])] + [m for m, _ in kickoff_slots(games, day)]
         for m in sorted(slots):
             t = dt.datetime.combine(day, dt.time(m // 60, m % 60), tzinfo=EDMONTON)
             if t > local:
@@ -279,7 +280,20 @@ def attach_consensus(P, season, week):
     return P, int(len(fp))
 
 
-def cmd_daily():
+def daily_is_fresh(hours=8):
+    """True when the last daily run succeeded within `hours` (data/cache/last_run.txt, written by the workflow)."""
+    try:
+        outcome, stamp = (CACHE / "last_run.txt").read_text().split()[:2]
+        done = dt.datetime.strptime(stamp, "%Y-%m-%dT%H:%MZ").replace(tzinfo=dt.timezone.utc)
+    except (OSError, ValueError):
+        return False
+    return outcome == "success" and (dt.datetime.now(dt.timezone.utc) - done).total_seconds() < hours * 3600
+
+
+def cmd_daily(auto=False):
+    if auto and daily_is_fresh():
+        print("daily: a run already succeeded in the last 8 hours; nothing to do (fallback schedule)")
+        return
     seasons, pw, sched, snaps, inj, H, status, src = load_all()
     week = upcoming_week(sched, C.SEASON)
     bt, phi, k, scale, gbm = B.run_backtest(H, seasons)
@@ -489,4 +503,4 @@ if __name__ == "__main__":
         if a.cmd == "history":
             cmd_history([int(w) for w in a.weeks.split(",") if w.strip()], [m for m in a.markets.split(",") if m.strip()])
         else:
-            cmd_daily() if a.cmd == "daily" else cmd_odds(a.hours, a.auto)
+            cmd_daily(a.auto) if a.cmd == "daily" else cmd_odds(a.hours, a.auto)

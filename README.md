@@ -42,11 +42,12 @@ zone data and pins UTC-6 if that data is stale, so nothing needs editing). The p
 
 | Job | When (Edmonton) | What it does |
 | --- | --- | --- |
-| Daily model update | Every day, early morning | New stats, backtest, projections, grading, parlay grading |
-| Pull tackle lines | Thu 9:00 am, 1:00 pm, 5:30 pm | Thursday game, and Friday games on holiday weeks |
+| Daily model update (with a fallback run 85 minutes later that does nothing when the first succeeded) | Every day, early morning | New stats, backtest, projections, grading, parlay grading |
+| Pull tackle lines | Any day, 1 h before every kickoff (kickoffs within 30 min share one pull) | Every game not yet started that day, from the schedule: Thursday, Friday, Saturday, Sunday and Monday games alike, holiday games included |
+| | Thu 9:00 am, 1:00 pm | Thursday game, and Friday games on holiday weeks |
 | | Sat 8:00 pm | Saturday and Sunday games, once the books have posted the slate (most Sunday tackle lines go up Saturday evening) |
-| | Sun 10:00 am, 1:00 pm, 5:30 pm | The Sunday slate in the morning, the afternoon games at 1 pm, the night game at 5:30 pm |
-| | Sun, 1 h before the first kickoff | The whole Sunday slate, with the inactives known for the early games (on a normal week this is the 10 am look) |
+| | Sun 10:00 am | The Sunday slate with the inactives known (on a normal week this is also the pre-kickoff pull, so one pull) |
+| | Mon 9:00 am, 1:00 pm | The Monday game |
 | | Mon, every two hours 9:00 am-5:00 pm and 5:30 pm | Monday game |
 | | 12 h and 1 h before kickoff | Any international game (neutral-site game overseas), that game only |
 

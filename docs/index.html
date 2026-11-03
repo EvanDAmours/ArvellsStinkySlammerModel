@@ -419,6 +419,13 @@ function renderMeta() {
                     el("span", {}, m.odds_credits_remaining != null ? `${m.odds_credits_remaining} odds credits left this month` : ""));
   if (m.formula_check_ok === false)
     $("#warnings").append(el("div", { class: "warn" }, "Tackle totals didn’t match the official numbers this run. Picks may be off until the data source is fixed; check the Actions log."));
+  // a pull that should have happened and has not: GitHub's scheduler stalls now and then; say so instead of showing stale lines as current
+  if (m.next_pull) {
+    const late = (Date.now() - new Date(m.next_pull).getTime()) / 60000;
+    if (late > 45) $("#warnings").append(el("div", { class: "warn" }, `The line pull due ${when(m.next_pull)} has not run (${Math.round(late)} minutes late; GitHub's scheduler stalls now and then). The board shows the lines from ${m.lines_pulled ? when(m.lines_pulled) : "the last pull"}. The next scheduled run serves the missed pull; to force it now, run "Pull tackle lines" from the repository's Actions tab.`));
+  }
+  const upd = (Date.now() - new Date(m.generated_at).getTime()) / 3600000;
+  if (upd > 30) $("#warnings").append(el("div", { class: "warn" }, `The model has not been updated since ${when(m.generated_at)} (${Math.round(upd)} hours). The daily job runs at 4:15 am and again at 6:40 am; if both missed, run "Daily model update" from the Actions tab.`));
 }
 
 function renderPlays() {

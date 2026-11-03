@@ -2,10 +2,11 @@ name: Pull tackle lines
 # Pull slots are defined in Edmonton local time in run.py (PULL_SLOTS), so the clock change needs no edits here.
 on:
   schedule:
-    - cron: "0,30 * * * *"     # every half hour; run.py decides whether this is a pull slot (Edmonton time) or an
-                               # international game is 12 h / 1 h from kickoff, and does nothing otherwise. See README.
-    - cron: "15,45 * * * *"    # a second schedule on the quarter hours: GitHub stalled the first one for two hours on
-                               # 2026-10-31 and the Saturday 9 am pull was late. Slots are served once, so no double pulls.
+    - cron: "7,37 * * * *"     # twice an hour; run.py decides whether a pull slot (Edmonton time) or a pre-kickoff pull is
+                               # due and does nothing otherwise. Off the hour and half hour: GitHub delays runs queued at
+                               # those minutes most (its own advice), and that is when the 2026-10-31 stall happened.
+    - cron: "22,52 * * * *"    # a second schedule between them. Slots are served once, so a stalled schedule is covered
+                               # by the other and nothing is pulled twice.
   workflow_dispatch:
     inputs:
       hours:
