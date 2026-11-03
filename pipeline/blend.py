@@ -66,14 +66,14 @@ def estimate(pw_comb, season, weeks=None):
         if cl is None or len(cl) == 0 or st.empty:
             continue
         cl = cl.copy(); cl["name_key"] = cl.player.map(norm_name); cl["kind"] = cl.market.map(C.market_kind)
-        cons = cl.groupby(["event_id", "name_key", "kind"]).line.median().reset_index()
+        cons = cl.groupby(["event_id", "name_key", "kind"]).agg(line=("line", "median"), over_odds=("over_odds", "median"), under_odds=("under_odds", "median")).reset_index()
         box = st.groupby("name_key").agg(comb=("comb", "sum"), solo=("solo_t", "sum"))
         cons = cons.join(box, on="name_key")
         cons = cons[cons.comb.notna()]
-        m = log[log.week == wk].drop_duplicates(["name_key", "kind"])[["name_key", "kind", "proj_model"]]
+        m = log[log.week == wk].drop_duplicates(["name_key", "kind"])[["name_key", "kind", "proj_model", "phi"]]
         cons = cons.merge(m, on=["name_key", "kind"], how="inner")
         cons["actual"] = _actual(cons.kind.values, cons.comb.values, cons.solo.values)
-        rows.append(cons[["kind", "line", "proj_model", "actual"]])
+        rows.append(cons[["kind", "line", "proj_model", "phi", "actual", "over_odds", "under_odds"]])
     if not rows:
         return {}
     d = pd.concat(rows, ignore_index=True)
@@ -90,7 +90,29 @@ def estimate(pw_comb, season, weeks=None):
                          bias_line=float(np.clip(sh * np.mean(a - li), -c["max_bias"], c["max_bias"])),
                          bias_model=float(np.clip(sh * np.mean(a - mo), -c["max_bias"], c["max_bias"])),
                          n=n, mse_model=mse_m, mse_line=mse_l, weeks=sorted(int(w) for w in log.week.unique()))
+        out[kind]["scores"] = _scores(part, out[kind])
     return out
+
+
+def _scores(part, b):
+    """Brier and log-loss of the chance of the over at each posted closing line: the market's own no-vig price, the
+    model's number alone, and the blended mean (with this estimate's weight and corrections: in-sample, so it
+    flatters the blend a little). Pushes left out."""
+    from pipeline.model import american_to_decimal, p_over
+    d = part[(part.actual != part.line) & part.phi.notna()]
+    d = d[(d.over_odds.fillna(0) != 0) & (d.under_odds.fillna(0) != 0)]
+    if len(d) < 20:
+        return {}
+    y = (d.actual.values > d.line.values).astype(float)
+    po = 1 / d.over_odds.map(american_to_decimal).values; pu = 1 / d.under_odds.map(american_to_decimal).values
+    p_mkt = po / (po + pu)
+    p_model = np.array([p_over(m, ph, l) for m, ph, l in zip(d.proj_model, d.phi, d.line)])
+    mean = (1 - b["w"]) * (d.proj_model.values + b["bias_model"]) + b["w"] * (d.line.values + b["bias_line"])
+    p_blend = np.array([p_over(max(0.05, m), ph, l) for m, ph, l in zip(mean, d.phi, d.line)])
+    def sc(p):
+        p = np.clip(p, 1e-6, 1 - 1e-6)
+        return dict(brier=float(np.mean((p - y) ** 2)), log_loss=float(-np.mean(y * np.log(p) + (1 - y) * np.log(1 - p))))
+    return dict(n=int(len(y)), market=sc(p_mkt), model=sc(p_model), blend=sc(p_blend))
 
 
 def save(blend):

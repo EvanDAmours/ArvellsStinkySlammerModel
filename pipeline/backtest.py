@@ -130,9 +130,23 @@ def run_backtest(H, seasons):
             if line < 0.5:
                 continue
             cal.append((M.p_over(r.mu, phi, line), 1.0 if r.comb > line else 0.0))
-    cal_rows = []
+    cal_rows, prob_scores = [], {}
     if cal:
         c = pd.DataFrame(cal, columns=["p", "hit"])
+        prob_scores["own_lines"] = dict(n=int(len(c)), brier=float(np.mean((c.p - c.hit) ** 2)), log_loss=float(-np.mean(c.hit * np.log(c.p.clip(1e-6, 1)) + (1 - c.hit) * np.log((1 - c.p).clip(1e-6, 1)))),
+                                        brier_coin=0.25)
+    # probability integral transform: where the actuals fall in the model's own distribution (randomised for counts);
+    # a calibrated shape puts 5% of them below its 5th percentile and 5% above its 95th, and fills the deciles evenly
+    rng = np.random.default_rng(11)
+    pit = []
+    for r in sample.itertuples():
+        phi = phi_by_group.get(r.group, 1.0)
+        k = int(r.comb); lo = (1 - M.p_over(r.mu, phi, k - 0.5)) if k > 0 else 0.0; hi = 1 - M.p_over(r.mu, phi, k + 0.5)
+        pit.append(lo + rng.random() * (hi - lo))
+    if pit:
+        u = np.asarray(pit, dtype=float); u = u[np.isfinite(u)]
+        prob_scores["pit"] = dict(n=int(len(u)), below_5=float(np.mean(u < 0.05)), above_95=float(np.mean(u > 0.95)),
+                                  deciles=[float(x) for x in np.histogram(u, bins=10, range=(0, 1))[0] / len(u)])
         c["bin"] = pd.cut(c.p, [0, .2, .35, .45, .55, .65, .8, 1.0], include_lowest=True)
         for b, part in c.groupby("bin", observed=True):
             cal_rows.append(dict(bucket=str(b), n=int(len(part)), predicted=float(part.p.mean()), observed=float(part.hit.mean())))
@@ -190,7 +204,7 @@ def run_backtest(H, seasons):
             gbm_rows = [dict(predictor=f"Full model, {last} fold", **fm), dict(predictor=f"{int(C.GBM['weight'] * 100)}% boosted corrector blend, {last} fold (trained on earlier seasons)", **gm)]
     gbm_live = M.fit_gbm(X, T.comb)
     result = dict(seasons=[int(s) for s in seasons], games=int(len(T)), best_shrink_games=int(best_k), scale=scale,
-                  predictors=table + gbm_rows + solo_rows, by_season=by_season, dispersion=phi_rows, calibration=cal_rows, scale_solo=phi_by_group["__scale_solo__"],
+                  predictors=table + gbm_rows + solo_rows, by_season=by_season, dispersion=phi_rows, calibration=cal_rows, prob_scores=prob_scores, scale_solo=phi_by_group["__scale_solo__"],
                   scale_solo_by_group={k.split("|")[0]: v for k, v in phi_by_group.items() if k.endswith("|solo_scale")},
                   regression=reg, role=role, new_role=new_role, weak_spots=weak_spots)
     return result, phi_by_group, best_k, scale, gbm_live

@@ -152,7 +152,12 @@ LOCK_EV_FULL = 0.10                # an expected return this high scores full ma
 LOCK_EV_FADE = (0.20, 0.40)        # above 20% the EV component falls off, to zero at 40%: picks with 25%+ claimed return hit 33% (n=15), 15-25% hit 50%, 6-10% hit 57%
 LOCK_MODEL_FULL = 0.75             # a model probability this high for our side scores full marks (50% scores zero)
 GRADE_BARS = dict(A=72, B=55)      # lock score at or above these is an A or a B; the rest are C
-GRADE_UNITS = dict(A=1.0, B=0.5, C=0.25)   # suggested stake per grade, in units (shown in the site legend)
+GRADE_UNITS = dict(A=1.0, B=0.5, C=0.25)   # the grade ladder, kept for the record's "units at grade stake"; the stake on a pick is STAKE below
+# Stake per pick: a quarter of the Kelly fraction of a 100-unit bankroll from the pick's claimed chance and price,
+# clipped, with at most game_cap units on one game (stakes in that game scaled down together). Research round 9,
+# weeks 7-8 at the same total staked: +21.2 u against +18.1 for the grade ladder and +10.8 flat, better in both
+# weeks, and the most on one game 5.4 u against 10.8.
+STAKE = dict(bankroll=100.0, kelly_fraction=0.25, min=0.25, max=3.0, game_cap=4.0)
 # Closing-line value: among picks whose closing number differed from ours, the share that moved our way. Below
 # ~52% is indistinguishable from noise over a few hundred bets (standard error ~3% at 300); sharp bettors sustain
 # 55-60% and 60%+ is rare. Shown in the site legend.

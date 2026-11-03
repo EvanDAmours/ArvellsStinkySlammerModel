@@ -67,7 +67,7 @@ def replay(season, week, markets=None, out=OUT, keep_all=False, blend_weeks=None
                                                          start=pd.to_datetime(snaps.drop_duplicates("event_id").commence_time, utc=True))
     for t in sorted(snaps.pulled_at.unique()):
         lines, now = lines_as_of(snaps, t)
-        bets = M.price_lines(lines, P, blend=blend)
+        bets = G.cap_stakes(M.price_lines(lines, P, blend=blend))
         if bets.empty or "pick" not in bets:
             continue
         # recommended parlay per slate day, re-chosen until the day's first kickoff

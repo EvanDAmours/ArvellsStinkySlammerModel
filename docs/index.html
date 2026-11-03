@@ -495,6 +495,7 @@ function legend() {
     el("p", {}, "Never a lock or a parlay leg, whatever the score (the lock-eligibility checklist, added after the week 8 Thursday post-mortem): a player in a new role (a part-timer who just played a starter's snaps), in a reduced role (his last game's snaps fell well below his season share), back from absence (a missed game that was not a bye), in his first game for a new team, with fewer than three games in his current role, listed questionable, without snap counts for his last game, or an Over (the model's Over picks have hit 41%; Overs stay plays, never locks, until forty more of them say otherwise). In every one of these the model is on ground where it is biased or blind. Each is tagged on the card, with the reason, and the pick can still be played at its grade."),
     el("p", {}, "Tags on a card say what the model sees behind the number (hover one for the rule): a role change (New role, Reduced role, Promoted, Demoted, Back from absence, New team), the injury report (Questionable, Opp QB out), the lineman's pressure profile (Run-stuffer, Interior, Pass rusher), and Model far from line. The 'Why' box under each pick shows the lock score piece by piece, the checklist, how picks of its kind have resolved, his game log, and an outside expert consensus (FantasyPros, the top players at each position) read relative to its usual relation to this model, for comparison only: it never prices, grades or chooses a pick."),
     el("p", {}, "Assists lines are priced the same way on their own tab (the Assists tab): a trial market, logged and graded like every pick here but never a lock or a parlay leg until its record earns it."),
+    el("p", {}, `The stake on each pick is ${g.stake ? `${Math.round((g.stake.kelly_fraction || 0.25) * 100)}% of the Kelly fraction of a ${g.stake.bankroll || 100}-unit bankroll` : "a quarter of the Kelly fraction of a 100-unit bankroll"}, from its claimed chance and its price (${g.stake?.min ?? 0.25} to ${g.stake?.max ?? 3} units), with at most ${g.stake?.game_cap ?? 4} units on one game: stakes on a game are scaled down together when the picks add up to more. The grade is how sure the model is; the stake is how much the price is wrong. Weeks 7-8 at the same total staked: +21 units this way against +18 on the grade ladder and +11 flat, in both weeks.`),
     el("p", {}, "Stakes are a guide, not a promise: the grades are being tested on the Track record tab, and if A does not beat B and C over time the formula changes."),
     el("h4", {}, "Beating the closing line"),
     el("p", {}, "A line moves between the time we bet it and kickoff as money comes in and the book sharpens its number. The last number before kickoff, the closing line, is the market's best estimate with everything priced in. If we took Under 3.5 and it closed at Under 2.5, we got a number a point better than the market's considered view: we beat the close. If it closed at 4.5, the market moved against us. One bet's result is mostly luck, but the direction the line moves is the whole market's judgement on whether we were right, and over a few hundred bets the share of picks that beat the close predicts profit better than the win-loss record does."),
@@ -613,7 +614,7 @@ function card(b, isLock) {
   const card = el("div", { class: "play" + (isPick ? " pick" : "") + (b.five ? " five" : "") },
     el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}`, title: "Confidence grade" }, b.grade) : "", b.five ? el("span", { class: "star", title: "Lock" }, "★") : "", b.player, " ", jersey(b),
       el("small", {}, [b.group, b.team, b.opp ? `vs ${b.opp}` : "", kickoffLocal(betKick(b)) ? `· ${kickoffLocal(betKick(b))}` : ""].filter(Boolean).join(" ")),
-      b.lock == null ? "" : el("div", { class: "lock" }, `Lock score ${Math.round(b.lock)}/100`)),
+      b.lock == null ? "" : el("div", { class: "lock" }, `Lock score ${Math.round(b.lock)}/100${b.stake != null ? ` · stake ${(+b.stake).toFixed(2)}u` : ""}`)),
     el("div", { class: "ev" }, el("b", {}, b.ev == null ? "" : signedPct(b.ev)), el("span", {}, "expected return")),
     el("div", { class: "actions" }, addButton(b), betLink(b, side)),
     el("div", { class: "bet" }, el("span", { class: side === "Under" ? "under" : "over" }, `${side || ""} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market).toLowerCase()}`, el("small", {}, ` · ${odds(price)} at ${b.book}`, b.payout == null ? "" : ` · pays ${num(b.payout, 2)} per unit`)),
@@ -818,7 +819,7 @@ function renderRecPicks() {
   const g = picks.filter((p) => p.result === "Win" || p.result === "Loss" || p.result === "Push");
   const w = g.filter((p) => p.result === "Win").length, l = g.filter((p) => p.result === "Loss").length, pu = g.filter((p) => p.result === "Push").length;
   const u = g.reduce((a, p) => a + (p.units || 0), 0);
-  const stakeOf = (p) => (DATA.meta?.grading?.units || { A: 1, B: 0.5, C: 0.25 })[p.grade] ?? 0;
+  const stakeOf = (p) => (p.stake != null ? +p.stake : (DATA.meta?.grading?.units || { A: 1, B: 0.5, C: 0.25 })[p.grade] ?? 0);   // the pick's own stake (quarter Kelly, capped), else the grade ladder for older picks
   const us = g.reduce((a, p) => a + (p.units || 0) * stakeOf(p), 0);
   // same rule as the grader: a line counts once the close moved off it (line or price); beat means it moved our way
   const moved = picks.filter((p) => p.clv_line != null && (p.clv_line !== 0 || Math.abs(p.clv_prob ?? 0) > 0.005)), beat = moved.filter((p) => p.clv_pos === true || p.clv_pos === 1 || p.clv_pos === "True").length;
@@ -971,6 +972,16 @@ function renderCheck() {
   if (solo.length) {
     box.append(section("Solo tackles", `Half the lines are solo markets. The solo projection is the combined projection times a shrunk solo share, with a league drift factor${b.scale_solo ? ` and a level calibration of ${num(b.scale_solo, 3)}` : ""}.`,
       el("div", { class: "scroll" }, table([["Predictor"], ["Miss", "n"], ["Bias", "n"]], solo.sort((x, y) => m(x) - m(y)).map((r) => [r.predictor.replace("Solo tackles: ", "").replace(/^./, (c) => c.toUpperCase()), num(m(r), 3), (r.bias >= 0 ? "+" : "") + num(r.bias, 2)])))));
+  }
+  // probability scores: the bet is a chance at a line, so the shape is judged too
+  const ps = b.prob_scores || {}, bl = DATA.meta?.grading?.blend || {};
+  if (ps.pit || Object.values(bl).some((x) => x.scores)) {
+    const rows = [];
+    if (ps.pit) rows.push(["Model's own distribution, all games", ps.pit.n.toLocaleString(), `${pct(ps.pit.below_5)} below its 5th percentile, ${pct(ps.pit.above_95)} above its 95th (5% each if the shape is right)`, ""]);
+    if (ps.own_lines) rows.push(["Lines around each projection", ps.own_lines.n.toLocaleString(), `Brier ${ps.own_lines.brier.toFixed(4)} (a coin is 0.2500)`, `log-loss ${ps.own_lines.log_loss.toFixed(4)}`]);
+    for (const [k, v] of Object.entries(bl)) if (v.scores?.n) rows.push([`Posted closing lines, ${k} (weeks ${(v.weeks || []).join(", ")})`, v.scores.n, `Brier: market ${v.scores.market.brier.toFixed(4)}, model ${v.scores.model.brier.toFixed(4)}, blend ${v.scores.blend.brier.toFixed(4)}`, `log-loss: market ${v.scores.market.log_loss.toFixed(3)}, model ${v.scores.model.log_loss.toFixed(3)}, blend ${v.scores.blend.log_loss.toFixed(3)}`]);
+    box.append(section("Does the chance at the line hold up?", "The miss above scores the mean; a bet is a chance at a line, so the shape of the distribution is scored too. Lower Brier and log-loss are better; the market's own no-vig price is the benchmark at posted lines.",
+      el("div", { class: "scroll" }, table([["What is scored"], ["Games or lines", "n"], ["Calibration or Brier"], ["Log-loss"]], rows))));
   }
   // assists
   const astRows = P.filter((r) => r.predictor.startsWith("Assists"));

@@ -10,6 +10,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 tmp = Path(tempfile.mkdtemp()) / "repo"
+import atexit; atexit.register(lambda: shutil.rmtree(tmp.parent, ignore_errors=True))   # the copy is a few hundred MB; 140 of them sat in /tmp once
 def _ignore_live_data(d, names):
     """Copy the code but not the live outputs (odds snapshots, logged picks, caches, site JSON) so the test starts clean."""
     rel = os.path.relpath(d, ROOT)
@@ -75,6 +76,7 @@ up = [p for p in proj if p["role_signal"]]
 check(len(up) >= 6, f"role signals raised for backups whose starter is listed out ({len(up)})")
 
 check(run("odds") == 0, "odds pull, pricing and pick logging run")
+check((tmp / "data" / "picks.csv").exists() and "stake" in pd.read_csv(tmp / "data" / "picks.csv").columns, "the stake is logged with the pick")
 bets = json.loads((tmp / "docs/data/bets.json").read_text())
 check(len(bets) > 50 and all(b["model_over"] is None or 0 <= b["model_over"] <= 1 for b in bets), f"lines priced ({len(bets)})")
 priced = [b for b in bets if b.get("proj") is not None]
@@ -218,11 +220,20 @@ _mt = json.loads((tmp / "docs" / "data" / "meta.json").read_text())
 check(_mt.get("season_over") is False, "meta says the season is not over while games remain")
 # the blend
 check("blend" in _mt.get("grading", {}), "meta carries the per-market blend (empty until a week is graded with logged numbers)")
+check(bt.get("prob_scores", {}).get("pit") and 0 < bt["prob_scores"]["pit"]["below_5"] < 0.2 and abs(sum(bt["prob_scores"]["pit"]["deciles"]) - 1) < 0.01 and bt["prob_scores"].get("own_lines", {}).get("brier", 1) < 0.3,
+      f"backtest scores the distribution's shape (PIT tails {bt['prob_scores'].get('pit', {}).get('below_5')}/{bt['prob_scores'].get('pit', {}).get('above_95')}, Brier at own lines {bt['prob_scores'].get('own_lines', {}).get('brier')})")
 # parlay correlation: two Unders on one defence rise together, an Under and an Over pull apart, different games are independent
 _leg = lambda side, ev="E1", mu=5.5: dict(mu=mu, phi=1.4, exp_opps=50.0, line=5.5, side=side, event_id=ev, team="T" if ev == "E1" else "U")
 _uu, _uo, _diff = M.parlay_corr_ratio([_leg("Under"), _leg("Under")]), M.parlay_corr_ratio([_leg("Under"), _leg("Over")]), M.parlay_corr_ratio([_leg("Under"), _leg("Under", ev="E2")])
 check(1.0 < _uu < 1.2 and 0.8 < _uo < 1.0 and _diff == 1.0, f"parlay legs on one defence share the plays draw (UU {_uu:.3f}, UO {_uo:.3f}, other game {_diff})")
 check(all("corr_ratio" in q for q in pj) if pj else True, "parlays carry the correlation ratio")
+# stakes: quarter Kelly per pick within the clip, capped per game, logged with the pick
+_pk = [b for b in _ba if b["pick"] in ("Over", "Under") and b.get("best_price") is not False]
+check(_pk and all(b.get("stake") is not None and C.STAKE["min"] - 1e-9 <= b["stake"] <= C.STAKE["max"] + 1e-9 for b in _pk), f"every pick carries a stake inside the clip ({len(_pk)} picks)")
+_byg = {}
+for b in _pk: _byg[b["event_id"]] = _byg.get(b["event_id"], 0) + b["stake"]
+check(_byg and max(_byg.values()) <= C.STAKE["game_cap"] + 1e-3, f"no game carries more than the cap (max {max(_byg.values()) if _byg else 0:.4f}u)")
+check(abs(M.kelly_stake(0.58, 1.909) - min(C.STAKE["max"], max(C.STAKE["min"], 0.25 * ((0.58 * 0.909 - 0.42) / 0.909) * 100))) < 1e-9 and M.kelly_stake(0.45, 1.909) is None, "the Kelly stake follows the claimed chance and the price, none without an edge")
 from pipeline import blend as BL
 check(abs(M.blend_mean(4.0, 6.0, "solo", {"solo": {"w": 0.5, "bias_model": -0.3, "bias_line": -0.5}}) - (0.5 * 3.7 + 0.5 * 5.5)) < 1e-9 and abs(M.blend_mean(4.0, 6.0, "solo", None) - ((1 - C.LINE_WEIGHT) * 4 + C.LINE_WEIGHT * 6)) < 1e-9,
       "the pricing mean applies the market's blend weight and both level corrections, else the default weight")
@@ -237,6 +248,7 @@ _snapdir = Path("data/odds/2026/wk06"); _snapdir.mkdir(parents=True, exist_ok=Tr
 _bl = _BL.estimate(pw, 2026, weeks=[6]); _BL.LOG = _old_log
 check(_bl.get("combined") and 0.35 < _bl["combined"]["w"] < 0.65 and _bl["combined"]["bias_model"] < -0.2 and _bl["combined"]["bias_line"] > 0.2 and _bl["combined"]["n"] >= 30,
       f"blend estimated from a graded week's closing lines ({_bl.get('combined')})")
+check(_bl["combined"].get("scores", {}).get("n", 0) >= 20 and all(k in _bl["combined"]["scores"] for k in ("market", "model", "blend")), "blend estimate scores the chance at the posted lines against the market")
 
 _sg = json.loads((tmp / "data" / "cache" / "segments.json").read_text()) if (tmp / "data" / "cache" / "segments.json").exists() else {}
 check(all("n_eff" in v and v["n_eff"] <= v["n"] + 1e-9 for v in _sg.values()) if _sg else True, f"segment calibration carries the recency-weighted count ({len(_sg)} segments)")

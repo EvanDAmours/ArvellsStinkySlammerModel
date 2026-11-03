@@ -1060,6 +1060,20 @@ def parlay_corr_ratio(legs):
     return float(np.clip(hit_all.mean() / prod, *c["clip"]))
 
 
+def kelly_stake(claim, dec):
+    """Units to stake on a pick (config.STAKE): a fraction of the Kelly fraction of the bankroll, from the claimed
+    chance and the decimal price; None when there is no edge or no price. The per-game cap is applied later
+    (grade.cap_stakes), once every pick on the game is known."""
+    c = C.STAKE
+    if dec is None or pd.isna(dec) or dec <= 1 or claim is None or pd.isna(claim):
+        return None
+    b = float(dec) - 1
+    f = (float(claim) * b - (1 - float(claim))) / b
+    if f <= 0:
+        return None
+    return float(np.clip(c["kelly_fraction"] * f * c["bankroll"], c["min"], c["max"]))
+
+
 def blend_mean(mu_model, mkt_line, kind, blend=None):
     """The pricing mean: the model's number and the consensus line, each level-corrected, weighted by the market's
     estimated blend (pipeline/blend.py) or the default line weight."""
@@ -1206,6 +1220,7 @@ def price_lines(lines, P, segments=None, blend=None):
                      "season_avg": float(p.season_avg), "last": None if pd.isna(p["last"]) else float(p["last"]),
                      "n_prev": int(p.n_prev), "consistency": consistency, "cons_hits": int(sum(hits)), "cons_n": len(hits),
                      "mkt_side": float(mkt_side), "payout": None if dec is None else float(dec - 1),
+                     "stake": kelly_stake(claim, dec) if pick in ("Over", "Under") else None,
                      "international": str(p.get("venue", "")) == "NEUTRAL", "depth": p.get("dc_status", ""), "uncertain": bool(uncertain),
                      "new_role": bool(new_role), "snap_jump": None if pd.isna(p.get("snap_jump", np.nan)) else float(p.get("snap_jump")),
                      "reduced_role": fl["reduced_role"], "absence": bool(fl["absence"] or fl["missed_game"]), "new_team": fl["new_team"],

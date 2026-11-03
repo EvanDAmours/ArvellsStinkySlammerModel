@@ -335,7 +335,7 @@ def cmd_daily(auto=False):
     summary["parlays"] = psum
     G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)
     lines = O.upcoming_only(O.latest_lines(C.SEASON, week))
-    bets = M.price_lines(lines, P, segments=load_segments(), blend=blend) if len(lines) else pd.DataFrame()
+    bets = G.cap_stakes(M.price_lines(lines, P, segments=load_segments(), blend=blend)) if len(lines) else pd.DataFrame()
     if len(bets):
         BL.log_model_numbers(bets, C.SEASON, week, dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ"))
     bets = mark_five(bets, C.SEASON, week)
@@ -408,7 +408,7 @@ def cmd_odds(hours=None, auto=False):
     remaining = int(sum(numeric)) if numeric else next(iter(credits.values()), None)
     O.save_snapshot(rows, C.SEASON, week)
     lines = O.upcoming_only(O.latest_lines(C.SEASON, week))
-    bets = M.price_lines(lines, P, segments=load_segments(), blend=BL.load())
+    bets = G.cap_stakes(M.price_lines(lines, P, segments=load_segments(), blend=BL.load()))
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     BL.log_model_numbers(bets, C.SEASON, week, stamp)
     n_new = G.log_picks(bets, C.SEASON, week, stamp)
@@ -450,7 +450,7 @@ def write_week_lines(P, season, week):
     if lines is None or len(lines) == 0 or P is None or len(P) == 0:
         _json(SITE / "lines_week.json", [])
         return
-    bets = M.price_lines(lines, P, segments=load_segments(), blend=BL.load())
+    bets = G.cap_stakes(M.price_lines(lines, P, segments=load_segments(), blend=BL.load()))
     _json(SITE / "lines_week.json", records(bets[[c for c in WEEK_LINE_COLS if c in bets.columns]]) if len(bets) else [])
 
 
@@ -481,7 +481,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
                 grading=dict(bars=C.GRADE_BARS, units=C.GRADE_UNITS, weights=C.LOCK_WEIGHTS, ev_full=C.LOCK_EV_FULL, ev_fade=list(C.LOCK_EV_FADE),
                              model_full=C.LOCK_MODEL_FULL, locks=C.LOCKS_PER_SLATE, lock_min=C.LOCK_MIN_SCORE, line_weight=C.LINE_WEIGHT, clv=C.CLV_BARS, clv_pct=C.CLV_PCT_BARS,
                              pick_bar=C.PICK_BAR, pick_bar_over=C.PICK_BAR_OVER, pick_min_claim=C.PICK_MIN_CLAIM, claim_shrink=C.CLAIM_SHRINK, segment_k=C.SEGMENT_CAL["k"], segment_min_n=C.SEGMENT_CAL["min_n"],
-                             blend=status.get("blend") or BL.load() or {}))
+                             blend=status.get("blend") or BL.load() or {}, stake=C.STAKE))
     prev = SEAL.read_json(SITE / "meta.json")
     if prev:
         meta.setdefault("odds_credits_remaining", prev.get("odds_credits_remaining"))

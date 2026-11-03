@@ -1034,11 +1034,63 @@ the projection frame carries more bench players than a game's box score. Built, 
 evening; the research script is `research/team_budget.py`. Pitfall added: judge a piece on level-matched miss
 first; a raw-miss gain with a bias change is a level change, not information.
 
-### Not yet done (next in the order given)
+**4. One fitted calibration map instead of the three devices.** A logistic map from the model's chance to the
+hit rate (one for all picks, and one per market), fitted on one week and scored on the other by Brier: fit on
+week 7, scored on week 8 (150 picks): raw model chance 0.2379, shrink alone 0.2405, the layered claim as logged
+(shrink plus segment correction) 0.2299, the logistic map 0.2433 (per market 0.2391), the market's own price
+0.2460. Fit on week 8, scored on week 7 (227): shrink alone 0.2500, logistic 0.2610 (per market 0.2578), market
+0.2477. The map's slope swung from 0.51 to 1.14 between fits: on 150-230 picks it learns the week, not the
+model. The layered claim is the best calibrated of the lot on the one week it can be scored, so it stays.
+Revisit at 600 picks.
 
-4 (one calibration map instead of three devices), 7 (probability scoring in the backtest), 6 (snap-share
-variance), 8 (Kelly stakes with exposure caps), 9 (opponent target distribution): worked next, each under the
-same protocol.
+**6. Snap-share variance in the dispersion.** The expected share misses the actual share by an sd of 0.19 in
+every bucket of expected share, so the hypothesis that a rotation player's count is wider because his share is
+less certain predicts the extra dispersion should grow with mu times the squared coefficient of variation.
+Fitted on 2023-2025 per position, the slope on that term is 0.01, -0.04, 0.06 and -0.01: nothing. Tail
+coverage on 2026 (9,000 games): the current two-bin dispersion 5.4%/5.4% below the 5th and above the 95th
+percentile, four share buckets 5.0%/5.4%, the continuous form 4.9%/5.4%; by bucket the differences are a
+point either way. Rejected; the two-bin split stays.
+
+### Adopted (continued)
+
+**7. Probability scores in the backtest.** The bet is a chance at a line, so the backtest now scores the shape
+as well as the mean: a randomised probability integral transform over 4,000 games (how often the actual falls
+below the model's 5th percentile and above its 95th, and the decile histogram) and the Brier and log-loss of
+the model's chance at the lines around each projection; the blend estimate adds, per market, the Brier and
+log-loss at the posted closing lines for the market's no-vig price, the model's number alone and the blended
+mean. Reported in `backtest.json` (`prob_scores`) and `blend.json` (`scores`), and in a "Does the chance at the
+line hold up?" section on the Model check tab. Current reading: 5.1% and 4.8% in the tails on the full history;
+at 504 posted lines of weeks 7-8 the blended chance scores Brier 0.2413 against the market's 0.2539.
+
+**8. Stakes from the claimed edge, capped per game** (`model.kelly_stake`, `grade.cap_stakes`, `config.STAKE`).
+Each pick's stake is a quarter of the Kelly fraction of a 100-unit bankroll from its claimed chance and price,
+clipped to 0.25-3 units, and the picks on one game are scaled down together above 4 units. Judged on the 394
+graded picks with every scheme scaled to the same total staked (136.5 units): the grade ladder +18.1 units
+(+13.3%), flat +10.8 (+7.9%), quarter Kelly +15.9, quarter Kelly with the game cap +21.2 (+15.6%); by week,
++8.3% against +5.8% and +23.2% against +19.5%; the most on one game 5.4 units against 10.8. Kelly stakes hardly
+differ by grade (A 0.24, B 0.32, C 0.28 on the 100-unit bankroll): the claimed edges are similar across grades,
+because the grade also weighs consistency and sample; the grade says how sure, the stake says how wrong the
+price is. The stake is logged with the pick and shown on the card; the record's "units at suggested stake"
+follows it (older picks keep the grade ladder). Thin evidence (two weeks, claims partly in sample for week 7),
+so revert if the Kelly stakes trail the grade ladder over the next 300 picks at the same total staked.
+
+**9. The opponent's completions by receiver position.** Each defender's tackle rate per completion to a back, a tight end and a receiver from his
+prior games (shrunk to his position's league rate over 40 completions), times the opponent's mix of completions
+by receiver kind from its prior games (shrunk to the league over six games), against the same rates at the
+league mix; the ratio applied to the pass share of his tackles. The rates differ by position as expected
+(linebackers 0.093 per completion to a back and 0.035 to a receiver, corners 0.070 and 0.121), but once an
+opponent's mix is shrunk the way it has to be to be known before the game, the factor has an sd of 0.009 and a
+correlation of at most 0.04 with the residual; level-matched miss 1.6185 to 1.6185 in every season at every
+power. The information is real at the position level and already in the model (the run/pass mix and each
+player's own rates); the between-opponent part is too small to price. Rejected.
+
+### Pitfalls found this round
+
+- Judge a projection piece on level-matched miss (`mae_cal`) before raw miss (the team budget).
+- A calibration map fitted on one week of picks learns the week: its slope moved from 0.51 to 1.14 between
+  fits. At a few hundred picks, corrections with structure (shrink plus per-kind segment) beat free fits.
+- The smoke test's temporary repository copies were never deleted; 140 of them sat in /tmp. It now removes its
+  copy at exit (the old ones are left for the owner to clear).
 
 ## Weekly post-mortems
 

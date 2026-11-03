@@ -14,6 +14,20 @@ PICKS = Path("data/picks.csv")
 KEY = ["season", "week", "player", "market", "side", "line", "book"]
 
 
+def cap_stakes(bets):
+    """At most config.STAKE['game_cap'] units on one game: when the picks on a game (best price each) add up to more,
+    every stake on that game is scaled down together. Returns the frame with `stake` capped."""
+    if bets is None or len(bets) == 0 or "stake" not in bets.columns or "event_id" not in bets.columns:
+        return bets
+    b = bets.copy()
+    cap = C.STAKE["game_cap"]
+    live = b.pick.isin(["Over", "Under"]) & b.stake.notna() & b.get("best_price", pd.Series(True, index=b.index)).fillna(True).astype(bool)
+    tot = b[live].groupby("event_id").stake.sum()
+    scale = (cap / tot).clip(upper=1.0)
+    b.loc[live, "stake"] = b.loc[live, "stake"] * b.loc[live, "event_id"].map(scale).fillna(1.0)
+    return b
+
+
 def log_picks(bets, season, week, pulled_at):
     if bets is None or bets.empty or "pick" not in bets:
         return 0
@@ -22,7 +36,7 @@ def log_picks(bets, season, week, pulled_at):
         return 0
     new = new.assign(season=season, week=week, pulled_at=pulled_at, side=new.pick,
                      odds=np.where(new.pick == "Over", new.over_odds, new.under_odds))
-    cols = KEY + ["player_id", "team", "opp", "group", "odds", "proj", "proj_model", "mkt_line", "model_over", "market_over", "ev", "why", "p_claim", "segment", "segment_adj",
+    cols = KEY + ["player_id", "team", "opp", "group", "odds", "proj", "proj_model", "mkt_line", "model_over", "market_over", "ev", "why", "p_claim", "segment", "segment_adj", "stake",
                   "lock", "grade", "consistency", "cons_hits", "cons_n", "payout", "uncertain", "new_role", "reduced_role", "absence", "new_team",
                   "in_role_games", "lock_block", "lock_eligible", "press_pg", "fp_comb", "fp_solo", "fp_rel", "event_id", "commence_time", "pulled_at"]
     new = new[[c for c in cols if c in new.columns]]
