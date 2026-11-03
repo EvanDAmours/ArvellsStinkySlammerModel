@@ -39,6 +39,7 @@ jobs:
       - run: |
           if [ -n "${{ github.event.inputs.hours }}" ]; then python run.py odds --hours "${{ github.event.inputs.hours }}"; else python run.py odds --auto; fi
       - name: Seal the site behind the shared password (without a password secret the site stays open)
+        id: seal
         env:
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
           SITE_PASSWORDS: ${{ secrets.SITE_PASSWORDS }}
@@ -49,6 +50,9 @@ jobs:
         run: |
           git config user.name "tackle-bot"
           git config user.email "tackle-bot@users.noreply.github.com"
+          if [ "${{ steps.seal.outcome }}" = "failure" ]; then
+            echo "sealing failed: the site files are not published unsealed"; git checkout -- docs/data && git clean -fdq docs/data
+          fi
           git add data docs/data
           # A pull that found lines also makes sure the daily schedule is still switched on (see keepalive.yml).
           git diff --cached --quiet || { git commit -m "Lines $(date -u +%Y-%m-%dT%H:%M)"; gh workflow enable daily.yml || true; }

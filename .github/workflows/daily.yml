@@ -26,6 +26,7 @@ jobs:
           SITE_PASSWORDS: ${{ secrets.SITE_PASSWORDS }}
         run: python run.py daily
       - name: Seal the site behind the shared password (without a password secret the site stays open)
+        id: seal
         if: steps.run.outcome == 'success'
         env:
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
@@ -39,6 +40,9 @@ jobs:
         run: |
           git config user.name "tackle-bot"
           git config user.email "tackle-bot@users.noreply.github.com"
+          if [ "${{ steps.seal.outcome }}" = "failure" ]; then
+            echo "sealing failed: the site files are not published unsealed"; git checkout -- docs/data && git clean -fdq docs/data
+          fi
           if [ "${{ steps.run.outcome }}" != "success" ]; then
             git checkout -- data docs/data && git clean -fdq data docs/data
           fi

@@ -1080,6 +1080,13 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, night MDT (seal: the runner lacked the crypto library; unsealed files never published again)
+- The first sealed run failed: `cryptography` was installed on this machine but not in `requirements.txt`, so the
+  runner could not seal and the save step published the plain files anyway. Fixed both: the library is a
+  requirement, and when the seal step fails the save step restores the site files instead of committing them
+  unsealed. Pitfall: a library used by the pipeline must be in requirements.txt; "works here" is not "works on the
+  runner". Pitfall: a step that protects published output must stop the publish when it fails.
+
 ### 2026-11-02, night MDT (workflow YAML broken by the seal step name; fixed)
 - The seal step's name held a colon, which broke both workflow files; GitHub answered "workflow does not have a
   workflow_dispatch trigger" and the scheduled pulls stopped for about three hours. Renamed; the smoke test now
@@ -1719,6 +1726,8 @@ Open, with what would justify them:
 ## Known pitfalls
 
 - Codespaces secrets are invisible to Actions. Only Actions secrets work.
+- A library the pipeline imports must be in requirements.txt; the runner installs only that file (the seal step
+  failed on `cryptography`, 2026-11-02). A step that protects published output must stop the publish when it fails.
 - A colon inside a workflow step name breaks the YAML, and GitHub then reports the workflow as having no triggers:
   every schedule and manual run stops without an error anywhere visible. The smoke test now parses every workflow
   file (found 2026-11-02 after the seal step was added; about three hours of pulls lost).
