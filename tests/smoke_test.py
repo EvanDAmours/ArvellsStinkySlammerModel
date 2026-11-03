@@ -87,6 +87,8 @@ check(any("role-shift" in r["predictor"] for r in bt["predictors"]) and isinstan
 check(all(any(k in r["predictor"] for r in bt["predictors"]) for k in ("per-snap base", "vacancy rule", "dome corners", "outlier damping")), "backtest reports the per-snap, vacancy, dome and outlier-damping pieces")
 check(any(p.get("group") == "DL" and p.get("press_pg") is not None for p in proj) and all(p.get("press_pg") is None for p in proj if p.get("group") != "DL")
       and not any("pressure" in r["predictor"] for r in bt["predictors"]), "lineman pressure profile carried for the card, DL only, with no model row (rejected in round 5)")
+_pl = json.loads((tmp / "docs/data/patchlog.json").read_text())
+check(len(_pl) >= 20 and {"change", "research", "post-mortem"} <= {e["kind"] for e in _pl} and all(e["title"] and "body" in e for e in _pl) and _pl == sorted(_pl, key=lambda e: e["date"], reverse=True), f"patch log built from the model log ({len(_pl)} entries, newest first)")
 check(all("fp_comb" in p and "fp_rel_comb" in p for p in proj) and meta.get("fantasypros_rows") == 0 and "espn_injury_rows" in meta, "outside consensus and outside injury feed wired through (empty on synthetic data)")
 sys.path.insert(0, str(tmp))
 from pipeline import sources as _S

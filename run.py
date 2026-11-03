@@ -20,6 +20,7 @@ import pandas as pd
 import config as C
 from pipeline import backtest as B
 from pipeline import seal as SEAL
+from pipeline import patchlog as PATCH
 from pipeline import grade as G
 from pipeline import model as M
 from pipeline import odds as O
@@ -435,6 +436,10 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
     _json(SITE / "projections.json", records(P, [c for c in cols if c in P.columns]) if len(P) else [])
     _json(SITE / "bets.json", records(bets))
     _json(SITE / "backtest.json", bt)
+    try:
+        _json(SITE / "patchlog.json", PATCH.build("MODEL_LOG.md"))     # every calibration, evaluation and change, from the log
+    except Exception as e:  # noqa: BLE001
+        print(f"patch log skipped ({type(e).__name__}: {e})")
     retro = Path("data/retro_five.json")
     _json(SITE / "results.json", dict(summary=summary, picks=records(graded), parlays=records(parlays) if parlays is not None and len(parlays) else [],
                                       retro=json.loads(retro.read_text()) if retro.exists() else None))

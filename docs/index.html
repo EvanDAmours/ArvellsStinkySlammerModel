@@ -94,6 +94,13 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 .ph .res b { display: block; font: 700 1.3rem/1 var(--cond); } .ph .res span { font-size: 0.8rem; color: var(--muted); }
 .ph[open] > summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
 .ph .parlay-box { border-top-left-radius: 0; border-top-right-radius: 0; margin-top: -1px; }
+.patch-e > summary { grid-template-columns: 1fr; } .patch-e.res > summary { border-left-color: #2c5aa0; }
+.patch-e .kind { font: 700 0.72rem var(--cond); padding: 2px 7px; border-radius: 999px; background: #8a8f98; color: #fff; margin-right: 6px; vertical-align: middle; }
+.patch-e .kind.change { background: #1f8a4c; } .patch-e .kind.research { background: #2c5aa0; } .patch-e .kind.post-mortem { background: #c98a1b; }
+.patch-body { background: var(--panel); border: 1px solid var(--line); border-top: none; border-radius: 0 0 8px 8px; padding: 10px 14px; font-size: 0.92rem; line-height: 1.5; }
+.md p { margin: 6px 0; max-width: 90ch; } .md ul, .md ol { margin: 6px 0 6px 20px; padding: 0; } .md li { margin: 3px 0; max-width: 88ch; } .md h4 { margin: 10px 0 4px; font: 700 1rem var(--cond); }
+.md table { font-size: 0.86rem; } .md td, .md th { white-space: normal; } .md code { font-size: 0.85em; background: var(--bg, #eef0f3); padding: 1px 4px; border-radius: 4px; }
+.rec-filters .reset.on { background: var(--ink); color: var(--panel); border-color: var(--ink); }
 .lead { color: var(--muted); font-size: 0.9rem; max-width: 80ch; margin: 0 0 10px; }
 .more { margin: 8px 0 0; font-size: 0.9rem; color: var(--muted); max-width: 80ch; } .more summary { cursor: pointer; color: var(--ink); font-weight: 600; } .more p { margin: 6px 0; }
 .indent { padding-left: 18px; } small.muted { color: var(--muted); font-weight: 400; }
@@ -179,6 +186,7 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
     <button role="tab" data-tab="record" aria-selected="false">Track record</button>
     <button role="tab" data-tab="check" aria-selected="false">Model check</button>
     <button role="tab" data-tab="mine" aria-selected="false">My board</button>
+    <button role="tab" data-tab="patch" aria-selected="false">Patch log</button>
   </nav>
 
   <section id="plays">
@@ -214,6 +222,10 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
 
   <section id="mine" hidden>
     <div id="mine-body"></div>
+  </section>
+
+  <section id="patch" hidden>
+    <div id="patch-body"></div>
   </section>
 </div>
 
@@ -1096,21 +1108,87 @@ function addPicker() {
   return wrap;
 }
 
+// ---------------------------------------------------------------- Patch log: every calibration, evaluation and change, from the model log
+const PATCH_F = { kind: "", q: "" };
+function mdInline(t) {
+  const frag = document.createDocumentFragment(); let rest = String(t);
+  const re = /(\*\*[^*]+\*\*|`[^`]+`)/g; let m, last = 0;
+  while ((m = re.exec(rest))) { if (m.index > last) frag.append(rest.slice(last, m.index)); const x = m[0]; frag.append(x.startsWith("`") ? el("code", {}, x.slice(1, -1)) : el("b", {}, x.slice(2, -2))); last = m.index + x.length; }
+  if (last < rest.length) frag.append(rest.slice(last));
+  return frag;
+}
+function mdBlock(text) {
+  // paragraphs, bullet lists (with wrapped continuation lines), numbered lists, markdown tables, sub-headings
+  const out = el("div", { class: "md" }); const lines = String(text || "").split("\n"); let i = 0;
+  const flushPara = (buf) => { if (buf.length) out.append(el("p", {}, mdInline(buf.join(" ")))); };
+  let para = [];
+  while (i < lines.length) {
+    const ln = lines[i];
+    if (!ln.trim()) { flushPara(para); para = []; i++; continue; }
+    if (/^#{3,4} /.test(ln)) { flushPara(para); para = []; out.append(el("h4", {}, ln.replace(/^#+ /, ""))); i++; continue; }
+    if (/^\|/.test(ln)) {
+      flushPara(para); para = []; const rows = [];
+      while (i < lines.length && /^\|/.test(lines[i])) { if (!/^\|\s*-/.test(lines[i])) rows.push(lines[i].replace(/^\||\|$/g, "").split("|").map((c) => c.trim())); i++; }
+      const t = el("table", {}, el("thead", {}, el("tr", {}, ...rows[0].map((c) => el("th", {}, mdInline(c))))), el("tbody", {}, ...rows.slice(1).map((r) => el("tr", {}, ...r.map((c) => el("td", {}, mdInline(c)))))));
+      out.append(el("div", { class: "scroll" }, t)); continue;
+    }
+    if (/^\s*([-*]|\d+\.) /.test(ln)) {
+      flushPara(para); para = []; const ordered = /^\s*\d+\. /.test(ln); const list = el(ordered ? "ol" : "ul"); let item = null;
+      while (i < lines.length && lines[i].trim()) {
+        const l = lines[i];
+        if (/^\s*([-*]|\d+\.) /.test(l)) { item = el("li", {}, mdInline(l.replace(/^\s*([-*]|\d+\.) /, ""))); list.append(item); }
+        else if (item) item.append(" ", mdInline(l.trim()));
+        i++;
+      }
+      out.append(list); continue;
+    }
+    para.push(ln.trim()); i++;
+  }
+  flushPara(para);
+  return out;
+}
+function renderPatch() {
+  const box = $("#patch-body"); if (!box) return; box.replaceChildren();
+  const all = DATA.patch || [];
+  if (!all.length) { box.append(el("div", { class: "empty" }, "The patch log is written by the daily job from MODEL_LOG.md; nothing published yet.")); return; }
+  const KIND = { change: ["Change", "A change to the model, pricing, schedule or site, with its evidence and revert condition"], research: ["Research", "A research round, audit or question answered with data: what was investigated and what was found"], "post-mortem": ["Post-mortem", "A graded slate reviewed: record, calibration, luck or skill, misses, what changed"] };
+  box.append(el("p", { class: "lead" }, "Every calibration, evaluation and change, newest first, read from the model log at each daily run. Changes carry their evidence and the condition that would reverse them; research entries say what was investigated and what was found, adopted or not; post-mortems review each graded slate."));
+  const bar = el("div", { class: "rec-filters" });
+  const counts = Object.fromEntries(Object.keys(KIND).map((k) => [k, all.filter((e) => e.kind === k).length]));
+  for (const [k, label] of [["", `All (${all.length})`], ...Object.entries(KIND).map(([k, v]) => [k, `${v[0]} (${counts[k]})`])]) {
+    const b = el("button", { type: "button", class: "reset" + (PATCH_F.kind === k ? " on" : ""), title: k ? KIND[k][1] : "" }, label); b.onclick = () => { PATCH_F.kind = k; renderPatch(); }; bar.append(b);
+  }
+  const q = el("input", { type: "search", placeholder: "Search the log", value: PATCH_F.q, "aria-label": "Search the patch log" }); q.addEventListener("input", () => { PATCH_F.q = q.value; renderPatch(); }); bar.append(q);
+  box.append(bar);
+  const t = PATCH_F.q.trim().toLowerCase();
+  const rows = all.filter((e) => (!PATCH_F.kind || e.kind === PATCH_F.kind) && (!t || `${e.title} ${e.when} ${e.body}`.toLowerCase().includes(t)));
+  box.append(el("div", { class: "count" }, `${rows.length} of ${all.length} entries`));
+  let lastDate = "";
+  for (const e of rows) {
+    if (e.date !== lastDate) { box.append(el("h3", { class: "mine-h" }, e.date || "undated")); lastDate = e.date; }
+    const d = el("details", { class: "ph patch-e" + (e.kind === "change" ? " win" : e.kind === "research" ? " res" : "") },
+      el("summary", {}, el("div", { class: "t" }, el("span", { class: `kind ${e.kind}` }, KIND[e.kind]?.[0] || e.kind), " ", e.title, el("small", {}, e.kind === "change" ? e.when : "")), el("div", { class: "legs-line" }, String(e.body).replace(/[#*`|]/g, " ").replace(/\s+/g, " ").slice(0, 160) + (e.body.length > 160 ? "…" : ""))),
+      el("div", { class: "patch-body" }, mdBlock(e.body)));
+    if (t) d.open = true;
+    box.append(d);
+  }
+}
+
 function show(id) {
-  for (const s of ["plays", "proj", "record", "check", "mine"]) { $("#" + s).hidden = s !== id; }
+  for (const s of ["plays", "proj", "record", "check", "mine", "patch"]) { $("#" + s).hidden = s !== id; }
   if (id === "mine") renderMine();
   document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === id)));
   history.replaceState(null, "", "#" + id);
 }
 
 (async () => {
-  [DATA.meta, DATA.bets, DATA.proj, DATA.results, DATA.backtest, DATA.parlays, DATA.week_lines] = await Promise.all(["meta", "bets", "projections", "results", "backtest", "parlays", "lines_week"].map(load));
-  renderMeta(); renderPlays(); renderDaybar(); renderProj(); renderRecord(); renderCheck();
+  [DATA.meta, DATA.bets, DATA.proj, DATA.results, DATA.backtest, DATA.parlays, DATA.week_lines, DATA.patch] = await Promise.all(["meta", "bets", "projections", "results", "backtest", "parlays", "lines_week", "patchlog"].map(load));
+  renderMeta(); renderPlays(); renderDaybar(); renderProj(); renderRecord(); renderCheck(); renderPatch();
   ["#picks-only", "#market", "#best-only", "#slate", "#pos", "#side", "#sort", "#book"].forEach((s) => $(s).addEventListener("change", renderPlays));
   $("#q").addEventListener("input", renderProj);
   $("#proj-slate").addEventListener("change", renderProj);
   document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => show(b.dataset.tab)));
-  const h = location.hash.slice(1); if (["plays", "proj", "record", "check", "mine"].includes(h)) show(h);
+  const h = location.hash.slice(1); if (["plays", "proj", "record", "check", "mine", "patch"].includes(h)) show(h);
   renderMine(); liveLoop();
 })();
 </script>

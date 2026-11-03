@@ -1080,6 +1080,15 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, late night MDT (Patch log tab)
+- Owner asked for a place to see, every time a calibration or evaluation happens, what was investigated and what
+  was found. `pipeline/patchlog.py` reads this file at each daily run into `docs/data/patchlog.json`: every
+  research and analysis section (what was investigated, found, adopted or rejected), every weekly post-mortem,
+  and every changelog entry with its evidence and revert condition; newest first, grouped by date. The site has
+  a "Patch log" tab with filters by kind, a search, and each entry opening to the full text (lists, tables and
+  emphasis rendered). This log stays the record; the tab is a view of it, so the standing post-mortem's entries
+  appear there the morning they are written. Sealed with the rest of the site. Smoke check.
+
 ### 2026-11-02, night MDT (site sealed live; the post-mortem is now a standing scheduled task)
 - The owner set `SITE_PASSWORDS`; the daily job sealed the site at 8:50 pm and the live site serves only the
   sealed files (plain `meta.json` answers 404, `meta.json.enc` 200). The first attempt had failed on the missing
