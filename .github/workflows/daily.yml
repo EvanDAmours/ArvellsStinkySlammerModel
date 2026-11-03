@@ -25,7 +25,7 @@ jobs:
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
           SITE_PASSWORDS: ${{ secrets.SITE_PASSWORDS }}
         run: python run.py daily
-      - name: Seal the site behind the shared password (no SITE_PASSWORD secret: the site stays open)
+      - name: Seal the site behind the shared password (without a password secret the site stays open)
         if: steps.run.outcome == 'success'
         env:
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}

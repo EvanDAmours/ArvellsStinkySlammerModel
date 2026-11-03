@@ -38,7 +38,7 @@ jobs:
       - run: pip install -r requirements.txt
       - run: |
           if [ -n "${{ github.event.inputs.hours }}" ]; then python run.py odds --hours "${{ github.event.inputs.hours }}"; else python run.py odds --auto; fi
-      - name: Seal the site behind the shared password (no SITE_PASSWORD secret: the site stays open)
+      - name: Seal the site behind the shared password (without a password secret the site stays open)
         env:
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
           SITE_PASSWORDS: ${{ secrets.SITE_PASSWORDS }}

@@ -193,6 +193,15 @@ log = (tmp / "data/weekly_five.md").read_text()
 check(isinstance(summary.get("luck"), list) and all({"hit", "market_base", "lift", "verdict"} <= set(r) for r in summary["luck"]) and "Luck or skill" in (tmp / "data/weekly_five.md").read_text(), f"luck check computed against the whole market ({len(summary.get('luck') or [])} rows) and written to the weekly log")
 check("Locks record: 1-1" in log and "| 2026 wk 6 | 2 | 1-1 |" in log and "Parlays record: 1-0" in log, "locks and parlays log written with records, week line and parlay line")
 
+# every workflow file must parse: a colon in a step name silently removed every trigger on 2026-11-02 (pulls stopped)
+import yaml as _yaml
+for _wf in sorted((ROOT / ".github/workflows").glob("*.yml")):
+    try:
+        _d = _yaml.safe_load(_wf.read_text()); _ok = bool(_d.get(True) or _d.get("on"))
+    except Exception:  # noqa: BLE001
+        _ok = False
+    check(_ok, f"workflow {_wf.name} is valid YAML with its triggers")
+
 # the gate: sealing the site behind a password, and a pull that still reads the sealed meta
 _r = subprocess.run([sys.executable, "run.py", "seal"], cwd=tmp, env=dict(env, SITE_PASSWORD="smoke-pw", SITE_PASSWORDS="evan: second-pw\n# a comment\nfriend: third-pw"), capture_output=True, text=True)
 _enc = sorted(p.name for p in (tmp / "docs/data").glob("*.json.enc")); _plain = sorted(p.name for p in (tmp / "docs/data").glob("*.json"))

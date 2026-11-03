@@ -1080,6 +1080,11 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, night MDT (workflow YAML broken by the seal step name; fixed)
+- The seal step's name held a colon, which broke both workflow files; GitHub answered "workflow does not have a
+  workflow_dispatch trigger" and the scheduled pulls stopped for about three hours. Renamed; the smoke test now
+  parses every workflow file. Pitfall recorded.
+
 ### 2026-11-02, late evening MDT (several passwords)
 - Owner asked what it would take to have more than one password. The sealed files now carry one random data key
   wrapped once per password (`SITE_PASSWORDS`, one `name: password` per line; `SITE_PASSWORD` still works);
@@ -1714,6 +1719,9 @@ Open, with what would justify them:
 ## Known pitfalls
 
 - Codespaces secrets are invisible to Actions. Only Actions secrets work.
+- A colon inside a workflow step name breaks the YAML, and GitHub then reports the workflow as having no triggers:
+  every schedule and manual run stops without an error anywhere visible. The smoke test now parses every workflow
+  file (found 2026-11-02 after the seal step was added; about three hours of pulls lost).
 - A pick or parlay handed to the owner must come from the pricer's output (claimed chance, return, pick), never
   from the raw model chance: the segment correction and the bars are the difference between a play and a pass.
 - Two feeds that both print a player's name do not print the same name (PFR "Cameron Lewis", league "Cam Lewis").
