@@ -739,7 +739,7 @@ function recFilterBar(picks) {
   const weeks = uniq((p) => p.week).sort((a, b) => b - a);
   const bar = el("div", { class: "rec-filters" },
     sel("week", "Week", [["", "All"], ...weeks.map((w) => [w, `Week ${w}`])]),
-    sel("grade", "Grade", [["", "All"], ["A", "A"], ["B", "B"], ["C", "C"], ["none", "No grade"]]),
+    sel("grade", "Grade", [["", "All"], ["A", "A"], ["B", "B"], ["C", "C"], ["AB", "A + B"], ["BC", "B + C"], ["none", "No grade"]]),
     sel("side", "Side", [["", "Both"], ["Over", "Overs"], ["Under", "Unders"]]),
     sel("market", "Market", [["", "Both"], ["player_tackles_assists", "Tackles + assists"], ["player_solo_tackles", "Solo tackles"]]),
     sel("pos", "Position", [["", "All"], ["LB", "Linebackers"], ["S", "Safeties"], ["CB", "Corners"], ["DL", "Defensive line"]]),
@@ -757,7 +757,8 @@ function recFilterBar(picks) {
 }
 function recFiltered() {
   const r = DATA.results || {}, q = REC_F.q.trim().toLowerCase();
-  return (r.picks || []).filter((p) => (!REC_F.week || String(p.week) === String(REC_F.week)) && (!REC_F.grade || (REC_F.grade === "none" ? !p.grade : p.grade === REC_F.grade))
+  const gradeOk = (p) => !REC_F.grade || (REC_F.grade === "none" ? !p.grade : REC_F.grade.length > 1 ? REC_F.grade.includes(p.grade || "") && !!p.grade : p.grade === REC_F.grade);
+  return (r.picks || []).filter((p) => (!REC_F.week || String(p.week) === String(REC_F.week)) && gradeOk(p)
     && (!REC_F.side || p.side === REC_F.side) && (!REC_F.market || p.market === REC_F.market) && (!REC_F.pos || posOf(p) === REC_F.pos)
     && (!REC_F.result || p.result === REC_F.result) && (!REC_F.book || p.book === REC_F.book) && (!REC_F.locks || p.five)
     && (!q || `${p.player} ${p.team || ""} ${p.opp || ""}`.toLowerCase().includes(q)));
@@ -784,7 +785,7 @@ function renderRecPicks() {
       pending ? el("div", {}, el("b", {}, String(pending)), "Pending") : ""),
     (() => {
       const chip = (label, sub) => { const sw = sub.filter((p) => p.result === "Win").length, sl = sub.filter((p) => p.result === "Loss").length; return sw + sl ? el("span", {}, `${label} `, el("b", {}, `${sw}-${sl}`), ` (${pct(sw / (sw + sl))})`) : ""; };
-      return el("div", { class: "chips" }, ...["A", "B", "C"].map((x) => chip(x, g.filter((p) => p.grade === x))), chip("Overs", g.filter((p) => p.side === "Over")), chip("Unders", g.filter((p) => p.side === "Under")),
+      return el("div", { class: "chips" }, ...["A", "B", "C"].map((x) => chip(x, g.filter((p) => p.grade === x))), chip("A+B", g.filter((p) => p.grade === "A" || p.grade === "B")), chip("Overs", g.filter((p) => p.side === "Over")), chip("Unders", g.filter((p) => p.side === "Under")),
         ...["LB", "S", "CB", "DL"].map((x) => chip(x, g.filter((p) => posOf(p) === x))));
     })());
   const [, key, dir] = REC_SORTS[REC_F.sort] || REC_SORTS.week;
