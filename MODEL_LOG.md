@@ -1080,6 +1080,18 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, evening MDT (a lock needs an A)
+- Owner, after asking whether Monday's lone lock (Thieneman Under 4.5 solo, score 61, grade B) was a true lock or
+  just the best of a thin night: "locks should only be a lock if the model strongly believes it will happen, not
+  just because the model sees that as the only viable pick." `LOCK_MIN_SCORE` is now the A bar (72) instead of the
+  B bar (55); the slate caps (3 and 5) are maxima, and a slate with no A has no lock. Live evidence: locks scored
+  72 or better went 5-1, locks at 55-72 went 2-1 on three picks; A grades 16-2 against B 55-42. Site: the locks box
+  and the Track record lead say so; an empty slate reads "Locks · none" with the reason. Smoke test.
+- Also recorded: the two-leg parlays suggested by hand on 2026-11-02 ranked legs by the model's raw chance, not the
+  segment-corrected claim the board uses; Thieneman Under 6.5 combined was a pass on the board (claimed 48%) while
+  the hand ranking had it at 58%. Pitfall: any pick or parlay handed to the owner must come from `price_lines`
+  output (p_claim, ev, pick), never from model_over alone.
+
 ### 2026-11-02, 10:20 am MDT (one-tap parlay links)
 - The 9 am pull carried links for every DraftKings outcome (`https://sportsbook.draftkings.com/?outcomes=<id>`);
   several ids join with "+" in one query, which the owner's slip on Sunday night confirmed loads as one parlay.
@@ -1681,6 +1693,8 @@ Open, with what would justify them:
 ## Known pitfalls
 
 - Codespaces secrets are invisible to Actions. Only Actions secrets work.
+- A pick or parlay handed to the owner must come from the pricer's output (claimed chance, return, pick), never
+  from the raw model chance: the segment correction and the bars are the difference between a play and a pass.
 - Two feeds that both print a player's name do not print the same name (PFR "Cameron Lewis", league "Cam Lewis").
   Join by id wherever one exists; a name join silently drops the player and the model prices him blind.
 - A game's plays faced cannot be forecast beyond the spread (correlation 0.15, residual 7.7 plays on 50). It is the

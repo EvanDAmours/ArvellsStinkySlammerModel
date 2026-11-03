@@ -122,12 +122,14 @@ check(picks.drop_duplicates(["player", "market", "side", "line"]).shape[0] == le
 check({"lock", "grade", "consistency", "payout"} <= set(picks.columns) and picks.grade.isin(["A", "B", "C"]).all(), "logged picks carry their grade, lock score, consistency and payout")
 five = picks[picks.five.fillna(False).astype(bool)] if "five" in picks.columns else pd.DataFrame()
 flagged = G.lock_blocked(picks)               # never locks, whatever their score
-others = picks[~picks.player.isin(five.player) & ~flagged] if len(five) else picks
+others = picks[~picks.player.isin(five.player) & ~flagged] if len(five) else picks[~flagged]
 _segs = G.segment_key(five) if len(five) else pd.Series([], dtype=str)
 _full = {k for k, v in _segs.value_counts().items() if v >= C.LOCKS_PER_SEGMENT}
 _better = others[(others.lock > five.lock.min() + 1e-9) & ~G.segment_key(others).isin(_full)] if len(five) and len(others) else others.iloc[0:0]
-check(1 <= len(five) <= 5 and five.player.nunique() == len(five) and _better.empty and (_segs.value_counts() <= C.LOCKS_PER_SEGMENT).all(),
-      f"weekly five flagged: top lock scores, one per player, at most {C.LOCKS_PER_SEGMENT} of a kind ({len(five)}; kinds {dict(_segs.value_counts())})")
+_strong = others[(others.lock >= C.LOCK_MIN_SCORE) & ~G.segment_key(others).isin(_full)] if len(others) else others.iloc[0:0]
+check(len(five) <= 5 and five.player.nunique() == len(five) and _better.empty and (_segs.value_counts() <= C.LOCKS_PER_SEGMENT).all()
+      and (five.lock >= C.LOCK_MIN_SCORE).all() and (len(five) > 0 or _strong.empty),
+      f"locks: only A-grade picks (score {C.LOCK_MIN_SCORE}+), top scores, one per player, at most {C.LOCKS_PER_SEGMENT} of a kind, none when no pick is strong ({len(five)}; kinds {dict(_segs.value_counts())})")
 check(sum(1 for b in bets if b.get("five")) == len(five), "locks marked on the board")
 parlays = pd.read_csv(tmp / "data/parlays.csv") if (tmp / "data/parlays.csv").exists() else pd.DataFrame()
 check(len(parlays) >= 2 and parlays.parlay_id.nunique() >= 1 and parlays.groupby("parlay_id").size().between(2, 4).all(), f"recommended parlay built ({parlays.parlay_id.nunique() if len(parlays) else 0} parlay, {len(parlays)} legs)")

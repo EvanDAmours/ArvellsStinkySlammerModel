@@ -141,8 +141,10 @@ GRADE_UNITS = dict(A=1.0, B=0.5, C=0.25)   # suggested stake per grade, in units
 CLV_BARS = dict(decent=0.52, good=0.56, great=0.60)
 
 # --- locks per slate day (Edmonton time) and the recommended parlay ---
-LOCKS_PER_SLATE = dict(single=3, multi=5)   # one game kicking off that day -> 3 locks; more games -> 5
-LOCK_MIN_SCORE = 55                         # a pick needs at least a B to be a lock; fewer locks beats fake ones
+LOCKS_PER_SLATE = dict(single=3, multi=5)   # at most this many locks: 3 on a one-game day, 5 on a multi-game day
+# A lock is a pick the model strongly believes in, never "the best of a thin board" (owner, 2026-11-02). It needs an
+# A-grade score; a slate with no A has no lock. Live: locks at 72+ went 5-1, locks at 55-72 went 2-1 on three picks.
+LOCK_MIN_SCORE = GRADE_BARS["A"]
 PARLAY_LEGS = (2, 3)                        # fewest and most legs in the recommended parlay (fewer legs = better chance of hitting)
 PARLAY_MARKETS = ("player_tackles_assists",)  # combined tackles only: the books refuse solo-tackle legs in a same-game parlay (owner, 2026-11-02)
 PARLAY_MIN_PROB = 0.56                      # a leg needs at least this claimed (shrunk) chance of hitting: 0.60 before the claim shrink

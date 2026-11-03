@@ -322,12 +322,12 @@ function renderPlays() {
       const f = DATA.results?.summary?.five, g = DATA.meta?.grading?.locks || { single: 3, multi: 5 };
       const tally = f && f.bets ? ` · season ${f.wins}-${f.losses}${f.pushes ? "-" + f.pushes : ""}${f.hit == null ? "" : ` (${pct(f.hit)})`}` : "";
       const days = [...new Set(five.map((b) => slateName(slateDate(b))))].join(", ");
-      const fb = el("div", { class: "five-box" }, el("h3", {}, `Locks${days ? ` · ${days}` : ""}${tally}`), el("p", { class: "note" }, `The most confident picks of each slate day on the model's own evidence: ${g.single} on a one-game day, ${g.multi} on a multi-game day, at most two of a kind. Re-chosen at every line pull until kickoff. Open "Why this is a lock" on each.`));
+      const fb = el("div", { class: "five-box" }, el("h3", {}, `Locks${days ? ` · ${days}` : ""}${tally}`), el("p", { class: "note" }, `Picks the model strongly believes in: an A-grade score (${DATA.meta?.grading?.lock_min ?? 72} or better) on its own evidence, at most ${g.single} on a one-game day and ${g.multi} on a multi-game day, at most two of a kind. A thin board gets no lock rather than its best pick. Re-chosen at every line pull until kickoff. Open "Why this is a lock" on each.`));
       five.sort((a, b) => (b.lock ?? 0) - (a.lock ?? 0)).forEach((b) => fb.append(card(b, true)));
       box.append(fb);
     } else if (all.some((b) => b.pick === "Over" || b.pick === "Under")) {
-      const g = DATA.meta?.grading?.bars || { B: 55 };
-      box.append(el("div", { class: "five-box" }, el("h3", {}, "Locks"), el("p", { class: "note" }, `No lock-eligible pick scores ${g.B} or better yet. Locks are re-chosen at every line pull until kickoff.`)));
+      const lm = DATA.meta?.grading?.lock_min ?? 72;
+      box.append(el("div", { class: "five-box" }, el("h3", {}, "Locks · none"), el("p", { class: "note" }, `No lock-eligible pick scores ${lm} (an A) yet, so there is no lock: a lock is a pick the model strongly believes in, not the best of a thin board. Re-chosen at every line pull until kickoff.`)));
     }
     // only open parlays belong on the board; a settled one lives on the Track record tab
     const over = (q) => q.finished || (q.first_kickoff && Date.now() > new Date(q.first_kickoff).getTime() + 4.5 * 3600 * 1000);
@@ -548,7 +548,7 @@ function renderRecord() {
   // 3. locks
   if (s.five && (s.five.bets || (s.five.weeks && s.five.weeks.length))) {
     const fp = r.picks.filter((p) => p.five);
-    const sec = section("Locks", "The most confident picks of each slate day, chosen on the model's own evidence. Target: 70% over the season.",
+    const sec = section("Locks", "A-grade picks only (lock score 72 or better), at most three on a one-game day and five on a multi-game day; a thin slate gets none. Target: 70% over the season.",
       el("div", { class: "stat-line" },
         el("div", {}, wl(s.five.wins, s.five.losses, s.five.pushes), "Record"),
         el("div", {}, el("b", { class: s.five.hit == null ? "" : s.five.hit >= 0.7 ? "pos" : "neg" }, s.five.hit == null ? "" : pct(s.five.hit)), "Hit rate"),
