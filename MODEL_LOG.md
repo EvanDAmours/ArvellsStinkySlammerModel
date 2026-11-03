@@ -1082,7 +1082,7 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ### 2026-11-03, early morning MDT (Track record: A + B and B + C grade filters)
 - Owner asked to review the record of A and B picks together. The grade filter on "Every pick" has "A + B" and
-  "B + C", and the chips under the totals carry an A+B record. Site only.
+  "B + C", and the chips under the totals carry an A+B record and a Locks record for the slice. Site only.
 
 ### 2026-11-02, late night MDT (My board: no bet stays pending once its game is graded)
 - Owner: bets showed pending after every game was done. Two causes. Bets stored before weeks were recorded on them
