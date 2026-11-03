@@ -1080,6 +1080,15 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-02, late night MDT (My board: no bet stays pending once its game is graded)
+- Owner: bets showed pending after every game was done. Two causes. Bets stored before weeks were recorded on them
+  had no week, so the official grade could not be matched; the ledger now writes the week from the storage key,
+  and the board uses the current week. And only the model's own picks had an official grade (the grader's rows);
+  a bet added from the picker had to wait for the live feed, which forgets a game once the week rolls. The daily
+  run now publishes `actuals.json`, the official box score (tackles and solo) for every defender-game this season,
+  and the board and ledger grade any bet from it. Smoke check. Picks on the Track record tab still read
+  "Pending" until the 4:15 am daily job grades them; that is the grader, not the board.
+
 ### 2026-11-02, late night MDT (clearing the board keeps the ledger)
 - Owner: clearing the board must not clear the season ledger. "Clear this week's board" now marks the bets
   archived: they leave the live board and stay in the ledger with their stakes and results; adding one of them

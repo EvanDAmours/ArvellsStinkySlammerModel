@@ -1052,7 +1052,7 @@ function renderMine() {
     let result = null;
     // a final result is written on the bet once, so the ledger keeps it after the week closes: the official grade when
     // the grader has one, the live box score otherwise
-    const off = officialGrade(b);
+    const off = officialGrade(b, DATA.meta?.week);
     if (off) { if (!b.settled || b.settled.source !== "official") { b.settled = { ...off, source: "official" }; changed = true; } if (g && g.state !== "post") status = `Final · ${off.result}`; cls = off.result === "Win" ? " good done" : off.result === "Loss" ? " bad done" : " done"; if (!status.startsWith("Final")) status = `Final · ${off.result}`; }
     else if (status.startsWith("Final") && have != null && !b.settled) { b.settled = { result: status.includes("Win") ? "Win" : status.includes("Loss") ? "Loss" : "Push", actual: have, source: "live", at: new Date().toISOString() }; changed = true; }
     else if (!g && b.settled && b.settled.result) { status = `Final · ${b.settled.result}`; cls = b.settled.result === "Win" ? " good done" : b.settled.result === "Loss" ? " bad done" : " done"; }
@@ -1098,12 +1098,19 @@ function renderMine() {
 
 // ---------------------------------------------------------------- the ledger: every week's board, kept on this device, with backup and transfer
 const WEEK_RE = /^mine-(\d+)-wk(\d+)$/;
-function officialGrade(b) {
-  // the grader's result for this exact bet (player, market, side, line, week), from the Track record data
-  if (!b.week || !DATA.results?.picks) return null;
+function officialGrade(b, weekHint) {
+  // the official result for this bet: the grader's row for the model's own picks, else the box score published for
+  // every defender-game (actuals.json), so a bet added from the picker or stored before weeks were recorded grades too
+  const week = b.week || weekHint || null; if (!week) return null;
   const nk = normName(b.player);
-  const hit = DATA.results.picks.find((p) => p.week === b.week && normName(p.player) === nk && p.market === b.market && p.side === b.side && +p.line === +b.line && p.result && p.result !== "Pending");
-  return hit ? { result: hit.result, actual: hit.actual } : null;
+  const hit = (DATA.results?.picks || []).find((p) => p.week === week && normName(p.player) === nk && p.market === b.market && p.side === b.side && +p.line === +b.line && p.result && p.result !== "Pending");
+  if (hit) return { result: hit.result, actual: hit.actual };
+  const wk = DATA.actuals?.weeks?.[String(week)]; if (!wk) return null;
+  const row = wk[`${b.team}|${nk}`] || Object.entries(wk).find(([k]) => k.endsWith(`|${nk}`))?.[1];
+  if (!row) return null;
+  const actual = (b.market || "").includes("solo") ? row[1] : row[0];
+  const result = actual === +b.line ? "Push" : (b.side === "Under" ? actual < +b.line : actual > +b.line) ? "Win" : "Loss";
+  return { result, actual };
 }
 function allWeeks() {
   const out = [];
@@ -1137,7 +1144,7 @@ function ledgerSection() {
   const rows = weeks.map((wk) => {
     // older weeks settle from the grader's official results too, written on the bet once
     let dirty = false;
-    for (const b of wk.list) { if (!b.settled || b.settled.source !== "official") { const off = officialGrade(b); if (off) { b.settled = { ...off, source: "official" }; dirty = true; } } }
+    for (const b of wk.list) { if (!b.week) { b.week = wk.week; b.season = wk.season; dirty = true; } if (!b.settled || b.settled.source !== "official") { const off = officialGrade(b, wk.week); if (off) { b.settled = { ...off, source: "official" }; dirty = true; } } }
     if (dirty) { try { localStorage.setItem(wk.key, JSON.stringify(wk.list)); } catch (e) { /* fine */ } if (wk.key === MINE_KEY()) MINE = wk.list; }
     let w = 0, l = 0, p = 0, st = 0, pr = 0, pend = 0;
     for (const b of wk.list) { const m = betMoney(b); if (m.result === "Win") w++; else if (m.result === "Loss") l++; else if (m.result === "Push") p++; else pend++; if (m.stake != null && m.result) { st += m.stake; pr += m.profit; } }
@@ -1321,7 +1328,7 @@ function show(id) {
 }
 
 (async () => {
-  [DATA.meta, DATA.bets, DATA.proj, DATA.results, DATA.backtest, DATA.parlays, DATA.week_lines, DATA.patch] = await Promise.all(["meta", "bets", "projections", "results", "backtest", "parlays", "lines_week", "patchlog"].map(load));
+  [DATA.meta, DATA.bets, DATA.proj, DATA.results, DATA.backtest, DATA.parlays, DATA.week_lines, DATA.patch, DATA.actuals] = await Promise.all(["meta", "bets", "projections", "results", "backtest", "parlays", "lines_week", "patchlog", "actuals"].map(load));
   renderMeta(); renderPlays(); renderDaybar(); renderProj(); renderRecord(); renderCheck(); renderPatch();
   ["#picks-only", "#market", "#best-only", "#slate", "#pos", "#side", "#sort", "#book"].forEach((s) => $(s).addEventListener("change", renderPlays));
   $("#q").addEventListener("input", renderProj);

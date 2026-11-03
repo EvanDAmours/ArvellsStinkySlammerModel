@@ -292,7 +292,13 @@ def cmd_daily():
     games = week_games(sched, C.SEASON, week)
     json.dump(games, open(CACHE / "games.json", "w"), indent=1)
     status["international_games"] = [f"{g['away']} at {g['home']}, {g['edmonton']} Edmonton" for g in games if g["international"]]
-    graded, summary = G.grade(H[["season", "week", "team", "name_key", "group", "comb", "solo_t"]])   # H has zero-tackle games from snap counts, so "played, no tackles" is not "did not play"
+    graded, summary = G.grade(H[["season", "week", "team", "name_key", "group", "comb", "solo_t"]])
+    # the official box score for every defender-game this season, so the owner's own board can grade any bet (not only the model's picks)
+    hs = H[(H.season == C.SEASON) & H.comb.notna()]
+    actuals = {}
+    for r in hs.itertuples():
+        actuals.setdefault(str(int(r.week)), {})[f"{r.team}|{r.name_key}"] = [int(r.comb), int(r.solo_t)]
+    _json(SITE / "actuals.json", dict(season=C.SEASON, weeks=actuals))   # H has zero-tackle games from snap counts, so "played, no tackles" is not "did not play"
     parlays, psum = G.grade_parlays(pw)
     summary["parlays"] = psum
     G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)
