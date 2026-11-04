@@ -1092,6 +1092,50 @@ player's own rates); the between-opponent part is too small to price. Rejected.
 - The smoke test's temporary repository copies were never deleted; 140 of them sat in /tmp. It now removes its
   copy at exit (the old ones are left for the owner to clear).
 
+## Research round 10: four free questions (2026-11-04, early morning MDT, at the owner's request)
+
+All four answered from the week 7-8 snapshots and box scores; no credits, no model change. Script:
+`research/timing_books_roles_solo.py`.
+
+**Timing: the first posted line against the close.** Lines go up 13-19 hours before kickoff and only 11-13% of
+them ever move. The close is not a better number than the open: solo open vs close error 3.69 vs 3.61 (week 7)
+and 3.76 vs 3.83 (week 8); of the solo lines that moved, the close was closer to the box score 38% and 23% of
+the time. The solo bias is the same at both ends (-0.46 open, -0.48 close in week 7; -0.33 and -0.31 in week
+8): it is in the formula the line is built from, not in stale timing. Being first buys nothing here; being right
+about the formula is the whole edge. No change to the pull schedule.
+
+**Cross-book disagreement and middles.** Two books post the same player-market in 1,445 snapshots; they differ
+in 9.3%, always by a full point. No book runs systematically high or low (offsets of 0.07 points or less; DraftKings
+0.06 low on combined, theScore within 0.01). Middles at the close: 25 in two weeks, 15 combined (hit both sides
+0%, -0.31 units per middle) and 10 solo (40%, +0.18): nothing on a sample that small, and a middle a fortnight is
+not a strategy. When a line moves, the books move it within hours of each other; DraftKings moves first 95% of
+the time. Line shopping for price stays worth doing (it is on the board); line shopping for a slow book is not.
+
+**Role changes the book might be slow on.** Flagged players are rare among lined players: 2 to 4 per flag per
+two weeks (new role, reduced role, promoted, demoted, vacancy, back from absence). Reduced-role players' lines
+ran 2-3 tackles above what they produced (3 picks each market), new-role lines 2.5 below on 2, which is the
+direction the flags predict, on samples that prove nothing. Logged as a watch for the post-mortem: the blind
+side by flag, accumulated over the season, until any flag reaches 30 lines.
+
+**Why the solo line is high (the one that matters).** The books build the solo line as a share of the combined
+line: solo line / combined line averages 0.58 at both books (sd 0.11) and tracks each player's own solo share
+to date. That share is what moved. The league's solo share of combined tackles was 0.538 over weeks 1-6 of 2026
+(0.53-0.55 in every earlier season) and fell to 0.499 in week 7 and 0.499 in week 8, in every position (corners
+0.673 to 0.598, safeties 0.589 to 0.524, linebackers 0.492 to 0.467) and at every stadium (Dallas 0.61 to 0.44,
+Seattle 0.65 to 0.48, Buffalo 0.56 to 0.42): a league-wide change in how the crews credit solo against assisted,
+starting week 7. The books' formula carried the old share, so the solo line sat 0.39 high; rebuilt with the
+weeks 7-8 share it is 0.01 off. Nobody could have seen week 7 coming (the drift factor's three-week window
+read 1.012 going in, and the week-to-week sd of the share is 0.03), so the week 7 solo profit was the market's
+mistake, not the model's foresight; by week 8 the model had half of it (drift 0.996) and the blend's level
+corrections now carry the rest (-0.27 on the solo line, -0.21 on the model). The three-week window is the right
+one: tested as a predictor of next week's share over 2023-2026, three weeks has the lowest error (rmse 0.0363
+against 0.0391 season-to-date, 0.0388 two weeks, 0.0410 last week). No change.
+
+What this means for the edge: it lasts while the crews keep crediting solo at about half of combined and the
+books keep deriving the solo line from the old share. The first the model will know of a reversal is a week of
+box scores; the standing watch ("is the solo line still too high") is the alarm, and the level corrections
+shrink back as new weeks grade. Read the week 9 solo share on Tuesday before trusting any solo Under claim.
+
 ## Weekly post-mortems
 
 Each post-mortem starts from the luck table (Track record tab; `data/weekly_five.md`): per kind of pick, our hit
