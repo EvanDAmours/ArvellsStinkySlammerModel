@@ -105,6 +105,11 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 #mine-body .chips .reset { font: 600 0.85rem var(--cond); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; color: var(--ink); }
 .grade-chips .gchip { margin-right: 12px; white-space: nowrap; } .grade-chips .grade { margin-right: 3px; }
 #mine-body textarea.code { width: 100%; font: 0.78rem/1.3 ui-monospace, Menlo, monospace; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; margin: 4px 0 8px; word-break: break-all; }
+.pulls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0 2px; font-size: 0.82rem; color: var(--muted); }
+.pulls .day { font-weight: 700; color: var(--ink); margin: 0 2px 0 6px; } .pulls .day:first-child { margin-left: 0; }
+.pulls .chip { border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pulls .chip.pulled { border-color: #1f8a4c; color: #1f8a4c; } .pulls .chip.skipped { opacity: 0.55; text-decoration: line-through; }
+.pulls .chip.late { border-color: #c0392b; color: #c0392b; font-weight: 700; } .pulls .chip.next { border-color: var(--ink); color: var(--ink); font-weight: 700; }
 .lead { color: var(--muted); font-size: 0.9rem; max-width: 80ch; margin: 0 0 10px; }
 .gloss h3 { margin: 22px 0 6px; } .gloss dl { margin: 0; max-width: 80ch; } .gloss dt { font: 700 1.05rem var(--cond); margin: 12px 0 2px; } .gloss dt small { font: 0.82rem var(--sans, inherit); color: var(--muted); margin-left: 8px; }
 .gloss dd { margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.45; } .gloss dd b { color: var(--ink); } .gloss mark { background: var(--warn-bg); color: inherit; padding: 0 2px; border-radius: 3px; }
@@ -185,6 +190,7 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
   <header>
     <h1 id="title">Tackle board</h1>
     <div class="meta" id="meta"></div>
+    <div id="pulls" class="pulls"></div>
     <div id="warnings"></div>
   </header>
   <nav role="tablist" aria-label="Sections">
@@ -407,6 +413,34 @@ function table(headers, rows) {
 
 let DATA = {};
 
+// the pull ticker: today's and the coming days' line pulls, which ran, which are next, which are late
+function renderPulls(m) {
+  const box = $("#pulls"); if (!box) return; box.replaceChildren();
+  const list = m.pull_schedule || []; if (!list.length) return;
+  const now = Date.now(), fmtDay = (iso) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ, weekday: "short" }).format(new Date(iso));
+  const fmtT = (iso) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ, hour: "numeric", minute: "2-digit" }).format(new Date(iso)).replace(":00", "").replace(" a.m.", " am").replace(" p.m.", " pm");
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  // today's pulls, plus the next game day's if today's are all done
+  const days = [...new Set(list.map((s) => s.day))];
+  const upcomingDay = days.find((d) => d > today && list.some((s) => s.day === d));
+  const showDays = [today, ...(list.filter((s) => s.day === today).every((s) => new Date(s.at).getTime() < now) && upcomingDay ? [upcomingDay] : [])];
+  const nextAt = list.filter((s) => s.status === "upcoming" || s.status === "due").map((s) => new Date(s.at).getTime()).filter((t) => t > now - 45 * 60000).sort((a, b) => a - b)[0];
+  box.append(el("span", {}, "Line pulls:"));
+  for (const d of showDays) {
+    const rows = list.filter((s) => s.day === d); if (!rows.length) continue;
+    box.append(el("span", { class: "day" }, d === today ? "Today" : fmtDay(rows[0].at)));
+    for (const s of rows) {
+      const t = new Date(s.at).getTime();
+      let cls = "", label = fmtT(s.at), title = s.kind === "prekick" ? "An hour before kickoff" : "Scheduled look";
+      if (s.status === "pulled") { cls = "pulled"; label += " ✓"; title += ` · pulled ${fmtT(s.pulled_at)}${s.games != null ? `, ${s.games} game${s.games === 1 ? "" : "s"}` : ""}`; }
+      else if (s.status === "skipped") { cls = "skipped"; title += " · folded into a later pull (the run came late)"; }
+      else if (now - t > 45 * 60000) { cls = "late"; label += " late"; title += " · not pulled yet: the next ticker beat serves it"; }
+      else if (t === nextAt) { cls = "next"; label += " next"; }
+      box.append(el("span", { class: `chip ${cls}`.trim(), title }, label));
+    }
+  }
+}
+
 function renderMeta() {
   const m = DATA.meta;
   if (!m) { $("#meta").append("Waiting for the first run. Start it from the Actions tab (see README)."); return; }
@@ -418,6 +452,7 @@ function renderMeta() {
                     m.next_pull ? el("span", {}, `Next pull ${when(m.next_pull)}`) : "",
                     GATE.pw ? (() => { const b = el("button", { type: "button", class: "lock-site", title: "Forget the password on this device" }, "Lock this device"); b.onclick = lockSite; return b; })() : "",
                     el("span", {}, m.odds_credits_remaining != null ? `${m.odds_credits_remaining} odds credits left this month` : ""));
+  renderPulls(m);
   if (m.formula_check_ok === false)
     $("#warnings").append(el("div", { class: "warn" }, "Tackle totals didn’t match the official numbers this run. Picks may be off until the data source is fixed; check the Actions log."));
   // a pull that should have happened and has not: GitHub's scheduler stalls now and then; say so instead of showing stale lines as current

@@ -1400,6 +1400,15 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-05, afternoon MDT (pull ticker on the site)
+- Owner: show which line pulls have run and which are pending. Each pull now records what it did in
+  `data/cache/pull_log.json` (pulled, with the time and the number of games, or folded into a later pull when a
+  run came late); `run.pull_schedule()` lists every scheduled pull from today through the next week with its
+  status, published as `meta.pull_schedule` by the daily and every pull. The page header shows today's pulls as
+  chips (green tick when pulled, "next" on the next one, red "late" when one is 45 minutes past due and not yet
+  pulled, struck through when folded into a later pull), and the next game day's once today's are done. Today's
+  9 am and 1 pm pulls were recorded by hand from their commits. Site and bookkeeping only.
+
 ### 2026-11-05, morning MDT (the pipeline ticker: nothing depends on GitHub starting a job on time)
 - Owner, 9 am Thursday: the 9 am pull had not run. GitHub's scheduler had started the pull job four times
   overnight instead of every fifteen minutes (14:56, 11:37, 06:32, 03:46 UTC), and on Wednesday it ran the

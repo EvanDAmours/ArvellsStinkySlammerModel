@@ -174,6 +174,67 @@ def load_served():
         return set()
 
 
+PULL_LOG = CACHE / "pull_log.json"    # slot key -> what happened: {"pulled": UTC stamp, "games": n} or {"skipped": UTC stamp}
+
+
+def log_pull(key, pulled=None, skipped=(), games=None):
+    """Record what each slot did, for the site's pull ticker: the slot pulled (with its time) or was folded into a
+    later one (a stale slot when a run came late)."""
+    try:
+        logd = json.loads(PULL_LOG.read_text())
+    except (OSError, ValueError):
+        logd = {}
+    now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
+    if key:
+        logd[key] = dict(pulled=pulled or now, games=games)
+    for k in skipped:
+        logd.setdefault(k, dict(skipped=now))
+    cutoff = str(dt.date.today() - dt.timedelta(days=10))
+    logd = {k: v for k, v in logd.items() if k[:10] >= cutoff or not k[:4].isdigit()}
+    PULL_LOG.parent.mkdir(parents=True, exist_ok=True)
+    PULL_LOG.write_text(json.dumps(logd, indent=1, sort_keys=True))
+
+
+def pull_schedule(now=None, games=None, days=7):
+    """Every scheduled pull from today through the next `days` days (Edmonton time), with what happened to each:
+    [{key, day, at (UTC ISO), kind: fixed|prekick, status: pulled|skipped|due|upcoming, pulled_at}]. 'due' means its
+    time has passed and no run has served it yet; the site shows it as late after a grace period."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    local = now.astimezone(EDMONTON)
+    served = load_served()
+    try:
+        logd = json.loads(PULL_LOG.read_text())
+    except (OSError, ValueError):
+        logd = {}
+    out = []
+    for n in range(days + 1):
+        day = local.date() + dt.timedelta(days=n)
+        slots = [(m, f"{day} {m // 60:02d}:{m % 60:02d}", "fixed") for m, _ in PULL_SLOTS.get(day.weekday(), [])]
+        slots += [(m, k, "prekick") for m, k in kickoff_slots(games, day)]
+        for m, key, kind in sorted(slots):
+            at = dt.datetime.combine(day, dt.time(max(m, 0) // 60, max(m, 0) % 60), tzinfo=EDMONTON).astimezone(dt.timezone.utc)
+            rec = logd.get(key, {})
+            if "pulled" in rec:
+                status = "pulled"
+            elif "skipped" in rec or key in served:
+                status = "skipped"
+            elif at <= now:
+                status = "due"
+            else:
+                status = "upcoming"
+            out.append(dict(key=key, day=str(day), at=at.isoformat(timespec="minutes"), kind=kind, status=status,
+                            pulled_at=rec.get("pulled"), games=rec.get("games")))
+    # a fixed look and a pre-kickoff pull at the same minute are one pull: keep the one that ran
+    seen, uniq = {}, []
+    for s in out:
+        prev = seen.get(s["at"])
+        if prev is None:
+            seen[s["at"]] = s; uniq.append(s)
+        elif s["status"] == "pulled" and prev["status"] != "pulled":
+            uniq[uniq.index(prev)] = s; seen[s["at"]] = s
+    return uniq
+
+
 def mark_served(keys):
     served = load_served() | set(keys)
     cutoff = str(dt.date.today() - dt.timedelta(days=10))
@@ -457,7 +518,8 @@ def cmd_odds(hours=None, auto=False):
         print(f"odds: {plan.pop('reason')}")
     P = refresh_injury_status(P, week)   # only when a pull is happening: the report as it stands now
     if auto:
-        mark_served([plan.pop("key")] + plan.pop("also_served", []))
+        pulled_key, skipped_keys = plan.pop("key"), plan.pop("also_served", [])
+        mark_served([pulled_key] + skipped_keys)
         if "teams" in plan:
             home, away = plan.pop("teams")
             names = {M.TEAM_NAMES.get(home), M.TEAM_NAMES.get(away)}
@@ -468,6 +530,8 @@ def cmd_odds(hours=None, auto=False):
     numeric = [c for c in credits.values() if isinstance(c, (int, float))]
     remaining = int(sum(numeric)) if numeric else next(iter(credits.values()), None)
     O.save_snapshot(rows, C.SEASON, week)
+    if auto:
+        log_pull(pulled_key, skipped=skipped_keys, games=len({r.get("event_id") for r in rows}) if rows else 0)
     lines = O.upcoming_only(O.latest_lines(C.SEASON, week))
     bets = G.cap_stakes(M.price_lines(lines, P, segments=load_segments(), blend=BL.load()))
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
@@ -479,7 +543,8 @@ def cmd_odds(hours=None, auto=False):
     meta_path = SITE / "meta.json"
     meta = SEAL.read_json(meta_path) or {}          # the previous meta may be sealed (SITE_PASSWORD) or plain
     games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
-    meta.update(odds_credits_remaining=remaining, odds_credits_by_key=credits, lines_pulled=stamp, lines_count=int(len(lines)), next_pull=next_pull(games=games))
+    meta.update(odds_credits_remaining=remaining, odds_credits_by_key=credits, lines_pulled=stamp, lines_count=int(len(lines)), next_pull=next_pull(games=games),
+                pull_schedule=pull_schedule(games=games))
     _json(meta_path, meta)
     _json(SITE / "bets.json", records(bets))
     write_week_lines(P, C.SEASON, week)
@@ -537,7 +602,7 @@ def write_parlays(season, week):
 def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays=None):
     now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes")
     games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
-    meta = dict(generated_at=now, season=C.SEASON, week=week, lines_pulled=lines_pulled, next_pull=next_pull(games=games), **status,
+    meta = dict(generated_at=now, season=C.SEASON, week=week, lines_pulled=lines_pulled, next_pull=next_pull(games=games), pull_schedule=pull_schedule(games=games), **status,
                 bars=dict(pick=C.PICK_BAR, signal=C.SIGNAL_BAR),
                 grading=dict(bars=C.GRADE_BARS, units=C.GRADE_UNITS, weights=C.LOCK_WEIGHTS, ev_full=C.LOCK_EV_FULL, ev_fade=list(C.LOCK_EV_FADE),
                              model_full=C.LOCK_MODEL_FULL, locks=C.LOCKS_PER_SLATE, lock_min=C.LOCK_MIN_SCORE, line_weight=C.LINE_WEIGHT, clv=C.CLV_BARS, clv_pct=C.CLV_PCT_BARS,
