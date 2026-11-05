@@ -1,0 +1,53 @@
+name: Pipeline ticker
+# The one scheduled job. GitHub starts scheduled runs late and skips many (on 2026-11-05 the pull job ran four times
+# overnight instead of every fifteen minutes, and the daily ran seven hours late), so nothing here depends on a run
+# starting on time: once a run starts it beats for five and a half hours, serving every pull slot a few minutes
+# after its time and the daily once a day after 4:15 am Edmonton (run.py tick decides). The schedule only has to
+# start one run every few hours; a run that starts while another is beating waits its turn (one pending at most).
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch: {}
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: pipeline
+  cancel-in-progress: false
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    env:
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      PARLAY_API_KEY: ${{ secrets.PARLAY_API_KEY }}
+      SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
+      SITE_PASSWORDS: ${{ secrets.SITE_PASSWORDS }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Beat for five and a half hours
+        run: |
+          git config user.name "tackle-bot"
+          git config user.email "tackle-bot@users.noreply.github.com"
+          end=$((SECONDS + 330 * 60))
+          while [ "$SECONDS" -lt "$end" ]; do
+            git pull --rebase -q -X theirs origin "${{ github.ref_name }}" || true
+            if python run.py tick; then
+              if ! python run.py seal; then echo "sealing failed: the site files are not published unsealed"; git checkout -- docs/data && git clean -fdq docs/data; fi
+            else
+              echo "tick failed: this beat's files are dropped"; git checkout -- data docs/data && git clean -fdq data docs/data
+            fi
+            git add data docs/data
+            if ! git diff --cached --quiet; then
+              git commit -q -m "Pipeline $(date -u +%Y-%m-%dT%H:%M)"
+              for i in 1 2 3 4; do git pull --rebase -q -X theirs origin "${{ github.ref_name }}" && git push -q && break; git rebase --abort 2>/dev/null || true; sleep $((i * 5)); done
+            fi
+            s=$(python run.py sleep 2>/dev/null || echo 300)
+            echo "next beat in $s s"; sleep "$s"
+          done

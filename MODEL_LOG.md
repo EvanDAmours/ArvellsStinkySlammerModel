@@ -1400,6 +1400,22 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-05, morning MDT (the pipeline ticker: nothing depends on GitHub starting a job on time)
+- Owner, 9 am Thursday: the 9 am pull had not run. GitHub's scheduler had started the pull job four times
+  overnight instead of every fifteen minutes (14:56, 11:37, 06:32, 03:46 UTC), and on Wednesday it ran the
+  daily at 18:37 and 19:59 UTC instead of 11:15 and 12:40; Thursday's daily had not run at all by 9 am. Pulled
+  and ran the daily by hand, then replaced the scheduling: `ticker.yml` is now the only scheduled workflow.
+  Once a run starts it beats for five and a half hours: each beat pulls the repo, runs `run.py tick` (the daily
+  once per Edmonton day after 4:15 am, `daily_due`; then any due pull slot), seals, commits and pushes, and
+  sleeps until the next due time (`run.py sleep`, 1 to 15 minutes). The schedule only has to start one run
+  every few hours; a run that starts while another is beating waits (one pending at most, same concurrency
+  group). `daily.yml` and `odds.yml` are by-hand jobs in their own concurrency group, so a manual run never
+  waits behind the ticker. The pull command now decides whether a slot is due before fetching the injury
+  report, so an idle beat costs nothing. Smoke test covers a beat, the sleep and the once-a-day rule.
+- Risk accepted: a manual daily can run while the ticker beats; a beat that reads a half-written projections
+  file prices one pull off yesterday's numbers and the next beat corrects it.
+- Revert: put the schedules back on `daily.yml` and `odds.yml` and disable `ticker.yml`.
+
 ### 2026-11-03, late afternoon MDT (six things that would have broken later, fixed now)
 Owner asked what would cause trouble down the line and picked six of the ten named. Each in turn:
 1. **Dependencies pinned.** `requirements.txt` now pins pandas 3.0.5, numpy 2.5.3, requests 2.34.2, pyarrow 26.0.0,

@@ -1,13 +1,7 @@
 name: Pull tackle lines
 # Pull slots are defined in Edmonton local time in run.py (PULL_SLOTS), so the clock change needs no edits here.
 on:
-  schedule:
-    - cron: "7,37 * * * *"     # twice an hour; run.py decides whether a pull slot (Edmonton time) or a pre-kickoff pull is
-                               # due and does nothing otherwise. Off the hour and half hour: GitHub delays runs queued at
-                               # those minutes most (its own advice), and that is when the 2026-10-31 stall happened.
-    - cron: "22,52 * * * *"    # a second schedule between them. Slots are served once, so a stalled schedule is covered
-                               # by the other and nothing is pulled twice.
-  workflow_dispatch:
+  workflow_dispatch:           # by hand: a pull now (blank = whatever slot is due, else games within this many hours). The schedule lives in ticker.yml.
     inputs:
       hours:
         description: "Only games starting within this many hours (blank = choose from the day and time)"
@@ -17,7 +11,7 @@ permissions:
   contents: write
   actions: write             # lets a pull switch the daily schedule back on if GitHub has turned it off
 concurrency:
-  group: pipeline
+  group: manual
   cancel-in-progress: false
 jobs:
   odds:
@@ -56,7 +50,7 @@ jobs:
           fi
           git add data docs/data
           # A pull that found lines also makes sure the daily schedule is still switched on (see keepalive.yml).
-          git diff --cached --quiet || { git commit -m "Lines $(date -u +%Y-%m-%dT%H:%M)"; gh workflow enable daily.yml || true; }
+          git diff --cached --quiet || { git commit -m "Lines $(date -u +%Y-%m-%dT%H:%M)"; gh workflow enable ticker.yml || true; }
           # Another job may have pushed meanwhile. Replay our commit on top, keeping our version of any generated
           # file both touched (ours is the fresher one), and retry the push a few times.
           for i in 1 2 3 4; do

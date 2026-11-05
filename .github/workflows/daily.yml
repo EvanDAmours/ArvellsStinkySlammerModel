@@ -1,14 +1,11 @@
 name: Daily model update
 on:
-  schedule:
-    - cron: "15 11 * * *"      # every day 11:15 UTC (5:15 am Edmonton in daylight time, 4:15 am in standard time); off the half hour so it never coincides with the line-pull job
-    - cron: "40 12 * * *"      # fallback 85 minutes later: a scheduled run passes --auto and does nothing when the first one already succeeded
-  workflow_dispatch: {}        # lets you run it by hand from the Actions tab
+  workflow_dispatch: {}        # by hand from the Actions tab; the schedule lives in ticker.yml (run.py tick runs the daily once a day)
 permissions:
   contents: write            # lets the job commit the refreshed data and site files back to the repo
   actions: write             # lets the job switch the line-pull schedule back on if GitHub has turned it off
 concurrency:
-  group: pipeline
+  group: manual
   cancel-in-progress: false
 jobs:
   daily:
@@ -25,7 +22,7 @@ jobs:
         env:
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
           SITE_PASSWORDS: ${{ secrets.SITE_PASSWORDS }}
-        run: python run.py daily ${{ github.event_name == 'schedule' && '--auto' || '' }}
+        run: python run.py daily
       - name: Seal the site behind the shared password (without a password secret the site stays open)
         id: seal
         if: steps.run.outcome == 'success'
@@ -63,4 +60,4 @@ jobs:
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow enable odds.yml
+        run: gh workflow enable ticker.yml

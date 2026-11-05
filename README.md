@@ -43,6 +43,7 @@ zone data and pins UTC-6 if that data is stale, so nothing needs editing). The p
 | Job | When (Edmonton) | What it does |
 | --- | --- | --- |
 | Daily model update (with a fallback run 85 minutes later that does nothing when the first succeeded) | Every day, early morning | New stats, backtest, projections, grading, parlay grading |
+| Pipeline ticker | Started by GitHub twice an hour; once started it beats every few minutes for five and a half hours | Everything below: the daily once a day after 4:15 am, and each pull slot a few minutes after its time, whatever GitHub's scheduler does (on 2026-11-05 it started four runs overnight instead of every fifteen minutes and ran the daily seven hours late) |
 | Pull tackle lines | Any day, 1 h before every kickoff (kickoffs within 30 min share one pull) | Every game not yet started that day, from the schedule: Thursday, Friday, Saturday, Sunday and Monday games alike, holiday games included |
 | | Thu 9:00 am, 1:00 pm | Thursday game, and Friday games on holiday weeks |
 | | Sat 8:00 pm | Saturday and Sunday games, once the books have posted the slate (most Sunday tackle lines go up Saturday evening) |

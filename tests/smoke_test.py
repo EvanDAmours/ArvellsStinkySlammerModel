@@ -76,6 +76,11 @@ up = [p for p in proj if p["role_signal"]]
 check(len(up) >= 6, f"role signals raised for backups whose starter is listed out ({len(up)})")
 
 check(run("odds") == 0, "odds pull, pricing and pick logging run")
+# the ticker: one beat (the daily when due, a due pull slot), and how long to sleep
+_t = subprocess.run([sys.executable, "run.py", "tick"], cwd=tmp, env=env, capture_output=True, text=True)
+check(_t.returncode == 0 and ("odds:" in _t.stdout or "tick:" in _t.stdout), f"a ticker beat runs ({_t.stdout.strip().splitlines()[-1][:90] if _t.stdout.strip() else _t.stderr[-200:]})")
+_s = subprocess.run([sys.executable, "run.py", "sleep"], cwd=tmp, env=env, capture_output=True, text=True)
+check(_s.returncode == 0 and _s.stdout.strip().isdigit() and 60 <= int(_s.stdout.strip()) <= 900, f"the ticker's sleep is between a minute and fifteen ({_s.stdout.strip()})")
 check((tmp / "data" / "picks.csv").exists() and "stake" in pd.read_csv(tmp / "data" / "picks.csv").columns, "the stake is logged with the pick")
 bets = json.loads((tmp / "docs/data/bets.json").read_text())
 check(len(bets) > 50 and all(b["model_over"] is None or 0 <= b["model_over"] <= 1 for b in bets), f"lines priced ({len(bets)})")
@@ -354,8 +359,20 @@ _now = dt.datetime.now(dt.timezone.utc)
 _lr.write_text(f"success {_now.strftime('%Y-%m-%dT%H:%MZ')}"); _fresh = R.daily_is_fresh()
 _lr.write_text(f"failure {_now.strftime('%Y-%m-%dT%H:%MZ')}"); _failed = R.daily_is_fresh()
 _lr.write_text(f"success {(_now - dt.timedelta(hours=10)).strftime('%Y-%m-%dT%H:%MZ')}"); _old = R.daily_is_fresh()
-(_lr.write_text(_was) if _was is not None else _lr.unlink())
 check(_fresh and not _failed and not _old, "the fallback daily run skips only after a success in the last 8 hours")
+# the ticker runs the daily once per Edmonton day after 4:15 am
+_day = dt.date(2026, 11, 5); _loc = lambda h, m=0: dt.datetime.combine(_day, dt.time(h, m), tzinfo=R.EDMONTON).astimezone(dt.timezone.utc)
+_lr.write_text(f"success {(_loc(4, 30) - dt.timedelta(days=1)).strftime('%Y-%m-%dT%H:%MZ')}")   # yesterday's run
+_due_after, _due_before = R.daily_due(_loc(5, 0)), R.daily_due(_loc(3, 0))
+_lr.write_text(f"success {_loc(4, 30).strftime('%Y-%m-%dT%H:%MZ')}")                              # today's run done
+_done_today = R.daily_due(_loc(9, 0))
+_lr.write_text(f"failure {_loc(4, 30).strftime('%Y-%m-%dT%H:%MZ')}")                              # today's run failed: try again
+_retry = R.daily_due(_loc(9, 0))
+check(_due_after and not _due_before and not _done_today and _retry, f"the ticker's daily is due once per Edmonton day after 4:15 am ({_due_after}, {_due_before}, {_done_today}, {_retry})")
+(_lr.write_text(_was) if _was is not None else _lr.unlink())
+import yaml as _y
+_tk = _y.safe_load((ROOT / ".github/workflows/ticker.yml").read_text()); _dy = _y.safe_load((ROOT / ".github/workflows/daily.yml").read_text()); _od = _y.safe_load((ROOT / ".github/workflows/odds.yml").read_text())
+check("schedule" in (_tk.get(True) or _tk.get("on")) and "schedule" not in (_dy.get(True) or _dy.get("on")) and "schedule" not in (_od.get(True) or _od.get("on")), "the ticker is the only scheduled workflow; daily and odds are by hand")
 intl = [dict(game_id="2026_07_NO_PIT", home="PIT", away="NO", kickoff=_at(2026, 10, 25, 7, 30).isoformat(), international=True)]
 p12 = R.auto_plan(now=_at(2026, 10, 24, 19, 50), games=intl)   # Saturday 7:50 pm, before the 8 pm slot
 check(p12 and p12.get("teams") == ("PIT", "NO") and p12["key"].endswith("12h"), "international game pulled in the 12 h window even when the run is late")

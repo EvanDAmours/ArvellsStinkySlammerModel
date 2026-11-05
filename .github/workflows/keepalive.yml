@@ -16,6 +16,7 @@ jobs:
       GH_REPO: ${{ github.repository }}
     steps:
       - run: |
+          gh workflow enable ticker.yml
           gh workflow enable daily.yml
           gh workflow enable odds.yml
           gh workflow list --all

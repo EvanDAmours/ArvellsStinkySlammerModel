@@ -291,6 +291,66 @@ def daily_is_fresh(hours=8):
     return outcome == "success" and (dt.datetime.now(dt.timezone.utc) - done).total_seconds() < hours * 3600
 
 
+DAILY_AT_MIN = 4 * 60 + 15      # Edmonton minutes after midnight: the ticker runs the daily once a day after this
+
+
+def _last_run():
+    """(outcome, UTC datetime) of the last daily run from data/cache/last_run.txt, or (None, None)."""
+    try:
+        outcome, stamp = (CACHE / "last_run.txt").read_text().split()[:2]
+        return outcome, dt.datetime.strptime(stamp, "%Y-%m-%dT%H:%MZ").replace(tzinfo=dt.timezone.utc)
+    except (OSError, ValueError):
+        return None, None
+
+
+def mark_run(outcome):
+    CACHE.mkdir(parents=True, exist_ok=True)
+    (CACHE / "last_run.txt").write_text(f"{outcome} {dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%MZ')}\n")
+
+
+def daily_due(now=None):
+    """The daily is due once per Edmonton day after DAILY_AT_MIN: no successful run yet on today's local date."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    local = now.astimezone(EDMONTON)
+    if local.hour * 60 + local.minute < DAILY_AT_MIN:
+        return False
+    outcome, when = _last_run()
+    return not (outcome == "success" and when is not None and when.astimezone(EDMONTON).date() >= local.date())
+
+
+def cmd_tick():
+    """One beat of the pipeline ticker (.github/workflows/ticker.yml): the daily once a day after 4:15 am Edmonton,
+    then any pull slot that is due. GitHub starts scheduled jobs late and skips many; a ticker that runs for hours
+    and beats every few minutes serves every slot a few minutes after its time whatever the scheduler does."""
+    if daily_due():
+        print("tick: the daily is due", flush=True)
+        try:
+            cmd_daily()
+            mark_run("success")
+        except Exception:
+            mark_run("failure")
+            raise
+    if any(os.environ.get(k) for k in C.ODDS_KEY_ENV) or os.environ.get("TACKLE_FAKE_ODDS"):
+        cmd_odds(auto=True)
+    else:
+        print("tick: no odds key in the environment; pulls skipped")
+
+
+def cmd_sleep(now=None):
+    """Seconds the ticker should sleep: until the next pull slot or the next daily, between 60 and 900."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
+    due = []
+    nxt = next_pull(now=now, games=games)
+    if nxt:
+        due.append(dt.datetime.fromisoformat(nxt))
+    local = now.astimezone(EDMONTON)
+    d = local.date() if local.hour * 60 + local.minute < DAILY_AT_MIN else local.date() + dt.timedelta(days=1)
+    due.append(dt.datetime.combine(d, dt.time(DAILY_AT_MIN // 60, DAILY_AT_MIN % 60), tzinfo=EDMONTON).astimezone(dt.timezone.utc))
+    secs = min((t - now).total_seconds() for t in due)
+    return int(max(60, min(900, secs + 15)))
+
+
 def cmd_daily(auto=False):
     if auto and daily_is_fresh():
         print("daily: a run already succeeded in the last 8 hours; nothing to do (fallback schedule)")
@@ -387,7 +447,6 @@ def cmd_odds(hours=None, auto=False):
     P = pd.read_csv(CACHE / "projections.csv")
     state = json.load(open(CACHE / "model_state.json"))
     week = int(state["week"])
-    P = refresh_injury_status(P, week)
     pull_kw = dict(hours_ahead=hours)
     if auto:
         games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
@@ -396,6 +455,8 @@ def cmd_odds(hours=None, auto=False):
             print("odds: no pull slot due and no international game in a pull window; nothing to do")
             return
         print(f"odds: {plan.pop('reason')}")
+    P = refresh_injury_status(P, week)   # only when a pull is happening: the report as it stands now
+    if auto:
         mark_served([plan.pop("key")] + plan.pop("also_served", []))
         if "teams" in plan:
             home, away = plan.pop("teams")
@@ -509,7 +570,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["daily", "odds", "seal", "history"])
+    ap.add_argument("cmd", choices=["daily", "odds", "seal", "history", "tick", "sleep"])
     ap.add_argument("--hours", type=float, default=None)
     ap.add_argument("--auto", action="store_true")
     ap.add_argument("--weeks", default="", help="history: comma-separated finished weeks to fetch, e.g. 7,8")
@@ -520,5 +581,9 @@ if __name__ == "__main__":
     else:
         if a.cmd == "history":
             cmd_history([int(w) for w in a.weeks.split(",") if w.strip()], [m for m in a.markets.split(",") if m.strip()])
+        elif a.cmd == "tick":
+            cmd_tick()
+        elif a.cmd == "sleep":
+            print(cmd_sleep())
         else:
             cmd_daily(a.auto) if a.cmd == "daily" else cmd_odds(a.hours, a.auto)
