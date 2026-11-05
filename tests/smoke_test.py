@@ -82,7 +82,7 @@ check(_t.returncode == 0 and ("odds:" in _t.stdout or "tick:" in _t.stdout), f"a
 _s = subprocess.run([sys.executable, "run.py", "sleep"], cwd=tmp, env=env, capture_output=True, text=True)
 _ps = json.loads((tmp / "docs" / "data" / "meta.json").read_text()).get("pull_schedule") or []
 check(_ps and all({"key", "at", "status", "kind"} <= set(x) for x in _ps) and all(x["status"] in ("pulled", "skipped", "due", "upcoming") for x in _ps), f"meta publishes the week's pull schedule with each slot's status ({len(_ps)} slots)")
-check('id="pulls"' in _html and "function renderPulls" in _html, "the site shows the pull ticker")
+check('id="pulls"' in (ROOT / "docs" / "index.html").read_text() and "function renderPulls" in (ROOT / "docs" / "index.html").read_text(), "the site shows the pull ticker")
 check(_s.returncode == 0 and _s.stdout.strip().isdigit() and 60 <= int(_s.stdout.strip()) <= 900, f"the ticker's sleep is between a minute and fifteen ({_s.stdout.strip()})")
 check((tmp / "data" / "picks.csv").exists() and "stake" in pd.read_csv(tmp / "data" / "picks.csv").columns, "the stake is logged with the pick")
 bets = json.loads((tmp / "docs/data/bets.json").read_text())
