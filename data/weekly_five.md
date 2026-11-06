@@ -1,7 +1,7 @@
 # Locks and parlays: running tally
 
 The locks: the highest-confidence picks of each slate day (3 on a one-game day, 5 on a multi-game day), named before kickoff and tracked here. Target: 70% hits. Then the recommended parlay for each slate day.
-Generated 2026-11-05 15:21 UTC by the daily job. Do not edit by hand.
+Generated 2026-11-06 10:16 UTC by the daily job. Do not edit by hand.
 
 **Locks record: 8-2 (80%), +4.21 units, 0 pending.**
 
@@ -40,6 +40,7 @@ All plays by side: our hit rate against the share of every closing line on the b
 | 2026 wk 7 | Under | 165 | 56% | 62% | 58% of 245 lines | -1% | 25% | the market went our way |
 | 2026 wk 8 | Over | 11 | 45% | 62% | 43% of 264 lines | +2% | 45% | nothing added |
 | 2026 wk 8 | Under | 156 | 58% | 56% | 57% of 264 lines | +2% | 24% | the market went our way |
+| 2026 wk 9 | Under | 11 | 73% | 66% | 72% of 25 lines | +1% | 9% | the market went our way |
 
 ## Parlays
 
