@@ -50,7 +50,8 @@ def log_picks(bets, season, week, pulled_at):
     for i in open_:
         k = tuple(both.loc[i, KEY])
         if k in fresh.index:
-            for c in ["lock", "grade", "consistency", "cons_hits", "cons_n", "ev", "proj", "proj_model", "mkt_line", "model_over", "market_over", "why"]:
+            for c in ["lock", "grade", "consistency", "cons_hits", "cons_n", "ev", "proj", "proj_model", "mkt_line", "model_over", "market_over", "why",
+                      "p_claim", "segment", "segment_adj", "stake", "lock_block", "lock_eligible", "payout"]:
                 if c in fresh.columns:
                     both.loc[i, c] = fresh.loc[k, c]
     # a logged pick whose player has vanished from a board that still lists his game (ruled out, inactive, line

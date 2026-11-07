@@ -458,7 +458,11 @@ def cmd_daily(auto=False):
     lines = O.upcoming_only(O.latest_lines(C.SEASON, week))
     bets = G.cap_stakes(M.price_lines(lines, P, segments=load_segments(), blend=blend)) if len(lines) else pd.DataFrame()
     if len(bets):
-        BL.log_model_numbers(bets, C.SEASON, week, dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ"))
+        _stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        BL.log_model_numbers(bets, C.SEASON, week, _stamp)
+        # the morning re-price is what the board shows until the next pull: log new picks and refresh open ones with
+        # it, so a grade seen on the site is the grade the record keeps (2026-11-05: an A shown all morning was never logged)
+        G.log_picks(bets, C.SEASON, week, _stamp)
     bets = mark_five(bets, C.SEASON, week)
     write_site(P, bets, bt, graded, summary, week, status, lines_pulled=None if lines.empty else str(lines.pulled_at.max()), parlays=parlays)
     write_week_lines(P, C.SEASON, week)

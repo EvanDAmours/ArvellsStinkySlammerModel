@@ -1400,6 +1400,21 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-07, midday MST (a grade the board showed is the grade the record keeps)
+- Owner: Antonio Johnson Under 3.5 solo (DraftKings, -155) showed as an A on Thursday morning, then the line moved
+  to 2.5 and the record only had it as a B. Cause: the 9:17 am pull logged it at B (lock 66.8), priced with
+  Wednesday's projections; the 9:21 am daily re-priced the same line at the same price with Thursday's projections
+  to A (75.2) and the board showed that all morning, but the daily never wrote to the pick log, and by the 1 pm
+  pull the 3.5 line was gone, so nothing refreshed it. Fix: the daily now logs new picks and refreshes open ones
+  exactly as a pull does (`run.cmd_daily` calls `grade.log_picks`), and the refresh carries the claimed chance,
+  segment, stake and lock checklist as well as the score and grade. The rule stays "the model's latest call while
+  the line was live": a line that leaves the board keeps the last grade it had; the price taken stays the first.
+- Backfill: week 9 re-priced as the 9:21 am daily did (its projections, blend and segments, the 9:17 lines) and
+  applied with the clock at 9:21. Changes: Johnson U3.5 solo B 66.8 to A 75.2 (a win, 1 solo); Oluokun U4.5 solo
+  B 63.7 to 62.7; Miller U3.5 solo B 65.7 to 57.7 (still B). Week 9 A record: 1-0. Other weeks untouched (weeks 7-8
+  were logged before the daily ran at a different hour; their dailies priced before the lines were up).
+- Johnson stays not lock-eligible (reduced role, back from absence): an A, never a lock.
+
 ### 2026-11-07, morning MST (site icon)
 - Owner: the bookmark showed a globe. The site now has an icon from the owner's photo of Arvell Reese, cropped
   to his face: `favicon.ico` (16/32/48), 32 and 192 px PNGs, and a 180 px `apple-touch-icon.png` for a phone's
