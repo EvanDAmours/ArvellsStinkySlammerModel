@@ -1400,6 +1400,11 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-07, evening MST (My board: the best case for the day)
+- Owner: show what the board makes if every pending bet hits. A tile on My board adds the profit of every bet not
+  yet settled, started or not, to what has already settled ("if every pending bet hits"), with the profit and the
+  stakes still to settle beside it. Site only.
+
 ### 2026-11-07, midday MST (a grade the board showed is the grade the record keeps)
 - Owner: Antonio Johnson Under 3.5 solo (DraftKings, -155) showed as an A on Thursday morning, then the line moved
   to 2.5 and the record only had it as a B. Cause: the 9:17 am pull logged it at B (lock 66.8), priced with

@@ -1150,7 +1150,7 @@ function renderMine() {
   else if (LIVE.error && !LIVE.events) box.append(el("div", { class: "warn" }, `ESPN's scoreboard is not answering (${LIVE.error}), so kickoff times and live tracking are unavailable for now. Official grading still settles every bet.`));
   box.append(el("p", { class: "lead" }, "The bets you took, tracked live, with your stakes. Press \"+ My board\" on any card on the Plays tab; it is kept in this browser only. While a game is on, each bet refreshes from ESPN's box score every minute: tackles so far, the pace for the full game, and whether the bet is trending the right way. The official box score the books settle on can differ by a tackle from the live feed."));
   if (!list.length) { box.append(el("div", { class: "empty" }, "Nothing on your board yet. Add bets from the Plays tab, or find one below."), addPicker(), ledgerSection()); return; }
-  let w = 0, l = 0, p = 0, onTrack = 0, live = 0, staked = 0, toWin = 0, settled = 0, pendingStake = 0, paced = 0, pacedN = 0, unstarted = 0, unstartedStake = 0;
+  let w = 0, l = 0, p = 0, onTrack = 0, live = 0, staked = 0, toWin = 0, settled = 0, pendingStake = 0, paced = 0, pacedN = 0, unstarted = 0, unstartedStake = 0, pendingWin = 0, pendingRisk = 0;
   const GR = { A: 0, B: 1, C: 2 };
   const sorted = [...list].sort((a, b) => (GR[a.grade] ?? 3) - (GR[b.grade] ?? 3) || (b.lock ?? 0) - (a.lock ?? 0) || String(a.commence_time || "").localeCompare(String(b.commence_time || "")));
   const groups = { in: [], pre: [], post: [] };
@@ -1186,6 +1186,7 @@ function renderMine() {
     if (stake != null && !(scratched && !b.settled)) {
       if (started) { staked += stake; if (win != null) toWin += win; }
       else { unstarted++; unstartedStake += stake; }
+      if (!status.startsWith("Final") && win != null) { pendingWin += win; pendingRisk += stake; }   // every bet not yet settled, started or not
       if (status.startsWith("Final")) { result = status.includes("Win") ? win : status.includes("Loss") ? -stake : 0; settled += result; paced += result; pacedN++; }
       else if (started) { pendingStake += stake; paced += cls.includes("good") ? (win ?? 0) : -stake; pacedN++; } }
     if (status.startsWith("Final")) { if (status.includes("Win")) w++; else if (status.includes("Loss")) l++; else p++; }
@@ -1204,6 +1205,7 @@ function renderMine() {
   if (changed) saveMine(mine());
   box.append(el("div", { class: "mine-bar" }, el("div", {}, el("b", {}, `${w}-${l}${p ? `-${p}` : ""}`), el("span", {}, "settled")), el("div", {}, el("b", {}, String(live)), el("span", {}, "in play")), el("div", {}, el("b", {}, `${onTrack} of ${live}`), el("span", {}, "trending right")),
     el("div", { title: "Stakes on games that have kicked off. A bet on a game that has not started can still be withdrawn, so it is not in yet." }, el("b", {}, money(staked) || "$0"), el("span", {}, "in play or settled")), el("div", {}, el("b", {}, money(toWin) || "$0"), el("span", {}, "to win if every started bet hits")),
+    pendingRisk ? el("div", { title: "Profit if every bet that has not settled yet wins, whether its game has started or not, added to what has already settled" }, el("b", { class: "pos" }, "+" + (money(settled + pendingWin) || "$0")), el("span", {}, `if every pending bet hits (${money(pendingWin)} on ${money(pendingRisk)} still to settle)`)) : "",
     unstarted ? el("div", {}, el("b", {}, money(unstartedStake) || "$0"), el("span", {}, `on ${unstarted} bet${unstarted === 1 ? "" : "s"} not started (can still be withdrawn)`)) : "",
     el("div", {}, el("b", { class: settled > 0 ? "pos" : settled < 0 ? "neg" : "" }, (settled > 0 ? "+" : "") + (money(settled) || "$0")), el("span", {}, `settled so far${pendingStake ? ` (${money(pendingStake)} still riding)` : ""}`)),
     el("div", { title: "Settled results plus every bet in play finishing the way it is trending right now. Bets that have not kicked off are not counted." }, el("b", { class: paced > 0 ? "pos" : paced < 0 ? "neg" : "" }, (paced > 0 ? "+" : "") + (money(paced) || "$0")), el("span", {}, `on current pace (${pacedN} started bet${pacedN === 1 ? "" : "s"})`)),
