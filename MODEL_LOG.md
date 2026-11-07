@@ -1400,6 +1400,11 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-07, morning MST (site icon)
+- Owner: the bookmark showed a globe. The site now has an icon from the owner's photo of Arvell Reese, cropped
+  to his face: `favicon.ico` (16/32/48), 32 and 192 px PNGs, and a 180 px `apple-touch-icon.png` for a phone's
+  home screen, linked in the page head (outside the password gate, so the icon shows before unlocking). Site only.
+
 ### 2026-11-05, afternoon MDT (pull ticker on the site)
 - Owner: show which line pulls have run and which are pending. Each pull now records what it did in
   `data/cache/pull_log.json` (pulled, with the time and the number of games, or folded into a later pull when a
