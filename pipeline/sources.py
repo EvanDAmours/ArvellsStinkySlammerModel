@@ -5,7 +5,9 @@ file or package change makes the pipeline fail loudly instead of silently.
 Set TACKLE_FAKE_DATA=1 to run everything on synthetic data (used by the tests).
 """
 import io
+import json
 import os
+from pathlib import Path
 import re
 
 import numpy as np
@@ -282,17 +284,38 @@ def _canon_names(df, name_col, id_col):
 
 
 # ---------------------------------------------------------------- jersey numbers (nflverse weekly rosters)
+JERSEY_CACHE = Path("data/cache/jerseys.json")
+
+
 def load_jerseys(season):
-    """gsis player id -> jersey number from the latest weekly roster of the season; empty on synthetic data or failure."""
+    """gsis player id -> jersey number from the latest weekly roster of the season. Tried three times; on failure the
+    last good map (data/cache/jerseys.json) is used, so a network hiccup never blanks every number on the site
+    (2026-11-08: one failed fetch left all 763 projections without one). Empty on synthetic data."""
     if os.environ.get("TACKLE_FAKE_DATA"):
         return {}
+    import time
+    for attempt in range(3):
+        try:
+            r = _nflreadpy("load_rosters_weekly", seasons=[season])
+            r = r[r.gsis_id.notna() & r.jersey_number.notna()].sort_values("week")
+            latest = r.groupby("gsis_id").tail(1)
+            out = {str(g): int(j) for g, j in zip(latest.gsis_id, latest.jersey_number)}
+            if out:
+                try:
+                    JERSEY_CACHE.parent.mkdir(parents=True, exist_ok=True)
+                    JERSEY_CACHE.write_text(json.dumps(out))
+                except OSError:
+                    pass
+                return out
+            print(f"  jersey numbers: the roster feed came back empty (attempt {attempt + 1})")
+        except Exception as e:  # noqa: BLE001
+            print(f"  jersey numbers: {type(e).__name__}: {e} (attempt {attempt + 1})")
+        time.sleep(5 * (attempt + 1))
     try:
-        r = _nflreadpy("load_rosters_weekly", seasons=[season])
-        r = r[r.gsis_id.notna() & r.jersey_number.notna()].sort_values("week")
-        latest = r.groupby("gsis_id").tail(1)
-        return {str(g): int(j) for g, j in zip(latest.gsis_id, latest.jersey_number)}
-    except Exception as e:  # noqa: BLE001
-        print(f"  jersey numbers: {type(e).__name__}: {e}")
+        cached = json.loads(JERSEY_CACHE.read_text())
+        print(f"  jersey numbers: using the last good copy ({len(cached)} players)")
+        return cached
+    except (OSError, ValueError):
         return {}
 
 

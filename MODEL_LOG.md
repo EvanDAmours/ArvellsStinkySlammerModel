@@ -1400,6 +1400,12 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-08, morning MST (jersey numbers never go blank)
+- Owner: many players on My board had no number. The morning daily's roster fetch failed and the loader returned
+  an empty map without a word, so all 763 projections went out without a jersey (the board falls back to the
+  projections for bets saved without one). The loader now tries three times and, if the feed still fails or comes
+  back empty, uses the last good map kept in data/cache/jerseys.json. Republished by hand the same morning.
+
 ### 2026-11-08, morning MST (backup links short enough to text)
 - Owner: transfer links are too long to send by text. Codes and links now use a short form: each bet as a small
   array of what the ledger needs (player, team, opponent, position, market, side, line, book, price, stake, grade,
