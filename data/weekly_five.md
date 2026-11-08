@@ -1,7 +1,7 @@
 # Locks and parlays: running tally
 
 The locks: the highest-confidence picks of each slate day (3 on a one-game day, 5 on a multi-game day), named before kickoff and tracked here. Target: 70% hits. Then the recommended parlay for each slate day.
-Generated 2026-11-08 10:32 UTC by the daily job. Do not edit by hand.
+Generated 2026-11-08 15:38 UTC by the daily job. Do not edit by hand.
 
 **Locks record: 8-2 (80%), +4.21 units, 5 pending.**
 
@@ -35,11 +35,11 @@ Generated 2026-11-08 10:32 UTC by the daily job. Do not edit by hand.
 
 | Pick | Price | Book | Grade | Lock | Actual | Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| Eric Stokes Under 2.5 solo | -138 | DraftKings | A | 79 |  | Pending |
-| Jamien Sherwood Under 4.5 solo | -158 | DraftKings | A | 77 |  | Pending |
-| Zach Allen Under 1.5 solo | -179 | DraftKings | A | 75 |  | Pending |
-| Dane Belton Under 4.5 solo | -105 | theScore Bet | A | 73 |  | Pending |
-| Quinnen Williams Under 1.5 solo | -144 | DraftKings | A | 73 |  | Pending |
+| Grover Stewart Under 1.5 solo | -280 | theScore Bet | A | 87 |  | Pending |
+| C.J. Henderson Under 4.5 solo | -139 | DraftKings | A | 79 |  | Pending |
+| Eric Stokes Under 2.5 solo | -138 | DraftKings | A | 78 |  | Pending |
+| Jamien Sherwood Under 4.5 solo | -150 | theScore Bet | A | 77 |  | Pending |
+| Dane Belton Under 4.5 solo | -105 | theScore Bet | A | 76 |  | Pending |
 
 ## Luck or skill, week by week
 
@@ -61,4 +61,4 @@ All plays by side: our hit rate against the share of every closing line on the b
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-10-29 (wk 8) | Isaiah McDuffie Under 7.5 (Loss); Brandon Cisse Under 3.5 (Win) | +268 | 36% | 0.1u | Loss | -0.10 |
 | 2026-11-01 (wk 8) | Jason Marshall Jr. Under 2.5 (Win); Christian Benford Under 3.5 (Win); Sam Williams Under 3.5 (Win) | +346 | 37% | 0.1u | Win | +0.35 |
-| 2026-11-08 (wk 9) | Pat Surtain II Under 5.5 (Pending); Devon Witherspoon Under 6.5 (Pending) | +186 | 32% | 0.1u | Pending | +0.00 |
+| 2026-11-08 (wk 9) | Sam Williams Under 8.5 (Pending); Pat Surtain II Under 5.5 (Pending); Sauce Gardner Under 4.5 (Pending) | +425 | 24% | 0.1u | Pending | +0.00 |
