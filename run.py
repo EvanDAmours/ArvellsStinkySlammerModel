@@ -401,6 +401,8 @@ def cmd_sleep(now=None):
     """Seconds the ticker should sleep: until the next pull slot or the next daily, between 60 and 900."""
     now = now or dt.datetime.now(dt.timezone.utc)
     games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
+    if auto_plan(now=now, games=games, served=load_served()) is not None or daily_due(now):
+        return 120            # something is due and was not done (a failed beat): try again in two minutes
     due = []
     nxt = next_pull(now=now, games=games)
     if nxt:

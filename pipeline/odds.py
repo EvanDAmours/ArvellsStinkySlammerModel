@@ -76,7 +76,7 @@ def pull(api_keys, hours_ahead=None, days=None, event_ids=None):
             credits[name] = 0.0
     if events is None:
         raise RuntimeError("No Odds API key worked")
-    now, rows = _utcnow(), []
+    now, rows, failed = _utcnow(), [], []
     window = f"next {hours_ahead:g} hours" if hours_ahead else f"games on {sorted(days)}" if days else f"events {sorted(event_ids)}" if event_ids else "all upcoming"
     print(f"odds api: {len(events)} NFL events listed, pulling {window}, credits left " +
           ", ".join(f"{n} {c if c is not None else '?'}" for n, c in credits.items()))
@@ -92,13 +92,14 @@ def pull(api_keys, hours_ahead=None, days=None, event_ids=None):
         if name is None:
             print(f"Stopping: every key is below {C.MIN_CREDITS_LEFT} credits for this month.")
             break
-        r = requests.get(f"{BASE}/sports/{C.ODDS_SPORT}/events/{e['id']}/odds", timeout=30, params={
-            "apiKey": api_keys[name], "markets": ",".join(C.ODDS_MARKETS), "oddsFormat": "american", "includeLinks": "true", "includeSids": "true", **_book_params()})
         label = f"{e['away_team']} @ {e['home_team']} {e['commence_time']}"
+        r = _get_event_odds(e["id"], api_keys[name], label)
+        if r is None:
+            failed.append(label)
+            continue          # this game failed after retries: the other games still pull, and the next pull retries it
         if r.status_code in (404, 422):
             print(f"  {label}: HTTP {r.status_code} {r.text[:200].strip()}")
             continue
-        r.raise_for_status()
         if r.headers.get("x-requests-remaining") is not None:
             credits[name] = float(r.headers["x-requests-remaining"])
         books = r.json().get("bookmakers", [])
@@ -122,6 +123,8 @@ def pull(api_keys, hours_ahead=None, days=None, event_ids=None):
                                      player=player, line=float(point), over_odds=s.get("over"), under_odds=s.get("under"),
                                      book_update=m.get("last_update"), over_link=lk.get("over"), under_link=lk.get("under"), over_sid=sd.get("over"), under_sid=sd.get("under"),
                                      market_link=m.get("link"), book_link=bk.get("link"), event_sid=e.get("sid")))
+    if failed:
+        print(f"odds api: {len(failed)} game(s) skipped after retries: {'; '.join(failed)}")
     return rows, credits
 
 
@@ -189,6 +192,33 @@ def pull_historical(api_key, season, week, markets, hours_before=1.0, event_ids=
         rows.extend(got)
         print(f"  {label}: snapshot {body.get('timestamp', at)}, {len(got)} prices, cost {r.headers.get('x-requests-last', '?')}, left {left}")
     return rows, left
+
+
+RETRY_WAITS = (3, 10, 30)      # seconds between attempts at one game after a server error or a dropped connection
+
+
+def _get_event_odds(event_id, api_key, label):
+    """One game's odds. A server error (5xx, 429) or a dropped connection is retried with waits of RETRY_WAITS; a game
+    that still fails returns None so the rest of the slate pulls (2026-11-07: one game's 502 at 8 pm threw away the
+    whole Saturday pull). A client error other than 404/422 (a bad key) still raises."""
+    params = {"apiKey": api_key, "markets": ",".join(C.ODDS_MARKETS), "oddsFormat": "american", "includeLinks": "true", "includeSids": "true", **_book_params()}
+    import time
+    for attempt, wait in enumerate((0,) + RETRY_WAITS):
+        if wait:
+            time.sleep(wait)
+        try:
+            r = requests.get(f"{BASE}/sports/{C.ODDS_SPORT}/events/{event_id}/odds", timeout=30, params=params)
+        except (requests.ConnectionError, requests.Timeout) as ex:
+            print(f"  {label}: {type(ex).__name__} (attempt {attempt + 1})")
+            continue
+        if r.status_code >= 500 or r.status_code == 429:
+            print(f"  {label}: HTTP {r.status_code} (attempt {attempt + 1})")
+            continue
+        if r.status_code not in (404, 422):
+            r.raise_for_status()
+        return r
+    print(f"  {label}: still failing after {len(RETRY_WAITS) + 1} attempts; skipped this pull")
+    return None
 
 
 def save_snapshot(rows, season, week):

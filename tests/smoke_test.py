@@ -83,6 +83,19 @@ _s = subprocess.run([sys.executable, "run.py", "sleep"], cwd=tmp, env=env, captu
 _ps = json.loads((tmp / "docs" / "data" / "meta.json").read_text()).get("pull_schedule") or []
 check(_ps and all({"key", "at", "status", "kind"} <= set(x) for x in _ps) and all(x["status"] in ("pulled", "skipped", "due", "upcoming") for x in _ps), f"meta publishes the week's pull schedule with each slot's status ({len(_ps)} slots)")
 check('id="pulls"' in (ROOT / "docs" / "index.html").read_text() and "function renderPulls" in (ROOT / "docs" / "index.html").read_text(), "the site shows the pull ticker")
+# one game's server error must not lose the slate: retried, then skipped, never raised
+import pipeline.odds as _O, requests as _rq
+_saved = (_O.requests.get, _O.RETRY_WAITS); _O.RETRY_WAITS = (0, 0, 0); _n = {"c": 0}
+class _Resp:
+    def __init__(s, code): s.status_code, s.text, s.headers = code, "", {}
+    def raise_for_status(s):
+        if s.status_code >= 400: raise _rq.HTTPError(str(s.status_code))
+def _flaky(url, timeout, params):
+    _n["c"] += 1; return _Resp(502) if _n["c"] < 3 else _Resp(200)
+_O.requests.get = _flaky; _ok = _O._get_event_odds("e", "k", "A @ B")
+_O.requests.get = lambda url, timeout, params: _Resp(502); _gone = _O._get_event_odds("e", "k", "A @ B")
+_O.requests.get, _O.RETRY_WAITS = _saved
+check(_ok is not None and _ok.status_code == 200 and _n["c"] == 3 and _gone is None, "a game's 502 is retried, and a game that keeps failing is skipped instead of crashing the pull")
 check(_s.returncode == 0 and _s.stdout.strip().isdigit() and 60 <= int(_s.stdout.strip()) <= 900, f"the ticker's sleep is between a minute and fifteen ({_s.stdout.strip()})")
 check((tmp / "data" / "picks.csv").exists() and "stake" in pd.read_csv(tmp / "data" / "picks.csv").columns, "the stake is logged with the pick")
 bets = json.loads((tmp / "docs/data/bets.json").read_text())

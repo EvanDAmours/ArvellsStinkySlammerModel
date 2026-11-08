@@ -1400,6 +1400,17 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-07, 8:30 pm MST (one game's server error no longer loses a pull)
+- Owner: the Saturday 8 pm pull had not happened. The ticker was on time (its beat started the pull at 8:00:28),
+  but The Odds API answered 502 Bad Gateway on one of the 13 games and the pull raised on it, so the whole beat
+  was dropped (by design: a failed beat commits nothing and leaves the slot unserved). The next beat was 15
+  minutes out; the owner's alert came first and the pull was run by hand at 8:13 (383 prices, 13 games).
+- Fix: each game's request is retried after a server error, a 429 or a dropped connection (waits of 3, 10 and 30
+  seconds); a game that still fails is skipped and named in the log, and the other games pull (the next pull
+  retries it). A client error other than 404/422 (a bad key) still raises. And when a slot or the daily is due and
+  undone after a beat (a failed beat), the ticker comes back in two minutes instead of fifteen. Smoke test covers
+  the retry and the skip.
+
 ### 2026-11-07, evening MST (My board: the best case for the day)
 - Owner: show what the board makes if every pending bet hits. A tile on My board adds the profit of every bet not
   yet settled, started or not, to what has already settled ("if every pending bet hits"), with the profit and the
