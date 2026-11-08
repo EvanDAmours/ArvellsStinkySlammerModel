@@ -1423,7 +1423,45 @@ async function unpack(code) {
   return JSON.parse(new TextDecoder().decode(raw));
 }
 function ledgerExport() { return { v: 1, exported: new Date().toISOString(), weeks: Object.fromEntries(allWeeks().map((w) => [w.key, w.list])) }; }
+// The short form for codes and links: each bet as a small array of what the ledger needs (who, which line, price,
+// stake, grade, kickoff, result), common words as numbers, nothing the site can rebuild (slip links, projections,
+// ids). About a sixth of the full form; restoring rebuilds the full bet. Files keep the full form.
+const SHORT_MK = ["player_tackles_assists", "player_solo_tackles", "player_assists"], SHORT_BK = ["DraftKings", "theScore Bet", "Bally Bet", "FanDuel"], SHORT_T0 = Date.UTC(2026, 0, 1) / 60000;
+const shortIdx = (arr, v) => { const i = arr.indexOf(v); return i >= 0 ? i : v; };
+function ledgerShort() {
+  const w = {};
+  for (const wk of allWeeks()) {
+    const m = wk.key.match(WEEK_RE); if (!m) continue;
+    w[`${m[1]}-${m[2]}`] = wk.list.map((b) => {
+      const t = b.commence_time ? Math.round(new Date(b.commence_time).getTime() / 60000 - SHORT_T0) : null;
+      const r = b.settled?.result ? (b.settled.source === "official" ? b.settled.result[0] : b.settled.result[0].toLowerCase()) : null;
+      const row = [b.player, b.team || "", b.opp || "", b.group || "", shortIdx(SHORT_MK, b.market), (b.side || b.pick) === "Under" ? 1 : 0, +b.line, shortIdx(SHORT_BK, b.book),
+                   b.odds ?? null, b.stake ?? null, b.grade || null, b.lock == null ? null : Math.round(b.lock), t, b.jersey ?? null, r, b.settled?.actual ?? null, b.archived ? 1 : null];
+      while (row.length && row[row.length - 1] == null) row.pop();     // trailing blanks cost nothing
+      return row;
+    });
+  }
+  return { v: 2, w };
+}
+function ledgerFromShort(o) {
+  const weeks = {}, RES = { W: "Win", L: "Loss", P: "Push", V: "Void" };
+  for (const [sw, rows] of Object.entries(o.w || {})) {
+    const [season, week] = sw.split("-").map(Number);
+    weeks[`mine-${season}-wk${week}`] = rows.map((r) => {
+      const [player, team, opp, group, mk, under, line, bk, odds, stake, grade, lock, t, jersey, res, actual, arch] = r;
+      const b = { player, team, opp, group, market: typeof mk === "number" ? SHORT_MK[mk] : mk, side: under ? "Under" : "Over", line, book: typeof bk === "number" ? SHORT_BK[bk] : bk,
+                  odds: odds ?? null, stake: stake ?? null, grade: grade ?? null, lock: lock ?? null, season, week, jersey: jersey ?? null,
+                  commence_time: t == null ? null : new Date((t + SHORT_T0) * 60000).toISOString() };
+      if (res) b.settled = { result: RES[res.toUpperCase()] || res, actual: actual ?? null, source: res === res.toUpperCase() ? "official" : "live" };
+      if (arch) b.archived = true;
+      b.key = betKey(b);
+      return b;
+    });
+  }
+  return { v: 1, weeks };
+}
 function ledgerImport(obj) {
+  if (obj && obj.v === 2) obj = ledgerFromShort(obj);
   if (!obj || obj.v !== 1 || !obj.weeks) throw new Error("not a ledger backup");
   let added = 0, weeks = 0;
   for (const [k, list] of Object.entries(obj.weeks)) {
@@ -1439,14 +1477,25 @@ function backupBox() {
   const wrap = el("div", { class: "section" }, el("h3", {}, "Back up or move this ledger"), el("p", { class: "lead" }, "The ledger lives in this browser only. Back it up as a file, copy it as a code, or send a transfer link to another device; opening the link there imports every week into that device's ledger (merging, never duplicating). A backup is the only way to keep it if this browser's storage is cleared."));
   const out = el("textarea", { class: "code", rows: "3", readonly: "", placeholder: "Press one of the buttons", "aria-label": "Backup code or link" });
   const bFile = el("button", { type: "button", class: "reset" }, "Download backup file"); bFile.onclick = () => { const a = el("a", { href: URL.createObjectURL(new Blob([JSON.stringify(ledgerExport(), null, 1)], { type: "application/json" })), download: `my-board-ledger-${new Date().toISOString().slice(0, 10)}.json` }); document.body.append(a); a.click(); a.remove(); };
-  const bCode = el("button", { type: "button", class: "reset" }, "Backup code"); bCode.onclick = async () => { out.value = await pack(ledgerExport()); out.select(); };
-  const bLink = el("button", { type: "button", class: "reset" }, "Transfer link"); bLink.onclick = async () => { out.value = `${location.href.split("#")[0]}#import=${await pack(ledgerExport())}`; out.select(); };
+  const bCode = el("button", { type: "button", class: "reset" }, "Backup code"); bCode.onclick = async () => { out.value = await pack(ledgerShort()); out.select(); };
+  const linkNow = async () => `${location.origin}${location.pathname}#import=${await pack(ledgerShort())}`;
+  const bLink = el("button", { type: "button", class: "reset" }, "Transfer link"); bLink.onclick = async () => { out.value = await linkNow(); out.select(); msg.textContent = `${out.value.length.toLocaleString()} characters`; };
+  // a phone's share sheet: the backup as a file attachment (any length) to Messages, Mail or AirDrop; opening it on the
+  // other phone and choosing it under "Restore from file" imports it. Falls back to sharing the short link.
+  const bShare = el("button", { type: "button", class: "reset" }, "Share backup"); bShare.onclick = async () => {
+    const f = new File([JSON.stringify(ledgerExport())], `my-board-ledger-${new Date().toISOString().slice(0, 10)}.json`, { type: "application/json" });
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: "My board ledger" }); msg.textContent = "Shared as a file: on the other device, save it and choose it under Restore from file."; return; }
+      if (navigator.share) { await navigator.share({ title: "My board ledger", url: await linkNow() }); msg.textContent = "Shared the transfer link."; return; }
+      out.value = await linkNow(); out.select(); msg.textContent = "This browser cannot share directly: copy the link or download the file instead.";
+    } catch (e) { if (e && e.name !== "AbortError") msg.textContent = `Sharing did not finish (${e.message || e}).`; }
+  };
   const bCopy = el("button", { type: "button", class: "reset" }, "Copy"); bCopy.onclick = async () => { try { await navigator.clipboard.writeText(out.value); bCopy.textContent = "Copied"; setTimeout(() => { bCopy.textContent = "Copy"; }, 1500); } catch (e) { out.select(); } };
   const inp = el("textarea", { class: "code", rows: "2", placeholder: "Paste a backup code or transfer link here to restore", "aria-label": "Restore code" });
   const bRestore = el("button", { type: "button", class: "reset" }, "Restore from code"); bRestore.onclick = async () => { try { const t = inp.value.includes("#import=") ? inp.value.split("#import=")[1] : inp.value; const r = ledgerImport(await unpack(t)); msg.textContent = `Restored: ${r.added} bet${r.added === 1 ? "" : "s"} added across ${r.weeks} week${r.weeks === 1 ? "" : "s"}.`; renderPlays(); renderMine(); } catch (e) { msg.textContent = "That code did not restore (" + (e.message || e) + ")."; } };
   const file = el("input", { type: "file", accept: "application/json,.json", "aria-label": "Restore from a backup file" }); file.addEventListener("change", async () => { try { const r = ledgerImport(JSON.parse(await file.files[0].text())); msg.textContent = `Restored: ${r.added} bet${r.added === 1 ? "" : "s"} added across ${r.weeks} week${r.weeks === 1 ? "" : "s"}.`; renderPlays(); renderMine(); } catch (e) { msg.textContent = "That file did not restore (" + (e.message || e) + ")."; } });
   const msg = el("div", { class: "count" });
-  wrap.append(el("div", { class: "chips" }, bFile, bCode, bLink, bCopy), out, el("div", { class: "chips" }, el("label", {}, "Restore from file ", file), bRestore), inp, msg);
+  wrap.append(el("div", { class: "chips" }, bShare, bFile, bCode, bLink, bCopy), out, el("div", { class: "chips" }, el("label", {}, "Restore from file ", file), bRestore), inp, msg);
   return wrap;
 }
 async function importFromHash() {

@@ -1400,6 +1400,16 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-08, morning MST (backup links short enough to text)
+- Owner: transfer links are too long to send by text. Codes and links now use a short form: each bet as a small
+  array of what the ledger needs (player, team, opponent, position, market, side, line, book, price, stake, grade,
+  lock score, kickoff, jersey, result and actual, archived), common words as numbers, and none of what the site
+  rebuilds (slip links, projections, ids, timestamps). A 60-bet ledger: 2,149 characters to 877; restoring it
+  rebuilds every bet exactly (stake, grade, price, result, archived), and old long links still import. Backup files
+  keep the full form. New "Share backup" button: on a phone it opens the share sheet with the backup as a file
+  attachment, any size, to Messages, Mail or AirDrop (restore it with Restore from file); where a browser cannot
+  share files it shares the short link. The transfer link now shows its length.
+
 ### 2026-11-08, early morning MST (My board with many bets)
 - Owner: with lots of bets live at once the board is hard to follow. My board now has filter chips by state (all,
   trending right, behind, not started, won, lost, each with its count); bets in play are grouped by game, each
