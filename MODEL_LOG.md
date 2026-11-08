@@ -1400,6 +1400,17 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-08, afternoon MST (My board: where a player is heading, not a straight-line pace)
+- Owner: one early tackle should not read as twelve for the game. The live pace was tackles so far divided by the
+  share of the game played. It is now tackles so far plus the expected tackles for the part of the game left, from
+  the model's projection for that market (which already carries his expected snaps), nudged by today's rate with
+  the weight of one game against four games of the projection (`projectedFinal`). Fitted on 2024-2025 play-by-play,
+  10,115 player-games with a season average of 2+: first-half tackles correlate 0.24 with second-half tackles,
+  the season average 0.40. Predicting the rest of the game after the first quarter: error 14.0 the old way, 4.3 the
+  new way (prior weight 0.5 game 5.2, 1 game 4.6, 2 games 4.4, 4 games 4.30, 8 games 4.30, projection only 4.31);
+  after the half: 4.9 against 2.7. The verdicts (on track, behind) and the money on current pace use it; the label
+  reads "heading for". Site only.
+
 ### 2026-11-08, midday MST (the phone showed the desktop page)
 - Owner: on a phone the site opened looking like the desktop version. Cause: the phone layout pushed earlier that
   morning let every scrolling box on My board stretch instead of scroll, to stop the compact list scrolling

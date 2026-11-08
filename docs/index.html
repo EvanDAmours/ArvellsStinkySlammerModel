@@ -1191,6 +1191,21 @@ function liveLoop(now) {
     LIVE.timer = setTimeout(run, live ? 60000 : soon ? 120000 : 600000); };
   LIVE.timer = setTimeout(run, now ? 0 : 500);
 }
+// Where a player's total is headed: what he has, plus his expected tackles for the part of the game left. The
+// expectation is the model's projection for this market (it already carries the snaps he is expected to play),
+// nudged by today's rate with the weight of one game against PACE_PRIOR_GAMES of the projection. Fitted on
+// 2024-2025 play-by-play (10,115 player-games): after the first quarter the rest of the game is predicted with
+// error 4.3 this way against 14.0 for the old "so far / share of the game played", which turned one early tackle
+// into twelve. The weight barely matters between 4 and 8 games; a game's early tackles say little about the rest.
+const PACE_PRIOR_GAMES = 4;
+function projectedFinal(b, have, share) {
+  if (have == null || share <= 0) return null;
+  if (share >= 1) return have;
+  const wl = (DATA.week_lines || []).find((l) => l.player === b.player && l.market === b.market && l.proj != null);
+  const prior = b.proj != null ? +b.proj : wl ? +wl.proj : +b.line;        // his expected total for a full game
+  const rate = (have + PACE_PRIOR_GAMES * prior) / (share + PACE_PRIOR_GAMES);
+  return have + (1 - share) * rate;
+}
 function elapsedShare(g) {
   if (!g || g.state === "pre") return 0; if (g.state === "post") return 1;
   const [m, s] = String(g.clock || "0:00").split(":").map(Number); const left = (isNaN(m) ? 0 : m) + (isNaN(s) ? 0 : s) / 60;
@@ -1214,7 +1229,7 @@ function renderMine() {
     const lastLine = (DATA.week_lines || []).find((l) => (b.player_id && l.player_id === b.player_id) || (normName(l.player) === normName(b.player) && l.team === b.team));
     const scratched = !!lastLine && OUT_STATUSES.has(String(lastLine.status || "").toLowerCase());
     const kind = kindOf(b.market), solo = kind === "solo"; const have = st ? (solo ? st.solo : kind === "assists" ? Math.max(0, st.tot - st.solo) : st.tot) : (bx && g && g.state !== "pre" ? 0 : null);   // in the box score but no row yet means no tackles yet
-    const share = elapsedShare(g); const pace = have == null || share <= 0 ? null : have / share;
+    const share = elapsedShare(g); const pace = projectedFinal(b, have, share);
     const under = b.side === "Under";
     let status, cls = "", verdict = "";
     if (!g) status = LIVE.error ? `Live feed unavailable (${LIVE.error}); graded from the official box score tomorrow` : "Game not found on ESPN yet";
@@ -1224,7 +1239,7 @@ function renderMine() {
     else { live++; const ok = have != null && (under ? have < b.line && (pace == null || pace < b.line) : have > b.line || (pace != null && pace > b.line)); const clinched = have != null && (under ? false : have > b.line); const dead = have != null && under && have > b.line;
       status = `${g.detail || `Q${g.period} ${g.clock}`} · ${g.teams[0]} ${g.score[g.teams[0]]}-${g.score[g.teams[1]]} ${g.teams[1]}`; cls = dead ? " bad" : clinched || ok ? " good" : " bad"; if (!dead && (clinched || ok)) onTrack++;
       const early = share < 0.25 ? "early, " : "";
-      verdict = dead ? `Lost: already past ${b.line}` : clinched ? `Won: past ${b.line}` : ok ? `On track (${early}pace ${pace.toFixed(1)} for the game)` : `Behind (${early}pace ${pace == null ? "?" : pace.toFixed(1)} for the game)`; }
+      verdict = dead ? `Lost: already past ${b.line}` : clinched ? `Won: past ${b.line}` : ok ? `On track (${early}heading for ${pace.toFixed(1)})` : `Behind (${early}heading for ${pace == null ? "?" : pace.toFixed(1)})`; }
     const stake = b.stake == null ? null : +b.stake, dec = toDec(b.odds), win = stake != null && dec ? stake * (dec - 1) : null;
     let result = null;
     // a final result is written on the bet once, so the ledger keeps it after the week closes: the official grade when
@@ -1291,7 +1306,7 @@ function compactRows(items) {
   const tb = el("tbody", {});
   for (const c of items) {
     const m = c._m, b = m.b;
-    const now = m.have == null ? "–" : `${m.have}${m.pace != null && m.stateKey === "in" ? ` (pace ${m.pace.toFixed(1)})` : ""}`;
+    const now = m.have == null ? "–" : `${m.have}${m.pace != null && m.stateKey === "in" ? ` (→ ${m.pace.toFixed(1)})` : ""}`;
     const pill = { good: ["ok", "On track"], bad: ["no", "Behind"], won: ["ok", "Won"], lost: ["no", "Lost"], pre: ["", "Not started"], other: ["", m.status.split("·")[0].trim()] }[m.sk] || ["", ""];
     const money_ = m.result != null ? el("b", { class: m.result > 0 ? "ok" : m.result < 0 ? "no" : "" }, `${m.result > 0 ? "+" : ""}${money(m.result)}`) : m.stake != null ? `${money(m.stake)}${m.win != null ? ` → ${money(m.win)}` : ""}` : "";
     const row = el("tr", { class: `st-${m.sk}`, title: `${m.verdict ? m.verdict + " · " : ""}${m.status}` },
@@ -1732,7 +1747,7 @@ function glossTerms() {
       ["Walk-forward", "Scoring a model only on games after everything it learned from. In-sample numbers (scored on the games it trained on) flatter a model several times over; nothing on this site is reported in-sample without saying so."]]],
     ["My board", [
       ["Live and official", "While a game is on, a bet on My board is tracked from ESPN's live box score; the morning after, the official stat line replaces it. The two can differ by an assist here and there; only the official one settles the ledger."],
-      ["On current pace", "Where his total would land if his tackle rate so far in the game held to the end, with the money that would mean. A read, not a prediction; tackles come in bunches."],
+      ["On current pace (heading for)", "Where his total is headed: what he has so far plus the model's expected tackles for the part of the game left (the projection already counts the snaps he should play), nudged a little by his rate today. Early tackles say little about the rest of a game, so one tackle in the first quarter moves the estimate by about a tackle, not to twelve. With the money that would mean. A read, not a promise: a player hurt mid-game keeps his estimate until the box score shows it."],
       ["In play", "Money counts toward the day's total only once the game has kicked off, because a bet can still be withdrawn before then. The unstarted column shows what is queued."],
       ["Ledger", "Every week's board kept on this device, with the official result and the grade on each bet, and the running total for the season. Closed weeks fold away; clearing the board archives the week, it never deletes it. Back it up: the ledger lives in the browser only."]]]];
 }
