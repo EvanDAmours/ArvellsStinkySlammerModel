@@ -1133,9 +1133,15 @@ function toggleMine(b) {
   saveMine(list); renderPlays(); renderMine(); liveLoop(true);
 }
 // the book's own bet-slip link for a side, when The Odds API passed one through (DraftKings and FanDuel do)
-const sideLink = (b, side) => (side === "Under" ? b.under_link : b.over_link) || null;
+// theScore Bet's links come from the US feed (The Odds API's "espnbet", the former ESPN BET, rebranded theScore Bet in
+// December 2025): they point at the US site with the US book's selection ids, which the Alberta theScore Bet app cannot
+// open (owner, 2026-11-08). They are dropped; the card names the book so the bet can be found in the app by hand.
+const US_ONLY_LINK = /^https:\/\/sportsbook\.thescore\.bet\//;
+const sideLink = (b, side) => { const h = (side === "Under" ? b.under_link : b.over_link) || null; return h && US_ONLY_LINK.test(h) ? null : h; };
 function betLink(b, side, label) {
-  const href = sideLink(b, side); if (!href || !/^https:\/\//.test(href)) return "";
+  const href = sideLink(b, side);
+  if (!href && b.book === "theScore Bet") return el("span", { class: "muted", title: "theScore Bet's lines come from its US feed (the former ESPN BET); its links cannot open the Alberta app's slip, and the Alberta book can price differently. Find the player in the app and check the price there." }, "Find in theScore Bet app (US feed price)");
+  if (!href || !/^https:\/\//.test(href)) return "";
   return el("a", { class: "bet-link", href, target: "_blank", rel: "noopener noreferrer", title: `Opens ${b.book} with this selection in the bet slip` }, label || `Bet at ${b.book} ↗`);
 }
 // one slip for several selections: DraftKings joins outcome ids with "+" in one outcomes= query (seen on the 2026-11-01 pull
@@ -1705,7 +1711,7 @@ function glossTerms() {
       ["Hit rate", "Wins divided by wins plus losses (pushes and voids left out). The break-even hit rate at −110 is 52.4%, so a 55% hit rate on −110 prices is a profit and a 51% one is a loss."],
       ["Return per bet (ROI)", "Units won or lost divided by bets made. +5% means five cents of profit for every dollar staked over the sample. The best sustained numbers in any market are single digits."],
       ["Parlay, same-game parlay", "Two or more legs that must all win; the payout multiplies the decimal odds, so the price is long and the chance is the product of the legs' chances (two 60% legs together hit 36%). A same-game parlay has legs from one game; the books restrict which markets can go in one, which is why the site's parlay is two combined-tackle legs."],
-      ["Slip link", "The 'tail on DraftKings' and theScore Bet links on a pick or parlay open the book's app with that selection already on the slip. Prices there can differ from the ones pulled here; the pick stands on the price shown on the site."]]],
+      ["Slip link", "The 'Bet at DraftKings' links on a pick or parlay open the book's app with that selection already on the slip. theScore Bet has no slip link: its lines come from the US theScore Bet feed (the former ESPN BET), whose links the Alberta app cannot open, so find the player in the app by hand, and check the price there, since the Alberta book can price differently. Prices there can differ from the ones pulled here; the pick stands on the price shown on the site."]]],
     ["The projection", [
       ["Projection", "The model's expected tackles for the player in this game: his per-snap tackle rate in his current role, times the snaps he is expected to play, times the game's adjustments (the opponent's pace and run rate, the home scorekeepers, the point spread, rest). It is an average, not a prediction of one number: a 6.0 projection means 6 is the centre of a wide range."],
       ["Priced projection, line weight", "The number the picks are priced from. The posted line is itself a forecast, and it has predicted tackles better than the raw projection on its own, so the pricing mean is " + pct(1 - lw) + " model and " + pct(lw) + " the consensus line. It keeps the model's claimed edges honest; the raw projection is on the Projections tab."],

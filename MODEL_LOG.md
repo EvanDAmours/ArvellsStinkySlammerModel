@@ -1400,6 +1400,17 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-08, afternoon MST (theScore Bet links, and whose prices they are)
+- Owner: theScore Bet links do not open the slip in the app. Cause: the board's theScore Bet lines come from The
+  Odds API's `espnbet` key, the US book (ESPN BET was rebranded theScore Bet in December 2025). Its links point at
+  the US site (sportsbook.thescore.bet) with the US book's selection ids, which the Alberta theScore Bet app cannot
+  open, and there is no Alberta link to rebuild them from. The site no longer shows those links (`sideLink` drops
+  them); a theScore card says "Find in theScore Bet app (US feed price)" instead; the glossary explains.
+- Open question, more important than the links: the prices may be the US book's, not Alberta's. Every theScore
+  pick so far was priced from the US feed. Until a comparison against the Alberta app shows they match, treat a
+  theScore price as a guide and check it in the app before betting. DraftKings links and prices are unaffected.
+- Pitfall: a book's name in the feed is not proof it is the Alberta book; check the feed key and the link domain.
+
 ### 2026-11-08, afternoon MST (My board: where a player is heading, not a straight-line pace)
 - Owner: one early tackle should not read as twelve for the game. The live pace was tackles so far divided by the
   share of the game played. It is now tackles so far plus the expected tackles for the part of the game left, from
