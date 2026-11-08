@@ -83,6 +83,12 @@ _s = subprocess.run([sys.executable, "run.py", "sleep"], cwd=tmp, env=env, captu
 _ps = json.loads((tmp / "docs" / "data" / "meta.json").read_text()).get("pull_schedule") or []
 check(_ps and all({"key", "at", "status", "kind"} <= set(x) for x in _ps) and all(x["status"] in ("pulled", "skipped", "due", "upcoming") for x in _ps), f"meta publishes the week's pull schedule with each slot's status ({len(_ps)} slots)")
 check('id="pulls"' in (ROOT / "docs" / "index.html").read_text() and "function renderPulls" in (ROOT / "docs" / "index.html").read_text(), "the site shows the pull ticker")
+# trade watch: a new trade on the wire raises one alert; other moves and old entries do not
+from pipeline import watch as _W
+_rows = [("2026-11-09T08:00Z", "Acquired LB Some One from the Chicago Bears in exchange for a 2027 fifth-round pick."), ("2026-11-09T08:00Z", "Signed WR Jalin Hyatt from the practice squad."),
+         ("2026-11-05T08:00Z", "Waived QB Jake Haener."), ("2026-11-02T08:00Z", "Traded CB Old Guy to the Jets.")]
+_hits = _W.new_trades(_rows, {"2026-11-02T08:00Z|Traded CB Old Guy to the Jets."})
+check([s for _, s in _hits] == [_rows[0][1]], f"the trade watch flags a new trade only ({len(_hits)} hits)")
 # one game's server error must not lose the slate: retried, then skipped, never raised
 import pipeline.odds as _O, requests as _rq
 _saved = (_O.requests.get, _O.RETRY_WAITS); _O.RETRY_WAITS = (0, 0, 0); _n = {"c": 0}

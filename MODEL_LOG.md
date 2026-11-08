@@ -1400,6 +1400,16 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-08, afternoon MST (Giants trade watch until the deadline)
+- Owner: a notification the moment the Giants make a trade before the deadline (Tuesday 2026-11-10, 4 pm ET).
+  Nothing here can send a text, so the alert is a GitHub issue that mentions the owner (GitHub emails it and pushes
+  it to the GitHub app). `pipeline/watch.py` reads ESPN's Giants transaction wire on every ticker beat (every 2 to
+  15 minutes), and the first time an entry reads as a trade ("traded", "trade", "acquired") it opens one issue;
+  signings, waivers and IR moves are ignored. The 25 entries already on the wire were marked seen (watch/
+  trade_seen.json, outside data/ so a failed beat cannot cause a second alert). It switches itself off after
+  2026-11-11 06:00 UTC (`config.TRADE_WATCH`). ESPN lists a trade once the league processes it, so the alert can
+  trail the first news report by minutes to hours. The ticker workflow gained `issues: write`.
+
 ### 2026-11-08, afternoon MST (theScore Bet links, and whose prices they are)
 - Owner: theScore Bet links do not open the slip in the app. Cause: the board's theScore Bet lines come from The
   Odds API's `espnbet` key, the US book (ESPN BET was rebranded theScore Bet in December 2025). Its links point at

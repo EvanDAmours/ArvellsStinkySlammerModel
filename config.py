@@ -183,3 +183,7 @@ PARLAY_MIN_PROB = 0.56                      # a leg needs at least this claimed 
 PARLAY_FALLBACK_PROB = 0.53                 # if too few legs clear that, legs down to this chance are allowed; below it, no parlay
 PARLAY_KELLY_FRACTION = 0.25                # stake = this fraction of the Kelly stake for the parlay
 PARLAY_UNITS = (0.1, 1.0)                   # stake bounds, in units
+
+# Trade watch (pipeline/watch.py): the owner is notified (a GitHub issue that mentions them, so GitHub emails and
+# pushes) the first time a trade appears on the team's ESPN transaction wire. On every ticker beat until `until`.
+TRADE_WATCH = dict(team="NYG", espn_team_id=19, notify="EvanDAmours", until="2026-11-11T06:00:00+00:00")   # deadline: Tue 2026-11-10, 4 pm ET

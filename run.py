@@ -641,7 +641,8 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["daily", "odds", "seal", "history", "tick", "sleep"])
+    ap.add_argument("cmd", choices=["daily", "odds", "seal", "history", "tick", "sleep", "watch"])
+    ap.add_argument("--test", action="store_true", help="watch: raise one test alert")
     ap.add_argument("--hours", type=float, default=None)
     ap.add_argument("--auto", action="store_true")
     ap.add_argument("--weeks", default="", help="history: comma-separated finished weeks to fetch, e.g. 7,8")
@@ -654,6 +655,9 @@ if __name__ == "__main__":
             cmd_history([int(w) for w in a.weeks.split(",") if w.strip()], [m for m in a.markets.split(",") if m.strip()])
         elif a.cmd == "tick":
             cmd_tick()
+        elif a.cmd == "watch":
+            from pipeline import watch as W
+            W.run(test=a.test)
         elif a.cmd == "sleep":
             print(cmd_sleep())
         else:
