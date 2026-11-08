@@ -134,7 +134,7 @@ table.mine-compact tr.mine-expand td { white-space: normal; padding: 4px 0 10px;
   table.mine-compact tr.mine-expand { display: block; padding: 0; } table.mine-compact tr.mine-expand td { display: block; }
   table.mine-compact tr.st-good, table.mine-compact tr.st-won { box-shadow: inset 4px 0 #1f8a4c; } table.mine-compact tr.st-bad, table.mine-compact tr.st-lost { box-shadow: inset 4px 0 #c0392b; }
   table.mine-compact tr td:first-child { box-shadow: none !important; }
-  .mine-section .scroll, #mine-body .scroll { overflow-x: visible; }
+  .scroll.compact-wrap { overflow-x: visible; }
   .game-h { font-size: 0.85rem; }
 }
 .pill { border-radius: 999px; padding: 1px 8px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--line); } .pill.ok { color: #1f8a4c; border-color: #1f8a4c; } .pill.no { color: #c0392b; border-color: #c0392b; }
@@ -152,7 +152,7 @@ table.mine-compact tr.mine-expand td { white-space: normal; padding: 4px 0 10px;
 .records .sub { flex-basis: 100%; color: var(--muted); font-size: 0.88rem; margin: -4px 0 0; }
 .legend { border: 1px solid var(--line, #cfd4dc); border-radius: 10px; padding: 8px 12px; margin: 0 0 14px; font-size: 0.92rem; }
 .legend summary { cursor: pointer; font: 700 1rem/1.4 var(--cond); }
-.legend table { margin: 8px 0; } .legend td, .legend th { padding: 4px 10px 4px 0; }
+.legend table { margin: 8px 0; max-width: 100%; } .legend td, .legend th { padding: 4px 10px 4px 0; white-space: normal; }
 .legend p { margin: 6px 0; color: var(--muted); }
 .five-box { border: 2px solid #1f8a4c; border-radius: 10px; padding: 10px 12px 2px; margin: 0 0 16px; }
 .five-box h3 { margin: 0 0 6px; font: 700 1.1rem/1.2 var(--cond); }
@@ -1305,7 +1305,7 @@ function compactRows(items) {
     tb.append(row);
   }
   t.append(tb);
-  return el("div", { class: "scroll" }, t);
+  return el("div", { class: "scroll compact-wrap" }, t);
 }
 function renderMineSections(box, groups, total) {
   const all = [...groups.in, ...groups.pre, ...groups.post];

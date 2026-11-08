@@ -1400,6 +1400,15 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-08, midday MST (the phone showed the desktop page)
+- Owner: on a phone the site opened looking like the desktop version. Cause: the phone layout pushed earlier that
+  morning let every scrolling box on My board stretch instead of scroll, to stop the compact list scrolling
+  sideways; that also caught the season ledger's 8-column tables, so with any ledger history the page grew to 857
+  px on a 390 px screen and Safari zoomed the whole site out to fit. My own phone test had no ledger, so it missed
+  it. Now only the compact list stretches (it is laid out to fit); every other table scrolls inside its box again,
+  and the legend's grade table wraps. Checked on an emulated iPhone with ledger history and every fold open: 390
+  px wide. Pitfall: test phone layouts with a full board, ledger and every section open, not an empty one.
+
 ### 2026-11-08, late morning MST (My board on a phone)
 - Owner: too much scrolling on a phone. On narrow screens the compact list is now two lines per bet that fit the
   width (grade, player and status pill on top; bet, tackles so far with pace, and stake to win below), with no
