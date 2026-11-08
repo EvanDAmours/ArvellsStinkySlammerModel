@@ -1400,6 +1400,12 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-08, late morning MST (My board on a phone)
+- Owner: too much scrolling on a phone. On narrow screens the compact list is now two lines per bet that fit the
+  width (grade, player and status pill on top; bet, tackles so far with pace, and stake to win below), with no
+  sideways scrolling; and while any game is live, the bets still to kick off fold into one line with their count,
+  stakes and what they pay (a tap opens them), like the settled ones. Site only.
+
 ### 2026-11-08, morning MST (jersey numbers never go blank)
 - Owner: many players on My board had no number. The morning daily's roster fetch failed and the loader returned
   an empty map without a word, so all 763 projections went out without a jersey (the board falls back to the
