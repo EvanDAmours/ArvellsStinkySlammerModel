@@ -1400,6 +1400,14 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-08, early morning MST (My board with many bets)
+- Owner: with lots of bets live at once the board is hard to follow. My board now has filter chips by state (all,
+  trending right, behind, not started, won, lost, each with its count); bets in play are grouped by game, each
+  game headed by its score, clock and how many of its bets are right or behind; settled bets fold into one line
+  with their record and net, opened on a click; and a compact view puts each bet on one line (grade, player, bet,
+  tackles so far with the pace, an on-track/behind/won/lost pill, stake to win or the result), a click opening the
+  full card underneath. Compact is the default from six bets up and the choice is remembered. Site only.
+
 ### 2026-11-07, evening MST (one-click slip of every A pick)
 - Owner: a parlay of every A-grade pick at DraftKings, clickable from the home page. The Plays tab now opens with
   a box listing every A pick still to kick off (one per player and market, at DraftKings' price and slip id even

@@ -114,6 +114,17 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 .pulls .chip { border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .pulls .chip.pulled { border-color: #1f8a4c; color: #1f8a4c; } .pulls .chip.skipped { opacity: 0.55; text-decoration: line-through; }
 .pulls .chip.late { border-color: #c0392b; color: #c0392b; font-weight: 700; } .pulls .chip.next { border-color: var(--ink); color: var(--ink); font-weight: 700; }
+.mine-filter { margin: 10px 0 4px; }
+.game-h { margin: 12px 0 6px; padding: 6px 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; font-size: 0.92rem; }
+.game-h .tally { color: var(--muted); }
+table.mine-compact { width: 100%; font-size: 0.9rem; border-collapse: collapse; }
+table.mine-compact td, table.mine-compact th { padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; text-align: left; }
+table.mine-compact .n { text-align: right; font-variant-numeric: tabular-nums; }
+table.mine-compact tbody tr { cursor: pointer; } table.mine-compact tr.st-good td:first-child, table.mine-compact tr.st-won td:first-child { box-shadow: inset 4px 0 #1f8a4c; }
+table.mine-compact tr.st-bad td:first-child, table.mine-compact tr.st-lost td:first-child { box-shadow: inset 4px 0 #c0392b; }
+table.mine-compact tr.mine-expand td { white-space: normal; padding: 4px 0 10px; }
+.pill { border-radius: 999px; padding: 1px 8px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--line); } .pill.ok { color: #1f8a4c; border-color: #1f8a4c; } .pill.no { color: #c0392b; border-color: #c0392b; }
+.mine-settled { margin: 14px 0; } .mine-settled > summary { cursor: pointer; font-size: 1rem; padding: 6px 0; }
 .lead { color: var(--muted); font-size: 0.9rem; max-width: 80ch; margin: 0 0 10px; }
 .gloss h3 { margin: 22px 0 6px; } .gloss dl { margin: 0; max-width: 80ch; } .gloss dt { font: 700 1.05rem var(--cond); margin: 12px 0 2px; } .gloss dt small { font: 0.82rem var(--sans, inherit); color: var(--muted); margin-left: 8px; }
 .gloss dd { margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.45; } .gloss dd b { color: var(--ink); } .gloss mark { background: var(--warn-bg); color: inherit; padding: 0 2px; border-radius: 3px; }
@@ -1227,7 +1238,10 @@ function renderMine() {
       el("div", { class: "trend" }, ...(verdict ? [el("b", { class: cls.includes("good") ? "ok" : "no" }, verdict), " · "] : []), status),
       stakeBox,
       (() => { const r = el("button", { type: "button", class: "rm" }, "Remove"); r.onclick = () => toggleMine({ ...b, pick: b.side, side: b.side }); return r; })());
-    groups[status.startsWith("Final") ? "post" : !g || g.state === "pre" ? "pre" : "in"].push(c);
+    const fin = status.startsWith("Final"), stateKey = fin ? "post" : !g || g.state === "pre" ? "pre" : "in";
+    const sk = fin ? (status.includes("Win") ? "won" : status.includes("Loss") ? "lost" : "other") : stateKey === "pre" ? (status.startsWith("Void") ? "other" : "pre") : cls.includes("good") ? "good" : "bad";
+    c._m = { b, g, sk, have, pace, verdict, status, stake, win, result, kind, under, stateKey };
+    groups[stateKey].push(c);
     return c;
   });
   if (changed) saveMine(mine());
@@ -1241,14 +1255,79 @@ function renderMine() {
   const openLinks = list.filter((b) => b.link && (!gameOf(b) || gameOf(b).state === "pre")).map((b) => b.link);
   const slip = tailLink(openLinks);
   if (slip && openLinks.length >= 2) box.append(el("div", { class: "tail" }, el("a", { class: "bet-link", href: slip.href, target: "_blank", rel: "noopener noreferrer" }, `Open every unstarted bet on this board at ${slip.book} in one slip (${openLinks.length}) ↗`), " The slip opens as one parlay; split it there if you want singles."));
-  for (const [key, title] of [["in", "In play"], ["pre", "Still to kick off"], ["post", "Settled"]]) {
-    if (!groups[key].length) continue;
-    box.append(el("h3", { class: "mine-h" }, `${title} · ${groups[key].length}`, el("small", {}, " sorted by grade")));
-    groups[key].forEach((c) => box.append(c));
-  }
+  renderMineSections(box, groups, cards.length);
   const clr = el("button", { type: "button", class: "rm", title: "Takes every bet off the live board; the season ledger keeps them with their results" }, "Clear this week's board (the ledger keeps it)"); clr.onclick = () => { if (confirm("Take every bet off this week's board? They stay in the season ledger with their results.")) { const all = mine(); all.forEach((b) => { b.archived = true; }); saveMine(all); renderPlays(); renderMine(); } }; box.append(clr);
   box.append(addPicker());
   box.append(ledgerSection());
+}
+
+// My board with many bets: filter by state, group the live ones by game, and a compact one-line-per-bet view
+let MINE_F = "all", MINE_VIEW = null;
+try { MINE_VIEW = localStorage.getItem("mine-view"); } catch (e) { /* fine */ }
+const MINE_KINDS = [["all", "All"], ["good", "Trending right"], ["bad", "Behind"], ["pre", "Not started"], ["won", "Won"], ["lost", "Lost"]];
+function gameHead(g, items) {
+  const on = items.filter((c) => c._m.sk === "good" || c._m.sk === "won").length, off = items.filter((c) => c._m.sk === "bad" || c._m.sk === "lost").length;
+  const score = g && g.score ? `${g.teams[0]} ${g.score[g.teams[0]] ?? ""}-${g.score[g.teams[1]] ?? ""} ${g.teams[1]}` : items[0]._m.b.team ? `${items[0]._m.b.team} vs ${items[0]._m.b.opp || ""}` : "";
+  const when = !g ? "" : g.state === "pre" ? kickoffLocal(new Date(g.date)) : g.state === "post" ? "Final" : (g.detail || `Q${g.period} ${g.clock}`);
+  return el("div", { class: "game-h" }, el("b", {}, score), when ? el("span", {}, ` · ${when}`) : "", el("span", { class: "tally" }, ` · ${items.length} bet${items.length === 1 ? "" : "s"}${on ? ` · ${on} right` : ""}${off ? ` · ${off} behind or lost` : ""}`));
+}
+function compactRows(items) {
+  const t = el("table", { class: "mine-compact" });
+  t.append(el("thead", {}, el("tr", {}, ...["", "Player", "Bet", "Now", "Status", "Stake"].map((h, i) => el("th", { class: i >= 3 && i !== 4 ? "n" : "" }, h)))));
+  const tb = el("tbody", {});
+  for (const c of items) {
+    const m = c._m, b = m.b;
+    const now = m.have == null ? "–" : `${m.have}${m.pace != null && m.stateKey === "in" ? ` (pace ${m.pace.toFixed(1)})` : ""}`;
+    const pill = { good: ["ok", "On track"], bad: ["no", "Behind"], won: ["ok", "Won"], lost: ["no", "Lost"], pre: ["", "Not started"], other: ["", m.status.split("·")[0].trim()] }[m.sk] || ["", ""];
+    const money_ = m.result != null ? el("b", { class: m.result > 0 ? "ok" : m.result < 0 ? "no" : "" }, `${m.result > 0 ? "+" : ""}${money(m.result)}`) : m.stake != null ? `${money(m.stake)}${m.win != null ? ` → ${money(m.win)}` : ""}` : "";
+    const row = el("tr", { class: `st-${m.sk}`, title: `${m.verdict ? m.verdict + " · " : ""}${m.status}` },
+      el("td", {}, b.grade ? el("span", { class: `grade ${b.grade}` }, b.grade) : ""),
+      el("td", {}, b.player, " ", jersey(b)),
+      el("td", {}, el("span", { class: m.under ? "under" : "over" }, `${b.side === "Under" ? "U" : "O"} ${num(b.line)}`), ` ${({ solo: "solo", assists: "ast" })[m.kind] || "tkl"}`),
+      el("td", { class: "n" }, now),
+      el("td", {}, el("span", { class: `pill ${pill[0]}` }, pill[1])),
+      el("td", { class: "n" }, money_));
+    row.onclick = () => { const open = row.nextSibling && row.nextSibling.classList?.contains("mine-expand"); if (open) row.nextSibling.remove(); else { const ex = el("tr", { class: "mine-expand" }, el("td", { colspan: "6" }, c)); row.after(ex); } };
+    tb.append(row);
+  }
+  t.append(tb);
+  return el("div", { class: "scroll" }, t);
+}
+function renderMineSections(box, groups, total) {
+  const all = [...groups.in, ...groups.pre, ...groups.post];
+  const compact = MINE_VIEW ? MINE_VIEW === "compact" : total >= 6;     // many bets: one line each by default
+  const counts = Object.fromEntries(MINE_KINDS.map(([k]) => [k, k === "all" ? all.length : all.filter((c) => c._m.sk === k).length]));
+  const bar = el("div", { class: "chips mine-filter" });
+  for (const [k, label] of MINE_KINDS) {
+    if (k !== "all" && !counts[k]) continue;
+    const bt = el("button", { type: "button", class: "reset" + (MINE_F === k ? " on" : "") }, `${label} ${counts[k]}`); bt.onclick = () => { MINE_F = k; renderMine(); }; bar.append(bt);
+  }
+  const vb = el("button", { type: "button", class: "reset", title: "One line per bet, or the full card for each" }, compact ? "Show full cards" : "Compact view");
+  vb.onclick = () => { MINE_VIEW = compact ? "cards" : "compact"; try { localStorage.setItem("mine-view", MINE_VIEW); } catch (e) { /* fine */ } renderMine(); };
+  bar.append(vb);
+  box.append(bar);
+  const keep = (c) => MINE_F === "all" || c._m.sk === MINE_F;
+  const show = (items) => (compact ? [compactRows(items)] : items);
+  // in play: one block per game, games in kickoff order, the bets in each by grade
+  const live = groups.in.filter(keep);
+  if (live.length) {
+    box.append(el("h3", { class: "mine-h" }, `In play · ${live.length}`, el("small", {}, " by game, then grade")));
+    const byGame = new Map();
+    for (const c of live) { const id = c._m.g?.id || c._m.b.team; if (!byGame.has(id)) byGame.set(id, []); byGame.get(id).push(c); }
+    [...byGame.values()].sort((x, y) => String(x[0]._m.g?.date || "").localeCompare(String(y[0]._m.g?.date || ""))).forEach((items) => { box.append(gameHead(items[0]._m.g, items)); show(items).forEach((n) => box.append(n)); });
+  }
+  const pre = groups.pre.filter(keep);
+  if (pre.length) { box.append(el("h3", { class: "mine-h" }, `Still to kick off · ${pre.length}`, el("small", {}, " sorted by grade"))); show(pre).forEach((n) => box.append(n)); }
+  const post = groups.post.filter(keep);
+  if (post.length) {
+    const won = post.filter((c) => c._m.sk === "won").length, lost = post.filter((c) => c._m.sk === "lost").length;
+    const net = post.reduce((t, c) => t + (c._m.result || 0), 0);
+    const d = el("details", { class: "mine-settled" }, el("summary", {}, el("b", {}, `Settled · ${post.length}`), ` · ${won}-${lost} · `, el("b", { class: net > 0 ? "pos" : net < 0 ? "neg" : "" }, `${net > 0 ? "+" : ""}${money(net) || "$0"}`)));
+    if (post.length <= 4 || MINE_F === "won" || MINE_F === "lost") d.open = true;      // a long settled list folds away so the live bets lead
+    show(post).forEach((n) => d.append(n));
+    box.append(d);
+  }
+  if (!live.length && !pre.length && !post.length) box.append(el("div", { class: "empty" }, "No bet on the board is in that state right now."));
 }
 
 // ---------------------------------------------------------------- the ledger: every week's board, kept on this device, with backup and transfer
