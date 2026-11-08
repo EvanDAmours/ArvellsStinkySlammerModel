@@ -468,10 +468,38 @@ function renderMeta() {
   if (upd > 30) $("#warnings").append(el("div", { class: "warn" }, `The model has not been updated since ${when(m.generated_at)} (${Math.round(upd)} hours). The daily job runs at 4:15 am and again at 6:40 am; if both missed, run "Daily model update" from the Actions tab.`));
 }
 
+// every A-grade pick still to kick off, at DraftKings, in one slip: the owner's one-click parlay of the A board
+function aGradeSlip(all) {
+  const now = Date.now();
+  const isPick = (b) => b.pick === "Over" || b.pick === "Under";
+  const aPicks = all.filter((b) => isPick(b) && b.grade === "A" && (!betKick(b) || betKick(b).getTime() > now));
+  const seen = new Set(), legs = [];
+  for (const a of aPicks.sort((x, y) => (y.lock ?? 0) - (x.lock ?? 0))) {
+    const k = `${a.player}|${a.market}`; if (seen.has(k)) continue;
+    // the same selection at DraftKings (its price, its slip id), whichever book has the best price
+    const dk = all.find((b) => b.book === "DraftKings" && b.player === a.player && b.market === a.market && +b.line === +a.line && (b.side || b.pick) === (a.side || a.pick));
+    const href = dk && sideLink(dk, dk.side || dk.pick);
+    if (!dk || !href || !DK_RE.test(href)) continue;
+    seen.add(k); legs.push({ ...dk, href, side: dk.side || dk.pick, p: dk.p_claim ?? (dk.side === "Under" ? 1 - dk.model_over : dk.model_over) });
+  }
+  if (legs.length < 2) return null;
+  const slip = tailLink(legs.map((l) => l.href)); if (!slip) return null;
+  const dec = legs.reduce((t, l) => t * (decimalOf(l.side === "Under" ? l.under_odds : l.over_odds) || 1), 1);
+  const amer = dec >= 2 ? `+${Math.round((dec - 1) * 100)}` : `-${Math.round(100 / (dec - 1))}`;
+  const chance = legs.reduce((t, l) => t * (l.p || 0.5), 1);
+  const games = new Set(legs.map((l) => l.event_id)).size;
+  const wrap = el("div", { class: "parlay-box" }, el("h3", {}, `Every A pick at DraftKings · ${legs.length} legs · ${amer}`));
+  wrap.append(el("p", { class: "note" }, `${legs.map((l) => `${l.player}${l.jersey != null ? ` #${l.jersey}` : ""} ${l.side} ${num(l.line)} ${(MARKET[l.market] || "").toLowerCase()} (${odds(l.side === "Under" ? l.under_odds : l.over_odds)})`).join(" · ")}.`));
+  wrap.append(el("div", { class: "tail" }, el("a", { class: "bet-link", href: slip.href, target: "_blank", rel: "noopener noreferrer" }, `Open all ${legs.length} at DraftKings in one slip ↗`)));
+  wrap.append(el("p", { class: "note" }, `The model's chance that every leg hits: ${pct(chance)} (the claimed chances multiplied; ${games} game${games === 1 ? "" : "s"}). A parlay of picks the model likes is still mostly a long shot: each A is a good bet on its own, and the slip opens as a parlay, so split it into singles there if you would rather. DraftKings may refuse two solo-tackle legs from one game in a parlay; drop one of them on the slip if it does. Re-built at every line pull until kickoff.`));
+  return wrap;
+}
+
 function renderPlays() {
   const top = $("#plays-top"), box = $("#plays-list"); top.replaceChildren(); box.replaceChildren();
   const all = (DATA.bets || []).filter((b) => b.market !== ASSIST);
   top.append(recordsBar(DATA.results?.summary));
+  const aSlip = aGradeSlip(all); if (aSlip) top.append(aSlip);
   top.append(legend());
   const haveLines = all.length > 0;
   $("#plays-controls").hidden = !haveLines;

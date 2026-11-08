@@ -1400,6 +1400,14 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-07, evening MST (one-click slip of every A pick)
+- Owner: a parlay of every A-grade pick at DraftKings, clickable from the home page. The Plays tab now opens with
+  a box listing every A pick still to kick off (one per player and market, at DraftKings' price and slip id even
+  when another book has the best price), the combined price, the model's chance that every leg hits (claimed
+  chances multiplied), and one link that opens them all in one DraftKings slip. It says plainly that a parlay of
+  picks is a long shot, that the slip can be split into singles, and that DraftKings may refuse two solo legs from
+  one game. Rebuilt at every pull. Site only.
+
 ### 2026-11-07, 8:30 pm MST (one game's server error no longer loses a pull)
 - Owner: the Saturday 8 pm pull had not happened. The ticker was on time (its beat started the pull at 8:00:28),
   but The Odds API answered 502 Bad Gateway on one of the 13 games and the pull raised on it, so the whole beat
