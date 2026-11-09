@@ -1185,6 +1185,20 @@ def price_lines(lines, P, segments=None, blend=None):
                                        (uncertain, "questionable"), (snaps_missing, "snap counts missing for his last game"),
                                        (side == "Over" and not C.LOCK_RULES.get("overs_eligible", True), "Over side")) if ok]
         lock = lock_score(ev, p_side, consistency, in_role_n, fade or role, seg_adj)
+        grade, capped = grade_of(lock), False
+        if grade == "A" and r.market not in C.A_GRADE_MARKETS:     # combined claims ran 9 points high over weeks 7-9: no A there until they earn it
+            grade, capped = "B", True                               # (not a lock_block: that would also bar it from the combined-only parlays)
+        # a sleeper: the model's own number, before the blend with the line, disagrees with the book by a margin that held in
+        # every live week (config.SLEEPER); tracked on its own record whether or not the bars make it a pick
+        sl, sleeper = C.SLEEPER, ""
+        if not flagged and not thin:
+            g_ = float(mu_model) - float(r.line)
+            ok_o = d_o is not None and (sl["min_ev"] is None or ev_o >= sl["min_ev"])
+            ok_u = d_u is not None and (sl["min_ev"] is None or ev_u >= sl["min_ev"])
+            if kind == "combined" and sl["comb_over"][0] <= g_ < sl["comb_over"][1] and ok_o:
+                sleeper = "Over"
+            elif solo and g_ <= sl["solo_under"] and ok_u:
+                sleeper = "Under"
         if flagged:
             why = f"His own status is {p.status or 'uncertain'}: wait for the final report"
         elif thin:
@@ -1211,6 +1225,10 @@ def price_lines(lines, P, segments=None, blend=None):
                 why += f"; a regular at his position is out or gone and he played {float(pct_last):.0%} of the snaps: projected at that share"
             if block:
                 why += "; not lock-eligible: " + ", ".join(block)
+        if capped and pick != "Pass":
+            why += "; scores as an A, shown as a B: A grades and locks are solo tackles only (combined claims ran 9 points high in weeks 7-9)"
+        if sleeper:
+            why += f"; sleeper: the model's own number is {float(mu_model):.1f} against a line of {float(r.line):g}"
         rows.append({**base, "team": p.team, "opp": p.opp_team, "group": p.group, "jersey": None if pd.isna(p.get("jersey", np.nan)) else int(p.get("jersey")), "proj": float(mu), "proj_model": float(mu_model),
                      "player_id": None if pd.isna(p.get("player_id", np.nan)) else str(p.get("player_id")), "espn_id": None if pd.isna(p.get("espn_id", np.nan)) else str(p.get("espn_id")).split(".")[0],
                      "exp_opps": None if pd.isna(p.get("exp_opps", np.nan)) else float(p.get("exp_opps")),
@@ -1233,7 +1251,8 @@ def price_lines(lines, P, segments=None, blend=None):
                      "fp_comb": None if pd.isna(p.get("fp_comb", np.nan)) else float(p.get("fp_comb")),
                      "fp_solo": None if pd.isna(p.get("fp_solo", np.nan)) else float(p.get("fp_solo")),
                      "fp_rel": None if ast or pd.isna(p.get("fp_rel_solo" if solo else "fp_rel_comb", np.nan)) else float(p.get("fp_rel_solo" if solo else "fp_rel_comb")),
-                     "lock": lock, "grade": grade_of(lock)})
+                     "lock": lock, "grade": grade, "sleeper": sleeper,
+                     "sleeper_ev": (ev_o if sleeper == "Over" else ev_u) if sleeper else None})
     out = pd.DataFrame(rows)
     if "ev" in out:
         out = out.sort_values("ev", ascending=False, na_position="last")

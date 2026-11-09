@@ -6,7 +6,16 @@ HISTORY_SEASONS = [2023, 2024, 2025]   # used for priors, stat crews and the bac
 ODDS_SPORT = "americanfootball_nfl"
 ODDS_MARKETS = ["player_tackles_assists", "player_solo_tackles", "player_assists"]   # assists added 2026-11-03 (scoping, research round 8): +1 credit per game
 ASSIST_MARKET = "player_assists"
-LOCK_MARKETS = ("player_tackles_assists", "player_solo_tackles")   # assists are tracked as theoretical picks: never a lock or a parlay leg until their record earns it
+LOCK_MARKETS = ("player_solo_tackles",)   # assists are tracked as theoretical picks: never a lock or a parlay leg until their record earns it.
+# Combined tackles left the locks 2026-11-08 night: its picks claimed 57% and hit 48% over weeks 7-9 (177 picks, 2.4 SE), its A picks went 1-3
+A_GRADE_MARKETS = ("player_solo_tackles",)  # an A grade only in these markets; a combined pick that scores 72+ shows as a B until 40 further combined picks hit their claim
+# Sleepers (2026-11-08 night): lines where the model's own number, before any blend with the line, disagrees with the book by a margin that
+# held in every live week. Blind board at the close, weeks 7-9: combined Overs with the model 0.5 to 1.5 above the line 48-25 (66%, +18%,
+# 14-11 / 23-8 / 11-6); solo Unders with the model 0.5+ below the line 60-22 (73%, +23%, 21-8 / 25-3 / 14-11). The pick bars hide most of the
+# combined ones (an Over needs a 10% return and a 55% claim after shrinking). Tracked as theoretical picks on their own record, never a lock.
+# min_ev None: no price filter. Re-priced through the pipeline, the combined band went 35-21 (+14%/bet) at every price but 7-10 where the
+# pricer (which leans on the line) also called the Over +EV; the rule was found on the model's number alone and is kept that way.
+SLEEPER = dict(comb_over=(0.5, 1.5), solo_under=-0.5, min_ev=None, review_after=40, review_hit=0.55)
 
 
 def market_kind(market):

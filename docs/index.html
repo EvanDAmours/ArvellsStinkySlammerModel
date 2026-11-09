@@ -188,6 +188,8 @@ table.mine-compact tr.mine-expand td { white-space: normal; padding: 4px 0 10px;
 .tag.ok { background: #1f8a4c; } .tag.warn { background: #c0392b; }
 .intl { display: inline-block; padding: 1px 6px; border-radius: 6px; background: #2c5aa0; color: #fff; font-size: 0.75rem; margin-left: 6px; vertical-align: middle; }
 .parlay-box { border: 2px solid #2c5aa0; border-radius: 10px; padding: 10px 12px 8px; margin: 0 0 16px; }
+.sleepers { border-color: #7a4fb5; } .sleepers > summary { cursor: pointer; padding: 2px 0 6px; }
+.sleeper-row { border-top: 1px solid var(--line, #ddd); padding: 6px 0; } .sleeper-row .note { margin: 2px 0; } .sleeper-row .tail { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .parlay-box h3 { margin: 0 0 4px; font: 700 1.1rem/1.2 var(--cond); }
 .parlay-box .terms { display: flex; flex-wrap: wrap; gap: 4px 22px; margin: 6px 0 8px; font-variant-numeric: tabular-nums; }
 .parlay-box .terms b { font: 700 1.25rem/1.1 var(--cond); display: block; }
@@ -520,6 +522,35 @@ function aGradeSlip(all) {
   return wrap;
 }
 
+// sleepers: the model's own number disagrees with the line by a margin that held in every live week (config.SLEEPER).
+// Tracked on their own record, never a lock; most of the combined ones never clear the pick bars.
+function sleeperBox(all) {
+  const now = Date.now(), sum = DATA.results?.summary?.sleepers;
+  const open = all.filter((b) => b.sleeper && (!betKick(b) || betKick(b).getTime() > now));
+  const best = new Map();
+  for (const b of open) {
+    const k = `${b.player}|${b.market}|${b.sleeper}`, o = b.sleeper === "Over" ? b.over_odds : b.under_odds, cur = best.get(k);
+    const better = (x, y) => { const lx = x.sleeper === "Over" ? -x.line : +x.line, ly = y.sleeper === "Over" ? -y.line : +y.line;   // the best line first, then the best price
+      return lx !== ly ? lx > ly : (x.sleeper === "Over" ? x.over_odds : x.under_odds) > (y.sleeper === "Over" ? y.over_odds : y.under_odds); };
+    if (o != null && (!cur || better(b, cur))) best.set(k, b);
+  }
+  const rows = [...best.values()].sort((a, b) => Math.abs(b.proj_model - b.line) - Math.abs(a.proj_model - a.line));
+  if (!rows.length && !(sum && sum.all && sum.all.bets)) return null;
+  const rec = (r) => (r && (r.wins + r.losses) ? `${r.wins}-${r.losses}${r.pushes ? "-" + r.pushes : ""} (${pct(r.hit)}), ${r.units >= 0 ? "+" : ""}${num(r.units, 1)}u` : "no graded games yet");
+  const kinds = sum && sum.by_kind ? Object.entries(sum.by_kind).map(([k, r]) => `${k} ${rec(r)}`).join(" · ") : "";
+  const wrap = el("details", { class: "parlay-box sleepers", open: rows.length ? "" : null },
+    el("summary", {}, el("strong", {}, `Sleepers · ${rows.length} open`), sum && sum.all && sum.all.bets ? ` · record ${rec(sum.all)}` : ""));
+  wrap.append(el("p", { class: "note" }, "Lines where the model's own number, before it is blended with the book's line, disagrees with the book by a margin that held in every week we have tracked: combined tackles where the model is half a tackle to a tackle and a half above the line (take the Over), and solo tackles where it is half a tackle or more below (take the Under). At the close in weeks 7 to 9 these went 48-25 and 60-22. The pick bars hide most of the combined ones, so they show here, on their own record at 1 unit each. Never a lock; if they hit under 55% over the next 40, they come off." + (kinds ? ` Season: ${kinds}.` : "")));
+  for (const b of rows) {
+    const side = b.sleeper, o = side === "Over" ? b.over_odds : b.under_odds, isPick = b.pick === side;
+    wrap.append(el("div", { class: "sleeper-row" },
+      el("div", {}, el("strong", {}, `${b.player}${b.jersey != null ? ` #${b.jersey}` : ""}`), ` ${b.team || ""}${b.opp ? " vs " + b.opp : ""} · `, el("strong", {}, `${side} ${num(b.line)} ${(MARKET[b.market] || "").toLowerCase()}`), ` ${odds(o)} at ${b.book}`),
+      el("div", { class: "note" }, `Model ${num(b.proj_model, 1)} vs line ${num(b.line)} (${b.proj_model - b.line >= 0 ? "+" : ""}${num(b.proj_model - b.line, 1)})${b.sleeper_ev != null ? ` · return ${b.sleeper_ev >= 0 ? "+" : ""}${Math.round(b.sleeper_ev * 100)}%` : ""}${isPick ? ` · also a ${b.grade || ""} pick` : " · not a pick on the board"}${betKick(b) ? ` · ${when(b.commence_time)}` : ""}`),
+      el("div", { class: "tail" }, betLink(b, side), addButton(b))));
+  }
+  return wrap;
+}
+
 function renderPlays() {
   const top = $("#plays-top"), box = $("#plays-list"); top.replaceChildren(); box.replaceChildren();
   const all = (DATA.bets || []).filter((b) => b.market !== ASSIST);
@@ -555,6 +586,7 @@ function renderPlays() {
     const over = (q) => q.finished || (q.first_kickoff && Date.now() > new Date(q.first_kickoff).getTime() + 4.5 * 3600 * 1000);
     const open = (DATA.parlays || []).filter((q) => !over(q));
     for (const q of open) box.append(parlayBox(q));
+    const sl = sleeperBox(all); if (sl) box.append(sl);
     if (!open.length && all.length) {
       const m = DATA.meta || {}, nxt = m.next_pull ? when(m.next_pull) : "";
       box.append(el("div", { class: "parlay-box" }, el("h3", {}, "Parlay"), el("p", { class: "note" }, `No open parlay yet. ${all.length} line${all.length === 1 ? "" : "s"} on the board${all.length < 40 ? " (the books post most Sunday tackle lines Saturday evening and Sunday morning)" : ""}; a parlay needs two lock-eligible combined-tackle picks with a 53%+ claimed chance on one slate day (solo-tackle legs are not allowed in a same-game parlay), chosen at every line pull until that day's first kickoff.${nxt ? ` Next pull ${nxt}.` : ""}`)));
@@ -580,7 +612,7 @@ function legend() {
     el("summary", {}, "How to read this board: grades, stakes, what can be a lock, beating the close"),
     el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Grade"), el("th", {}, "Lock score"), el("th", {}, "Suggested stake"), el("th", {}, "Read it as"))),
       el("tbody", {},
-        row("A", `${bars.A} and up`, `${u.A} unit`, "The model is confident and the price is wrong by a lot, backed by his game log. The locks come from here."),
+        row("A", `${bars.A} and up`, `${u.A} unit`, "The model is confident and the price is wrong by a lot, backed by his game log. Solo tackles only: a combined-tackle pick that scores this high shows as a B (combined claims ran 9 points high in weeks 7 to 9). The locks come from here."),
         row("B", `${bars.B} to ${bars.A - 1}`, `${u.B} unit`, "A real edge with one weak spot: a thinner game log, a smaller gap, or no signal behind it."),
         row("C", `below ${bars.B}`, `${u.C} unit or pass`, "Clears the bar on price alone. Play only if you like the matchup."))),
     el("p", {}, `The lock score is out of 100 and uses the model's own evidence only, never the book's opinion: ${pct(w.ev)} expected return at the posted price (full marks at ${signedPct(g.ev_full ?? 0.10)}; above ${signedPct((g.ev_fade ?? [0.2, 0.4])[0])} it falls away again, because the biggest disagreements with the market are mostly model error), ${pct(w.model)} the model's claimed chance for the side (full marks at ${pct(g.model_full ?? 0.75)}; a pick's claimed chance is shrunk ${pct(1 - (g.claim_shrink ?? 0.6))} of the way toward even first, since selected picks overclaim), ${pct(w.consistency)} how often he cleared this line in his games this season, read at the snap share he is expected to play, ${pct(w.sample)} games of data in his current role, and ${pct(w.signal)} for a role-change or outlier-fade signal behind the pick. A pick needs ${signedPct(g.pick_bar ?? 0.06)} expected return (${signedPct(g.pick_bar_over ?? 0.10)} for an Over, which the model gets wrong more often) and a claimed chance of at least ${pct(g.pick_min_claim ?? 0.55)}: a plus-money side with a coin-flip claim is not a play, whatever its return. The claimed chance is then corrected by how claims for picks of the same kind (side, market, position) have actually resolved, shrunk by n/(n+${g.segment_k ?? 30}); the Track record tab shows those corrections. The projection it prices from is ${pct(1 - (g.line_weight ?? 0.6))} model and ${pct(g.line_weight ?? 0.6)} the posted line, which keeps the model's claimed edges honest.`),
@@ -1726,7 +1758,8 @@ function glossTerms() {
       ["Expected return (EV)", "Profit per unit staked if the claimed chance is right: claimed chance × what a win pays, minus the chance of losing. A 58% claim at −110 is +10.5%. It is the model's own number and never the book's; a pick needs " + signedPct(pickBar) + " (" + signedPct(overBar) + " for an Over) and a claimed chance of at least " + pct(claimMin) + "."],
       ["Pick bar, Over bar, claim floor", "The three thresholds a line must clear to be a play: expected return of " + signedPct(pickBar) + ", " + signedPct(overBar) + " for Overs (the model's Overs have hit well under half, so they carry a higher bar), and a claimed chance of " + pct(claimMin) + " (a plus-money side with a coin-flip claim is not a play, however long the price)."],
       ["Pass", "A line that is priced but does not clear the bars. The board shows every live line with the model's read of both sides when no pick clears the bar, so a Pass is still a read, not a blank."],
-      ["Lock score", "A 0 to 100 score from the model's own evidence: expected return, claimed chance, how often he has cleared this line this season (at his expected snap share), games of data in his current role, and a role or outlier signal behind the pick. It never uses whether the book agrees. " + bars.A + " and up is an A, " + bars.B + " to " + (bars.A - 1) + " a B, below that a C."],
+      ["Sleeper", "A line where the model's own number, before it is blended with the book's line, disagrees with the book by a margin that held in every week tracked: combined tackles with the model half a tackle to a tackle and a half above the line (Over), solo tackles with the model half a tackle or more below it (Under). Kept on its own record at 1 unit each, never a lock. See the Sleepers box on the Plays tab."],
+      ["Lock score", "A 0 to 100 score from the model's own evidence: expected return, claimed chance, how often he has cleared this line this season (at his expected snap share), games of data in his current role, and a role or outlier signal behind the pick. It never uses whether the book agrees. " + bars.A + " and up is an A (solo tackles only; a combined pick that scores this high shows as a B), " + bars.B + " to " + (bars.A - 1) + " a B, below that a C."],
       ["Grade (A, B, C)", "The lock score in three bands. A: the model is confident and the price is wrong by a lot, backed by his game log. B: a real edge with one weak spot. C: clears the bar on price alone. The Track record tab tests whether A beats B beats C; the stakes follow the grades."],
       ["Lock", "A pick the model strongly believes in: an A-grade score on a lock-eligible pick. There are at most a few per slate day, and a day with no A has no lock, because a lock is never the best of a thin board. Locks are the green-edged cards and the 'Locks' record on the Track record tab."],
       ["Lock-eligible, the checklist", "The situations in which the model is biased or blind, so a pick can never be a lock or a parlay leg whatever its score: a new or reduced role, back from absence, first game for a new team, fewer than three games in his current role, listed questionable, missing snap counts, or an Over. Each is a tag on the card; the pick can still be played at its grade."],

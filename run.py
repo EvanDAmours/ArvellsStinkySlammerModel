@@ -424,10 +424,11 @@ def cmd_live_grade(force=False):
     summary["live_graded"] = int((graded.get("graded_by") == "live").sum()) if len(graded) else 0
     parlays, psum = G.grade_parlays(pw, live=live)
     summary["parlays"] = psum
+    sleepers, summary["sleepers"] = G.grade_sleepers(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
     G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)
     retro = Path("data/retro_five.json")
     _json(SITE / "results.json", dict(summary=summary, picks=records(graded), parlays=records(parlays) if parlays is not None and len(parlays) else [],
-                                      retro=json.loads(retro.read_text()) if retro.exists() else None))
+                                      sleepers=records(sleepers) if len(sleepers) else [], retro=json.loads(retro.read_text()) if retro.exists() else None))
     LIVE_DONE.write_text(json.dumps(sorted(done | set(events))))
     print(f"live grade: {summary['live_graded']} pick(s) settled live; {summary.get('pending', 0)} still pending", flush=True)
 
@@ -524,8 +525,10 @@ def cmd_daily(auto=False):
         # the morning re-price is what the board shows until the next pull: log new picks and refresh open ones with
         # it, so a grade seen on the site is the grade the record keeps (2026-11-05: an A shown all morning was never logged)
         G.log_picks(bets, C.SEASON, week, _stamp)
+        G.log_sleepers(bets, C.SEASON, week, _stamp)
+    sleepers, summary["sleepers"] = G.grade_sleepers(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
     bets = mark_five(bets, C.SEASON, week)
-    write_site(P, bets, bt, graded, summary, week, status, lines_pulled=None if lines.empty else str(lines.pulled_at.max()), parlays=parlays)
+    write_site(P, bets, bt, graded, summary, week, status, lines_pulled=None if lines.empty else str(lines.pulled_at.max()), parlays=parlays, sleepers=sleepers)
     write_week_lines(P, C.SEASON, week)
     write_parlays(C.SEASON, week)
     print(f"daily: week {week}, {len(P)} projections, {len(bets)} priced lines, backtest on {bt.get('games', 0)} games")
@@ -602,6 +605,7 @@ def cmd_odds(hours=None, auto=False):
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     BL.log_model_numbers(bets, C.SEASON, week, stamp)
     n_new = G.log_picks(bets, C.SEASON, week, stamp)
+    G.log_sleepers(bets, C.SEASON, week, stamp)
     G.build_parlays(bets, C.SEASON, week, stamp)
     bets = mark_five(bets, C.SEASON, week)
     write_parlays(C.SEASON, week)
@@ -664,7 +668,7 @@ def write_parlays(season, week):
     _json(SITE / "parlays.json", out)
 
 
-def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays=None):
+def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays=None, sleepers=None):
     now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes")
     games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
     meta = dict(generated_at=now, season=C.SEASON, week=week, lines_pulled=lines_pulled, next_pull=next_pull(games=games), pull_schedule=pull_schedule(games=games), **status,
@@ -695,6 +699,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
     if retro_ast.exists():
         meta["retro_assists"] = json.loads(retro_ast.read_text())
     _json(SITE / "results.json", dict(summary=summary, picks=records(graded), parlays=records(parlays) if parlays is not None and len(parlays) else [],
+                                      sleepers=records(sleepers) if sleepers is not None and len(sleepers) else [],
                                       retro=json.loads(retro.read_text()) if retro.exists() else None))
 
 

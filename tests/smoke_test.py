@@ -16,7 +16,7 @@ def _ignore_live_data(d, names):
     rel = os.path.relpath(d, ROOT)
     skip = {".git", "__pycache__"}
     if rel == "data":
-        skip |= {"cache", "picks.csv", "parlays.csv", "retro_five.json", "weekly_five.md", "lines_log.csv", "retro_assists.json"}
+        skip |= {"cache", "picks.csv", "parlays.csv", "retro_five.json", "weekly_five.md", "lines_log.csv", "retro_assists.json", "sleepers.csv"}
     if rel == os.path.join("data", "odds"):
         skip |= {n for n in names if n.isdigit()}
     if rel == os.path.join("docs", "data"):
@@ -167,6 +167,22 @@ check(sum(1 for b in bets if b.get("five")) == len(five), "locks marked on the b
 parlays = pd.read_csv(tmp / "data/parlays.csv") if (tmp / "data/parlays.csv").exists() else pd.DataFrame()
 check(len(parlays) >= 2 and parlays.parlay_id.nunique() >= 1 and parlays.groupby("parlay_id").size().between(2, 4).all(), f"recommended parlay built ({parlays.parlay_id.nunique() if len(parlays) else 0} parlay, {len(parlays)} legs)")
 check(len(parlays) and parlays.player.nunique() == len(parlays) and parlays.units.between(0.1, 1.0).all(), "parlay legs are distinct players with a stake between 0.1 and 1 unit")
+check(not any(b.get("grade") == "A" and b.get("market") not in C.A_GRADE_MARKETS for b in priced) and five.market.isin(C.A_GRADE_MARKETS).all() if len(five) else True,
+      "A grades and locks are solo tackles only (combined picks that score 72+ show as a B)")
+_sl = [b for b in priced if b.get("sleeper")]
+_lo, _hi = C.SLEEPER["comb_over"]
+check(all((b["sleeper"] == "Over" and C.market_kind(b["market"]) == "combined" and _lo <= b["proj_model"] - b["line"] < _hi) or
+          (b["sleeper"] == "Under" and C.market_kind(b["market"]) == "solo" and b["proj_model"] - b["line"] <= C.SLEEPER["solo_under"]) for b in _sl)
+      and all(b.get("sleeper_ev") is not None and (C.SLEEPER["min_ev"] is None or b["sleeper_ev"] >= C.SLEEPER["min_ev"] - 1e-9) for b in _sl), f"sleepers follow the rule: combined Overs 0.5 to 1.5 under the model, solo Unders 0.5+ over it ({len(_sl)} on the board)")
+_slc = pd.read_csv(tmp / "data/sleepers.csv") if (tmp / "data/sleepers.csv").exists() else pd.DataFrame()
+check((len(_slc) > 0) == (len(_sl) > 0) and (len(_slc) == 0 or _slc.duplicated(["season", "week", "player", "market", "side"]).sum() == 0), f"sleepers logged once per player, market and side ({len(_slc)} rows)")
+if len(_slc):
+    _rowp = pw[(pw.season == 2026) & (pw.week == 6)].sort_values("comb", ascending=False).iloc[0]
+    pd.DataFrame([dict(season=2026, week=6, player=_rowp.player, market="player_tackles_assists", side="Over", line=float(_rowp.comb) - 0.5, odds=100,
+                       book="DraftKings", commence_time="2026-10-18T17:00:00Z")]).to_csv(G.SLEEPERS, index=False)
+    _gs, _ss = G.grade_sleepers(pw)
+    check(list(_gs.result) == ["Win"] and _ss["all"]["wins"] == 1 and abs(_ss["all"]["units"] - 1.0) < 1e-9, f"a sleeper grades on the box score ({list(_gs.result)})")
+    _slc.to_csv(G.SLEEPERS, index=False)
 pj = json.loads((tmp / "docs/data/parlays.json").read_text())
 check(all(l["market"] == "player_tackles_assists" for q in pj for l in q["legs"]), "parlay legs are combined-tackle lines only")
 check(len(pj) >= 1 and pj[0]["n_legs"] == len(pj[0]["legs"]) and sum(1 for b in bets if b.get("parlay")) == len(parlays), "parlay written for the site and marked on the board")

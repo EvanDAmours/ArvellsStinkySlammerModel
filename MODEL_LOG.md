@@ -1400,6 +1400,55 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-08, evening MST (deep review after week 9 Sunday: A grades solo only, sleepers tracked)
+Owner: "our A picks need to be true locks... find us the sleepers... I don't want to catch up for two weeks."
+Evidence base: every logged pick of weeks 7-9 (Sunday-night and Monday games of week 9 still pending, ESPN finals
+for the rest) and the blind board (every closing line, DraftKings or the first book, against the box score, no
+model). Scripts and tables in the session scratchpad; the numbers that decided things are below.
+
+What the record says, honestly:
+- A grades, one row per player (the same pick at two books counted once): solo 22-6 (79%) over weeks 7-9, claimed
+  about 64%; week 9 so far 9-6 while every solo Under on the board went 60-60. A beat the blind board by 10 points in
+  the week the solo-share regime flipped. A is not broken; no tackle prop is a lock, and nothing built from past
+  weeks could have seen week 9's flip coming (the league solo share went 0.499 to 0.547).
+- Combined tackles: picks claimed 57% and hit 48% over 177 picks (2.4 standard errors short), Overs and Unders
+  alike; combined A picks went 1-3. The segment correction did not close the gap.
+- The lock score does not rank well inside the picks yet (scores 65-72 hit 50%, 72-78 58%, 78+ 75%; small samples);
+  logged for the post-mortems, not acted on.
+
+Adopted:
+- **A grades and locks are solo tackles only** (`config.A_GRADE_MARKETS`, `LOCK_MARKETS`). A combined pick that scores
+  72+ shows as a B, with the reason in its card. Not a lock_block, so it can still be a leg of the combined-only
+  parlay. Revert when 40 further combined picks hit within 3 points of their claim.
+- **Sleepers** (`config.SLEEPER`, `grade.log_sleepers`/`grade_sleepers`, data/sleepers.csv, Plays tab box): lines
+  where the model's own number, before the blend with the line, disagrees with the book by a margin that held in
+  every live week. Blind board at the close, weeks 7-9: combined Overs with the model 0.5 to 1.5 above the line
+  48-25 (66%, +18%; 14-11, 23-8, 11-6); solo Unders with the model 0.5+ below the line 60-22 (73%, +23%; 21-8, 25-3,
+  14-11, and 14-11 in the regime-flip week against a 50% board). Re-priced through the pipeline at the close (best
+  line, then best price, per player): combined Overs 49-32 (+8%/bet; 13-12, 24-8, 12-12), solo Unders 62-24 (+21%;
+  20-8, 25-4, 17-12). 55 of the 86 solo Unders were already picks; none of the 81 combined Overs were (an Over needs
+  a 10% return and a 55% claim, and the pricer leans on the line). No price filter: inside the combined band the
+  Overs the pricer also called +EV went 7-10, the whole band 35-21, and the rule was found on the model's number
+  alone. Sleepers follow the board until kickoff (dropped if the model and the line come together), then freeze and
+  grade at the logged price, 1 unit each, on their own record; never a lock, never staked by the model. The
+  combined half is the weaker evidence (one strong week of three in the pipeline re-price): a watch list.
+  Revert (each half on its own) if it hits under 55% over its next 40 graded rows.
+
+Measured and not adopted (do not retry without new data):
+- **Regime-robust solo price** (solo given combined ~ Binomial(combined, share), the share shrunk to the position
+  with the league share uncertain at sd 0.03). Better Brier than the plain blend shape in all three weeks (0.2337 vs
+  0.2347, 0.2296 vs 0.2323, 0.2452 vs 0.2485), but as a gate on A grades it made them worse: A picks the robust price
+  also backed went 11-8 (rob 0.55+) against 15-8 for all A picks it could price. Not a lock filter.
+- **Level corrections only where every week agrees in sign** (zero the solo line/model corrections once a week
+  disagrees). Walk-forward on weeks 8-9: solo Brier 0.2276 to 0.2322 (worse) in week 8, 0.2598 to 0.2571 in week 9;
+  combined slightly worse both weeks. The current corrections' week 9 solo Unders at the close still went 23-15
+  (+24%) in the harness. Kept as is.
+- **League solo drift** as the cause of week 9: drift was 0.973 that week; without it the solo projection still ran
+  0.31 low (0.39 with it). Not the culprit; kept.
+- **Segment correction as a gate**: solo Unders that cleared the bars only because of it went 33-36 against 55-46
+  for the rest (claim-only split; an EV-based split looked far worse for it, 61-65 vs 27-17, but leans on my
+  approximation of the pricer's EV). Suggestive, not decisive: re-read at the week 10 post-mortem.
+
 ### 2026-11-08, evening MST (picks settle when the game ends, not overnight)
 - Owner: finished games' picks sat as pending (14 A grades on Sunday evening) until the 4:15 am daily, because the
   grader only used the official league stats, which reach nflverse overnight. `pipeline/live_grade.py` reads ESPN's
@@ -2540,5 +2589,10 @@ Open, with what would justify them:
   Under at the close made +21% per bet in weeks 7 and 8 with no model at all. Compare each kind of pick with the
   blind board before crediting the model (lift), and expect a market-level mispricing to be corrected by the
   books without notice.
+- Count a pick once per player, market and side when judging a grade: the same pick logged at DraftKings and theScore
+  Bet doubles its weight in a record (week 9's A grades read 10-9 with duplicates, 9-6 without).
+- A filter that "agrees with the pricer" can select against a model signal: the pricer's EV leans on the book's line,
+  so inside the combined-Over sleeper band the +EV rows went 7-10 while the band went 35-21. Test a signal on the
+  model's own number before adding the pricer's return as a second condition.
 - `picks.csv` gains columns over time (`uncertain` added 2026-10-27); older rows read back as empty, so every use
   of a newer column must `fillna` a neutral value.
