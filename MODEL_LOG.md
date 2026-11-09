@@ -1400,6 +1400,22 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-08, evening MST (picks settle when the game ends, not overnight)
+- Owner: finished games' picks sat as pending (14 A grades on Sunday evening) until the 4:15 am daily, because the
+  grader only used the official league stats, which reach nflverse overnight. `pipeline/live_grade.py` reads ESPN's
+  scoreboard and the final box score of every finished game of the week; `grade.grade(..., live=)` settles a pick
+  from it only where the official stats have nothing and only for a player listed in that box score (a player
+  missing from ESPN's defensive list stays pending, never void: missing can be a zero-tackle game). Each such pick
+  is marked `graded_by = "live"`; the next daily grades from the official stats and replaces it. Parlay legs too.
+  Every ticker beat runs `run.py live-grade` work when a new game has ended (ESPN events already settled are kept in
+  data/cache/live_graded.json), rewriting results.json and the weekly log; the daily passes the same finals so a
+  slow official feed cannot turn a settled pick back to pending. The records bar says how many were settled live.
+- First run, Sunday evening: 12 finished games, 49 picks settled live, 33 still pending (Sunday and Monday night,
+  and players ESPN had not listed yet).
+- Seen in passing, for the Monday post-mortem: the league solo share in today's 12 games was 0.547, back to the
+  weeks 1-6 level (0.538) from 0.499 in weeks 7-8, and the A-grade solo Unders went 10-9 on the week so far. That
+  is the "edge is ending" world the solo-line watch was set for; the post-mortem must read it on the full week.
+
 ### 2026-11-08, afternoon MST (Giants trade watch until the deadline)
 - Owner: a notification the moment the Giants make a trade before the deadline (Tuesday 2026-11-10, 4 pm ET).
   Nothing here can send a text, so the alert is a GitHub issue that mentions the owner (GitHub emails it and pushes

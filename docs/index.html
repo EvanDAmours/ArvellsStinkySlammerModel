@@ -310,7 +310,7 @@ function recordsBar(s) {
   const r = DATA.results || {}, f = (s || {}).five || {}, bar = el("div", { class: "records" });
   const hit = f.hit == null ? "" : ` (${pct(f.hit)})`;
   bar.append(el("div", { class: "rec" }, wl(f.wins, f.losses, f.pushes), el("span", { class: "label" }, `Locks${hit}${f.pending ? `, ${f.pending} pending` : ""}`)));
-  bar.append(el("div", { class: "rec" }, wl(s?.wins, s?.losses, s?.pushes), el("span", { class: "label" }, `All plays${s?.pending ? `, ${s.pending} pending` : ""}`)));
+  bar.append(el("div", { class: "rec" }, wl(s?.wins, s?.losses, s?.pushes), el("span", { class: "label" }, `All plays${s?.pending ? `, ${s.pending} pending` : ""}${s?.live_graded ? ` (${s.live_graded} settled from the live box score; official stats confirm overnight)` : ""}`)));
   const bg = Object.fromEntries(((s || {}).by_grade || []).map((g) => [g.grade, g]));
   for (const gr of ["A", "B", "C"]) {
     const g = bg[gr] || {};

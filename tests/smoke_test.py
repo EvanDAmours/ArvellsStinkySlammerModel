@@ -207,6 +207,14 @@ _pb = pd.concat([pd.DataFrame(rows), pd.DataFrame([dict(season=2026, week=6, pla
 _pb.to_csv("data/picks.csv", index=False)
 _gb, _ = G.grade(pw.assign(player_id=pw.player_id.astype(str)))
 check(_gb.result.iloc[3] == "Win" and float(_gb.actual.iloc[3]) == float(_r0.comb), f"a pick grades on its league id when the name does not match ({_gb.result.iloc[3]}, actual {_gb.actual.iloc[3]})")
+# a game the official stats have not reached is settled from ESPN's final box score, and marked live
+from pipeline.sources import norm_name as _nn
+pd.DataFrame(rows).to_csv("data/picks.csv", index=False)
+_r1 = week6.iloc[1]
+_pw_wo = pw[~((pw.season == 2026) & (pw.week == 6) & (pw.team == _r1.team))]
+_live = pd.DataFrame([dict(season=2026, week=6, team=_r1.team, name_key=_nn(_r1.player), player=_r1.player, comb=int(_r1.comb), solo_t=int(_r1.solo_t))])
+_gl, _sl = G.grade(_pw_wo, live=_live)
+check(_gl.result.iloc[1] == "Loss" and _gl.graded_by.iloc[1] == "live" and _gl.graded_by.iloc[0] == "official", f"a finished game's pick settles from the live box score until the official stats arrive ({_gl.result.iloc[1]}, {_gl.graded_by.iloc[1]})")
 _pa.to_csv("data/picks.csv", index=False)
 _ga, _ = G.grade(pw)
 check(list(_ga.result) == ["Win", "Loss", "Win", "Win"] and float(_ga.actual.iloc[3]) == float(_r0.comb - _r0.solo_t) and _ga.side_market.iloc[3] == "Over assists",

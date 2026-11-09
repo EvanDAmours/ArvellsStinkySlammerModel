@@ -20,6 +20,7 @@ import pandas as pd
 import config as C
 from pipeline import backtest as B
 from pipeline import blend as BL
+from pipeline import live_grade as LG
 from pipeline import seal as SEAL
 from pipeline import patchlog as PATCH
 from pipeline import grade as G
@@ -379,6 +380,58 @@ def daily_due(now=None):
     return not (outcome == "success" and when is not None and when.astimezone(EDMONTON).date() >= local.date())
 
 
+LIVE_DONE = CACHE / "live_graded.json"     # ESPN events already settled live
+
+
+def _live_rows(week=None):
+    """ESPN final box-score rows for this week's finished games (empty on synthetic data or failure)."""
+    if os.environ.get("TACKLE_FAKE_DATA") or not G.PICKS.exists():
+        return pd.DataFrame()
+    try:
+        week = week or int(json.load(open(CACHE / "model_state.json"))["week"])
+        rows, _ = LG.finals(pd.read_csv(G.PICKS), C.SEASON, week)
+        return rows
+    except Exception as e:  # noqa: BLE001
+        print(f"live grade: ESPN finals not read ({type(e).__name__}: {e})")
+        return pd.DataFrame()
+
+
+def cmd_live_grade(force=False):
+    """Settle the picks of every game that has ended, from ESPN's final box score, without waiting for the daily:
+    regrade, rewrite results.json and the weekly log. Runs on a ticker beat only when a new game has finished."""
+    if os.environ.get("TACKLE_FAKE_DATA") or not G.PICKS.exists() or not (CACHE / "model_state.json").exists():
+        return
+    week = int(json.load(open(CACHE / "model_state.json"))["week"])
+    try:
+        live, events = LG.finals(pd.read_csv(G.PICKS), C.SEASON, week)
+    except Exception as e:  # noqa: BLE001
+        print(f"live grade: ESPN not reached ({type(e).__name__}); next beat retries")
+        return
+    try:
+        done = set(json.loads(LIVE_DONE.read_text()))
+    except (OSError, ValueError):
+        done = set()
+    new = [e for e in events if e not in done]
+    if not new and not force:
+        return
+    print(f"live grade: {len(new)} game(s) just ended; settling their picks from ESPN's final box score", flush=True)
+    seasons = [C.SEASON]
+    pw, _ = S.load_player_week(seasons)
+    formula, _, _ = S.choose_tackle_formula(pw, json.loads(Path("data/known_checks.json").read_text()))
+    pw = S.apply_tackle_formula(pw, formula)
+    H = M.prepare(pw, S.load_schedule(seasons), S.load_snaps(seasons))      # zero-tackle games from snap counts, as the daily grades
+    graded, summary = G.grade(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
+    summary["live_graded"] = int((graded.get("graded_by") == "live").sum()) if len(graded) else 0
+    parlays, psum = G.grade_parlays(pw, live=live)
+    summary["parlays"] = psum
+    G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)
+    retro = Path("data/retro_five.json")
+    _json(SITE / "results.json", dict(summary=summary, picks=records(graded), parlays=records(parlays) if parlays is not None and len(parlays) else [],
+                                      retro=json.loads(retro.read_text()) if retro.exists() else None))
+    LIVE_DONE.write_text(json.dumps(sorted(done | set(events))))
+    print(f"live grade: {summary['live_graded']} pick(s) settled live; {summary.get('pending', 0)} still pending", flush=True)
+
+
 def cmd_tick():
     """One beat of the pipeline ticker (.github/workflows/ticker.yml): the daily once a day after 4:15 am Edmonton,
     then any pull slot that is due. GitHub starts scheduled jobs late and skips many; a ticker that runs for hours
@@ -391,6 +444,10 @@ def cmd_tick():
         except Exception:
             mark_run("failure")
             raise
+    try:
+        cmd_live_grade()           # a game just ended: settle its picks now, not at tomorrow's daily
+    except Exception as e:  # noqa: BLE001
+        print(f"tick: live grade skipped ({type(e).__name__}: {e})")
     if any(os.environ.get(k) for k in C.ODDS_KEY_ENV) or os.environ.get("TACKLE_FAKE_ODDS"):
         cmd_odds(auto=True)
     else:
@@ -441,7 +498,9 @@ def cmd_daily(auto=False):
     json.dump(dict(phi=phi, k=k, scale=scale, week=week), open(CACHE / "model_state.json", "w"))
     json.dump(games, open(CACHE / "games.json", "w"), indent=1)
     status["international_games"] = [f"{g['away']} at {g['home']}, {g['edmonton']} Edmonton" for g in games if g["international"]]
-    graded, summary = G.grade(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]])
+    live = _live_rows()
+    graded, summary = G.grade(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
+    summary["live_graded"] = int((graded.get("graded_by") == "live").sum()) if len(graded) else 0
     blend = BL.estimate(H[["season", "week", "name_key", "comb", "solo_t"]], C.SEASON)
     BL.save(blend)
     status["blend"] = blend
@@ -454,7 +513,7 @@ def cmd_daily(auto=False):
         actuals.setdefault(str(int(r.week)), {})[f"{r.team}|{r.name_key}"] = [int(r.comb), int(r.solo_t), int(r.comb - r.solo_t)]   # combined, solo, assists
         actuals[str(int(r.week))][f"id:{r.player_id}"] = actuals[str(int(r.week))][f"{r.team}|{r.name_key}"]                    # the same row by league id, for bets that carry one
     _json(SITE / "actuals.json", dict(season=C.SEASON, weeks=actuals))   # H has zero-tackle games from snap counts, so "played, no tackles" is not "did not play"
-    parlays, psum = G.grade_parlays(pw)
+    parlays, psum = G.grade_parlays(pw, live=live)
     summary["parlays"] = psum
     G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)
     lines = O.upcoming_only(O.latest_lines(C.SEASON, week))
@@ -641,7 +700,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["daily", "odds", "seal", "history", "tick", "sleep", "watch"])
+    ap.add_argument("cmd", choices=["daily", "odds", "seal", "history", "tick", "sleep", "watch", "live-grade"])
     ap.add_argument("--test", action="store_true", help="watch: raise one test alert")
     ap.add_argument("--hours", type=float, default=None)
     ap.add_argument("--auto", action="store_true")
@@ -655,6 +714,8 @@ if __name__ == "__main__":
             cmd_history([int(w) for w in a.weeks.split(",") if w.strip()], [m for m in a.markets.split(",") if m.strip()])
         elif a.cmd == "tick":
             cmd_tick()
+        elif a.cmd == "live-grade":
+            cmd_live_grade(force=True)
         elif a.cmd == "watch":
             from pipeline import watch as W
             W.run(test=a.test)

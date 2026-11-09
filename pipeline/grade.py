@@ -279,8 +279,12 @@ def grade_parlay_legs(L, stats):
     return pd.DataFrame(rows)
 
 
-def grade_parlays(pw_comb):
+def grade_parlays(pw_comb, live=None):
     pw_comb = _with_ast(pw_comb)
+    if live is not None and len(live):        # ESPN finals for games the official stats do not cover yet
+        have = set(zip(pw_comb.season, pw_comb.week, pw_comb.name_key))
+        extra = _with_ast(live)[[k not in have for k in zip(live.season, live.week, live.name_key)]]
+        pw_comb = pd.concat([pw_comb, extra[[c for c in extra.columns if c in pw_comb.columns or c in ("comb", "solo_t", "ast_t")]]], ignore_index=True)
     if not PARLAYS.exists():
         return pd.DataFrame(), {}
     L = pd.read_csv(PARLAYS)
@@ -546,8 +550,10 @@ def record_by_grade(P):
     return out
 
 
-def grade(pw_comb):
-    """pw_comb: player-week rows with name_key, season, week, comb, solo_t (official formula applied)."""
+def grade(pw_comb, live=None):
+    """pw_comb: player-week rows with name_key, season, week, comb, solo_t (official formula applied).
+    live: ESPN final box-score rows (pipeline/live_grade.py) for games the official stats do not cover yet; they
+    settle a pick only where the official stats have nothing, and only for a player listed in that box score."""
     pw_comb = _with_ast(pw_comb)
     if not PICKS.exists():
         return pd.DataFrame(), {}
@@ -568,6 +574,16 @@ def grade(pw_comb):
             P[c] = P[f"{c}_id"].where(P[f"{c}_id"].notna(), P[c])
         P = P.drop(columns=["comb_id", "solo_id", "ast_id"])
     P["actual"] = _actual_for(P)
+    P["graded_by"] = np.where(P.actual.notna(), "official", None)
+    if live is not None and len(live):
+        lv = _with_ast(live).groupby(["season", "week", "name_key"]).agg(comb_l=("comb", "sum"), solo_l=("solo_t", "sum"), ast_l=("ast_t", "sum")).reset_index()
+        P = P.merge(lv, on=["season", "week", "name_key"], how="left")
+        fill = P.actual.isna() & P.comb_l.notna()
+        for c in ("comb", "solo", "ast"):
+            P.loc[fill, c] = P.loc[fill, f"{c}_l"]
+        P.loc[fill, "actual"] = _actual_for(P[fill])
+        P.loc[fill, "graded_by"] = "live"
+        P = P.drop(columns=["comb_l", "solo_l", "ast_l"])
     # a game that is in the books (the team has stat rows) but the player has none: he did not play, the bet is void
     if "team" in pw_comb.columns and "team" in P.columns:
         teams_done = set(zip(pw_comb.season, pw_comb.week, pw_comb.team))
