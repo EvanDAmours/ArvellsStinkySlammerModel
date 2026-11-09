@@ -1,15 +1,15 @@
 # Locks and parlays: running tally
 
 The locks: the highest-confidence picks of each slate day (3 on a one-game day, 5 on a multi-game day), named before kickoff and tracked here. Target: 70% hits. Then the recommended parlay for each slate day.
-Generated 2026-11-09 10:16 UTC by the daily job. Do not edit by hand.
+Generated 2026-11-09 20:39 UTC by the daily job. Do not edit by hand.
 
-**Locks record: 11-4 (73%), +4.05 units, 0 pending.**
+**Locks record: 10-4 (71%), +3.45 units, 0 pending.**
 
 | Week | Picks | Record | Units | Running record |
 | --- | --- | --- | --- | --- |
 | 2026 wk 7 | 1 | 1-0 | +0.99 | 1-0 |
-| 2026 wk 8 | 9 | 7-2 | +3.22 | 8-2 |
-| 2026 wk 9 | 5 | 3-2 | -0.17 | 11-4 |
+| 2026 wk 8 | 9 | 6-2 | +2.63 | 7-2 |
+| 2026 wk 9 | 5 | 3-2 | -0.17 | 10-4 |
 
 ## 2026 week 7
 
@@ -24,7 +24,7 @@ Generated 2026-11-09 10:16 UTC by the daily job. Do not edit by hand.
 | Jason Marshall Jr. Under 2.5 solo | -240 | theScore Bet | A | 87 | 1 | Win |
 | Nohl Williams Under 3.5 solo | -155 | theScore Bet | A | 85 | 1 | Win |
 | Isaiah McDuffie Under 7.5 tackles + assists | -107 | DraftKings | A | 83 | 10 | Loss |
-| Dante Trader Jr. Under 3.5 solo | -169 | DraftKings | A | 77 | 3 | Win |
+| Dante Trader Jr. Under 3.5 solo | -169 | DraftKings | A | 77 | 3 | Void |
 | Kevin Winston Jr. Under 4.5 solo | -120 | DraftKings | A | 76 | 3 | Win |
 | Sonny Styles Under 4.5 solo | -135 | theScore Bet | A | 75 | 4 | Win |
 | Xavier McKinney Under 2.5 solo | +135 | DraftKings | B | 70 | 2 | Win |
@@ -47,12 +47,12 @@ All plays by side: our hit rate against the share of every closing line on the b
 
 | Week | Side | Picks | Hit | Claimed | Whole market | Lift | Beat the close | Verdict |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2026 wk 7 | Over | 65 | 43% | 60% | 42% of 245 lines | +1% | 38% | nothing added |
-| 2026 wk 7 | Under | 165 | 56% | 62% | 58% of 245 lines | -1% | 25% | the market went our way |
-| 2026 wk 8 | Over | 11 | 45% | 62% | 43% of 264 lines | +2% | 45% | nothing added |
-| 2026 wk 8 | Under | 156 | 58% | 56% | 57% of 264 lines | +2% | 24% | the market went our way |
-| 2026 wk 9 | Over | 1 | 0% | 72% | 49% of 403 lines | -49% | 0% | we picked badly (few picks) |
-| 2026 wk 9 | Under | 219 | 55% | 63% | 51% of 403 lines | +4% | 18% | the market went our way |
+| 2026 wk 7 | Over | 39 | 46% | 56% | 44% of 245 lines | +2% | 65% | nothing added |
+| 2026 wk 7 | Under | 98 | 54% | 58% | 57% of 245 lines | -3% | 49% | the market went our way |
+| 2026 wk 8 | Over | 7 | 29% | 56% | 47% of 264 lines | -18% | 67% | we picked badly (few picks) |
+| 2026 wk 8 | Under | 99 | 55% | 57% | 58% of 264 lines | -3% | 61% | the market went our way |
+| 2026 wk 9 | Over | 1 | 0% | 59% | 48% of 409 lines | -48% |  | we picked badly (few picks) |
+| 2026 wk 9 | Under | 139 | 53% | 60% | 52% of 409 lines | +0% | 52% | the market went our way |
 
 ## Parlays
 
