@@ -326,6 +326,8 @@ function recordsBar(s) {
   }
   const pr = (s || {}).parlays || {};
   bar.append(el("div", { class: "rec" }, wl(pr.wins, pr.losses), el("span", { class: "label" }, `Parlays${pr.units == null ? "" : `, ${pr.units >= 0 ? "+" : ""}${pr.units.toFixed(1)}u`}${pr.pending ? `, ${pr.pending} pending` : ""}`)));
+  const sl = ((s || {}).sleepers || {}).all;
+  if (sl && sl.bets) bar.append(el("div", { class: "rec" }, wl(sl.wins, sl.losses, sl.pushes), el("span", { class: "label" }, `Sleepers${sl.hit == null ? "" : ` (${pct(sl.hit)})`}${sl.units == null ? "" : `, ${sl.units >= 0 ? "+" : ""}${sl.units.toFixed(1)}u`}${sl.pending ? `, ${sl.pending} pending` : ""}`)));
   const rw = (r.retro && r.retro.weeks) || [];
   if (rw.length) {
     const tot = rw.reduce((a, w) => ({ w: a.w + w.five.wins, l: a.l + w.five.losses, pw: a.pw + w.plays.wins, pl: a.pl + w.plays.losses, pend: a.pend + w.five.pending,
@@ -857,7 +859,7 @@ function renderRecord() {
   if (!r || !r.picks || !r.picks.length) { box.append(el("div", { class: "empty" }, "No picks logged yet. Every pick the board makes is saved with the price at the time and graded against the official box score the next morning.")); return; }
   const s = r.summary || {};
   box.append(recordsBar(s));
-  const jumps = [["rec-picks", "Every pick"], ["rec-parlays", "Parlay history"], ["rec-locks", "Locks"], ["rec-grade", "By grade"], ["rec-side", "By side"], ["rec-deeper", "Luck, calibration, replays"]];
+  const jumps = [["rec-picks", "Every pick"], ["rec-parlays", "Parlay history"], ["rec-locks", "Locks"], ["rec-sleepers", "Sleepers"], ["rec-grade", "By grade"], ["rec-side", "By side"], ["rec-deeper", "Luck, calibration, replays"]];
   box.append(el("nav", { class: "jump", "aria-label": "Track record sections" }, ...jumps.map(([id, label]) => { const a = el("a", { href: `#${id}` }, label); a.onclick = (e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); }; return a; })));
 
   // 1. every pick, filtered
@@ -883,6 +885,27 @@ function renderRecord() {
         [...fp].reverse().map((p) => [`Week ${p.week}`, `${p.player} ${p.side} ${num(p.line)} ${(MARKET[p.market] || p.market).toLowerCase()}`, odds(p.odds), p.book, p.grade ? el("span", { class: `grade ${p.grade}` }, p.grade) : "", p.lock == null ? "" : Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result])))) : null);
     sec.id = "rec-locks"; box.append(sec);
   }
+
+  // 3b. sleepers: their own record (1 unit each at the logged price), by grade, kind and week, and every one settled
+  { const ss = s.sleepers || {}, rows = (r.sleepers || []).filter((x) => ["Win", "Loss", "Push", "Pending"].includes(x.result));
+    const all = ss.all || {}, gOrd = { A: 0, B: 1, C: 2 };
+    const gradeRows = Object.entries(ss.by_grade || {}).sort((a, b) => (gOrd[a[0]] ?? 3) - (gOrd[b[0]] ?? 3));
+    const sec = section("Sleepers", "Lines where the model's own number disagrees with the book by a margin that held every week (see the Sleepers box on the Plays tab for the rules and the math). Tracked at 1 unit each at the price logged before kickoff; never a lock. The grade comes from the model's own evidence; the model's chance is shown against the hit rate so the grade itself is tested.",
+      all.bets ? el("div", { class: "stat-line" },
+        el("div", {}, wl(all.wins, all.losses, all.pushes), "Record"),
+        el("div", {}, el("b", { class: all.hit == null ? "" : all.hit >= 0.6 ? "pos" : "neg" }, all.hit == null ? "" : pct(all.hit)), "Hit rate"),
+        el("div", {}, units(all.units), "Units at 1 each"),
+        el("div", {}, el("b", {}, String(all.pending ?? 0)), "Pending")) : el("p", { class: "lead" }, "No sleeper has been graded yet: the first ones were logged for Monday night of week 9."),
+      gradeRows.length ? el("div", { class: "scroll" }, table([["Grade"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Model's chance", "n"], ["Units", "n"]],
+        gradeRows.map(([g, x]) => [g === "ungraded" ? "Before grades" : el("span", { class: `grade ${g}` }, g), x.bets, recCell(x), x.hit == null ? "" : pct(x.hit), x.model_chance == null ? "" : pct(x.model_chance), units(x.units, 2)]))) : null,
+      Object.keys(ss.by_kind || {}).length ? el("div", { class: "scroll" }, table([["Kind"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Units", "n"]],
+        Object.entries(ss.by_kind).map(([k, x]) => [k, x.bets, recCell(x), x.hit == null ? "" : pct(x.hit), units(x.units, 2)]))) : null,
+      (ss.by_week || []).length ? el("div", { class: "scroll" }, table([["Week"], ["Bets", "n"], ["Record"], ["Units", "n"]],
+        [...ss.by_week].reverse().map((w) => [`Week ${w.week}`, w.bets, recCell(w), units(w.units, 2)]))) : null,
+      rows.length ? more(`Every sleeper (${rows.length})`, el("div", { class: "scroll" }, table([["Week"], ["Sleeper"], ["Grade"], ["Price", "n"], ["Book"], ["Model's chance", "n"], ["Actual", "n"], ["Result"]],
+        [...rows].sort((a, b) => (b.week - a.week) || ((gOrd[a.sleeper_grade] ?? 3) - (gOrd[b.sleeper_grade] ?? 3))).map((x) => [`Week ${x.week}`, `${x.player} ${x.side} ${num(x.line)} ${(MARKET[x.market] || x.market).toLowerCase()}`,
+          x.sleeper_grade ? el("span", { class: `grade ${x.sleeper_grade}` }, x.sleeper_grade) : "", odds(x.odds), x.book || "", x.sleeper_p == null ? "" : pct(x.sleeper_p), x.actual == null ? "" : num(x.actual, 0), x.result])))) : null);
+    sec.id = "rec-sleepers"; box.append(sec); }
 
   // 4. by grade
   if (s.by_grade && s.by_grade.length) {

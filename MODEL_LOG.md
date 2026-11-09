@@ -41,41 +41,51 @@ Losing picks are not mistakes. Tackle props are high-variance and a good bet los
 made without evidence, a change not tested, a change not recorded, or a known pitfall repeated. This file exists
 to prevent those.
 
-## How the model works (current)
+## How the model works (current; rewritten 2026-11-09 after the week 9 post-mortem)
 
 Standing rule (2026-10-30): **a lock must come from where the model is reliable.** A player whose season history
-does not describe his current role (a part-timer who just played a starter's snaps) or who may not play (listed
-questionable) can be a pick, never a lock or a parlay leg.
+does not describe his current role, or who may not play, can be a pick, never a lock or a parlay leg.
 
-
-1. **Projection (rebuilt 2026-10-30, research round 4).** Two bases blended 60/40: the per-game base (season-to-date
-   tackles per game shrunk toward last season or a position prior with a position-specific weight, LB 0.5 games,
-   S 1, CB 3, DL 3, times the snap-share trend, the role bump and the reduced-role correction) and the **per-snap
-   base** (tackles per defensive snap from games with real snaps, shrunk toward last season's rate, times the
-   expected snap share from a situation-aware share model, times expected team defensive snaps). When a regular at
-   his position is out or gone and his share jumped outside a blowout, the projection moves halfway to his per-snap
-   rate at his last-game share (the vacancy rule). Then the game-context factors: a small point-spread tilt, a stat-crew factor
-   for the venue, a role bump when a regular at the position group is out, a **snap-share trend** factor (last 3
-   games vs season, damped), a **tackle-opportunity volume** factor (expected opponent carries + completions +
-   sacks vs what the player has faced, damped and capped), a **depth-chart** factor (demoted x0.90, promoted
-   x1.02), **PFR** factors (coverage targets for DBs, missed-tackle rate), a **run/pass mix** factor from
-   play-by-play, a **bye-week** factor (x0.96) and an **injury-report** factor (listed questionable x0.92, limited
-   practice x0.97). A level calibration from the backtest (about 1.0) is applied. Then a **second model** (added
-   2026-10-27): a gradient-boosted regressor with Poisson loss, trained every morning on every finished
-   defender-game since 2023 from the same 25 signals plus the factor projection itself, takes 60% of the final
-   number and the factor model 40% (`GBM`). The solo projection moves in the same proportion. Count distribution
-   tighter or looser than Poisson per position, re-estimated daily by the backtest.
-2. **Pricing (changed 2026-10-26).** The mean used to price a line is `0.4 x projection + 0.6 x consensus line`
-   (`LINE_WEIGHT`). Expected return is computed from that mean against the no-vig market price.
-3. **Picks.** A side is a pick when its expected return clears `PICK_BAR` (6%), or `SIGNAL_BAR` (4%) with a
-   role-change or outlier-fade signal, the player is not out or doubtful, and he has at least 3 games. A player
-   listed questionable is priced (with the x0.92 factor) and can be a pick, tagged "Questionable", but is never a
-   lock or a parlay leg: he may not play, and the bet voids if he sits.
-4. **Grade (added 2026-10-26, market agreement removed the same day).** Every priced line gets a 0-100 lock score
-   and an A/B/C grade from expected return, the model's own side probability, how often the player cleared the line
-   this season, games of data, and a signal bonus. Nothing from the market. Logged with every pick
-   and summarised by grade on the Track record tab so the grade itself is tested.
-5. **Grading.** Picks are graded against official box scores the next morning, with closing-line value.
+1. **Who plays, and for whom.** Statuses come from three feeds merged per player-week, most severe wins: the league's
+   weekly injury report, ESPN's injury feed, and the league's weekly roster (injured reserve, PUP, NFI, suspended,
+   exempt, the week's inactives; added 2026-11-09 after Tremaine Edmunds sat on IR unseen). Trades: a player moves to
+   his new team when the depth chart or the weekly roster (a row newer than his last game) shows him there; his first
+   games for the new team are priced down and never a lock; his old team gets the vacancy flag and, in its first game
+   without him, the next-man-up bump for the backups at his position (2026-11-09).
+2. **Projection.** Two bases blended 60/40: the per-game base (season-to-date tackles per game, crew-adjusted,
+   shrunk toward last season or a position prior: LB 0.5 games, S 1, CB 3, DL 3) and the per-snap base (tackles per
+   real defensive snap, shrunk toward last season, x his expected snap share from a situation-aware share model x
+   his defence's expected snaps). Snap trend, next-man-up (x1.10 for a backup when a regular at his group is out) and
+   role-shift factors move the per-game part; the vacancy rule moves him halfway to his rate at last game's share
+   when a regular is gone and his share jumped. Game factors multiply the whole: spread tilt, stat crew at the venue,
+   opponent volume (expected carries + completions + sacks against what he has faced), depth chart, PFR coverage
+   targets and missed tackles, run/pass mix, bye, injury report, absence/new team, indoors (corners), outlier
+   damping; then the backtest's level calibration. A gradient-boosted corrector trained every morning on every
+   defender-game since 2023 takes 60% of the final number. Solo = the combined number x his solo share (shrunk toward
+   his position's) x the league's 3-week solo drift. Counts are negative binomial with a spread per position and
+   market. Every card shows this build ("Game logic"; `model.logic_steps`), each factor with its size.
+3. **Pricing.** The mean that prices a line blends the model's number and the consensus line, per market, with the
+   weight and level corrections estimated from graded weeks (`pipeline/blend.py`, about half the line). The chance of
+   each side comes from that mean; the expected return from it against the book's price.
+4. **Claimed chance** = 0.5 + 0.6 x (that chance - 0.5) + the segment correction (how claims for picks of the same
+   side x market x position resolved, recency-weighted, at most 8 points). Never pulled toward the book.
+5. **Picks.** Best side's return at least 6% (Overs 10%), claimed chance at least 55%, **claimed edge** (claimed
+   chance x decimal odds - 1) at least 2% (2026-11-09), not out or doubtful, 3+ games.
+6. **Grades.** A 0-100 lock score from the model's own evidence (return, claimed chance, how often he cleared the line
+   in his current role, games in role, a signal): A at 72+, B at 55+. **An A must be a solo-tackle pick with a claimed
+   edge of 4%+** (2026-11-09); otherwise it shows as a B with the reason.
+7. **Locks.** The highest-scoring lock-eligible A picks per slate day (3 on a one-game day, 5 otherwise), one per
+   player, at most two of a kind; solo tackles only, never an Over; the checklist (settled role, played last game,
+   same team, snap counts in, not on the report).
+8. **Parlays** (combined tackles only: books refuse solo legs in a same-game parlay) and **stakes** (quarter Kelly at
+   the claimed chance, 0.25-3 units, 4 per game).
+9. **Sleepers** (2026-11-08/09): lines where the model's own number, before the blend, disagrees with the book by a
+   margin that held every week: solo Unders with the model 0.5+ under the line and his season median within a tackle
+   of it; combined Overs with the model 0.5 to 1.0 over. Graded A/B/C from the model's own chance, a steady role and
+   the game's volume; never the price. Own record, 1 unit each, never a lock.
+10. **Grading.** ESPN's final box score settles a pick when its game ends; the official stats confirm overnight.
+    Closing-line value against the last pull before kickoff. Records by grade, side, market, locks, parlays and
+    sleepers on the Track record tab; the luck table compares each kind of pick with the whole board.
 
 ## Validation protocol (do this before pushing any model change)
 
@@ -1430,6 +1440,31 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-11-09, evening MST (audit round: statistical checks that did not earn a change)
+Owner: "find more statistical and logical holes... at least 10 errors, fix them, run the numbers retroactively." The
+statistical half of the audit, on data (weeks 7-9, one row per selection; walk-forward where a parameter is fitted).
+These were measured and are NOT adopted; do not re-test without new data:
+- **Count spread for starters.** The main dispersion per group is estimated on all defenders, rotation players
+  included (LB 1.59, S 1.44, CB 1.27 against 1.23, 1.20, 1.10 for players at 60%+ snaps), and the lines' players
+  showed 1.25 observed around the model against 1.43 used. But a narrower spread prices worse: 2025 starters with
+  spreads estimated on 2023-24, Brier at the lines next to the projection 0.23786 (current) vs 0.23837 (starters,
+  noise-corrected) vs 0.23794 (starters, raw); 2026's real combined lines 0.25079 vs 0.25046 vs 0.25052. The wider
+  spread carries the projection's own error. Kept.
+- **Level corrections by position** (combined LB/S lines run ~0.5 low, CB/DL high on the board). Walk-forward
+  (weeks 7-8 -> 9, 7 -> 8): combined Brier flat to worse (0.2432 -> 0.2439, 0.2510 -> 0.2510), solo worse in week 8
+  (0.2276 -> 0.2299), better in week 9 (0.2598 -> 0.2534). Mixed: kept market-wide.
+- **Claims run 5 points high** overall (claimed 59.0%, hit 53.8%, se 3.2; week 8 calibrated 57/56, week 9 60/52):
+  the solo-share regime, not a slope; claims of 67%+ hit 15 of 16. No re-scaling (a calibration map was rejected
+  before for learning the week).
+- **Timing of the pick** (hours between logging and kickoff): no pattern (0-2 h 68%, 2-6 h 48%, 6-14 h 48%, 14-24 h
+  55%); 24-48 h went 7-13 on 20 picks: watch. **Book**: theScore Bet picks 75-76 vs DraftKings 140-116, inside the
+  noise (and theScore's prices are its US feed).
+- **Grade order B vs C**: on the replay of weeks 7-9, B 53% (+1%/bet) and C 59% (+24%/bet); the hit-rate gap is
+  inside the noise (se ~7 points) and the return gap is price (C holds plus-money Unders the EV fade demotes). Watch:
+  re-read at the week 10 post-mortem with the luck table.
+- **Over picks** (7-12 solo, 14-17 combined, mostly week 7): already rare under the current bars (3 in the replay of
+  weeks 7-9); the solo model's 60%+ Over probabilities hit 6 of 21 at the lines. Left as is: Overs are never locks.
 
 ### 2026-11-09, afternoon MST (trades: the weekly roster moves a player, the next man up fires, the card names who is gone)
 - Owner: "The model should also take into account trades. Grover Stewart is getting more snaps now that DeForest
