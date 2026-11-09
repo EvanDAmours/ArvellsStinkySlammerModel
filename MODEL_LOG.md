@@ -1465,6 +1465,11 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 - Not adopted: consistency (non-monotonic; 0.7-0.9 Unders hit 59% vs 81% below 0.7: it tracks a line far above his
   history, which the history check now covers), spread, stat crew, opponent tackles allowed, snap trend, position
   (all mixed across weeks).
+- Each card also shows the chance its price needs to break even against the model's own chance, in red when the
+  price is too short (shown, never graded: a likely hit at -330 is still a losing bet), and the math section says
+  sleepers on one defence move together. First live slate (Monday, BUF at MIN, re-priced with this code): five
+  sleepers, all Vikings defenders: Turner U2.5 solo A, Van Ginkel U2.5 solo B (at -330, needs 77%, model 69%),
+  Metellus U4.5 solo B, Cashman U5.5 solo B, Wilson O6.5 combined C.
 - Revert/review: each kind comes off if it hits under 55% over its next 40; the A rule is reviewed if A sleepers hit
   under 70% over their next 20 (`review_a_after`, `review_a_hit`).
 

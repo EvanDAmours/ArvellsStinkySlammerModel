@@ -560,7 +560,12 @@ function sleeperBox(all) {
     wrap.append(el("div", { class: "sleeper-row" },
       el("div", {}, el("span", { class: `grade ${b.sleeper_grade || "C"}`, title: "Sleeper grade" }, b.sleeper_grade || "?"), el("strong", {}, `${b.player}${b.jersey != null ? ` #${b.jersey}` : ""}`), ` ${b.team || ""}${b.opp ? " vs " + b.opp : ""} · `, el("strong", {}, `${side} ${num(b.line)} ${(MARKET[b.market] || "").toLowerCase()}`), ` ${odds(o)} at ${b.book}`),
       el("div", { class: "note sleeper-sum" }, b.sleeper_note || `Model ${num(b.proj_model, 1)} vs line ${num(b.line)}.`),
-      el("div", { class: "note" }, `${b.sleeper_p != null ? `Model's own chance ${pct(b.sleeper_p)}` : ""}${b.sleeper_ev != null ? ` · the pricer's return ${b.sleeper_ev >= 0 ? "+" : ""}${Math.round(b.sleeper_ev * 100)}% (it leans on the line; not part of the grade)` : ""}${isPick ? ` · also a ${b.grade || ""} pick` : " · not a pick on the board"}${betKick(b) ? ` · ${when(b.commence_time)}` : ""}`),
+      (() => {   // the price check: the chance this price needs to break even, against the model's own chance (shown, never part of the grade)
+        const be = toDec(o) ? 1 / toDec(o) : null, short = be != null && b.sleeper_p != null && b.sleeper_p < be;
+        return el("div", { class: "note" }, `${b.sleeper_p != null ? `Model's own chance ${pct(b.sleeper_p)}` : ""}${be != null ? ` vs ${pct(be)} to break even at ${odds(o)}` : ""}`,
+          short ? el("strong", { class: "no" }, " · the price is too short for this chance: a likely hit, a losing bet") : "",
+          `${isPick ? ` · also a ${b.grade || ""} pick` : " · not a pick on the board"}${betKick(b) ? ` · ${when(b.commence_time)}` : ""}`);
+      })(),
       el("div", { class: "tail" }, betLink(b, side), addButton(b))));
   }
   return wrap;
@@ -588,6 +593,8 @@ function sleeperMath() {
     el("h4", {}, "5. What these numbers cannot promise"),
     L("The cuts and grades were chosen on the same three weeks they are scored on. The live record will be lower, the A rate most of all. Judge them on the record by grade above, not on 21-3.",
       "Solo Unders share one risk: a week when stat crews credit more solo tackles (week 9: 55% of tackles solo, up from 50%) hurts every solo Under at once, sleepers included (A went 5-2 that week).",
+      "Likely is not the same as worth it. Each card shows the chance its price needs to break even (a -190 price needs 66%, -330 needs 77%). A sleeper the model gives 69% at -330 will hit often and still lose money over time; the card says so in red.",
+      "Sleepers on one defence move together: if that game's crew credits a lot of solo tackles, its solo Unders lose as a group. Spread them across games rather than stacking one team.",
       "Each kind comes off if it hits under 55% over its next 40; the A rule is reviewed if A sleepers hit under 70% over their next 20."));
 }
 
