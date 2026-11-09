@@ -144,6 +144,12 @@ SIGNAL_BAR = 0.06                  # a signal no longer lowers the bar: the 12 l
 # A pick also needs a claimed chance (shrunk, segment-corrected) of at least this. Live weeks 7-8: the 108 picks claimed
 # under 55% went 44-64 (-6.1 u) in both weeks; the rest 57% and +33 u. A plus-money side with a 50% claim is a coin flip.
 PICK_MIN_CLAIM = 0.55
+# Claimed edge (2026-11-09 post-mortem): the return at our own claimed chance, claim x decimal odds - 1. The return bars above use the
+# pricer's probability, which shrinks less than the claim, so a pick could clear 6% there while its claimed chance did not beat the price:
+# weeks 8-9, claimed edge under 0: 12-20 (-34%/bet), 0-4%: 14-11 (-2%), 4-15%: 57-36 (+11%). A picks at 4%+ went 13-2, under 4% 6-6
+# (week 9: six of its eight A losses had a claimed chance at or below the price's). Thresholds from 2% to 6% all give A 83-90%.
+PICK_MIN_CLAIM_EV = 0.02           # a pick must beat its price by 2% at the claimed chance
+A_MIN_CLAIM_EV = 0.04              # an A (and so a lock) by 4%; a 72+ score below that shows as a B
 # Selected picks claim more than they hit (weeks 7-8 replay: claimed 55.8%, hit 50.9% on 163 picks; the winner's curse of
 # picking the biggest disagreements). The claimed chance of a pick is shrunk toward even by this factor for the lock score,
 # the card and parlays. Market-free: it shrinks toward 50%, not toward the book.

@@ -36,7 +36,7 @@ def log_picks(bets, season, week, pulled_at):
         return 0
     new = new.assign(season=season, week=week, pulled_at=pulled_at, side=new.pick,
                      odds=np.where(new.pick == "Over", new.over_odds, new.under_odds))
-    cols = KEY + ["player_id", "team", "opp", "group", "odds", "proj", "proj_model", "mkt_line", "model_over", "market_over", "ev", "why", "p_claim", "segment", "segment_adj", "stake",
+    cols = KEY + ["player_id", "team", "opp", "group", "odds", "proj", "proj_model", "mkt_line", "model_over", "market_over", "ev", "why", "p_claim", "claim_ev", "segment", "segment_adj", "stake",
                   "lock", "grade", "consistency", "cons_hits", "cons_n", "payout", "uncertain", "new_role", "reduced_role", "absence", "new_team",
                   "in_role_games", "lock_block", "lock_eligible", "press_pg", "fp_comb", "fp_solo", "fp_rel", "event_id", "commence_time", "pulled_at"]
     new = new[[c for c in cols if c in new.columns]]
@@ -51,7 +51,7 @@ def log_picks(bets, season, week, pulled_at):
         k = tuple(both.loc[i, KEY])
         if k in fresh.index:
             for c in ["lock", "grade", "consistency", "cons_hits", "cons_n", "ev", "proj", "proj_model", "mkt_line", "model_over", "market_over", "why",
-                      "p_claim", "segment", "segment_adj", "stake", "lock_block", "lock_eligible", "payout"]:
+                      "p_claim", "claim_ev", "segment", "segment_adj", "stake", "lock_block", "lock_eligible", "payout"]:
                 if c in fresh.columns:
                     both.loc[i, c] = fresh.loc[k, c]
     # a logged pick whose player has vanished from a board that still lists his game (ruled out, inactive, line

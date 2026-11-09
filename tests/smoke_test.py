@@ -167,6 +167,9 @@ check(sum(1 for b in bets if b.get("five")) == len(five), "locks marked on the b
 parlays = pd.read_csv(tmp / "data/parlays.csv") if (tmp / "data/parlays.csv").exists() else pd.DataFrame()
 check(len(parlays) >= 2 and parlays.parlay_id.nunique() >= 1 and parlays.groupby("parlay_id").size().between(2, 4).all(), f"recommended parlay built ({parlays.parlay_id.nunique() if len(parlays) else 0} parlay, {len(parlays)} legs)")
 check(len(parlays) and parlays.player.nunique() == len(parlays) and parlays.units.between(0.1, 1.0).all(), "parlay legs are distinct players with a stake between 0.1 and 1 unit")
+check(all((b.get("claim_ev") or -1) >= C.PICK_MIN_CLAIM_EV - 1e-9 for b in priced if b.get("pick") in ("Over", "Under"))
+      and all((b.get("claim_ev") or -1) >= C.A_MIN_CLAIM_EV - 1e-9 for b in priced if b.get("grade") == "A"),
+      "every pick beats its price by 2% at its claimed chance, every A by 4%")
 check(not any(b.get("grade") == "A" and b.get("market") not in C.A_GRADE_MARKETS for b in priced) and five.market.isin(C.A_GRADE_MARKETS).all() if len(five) else True,
       "A grades and locks are solo tackles only (combined picks that score 72+ show as a B)")
 _sl = [b for b in priced if b.get("sleeper")]

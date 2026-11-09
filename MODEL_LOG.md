@@ -1142,6 +1142,37 @@ Each post-mortem starts from the luck table (Track record tab; `data/weekly_five
 rate against the whole board's base rate and the beat-the-close share. Only where lift and the close agree with
 the record is the week evidence about the model.
 
+### Week 9 through Sunday, 2026 (graded 2026-11-09 from ESPN finals; Monday's game pending; written 6 am MST at the owner's request)
+
+**Record** (one row per player, market and side, best grade): 68-63 (52%), -4.1 u at the logged prices. A 9-8
+(-2.2 u; solo 9-7), B 41-30 (+3.5 u), C 18-25 (-5.4 u). Locks 3-2 (-0.2 u): Stewart (-280) and Sherwood lost,
+Henderson, Stokes and Young won. Parlay 0-1 (Gardner Under 4.5 leg lost).
+
+**Luck table:** Unders 219 picks, hit 55% against a 51% board (lift +4), claimed 63%, beat the close 18%. The board
+moved against the solo Under: every closing solo Under went 71-66 (-1%/bet) after +24% and +19% in weeks 7-8. League
+solo share 0.549 (0.565 in the 12:00 Edmonton window, 0.499 in weeks 7-8). The lift is real but small; the record
+is the regime.
+
+**Calibration:** claimed 60%, hit 52% (all picks); A claimed 64%, hit 53%; C claimed 59%, hit 42%. Week 8's A
+claims were 6.6 points above their prices (0.648 vs 0.582); week 9's were 2 points above (0.642 vs 0.622).
+
+**By market, side, signal, window:** solo 63-60 (-5.2 u), combined 5-3 (+1.0 u); Unders 68-62, the one Over lost;
+outlier fade 8-5 (+1.4 u), price gap only 60-58 (-5.6 u); by position CB 20-16, DL 8-8, LB 21-20, S 19-19. By kickoff
+(Edmonton): Thursday 6-1, Sunday 8:30 (international) 6-3, 12:00 29-39 (-14.1 u), 15:05 and 15:25 21-14 (+3.7 u), 19:20
+6-6. The 12:00 window was the high-solo-share window (0.565), not a timing failure: the earliest pull's picks for
+it went 9-3, the later pulls' 20-36.
+
+**Why the A grades failed:** six of the eight A losses (Sherwood, Henley, Pitre, Greenlaw, Stewart, Brown) had a
+claimed chance at or below the price's own (claimed edge -3% to +1%); they were A because the return bar and the
+lock score's EV term use the pricer's probability, which shrinks less than the claim. Heavy-juice Unders with no
+cushion lose as a group when the solo share turns. Across all picks of weeks 8-9, claimed edge under 0: 12-20 (-34%);
+0-4%: 14-11 (-2%); 4-15%: 57-36 (+11%); over 15%: 43-41. A at 4%+: 13-2 (7-0, 6-2); A under 4%: 6-6.
+
+**What changed because of it:** the claimed-edge gate (changelog 2026-11-09, morning). Retroactively, at the logged
+prices: week 9 A 6-2 (+2.2 u) instead of 9-8 (-2.2 u), Sunday locks Gibbens, Henderson, Stokes, Belton, Allen
+5-0 instead of 3-2; week 8 A 6-0 instead of 10-0 (it would have dropped four winners: Walker, Styles, Marshall
+and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
+
 ### Week 8 final, 2026, and the season to date (graded 2026-11-03; written 8 am MDT at the owner's question "are we beating the books or getting lucky")
 
 Monday night (CHI and SEA; the one graded pick): Dillon Thieneman Under 4.5 solo at -155, B, 3 solo, win. Week 8
@@ -1399,6 +1430,22 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-11-09, morning MST (claimed-edge gate: a pick must beat its price at its own claimed chance)
+- Week 9 post-mortem (above): the A losses were picks whose claimed chance only matched the price. `claim_ev` =
+  claimed chance x decimal odds - 1 on every priced line; a pick needs `PICK_MIN_CLAIM_EV` 2%, an A (and so a lock)
+  `A_MIN_CLAIM_EV` 4%, else it shows as a B with the reason in its card. Logged in picks.csv.
+- Evidence (claims made before kickoff, weeks 8-9): claimed edge under 0 went 12-20 (-34%/bet, both weeks negative);
+  A at 4%+ 13-2, under 4% 6-6; thresholds 2-6% all give A 83-90%. Not knife-edge.
+- Against it, honestly: re-priced at the closing lines (today's segment corrections and blend, which have seen weeks
+  7-9: in-sample), the gate drops six A winners (9-0 to 3-0) and halves the picks at the same return per bet (41-27
+  +7% to 20-15 +8%; claims there 58% vs hit 57-60%). The pick-time record is the out-of-sample one and it is what
+  decided this. Expect fewer A grades and some slates with fewer than five locks.
+- Every priced line's read (side, line, book, odds, claimed chance, claimed edge, grade, pick, lock) now goes into
+  data/lines_log.csv at each pull (the last pull before kickoff is kept), so the next post-mortem can grade the
+  lines the gate turned away against the ones it kept, out of sample.
+- Revert (to PICK_MIN_CLAIM_EV 0, A_MIN_CLAIM_EV 0) if over weeks 10-11 the A-scoring lines the gate turned into B
+  hit as often as the gated A's, or the gated A's hit under 70%.
 
 ### 2026-11-08, evening MST (deep review after week 9 Sunday: A grades solo only, sleepers tracked)
 Owner: "our A picks need to be true locks... find us the sleepers... I don't want to catch up for two weeks."
@@ -2591,6 +2638,9 @@ Open, with what would justify them:
   books without notice.
 - Count a pick once per player, market and side when judging a grade: the same pick logged at DraftKings and theScore
   Bet doubles its weight in a record (week 9's A grades read 10-9 with duplicates, 9-6 without).
+- Two probabilities live on each line: the pricer's (`model_over`, shrunk toward the market by PROB_SHRINK) and the
+  claim (shrunk toward 50% by CLAIM_SHRINK, plus the segment correction). The return bars used the first, so a pick
+  could clear 6% while its claim did not beat the price. Any bar on "edge" must be checked at the claim.
 - A filter that "agrees with the pricer" can select against a model signal: the pricer's EV leans on the book's line,
   so inside the combined-Over sleeper band the +EV rows went 7-10 while the band went 35-21. Test a signal on the
   model's own number before adding the pricer's return as a second condition.

@@ -1176,7 +1176,9 @@ def price_lines(lines, P, segments=None, blend=None):
         seg_adj, seg_key = segment_adjust(segments, side, kind, p.group)
         claim = claimed_prob(p_side, seg_adj)
         low_claim = claim < C.PICK_MIN_CLAIM
-        pick = side if (ev >= bar and not flagged and not thin and not low_claim) else "Pass"
+        claim_ev = claim * dec - 1 if dec else float("nan")       # the return at our own claimed chance (config.PICK_MIN_CLAIM_EV)
+        low_edge = not (claim_ev >= C.PICK_MIN_CLAIM_EV)
+        pick = side if (ev >= bar and not flagged and not thin and not low_claim and not low_edge) else "Pass"
         # lock eligibility checklist (market-free): the model must be on ground where it is reliable
         settled = in_role_n >= C.LOCK_RULES["min_in_role_games"] or in_role_n >= int(p.n_prev)
         snaps_missing = pd.isna(pct_last) and int(p.n_prev) > 0      # he has games but no snap count for his last one: the role checks are blind
@@ -1185,7 +1187,9 @@ def price_lines(lines, P, segments=None, blend=None):
                                        (uncertain, "questionable"), (snaps_missing, "snap counts missing for his last game"),
                                        (side == "Over" and not C.LOCK_RULES.get("overs_eligible", True), "Over side")) if ok]
         lock = lock_score(ev, p_side, consistency, in_role_n, fade or role, seg_adj)
-        grade, capped = grade_of(lock), False
+        grade, capped, thin_edge = grade_of(lock), False, False
+        if grade == "A" and not (claim_ev >= C.A_MIN_CLAIM_EV):     # an A must beat its price by 4% at the claimed chance (2026-11-09 post-mortem)
+            grade, thin_edge = "B", True
         if grade == "A" and r.market not in C.A_GRADE_MARKETS:     # combined claims ran 9 points high over weeks 7-9: no A there until they earn it
             grade, capped = "B", True                               # (not a lock_block: that would also bar it from the combined-only parlays)
         # a sleeper: the model's own number, before the blend with the line, disagrees with the book by a margin that held in
@@ -1207,6 +1211,8 @@ def price_lines(lines, P, segments=None, blend=None):
             why = f"Best side returns {ev:+.0%}; needs {bar:.0%}"
         elif low_claim:
             why = f"{side} returns {ev:+.0%} but the claimed chance is only {claim:.0%}; a pick needs {C.PICK_MIN_CLAIM:.0%}"
+        elif low_edge:
+            why = f"{side} at {claim:.0%} claimed returns {claim_ev:+.0%} at this price; a pick needs {C.PICK_MIN_CLAIM_EV:.0%} at the claimed chance"
         else:
             why = f"{side} returns {ev:+.0%}" + (", backed by a role change" if role else ", fading an outlier last game" if fade else ", price gap only")
             if uncertain:
@@ -1225,6 +1231,8 @@ def price_lines(lines, P, segments=None, blend=None):
                 why += f"; a regular at his position is out or gone and he played {float(pct_last):.0%} of the snaps: projected at that share"
             if block:
                 why += "; not lock-eligible: " + ", ".join(block)
+        if thin_edge and pick != "Pass":
+            why += f"; scores as an A, shown as a B: at its {claim:.0%} claimed chance it returns {claim_ev:+.0%}, an A needs {C.A_MIN_CLAIM_EV:.0%}"
         if capped and pick != "Pass":
             why += "; scores as an A, shown as a B: A grades and locks are solo tackles only (combined claims ran 9 points high in weeks 7-9)"
         if sleeper:
@@ -1233,7 +1241,7 @@ def price_lines(lines, P, segments=None, blend=None):
                      "player_id": None if pd.isna(p.get("player_id", np.nan)) else str(p.get("player_id")), "espn_id": None if pd.isna(p.get("espn_id", np.nan)) else str(p.get("espn_id")).split(".")[0],
                      "exp_opps": None if pd.isna(p.get("exp_opps", np.nan)) else float(p.get("exp_opps")),
                      "mkt_line": float(r.mkt_line), "phi": phi_use, "model_over": po, "market_over": mkt, "ev": ev, "side": side, "far_from_line": bool(far_from_line),
-                     "p_claim": claim, "segment": seg_key, "segment_adj": float(seg_adj),
+                     "p_claim": claim, "claim_ev": None if claim_ev != claim_ev else float(claim_ev), "segment": seg_key, "segment_adj": float(seg_adj),
                      "pick": pick, "why": why, "signal_fade": bool(fade), "signal_role": role, "status": p.status,
                      "season_avg": float(p.season_avg), "last": None if pd.isna(p["last"]) else float(p["last"]),
                      "n_prev": int(p.n_prev), "consistency": consistency, "cons_hits": int(sum(hits)), "cons_n": len(hits),

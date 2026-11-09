@@ -18,7 +18,7 @@ from pipeline import odds as O
 from pipeline.sources import norm_name
 
 LOG = Path("data/lines_log.csv")
-LOG_COLS = ["season", "week", "player", "player_id", "team", "market", "proj_model", "phi", "exp_opps", "share_pred", "pulled_at"]
+LOG_COLS = ["season", "week", "player", "player_id", "team", "market", "proj_model", "phi", "exp_opps", "share_pred", "pulled_at", "line", "book", "side", "odds", "p_claim", "claim_ev", "grade", "pick", "lock"]   # the board row's read too (2026-11-09): any pick rule can be graded out of sample at the post-mortem
 CACHE = Path("data/cache/blend.json")
 
 
@@ -29,6 +29,8 @@ def log_model_numbers(bets, season, week, stamp):
         return 0
     new = bets[bets.proj_model.notna()].drop_duplicates(["player", "market"]).copy()
     new = new.assign(season=season, week=week, pulled_at=stamp)
+    if "side" in new.columns and "over_odds" in new.columns:
+        new["odds"] = np.where(new.side == "Over", new.over_odds, new.under_odds)
     for c in LOG_COLS:
         if c not in new.columns:
             new[c] = np.nan
