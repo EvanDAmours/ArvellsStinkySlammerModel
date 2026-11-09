@@ -379,6 +379,38 @@ def load_espn_injuries(season, week):
         return parse_espn_injuries({}, season, week)
 
 
+# the league's weekly roster: reserve lists the weekly injury report stops carrying (2026 week 9: Tremaine Edmunds, on
+# injured reserve since week 7, was priced as active; ESPN's injury feed did not list him either)
+ROSTER_OUT = {"RES": "injured reserve", "PUP": "injured reserve", "NFI": "injured reserve", "NON": "injured reserve",
+              "SUS": "suspended", "EXE": "out"}
+
+
+def load_roster_out(season, week):
+    """Players the league's weekly roster has on a reserve list (injured reserve, PUP, NFI), suspended or exempt as of
+    `week` (his latest roster row at or before it), plus anyone the week's own rows list inactive. Rows like
+    load_injuries(), for merge_injury_sources(). Empty on synthetic data or when the feed is down."""
+    cols = ["season", "week", "team", "name_key", "player_id", "status", "practice"]
+    if os.environ.get("TACKLE_FAKE_DATA"):
+        return pd.DataFrame(columns=cols)
+    try:
+        r = _nflreadpy("load_rosters_weekly", seasons=[season])
+    except Exception as e:  # noqa: BLE001
+        print(f"  roster status: {type(e).__name__}: {e}")
+        return pd.DataFrame(columns=cols)
+    if r is None or len(r) == 0 or "status" not in r.columns:
+        return pd.DataFrame(columns=cols)
+    r = r[r.gsis_id.notna()].copy()
+    r["week"] = pd.to_numeric(r.week, errors="coerce")
+    r = r[r.week <= week].sort_values("week")
+    last = r.groupby("gsis_id").tail(1)
+    st = last.status.astype(str).str.upper()
+    pick = st.isin(set(ROSTER_OUT)) | ((st == "INA") & (last.week == week))
+    out = last[pick]
+    return pd.DataFrame({"season": int(season), "week": int(week), "team": out.team.astype(str).values,
+                         "name_key": out.full_name.map(norm_name).values, "player_id": out.gsis_id.astype(str).values,
+                         "status": [ROSTER_OUT.get(x, "out") for x in st[pick]], "practice": ""}, columns=cols)
+
+
 def merge_injury_sources(league, outside):
     """One listing per player-week: the more severe status wins (out/IR/suspended > doubtful > questionable), so a
     suspension or an IR stay that the league report never carries still rules a player out; the league report's

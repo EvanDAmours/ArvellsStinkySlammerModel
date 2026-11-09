@@ -262,6 +262,8 @@ def load_all():
     week_ahead = upcoming_week(sched, C.SEASON)
     espn = S.load_espn_injuries(C.SEASON, week_ahead)        # suspensions and IR stays the league report never carries
     inj = S.merge_injury_sources(inj, espn)
+    roster_out = S.load_roster_out(C.SEASON, week_ahead)     # reserve lists neither feed always carries (Edmunds, week 9)
+    inj = S.merge_injury_sources(inj, roster_out)
     vol = S.load_team_volume(seasons)
     pbp, pfr, dc = S.load_pbp_tackles(seasons), S.load_pfr_def(seasons), S.load_depth_charts(seasons)
     if len(pbp["teams"]):
@@ -277,7 +279,7 @@ def load_all():
                      snaps_through_week=int(cur_snaps.week.max()) if len(cur_snaps) else None)
     freshness["snaps_lag"] = bool(freshness["stats_through_week"] and freshness["snaps_through_week"] and freshness["snaps_through_week"] < freshness["stats_through_week"])
     status = dict(stats_source=used, tackle_formula=formula, formula_check_ok=ok, formula_check=report, freshness=freshness,
-                  snaps_rows=int(len(snaps)), injury_rows=int(len(inj)), espn_injury_rows=int(len(espn)), volume_rows=int(len(vol)),
+                  snaps_rows=int(len(snaps)), injury_rows=int(len(inj)), espn_injury_rows=int(len(espn)), roster_out_rows=int(len(roster_out)), volume_rows=int(len(vol)),
                   pbp_rows=int(len(pbp["players"])), pfr_rows=int(len(pfr)), depth_chart_rows=int(len(dc)))
     return seasons, pw, sched, snaps, inj, H, status, dict(vol=vol, pbp=pbp, pfr=pfr, dc=dc)
 
@@ -552,6 +554,7 @@ def refresh_injury_status(P, week):
         return P
     inj = inj[(inj.season == C.SEASON) & (inj.week == week)] if len(inj) else inj
     inj = S.merge_injury_sources(inj, S.load_espn_injuries(C.SEASON, week))
+    inj = S.merge_injury_sources(inj, S.load_roster_out(C.SEASON, week))
     if inj.empty or "name_key" not in P.columns:
         return P
     status = {(r.team, r.name_key): str(r.status) for r in inj.itertuples()}

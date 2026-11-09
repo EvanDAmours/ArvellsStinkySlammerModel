@@ -1431,6 +1431,56 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-09, afternoon MST (football logic in numbers: the owner's reads tested, an injured-reserve blind spot, the logic shown)
+- Owner: the model is all numbers and no logic; Arvell Reese (rookie LB, Tremaine Edmunds out, divisional game,
+  "better every game") should have been a lock on Over 7.5 and went 12; Deonte Banks (press-man corner) Under hit.
+  "Blend both, with a heavy emphasis on numbers." The test: turn each read into a number, measure it on every
+  regular-season defender-game since 2023, and keep it only if it predicts out of sample.
+- **Found a data hole (fixed):** Edmunds has been on injured reserve since week 7 (league weekly roster status RES).
+  The weekly injury report drops IR players and ESPN's feed did not list him, so the model priced him as active
+  (6.2 projected tackles, no status). `sources.load_roster_out` now reads the league's weekly roster (injured
+  reserve, PUP, NFI, NON, suspended, exempt; the week's own inactive list when posted) and merges it with the report
+  and ESPN, most severe wins, at the daily and at every pull. Week 9: 504 players listed by it, Edmunds as injured
+  reserve. Reese's own number would not have moved: the vacancy flag was already on for the Giants' linebackers
+  (Edmunds missed the games before), and the fix acts through statuses (his own lines, backups' role bump).
+- **The reads, measured (2023-2026, regular season):**
+  - Starter out, the other full-time starters absorb his tackles: they do not, much. Remaining regulars (75%+ snaps)
+    when a fellow regular is missing, against their own season rate, difference in differences: LB +0.34 tackles
+    (+5%, se 0.19, n=255; by season +0.27, +0.57, +0.14, -0.12), CB +0.19 (+4%), S -0.16, DL noise. The backup who
+    takes the snaps takes the tackles (the role bump and vacancy rule cover him). Reese in week 7, the first game
+    without Edmunds: 7 tackles (McFadden 10).
+  - Better every game (recent form): for veterans the last three games add nothing to the season rate (best weight
+    0.10; out-of-sample error unchanged; a rise of 2+ tackles carries ~0% into the next game, a fall carries 20-35%).
+    For rookies it is real: weight 0.15, 2% lower error out of sample, a 2+ rise carries ~40%. Reese's last three
+    (9, 6, 7) were not a rise.
+  - Divisional game: no effect for LB (-0.07, se 0.10, sign flips by season), S or DL; corners -0.17 (se 0.08,
+    negative in all four seasons), about -4%.
+  - Press-man corner (few catches allowed, so few tackles): corners allowing under 2 completions a game so far run
+    +0.67 tackles above their season average next game, 4+ a game -0.92, in all three seasons. The low average is
+    real, but it regresses up: the style explains the past, not a further drop.
+  - Walk-forward test of all of it in the boosted corrector (completions allowed per game and catch rate for DBs,
+    rookie, last-three trend): 2025 fold MAE 1.5887 -> 1.5883, 2026 fold 1.5769 -> 1.5765 (level-matched the
+    same); corners 2026 slightly worse, rookies 2026 slightly worse. The model already carries what these hold
+    (shrunk season rate, targets, snap trend, last game, vacancy). Not added: an input that does not predict out
+    of sample only adds noise. Do not re-test without a new data source (e.g. charted press/man coverage).
+- **The logic made visible:** the model already reasons in football terms (17 measured factors: snap trend, next
+  man up, new role, role shift, vacancy rule, spread, stat crew, opponent volume, depth chart, coverage targets and
+  missed tackles, run/pass mix, bye, injury report, absence, indoors, outlier damping, the second model), but the
+  card only named a few and never said how much each moved the number. `project_frame(parts=)` now records every
+  piece (unchanged numbers, checked in the smoke test), `finalize_projections` stores them (lf_*), and
+  `model.logic_steps` writes "How the model built 7.6: season rate 8.0 over 7 games...; per-snap view...; opponent
+  volume -2%; ..." on every priced line, with a "Game logic" row of the 3%+ movers on the card face.
+- Checked on live data (the daily run on a scratch copy, week 9): Edmunds now reads "injured reserve"; McFadden, his
+  replacement, now also gets the next-man-up bump (6.1 -> 6.7). Reese's build as the card now shows it: season rate
+  8.0 over 7 games (7.8 after crews and the LB weighting), per-snap view 8.2, blended; then off a bye -4% (the
+  Giants' week 8 bye; defences off a bye run under their average), spread -2%, stat crew -1%, volume +1%: 7.4.
+  Banks: coverage -6% (targeted less than a typical corner: the owner's press-man read, already in the model).
+- Reese in numbers (the projection the board priced with before kickoff): model 7.4 against 7.5 (Over 45% at the
+  model's number; the book's no-vig 54%); 12 or more was a 12% outcome. Banks: the model had the Under (solo 2.5, claimed 62%, +32% return); it graded C because returns
+  over 20% fade in the lock score (claimed edges over 15% went 43-41 in weeks 8-9) and he had 5 games.
+- Revert: the roster source if it marks a player out who then plays (check the void list each week); the logic
+  text is display only.
+
 ### 2026-11-09, morning MST (sleepers: tighter rules, a grade, a summary and the math on each)
 - Owner: "explain the sleepers in depth... provide a brief summary of each on the website every time... grade the
   sleepers. I want these to hit frequently." Data: every line of weeks 7-9 re-priced at the close by the live pricer
@@ -2680,6 +2730,10 @@ Open, with what would justify them:
   books without notice.
 - Count a pick once per player, market and side when judging a grade: the same pick logged at DraftKings and theScore
   Bet doubles its weight in a record (week 9's A grades read 10-9 with duplicates, 9-6 without).
+- The weekly injury report drops a player once he goes on injured reserve, and ESPN's feed does not always carry him:
+  read the league's weekly roster status too (2026 week 9: Edmunds, on IR since week 7, was priced as active).
+- A football read that explains a player's past is not a prediction: test it against his own season rate, out of
+  sample. Press-man corners have low tackle averages, and those averages regress up, not down.
 - A model-vs-line disagreement has a ceiling: past about a tackle (combined model more than 1.0 over the line, a solo
   line more than a tackle above his season median) the book usually knows a role change the history does not show,
   and the signal turns into a coin flip (9-11, 17-16). Any new "model disagrees with the line" signal needs its

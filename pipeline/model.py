@@ -641,7 +641,9 @@ def rest_factor(F):
 
 
 def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_snap=True, use_volume=True, use_depth=True, use_pfr=True, use_mix=True, use_rest=True, use_injury=True, use_new_role=True, use_role_shift=True,
-                  use_persnap=True, use_vacancy=True, use_dome=True, use_solo_drift=True, use_outlier_damp=True):
+                  use_persnap=True, use_vacancy=True, use_dome=True, use_solo_drift=True, use_outlier_damp=True, parts=None):
+    """(base, mu, mu_solo). `parts`, when a dict, receives every piece of the build per row (the base, the per-snap view,
+    each game factor as a multiplier, the solo share) so a card can show how the number was made; the numbers are the same."""
     k = F.group.map(C.SHRINK_GAMES_BY_GROUP).fillna(C.SHRINK_GAMES) if k is None else k
     if use_crew:
         prev, ps = F.comb_prev, F.ps_avg
@@ -657,29 +659,36 @@ def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_sn
     snap = snap_trend_factor(F).values if use_snap else 1.0
     volume = volume_factor(F).values if use_volume else 1.0
     extra = 1.0
+    xf = {}                                     # each game factor on its own, for `parts`
     if use_depth:
-        extra = extra * depth_factor(F).values
+        xf["depth"] = depth_factor(F).values
     if use_pfr:
-        extra = extra * pfr_factor(F).values
+        xf["pfr"] = pfr_factor(F).values
     if use_mix:
-        extra = extra * mix_factor(F).values
+        xf["mix"] = mix_factor(F).values
     if use_rest:
-        extra = extra * rest_factor(F).values
+        xf["rest"] = rest_factor(F).values
     if use_injury:
-        extra = extra * injury_factor(F).values
+        xf["injury"] = injury_factor(F).values
     if use_role_shift:
-        extra = extra * role_shift_factor(F, "availability").values
+        xf["availability"] = role_shift_factor(F, "availability").values
     if use_dome:
-        extra = extra * dome_factor(F).values
+        xf["dome"] = dome_factor(F).values
     if use_outlier_damp:
-        extra = extra * outlier_damp_factor(F).values
+        xf["damp"] = outlier_damp_factor(F).values
+    for v in xf.values():
+        extra = extra * v
     # the per-game core: season rate x snap trend x role bump x the share-related corrections
     pg = base * role * snap
+    nr = rs = 1.0
     if use_new_role:
-        pg = pg * new_role_factor(F).values
+        nr = new_role_factor(F).values
+        pg = pg * nr
     if use_role_shift:
-        pg = pg * role_shift_factor(F, "share").values
+        rs = role_shift_factor(F, "share").values
+        pg = pg * rs
     core = pg
+    ps_used, vac_on, core_pre = np.full(len(F), np.nan), np.zeros(len(F), dtype=bool), None
     if use_persnap:
         share = share_pred(F)
         ps = persnap_base(F, share.fillna(_col_or(F, "pct_prev", np.nan)))
@@ -687,18 +696,27 @@ def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_sn
         ok = ps.notna() & has_rate
         w = C.PERSNAP["weight"]
         core = np.where(ok, (1 - w) * pg + w * ps.values, pg)
+        ps_used = np.where(ok, ps.values, np.nan)
+    core_pre = core
     if use_vacancy:
         rule = vacancy_rule(F)
         if rule.any():
             ps_last = persnap_base(F, _col_or(F, "pct_last", np.nan).fillna(0))     # his last game's share is his new role
             wv = C.VACANCY["weight"]
             core = np.where(rule, wv * ps_last.values + (1 - wv) * core, core)
+            vac_on = np.asarray(rule, dtype=bool)
     m_s = C.SOLO_SHARE_PSEUDO
     solo_share = (F.solo_prev + m_s * F.group.map(C.POS_SOLO_SHARE).fillna(0.6)) / (F.comb_prev + m_s)
     if use_solo_drift:
         solo_share = solo_share * pd.to_numeric(_col_or(F, "solo_drift", 1.0), errors="coerce").fillna(1.0)
     mu = core * tilt * crew_c * volume * extra
     mu_solo = core * tilt * solo_share * crew_s * volume * extra
+    if parts is not None:
+        full = lambda v: np.broadcast_to(np.asarray(v, dtype=float), (len(F),)).astype(float)
+        parts.update(base=full(base), pg=full(pg), persnap=full(ps_used), core_pre=full(core_pre), core=full(core), vacancy_rule=vac_on,
+                     role=full(role), snap=full(snap), new_role=full(nr), share_shift=full(rs), tilt=full(tilt), crew=full(crew_c),
+                     crew_solo=full(crew_s), volume=full(volume), solo_share=full(solo_share),
+                     **{k_: full(v) for k_, v in xf.items()})
     return pd.Series(base, index=F.index), pd.Series(mu, index=F.index), pd.Series(mu_solo, index=F.index)
 
 
@@ -840,7 +858,9 @@ def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
     gbm: the trained corrector's predict function; its blend moves the combined projection and the solo one in step."""
     if F.empty:
         return F
-    base, mu, mu_solo = project_frame(F, k=k)
+    parts = {}
+    base, mu, mu_solo = project_frame(F, k=k, parts=parts)
+    mu_raw = mu.copy()
     scale_solo = phi_by_group.get("__scale_solo__", scale) if isinstance(phi_by_group, dict) else scale
     by_grp = F.group.map({g: phi_by_group.get(f"{g}|solo_scale") for g in F.group.unique()}) if isinstance(phi_by_group, dict) else pd.Series(np.nan, index=F.index)
     mu, mu_solo = mu * scale, mu_solo * by_grp.fillna(scale_solo).values     # solo level per position (CB and S run highest)
@@ -851,6 +871,12 @@ def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
         F = F.assign(proj_factor=mu.values, proj_gbm=np.asarray(g))
         mu, mu_solo = blended, mu_solo * ratio
     F = F.assign(base=base.values, proj=mu.values, proj_solo=mu_solo.values)
+    # how the number was built, piece by piece, for the card (logic_steps): every factor as the multiplier it applied
+    for k_, v in parts.items():
+        F["lf_" + k_] = v
+    F["lf_scale"] = float(scale) if np.isscalar(scale) else np.asarray(scale, dtype=float)
+    F["lf_scale_solo"] = by_grp.fillna(scale_solo).values
+    F["lf_gbm"] = (mu.values / np.clip(mu_raw.values * (float(scale) if np.isscalar(scale) else 1.0), 1e-6, None)) if gbm is not None else 1.0
     F["phi"] = F.group.map(phi_by_group).fillna(1.0)
     F["share_pred"] = share_pred(F).values
     F["rate_clean"] = persnap_rate(F).values
@@ -1085,6 +1111,82 @@ def blend_mean(mu_model, mkt_line, kind, blend=None):
     return max(0.05, (1 - w) * (float(mu_model) + bm) + w * (float(mkt_line) + bl))
 
 
+LOGIC_LABELS = {   # factor -> (short label for the card, what it means in football terms)
+    "snap": ("Snap trend", "his snap share over his last three games against his season share"),
+    "role": ("Next man up", "a regular at his position is out and he is the backup who steps in"),
+    "new_role": ("New role", "a part-timer who just played a starter's snaps"),
+    "share_shift": ("Role shift", "his last game's role against his season role"),
+    "tilt": ("Spread", "point spread: an underdog's defence faces more plays"),
+    "crew": ("Stat crew", "this stadium's stat crew credits tackles high or low"),
+    "volume": ("Opponent volume", "tackle chances expected this game (opponent carries + completions + sacks) against what he has faced"),
+    "depth": ("Depth chart", "promoted or demoted on the latest depth chart"),
+    "pfr": ("Coverage", "how often he is targeted in coverage and how often he misses tackles"),
+    "mix": ("Run/pass mix", "this opponent's run/pass mix through his own run and pass tackle rates"),
+    "rest": ("Bye", "defences off a bye run under their average"),
+    "injury": ("Injury report", "listed questionable or limited in practice"),
+    "availability": ("Absence", "back from a missed game or new to the team"),
+    "dome": ("Indoors", "corners run higher indoors"),
+    "damp": ("Outlier damp", "one big game in his log counts for less"),
+    "scale": ("Level", "the backtest's level calibration"),
+    "gbm": ("Second model", "the boosted model trained on every defender-game since 2023"),
+}
+
+
+def logic_steps(p, kind="combined", min_effect=0.0):
+    """How the model built a player's number, from the pieces finalize_projections stored (lf_*): his base rate, the
+    per-snap view, every game factor as a percentage, the second model, the solo share. Returns (steps, text): steps
+    are (label, effect as a fraction or None, detail) in order; text is one paragraph. Empty when the row has no pieces."""
+    g = lambda c, d=np.nan: _num(p.get(c), d) if hasattr(p, "get") else d
+    if np.isnan(g("lf_base")):
+        return [], ""
+    kind = kind if isinstance(kind, str) else ("solo" if kind else "combined")
+    n = int(g("n_prev", 0)); avg = g("comb_prev_raw", np.nan) / max(n, 1) if n else np.nan
+    grp = str(p.get("group", "")); steps = []
+    prior = f"last season's {g('ps_avg'):.1f}" if g("ps_games", 0) >= 4 and not np.isnan(g("ps_avg")) else f"the {grp} average"
+    rate_lab = "Season rate" if kind == "combined" else "Season rate (tackles + assists; the solo share comes last)"
+    steps.append((rate_lab, None, f"{avg:.1f} a game over {n} games; adjusted for the stat crews of his games and weighted with {prior}: {g('lf_base'):.1f}" if n else f"no games yet: {prior}"))
+    ps = g("lf_persnap")
+    if not np.isnan(ps):
+        steps.append(("Per-snap view", None, f"{g('rate_clean'):.3f} tackles a snap x {g('share_pred'):.0%} of {g('tsnaps_exp'):.0f} expected defensive snaps = {ps:.1f}; blended 60/40 with the season rate"))
+    if _flag(p.get("lf_vacancy_rule", False)):
+        steps.append(("Vacancy rule", None, "a regular at his position is out and his snaps jumped: moved halfway to his rate at last game's share"))
+    pg, core_pre, core = g("lf_pg"), g("lf_core_pre"), g("lf_core")
+    w_ps = 0.0 if np.isnan(ps) else C.PERSNAP["weight"]
+    for k_ in ("snap", "role", "new_role", "share_shift", "tilt", "crew", "volume", "depth", "pfr", "mix", "rest", "injury", "availability", "dome", "damp", "scale", "gbm"):
+        src = {"crew": "crew_solo", "scale": "scale_solo"}.get(k_, k_) if kind == "solo" else k_
+        v = g("lf_" + src, 1.0)
+        if k_ in ("snap", "role", "new_role", "share_shift") and not np.isnan(v) and v > 0 and not any(np.isnan(x) for x in (pg, core_pre, core)):
+            # these move only the per-game part (60% of the base when the per-snap view is in): their effect on the number
+            pre_wo = (1 - w_ps) * pg / v + w_ps * (0 if np.isnan(ps) else ps)
+            wv = C.VACANCY["weight"]       # the vacancy rule mixes in his last-game share's rate, which these do not touch
+            core_wo = (core - (1 - wv) * core_pre) + (1 - wv) * pre_wo if _flag(p.get("lf_vacancy_rule", False)) else pre_wo
+            v = core / core_wo if core_wo > 0 else v
+        if np.isnan(v) or abs(v - 1) < max(min_effect, 0.005):
+            continue
+        lab, what = LOGIC_LABELS[k_]
+        detail = what
+        if k_ == "volume" and not np.isnan(g("exp_opps")) and not np.isnan(g("opps_prev_mean")):
+            detail = f"{g('exp_opps'):.0f} tackle chances expected against the {g('opps_prev_mean'):.0f} he has faced a game"
+        elif k_ == "snap" and not np.isnan(g("pct_last3")):
+            detail = f"{g('pct_last3'):.0%} of the snaps over his last three games against {g('pct_prev'):.0%} this season"
+        elif k_ == "tilt" and not np.isnan(g("spread_dog")):
+            sd = g("spread_dog"); detail = f"his team is a {abs(sd):g}-point {'underdog' if sd > 0 else 'favourite'}: {'more' if sd > 0 else 'fewer'} plays for his defence"
+        elif k_ == "depth":
+            detail = f"{p.get('dc_status')} on the latest depth chart"
+        elif k_ == "injury":
+            detail = f"listed {str(p.get('status') or p.get('practice') or 'on the report').lower()}"
+        steps.append((lab, float(v - 1), detail))
+    if kind == "solo":
+        steps.append(("Solo share", None, f"{g('lf_solo_share'):.0%} of his tackles solo (his own, weighted with his position's)"))
+    total = g("proj_solo") if kind == "solo" else g("proj") - g("proj_solo") if kind == "assists" else g("proj")
+    unit = {"solo": "solo tackles", "assists": "assists"}.get(kind, "tackles + assists")
+    bits = [f"{lab} {e:+.0%}" if e is not None else f"{lab}: {d}" for lab, e, d in steps]
+    text = f"How the model built {total:.1f} {unit}: " + "; ".join(bits) + "."
+    if kind == "assists":
+        text += " Assists are the combined number less the solo one."
+    return steps, text
+
+
 def sleeper_grade(side, p_model, exp_opps, unsteady):
     """A sleeper's grade from the model's own evidence only (config.SLEEPER): a steady role for A or B; a solo Under is an A
     with a 70%+ model chance or a low-volume game (under 50 expected tackle opportunities); a combined Over is at most a B.
@@ -1281,6 +1383,7 @@ def price_lines(lines, P, segments=None, blend=None):
                 why += "; not lock-eligible: " + ", ".join(block)
         if thin_edge and pick != "Pass":
             why += f"; scores as an A, shown as a B: at its {claim:.0%} claimed chance it returns {claim_ev:+.0%}, an A needs {C.A_MIN_CLAIM_EV:.0%}"
+        lg_steps, lg_text = logic_steps(p, kind)
         if capped and pick != "Pass":
             why += "; scores as an A, shown as a B: A grades and locks are solo tackles only (combined claims ran 9 points high in weeks 7-9)"
         if sleeper:
@@ -1309,7 +1412,8 @@ def price_lines(lines, P, segments=None, blend=None):
                      "fp_rel": None if ast or pd.isna(p.get("fp_rel_solo" if solo else "fp_rel_comb", np.nan)) else float(p.get("fp_rel_solo" if solo else "fp_rel_comb")),
                      "lock": lock, "grade": grade, "sleeper": sleeper,
                      "sleeper_ev": (ev_o if sleeper == "Over" else ev_u) if sleeper else None,
-                     "sleeper_grade": s_grade, "sleeper_p": s_p, "sleeper_note": s_note, "sleeper_med": s_med})
+                     "sleeper_grade": s_grade, "sleeper_p": s_p, "sleeper_note": s_note, "sleeper_med": s_med,
+                     "logic": lg_text or None, "logic_chips": [[lab, round(e, 3)] for lab, e, _ in lg_steps if e is not None and abs(e) >= 0.03] or None})
     out = pd.DataFrame(rows)
     if "ev" in out:
         out = out.sort_values("ev", ascending=False, na_position="last")

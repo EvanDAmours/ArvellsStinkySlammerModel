@@ -172,6 +172,14 @@ check(all((b.get("claim_ev") or -1) >= C.PICK_MIN_CLAIM_EV - 1e-9 for b in price
       "every pick beats its price by 2% at its claimed chance, every A by 4%")
 check(not any(b.get("grade") == "A" and b.get("market") not in C.A_GRADE_MARKETS for b in priced) and five.market.isin(C.A_GRADE_MARKETS).all() if len(five) else True,
       "A grades and locks are solo tackles only (combined picks that score 72+ show as a B)")
+_T6 = H[(H.season == 2026) & (H.n_prev >= 2)].head(400)
+_pa = {}
+_m0, _m1 = M.project_frame(_T6)[1], M.project_frame(_T6, parts=_pa)[1]
+check(np.allclose(_m0.values, _m1.values, equal_nan=True) and {"base", "volume", "crew", "tilt", "damp", "solo_share"} <= set(_pa),
+      "recording the projection's pieces leaves the projection unchanged")
+check(all(str(b.get("logic", "")).startswith("How the model built") for b in priced)
+      and all(abs(e) >= 0.03 for b in priced for _, e in (b.get("logic_chips") or [])),
+      f"every priced line shows how the model built its number; the card's factor row lists the 3%+ movers ({sum(1 for b in priced if b.get('logic_chips'))} with movers)")
 _sl = [b for b in priced if b.get("sleeper")]
 _lo, _hi = C.SLEEPER["comb_over"]
 check(all((b["sleeper"] == "Over" and C.market_kind(b["market"]) == "combined" and _lo <= b["proj_model"] - b["line"] < _hi) or
