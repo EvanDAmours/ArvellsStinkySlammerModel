@@ -116,7 +116,7 @@ def prepare(pw, sched, snaps):
         miss = sn.merge(have, on=["season", "week", "team", "name_key"], how="left", indicator=True)
         miss = miss[miss._merge == "left_only"].drop(columns=["_merge"]).merge(ids, on=["season", "team", "name_key"], how="inner")
         if len(miss):
-            for c in ["comb", "solo_t", "solo", "ast", "with_ast"]:
+            for c in ["comb", "solo_t", "solo", "ast", "with_ast", "solo_off"]:
                 miss[c] = 0
             pw = pd.concat([pw, miss[[c for c in pw.columns if c in miss.columns]]], ignore_index=True)
         pw = pw.merge(snaps[["season", "week", "team", "name_key", "def_pct", "def_snaps"]], on=["season", "week", "team", "name_key"], how="left")
@@ -913,6 +913,10 @@ def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
     scale_solo = phi_by_group.get("__scale_solo__", scale) if isinstance(phi_by_group, dict) else scale
     by_grp = F.group.map({g: phi_by_group.get(f"{g}|solo_scale") for g in F.group.unique()}) if isinstance(phi_by_group, dict) else pd.Series(np.nan, index=F.index)
     mu, mu_solo = mu * scale, mu_solo * by_grp.fillna(scale_solo).values     # solo level per position (CB and S run highest)
+    # the model trains on nflverse's solo alone (a stable series); the books and the grader settle on the official count,
+    # which adds tackles made with an assist: this season's rate of them (run.py stores it; 2.4% of solo in 2026)
+    official = float(phi_by_group.get("__solo_official__", 1.0)) if isinstance(phi_by_group, dict) else 1.0
+    mu_solo = mu_solo * official
     if gbm is not None:
         g = gbm(gbm_features(F, mu))
         blended = pd.Series(blend_gbm(mu, g), index=F.index)
@@ -925,6 +929,7 @@ def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
         F["lf_" + k_] = v
     F["lf_scale"] = float(scale) if np.isscalar(scale) else np.asarray(scale, dtype=float)
     F["lf_scale_solo"] = by_grp.fillna(scale_solo).values
+    F["lf_official"] = official
     F["lf_gbm"] = (mu.values / np.clip(mu_raw.values * (float(scale) if np.isscalar(scale) else 1.0), 1e-6, None)) if gbm is not None else 1.0
     F["phi"] = F.group.map(phi_by_group).fillna(1.0)
     F["share_pred"] = share_pred(F).values
@@ -1235,6 +1240,9 @@ def logic_steps(p, kind="combined", min_effect=0.0):
         steps.append((lab, float(v - 1), detail))
     if kind == "solo":
         steps.append(("Solo share", None, f"{g('lf_solo_share'):.0%} of his tackles solo (his own, weighted with his position's)"))
+        off = g("lf_official", 1.0)
+        if not np.isnan(off) and abs(off - 1) >= 0.005:
+            steps.append(("Official count", float(off - 1), "the books count a tackle made with an assist as solo; this season's share of them"))
     total = g("proj_solo") if kind == "solo" else g("proj") - g("proj_solo") if kind == "assists" else g("proj")
     unit = {"solo": "solo tackles", "assists": "assists"}.get(kind, "tackles + assists")
     bits = [f"{lab} {e:+.0%}" if e is not None else f"{lab}: {d}" for lab, e, d in steps]

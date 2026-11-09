@@ -385,6 +385,16 @@ def daily_due(now=None):
 LIVE_DONE = CACHE / "live_graded.json"     # ESPN events already settled live
 
 
+def official_solo(H):
+    """The history frame with solo_t set to the official solo count (nflverse solo + tackle with assist), the one the
+    books and ESPN's live box scores settle on. The model itself trains on solo alone, the stable series."""
+    if "solo_off" not in H.columns:
+        return H
+    Hg = H.copy()
+    Hg["solo_t"] = Hg.solo_off.fillna(Hg.solo_t)
+    return Hg
+
+
 def _live_rows(week=None):
     """ESPN final box-score rows for this week's finished games (empty on synthetic data or failure)."""
     if os.environ.get("TACKLE_FAKE_DATA") or not G.PICKS.exists():
@@ -434,11 +444,12 @@ def cmd_live_grade(force=False):
     formula, _, _ = S.choose_tackle_formula(pw, json.loads(Path("data/known_checks.json").read_text()))
     pw = S.apply_tackle_formula(pw, formula)
     H = M.prepare(pw, S.load_schedule(seasons), S.load_snaps(seasons))      # zero-tackle games from snap counts, as the daily grades
-    graded, summary = G.grade(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
+    Hg = official_solo(H)
+    graded, summary = G.grade(Hg[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
     summary["live_graded"] = int((graded.get("graded_by") == "live").sum()) if len(graded) else 0
-    parlays, psum = G.grade_parlays(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)   # H: zero-tackle games too, so a leg can settle
+    parlays, psum = G.grade_parlays(Hg[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)   # H: zero-tackle games too, so a leg can settle
     summary["parlays"] = psum
-    sleepers, summary["sleepers"] = G.grade_sleepers(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
+    sleepers, summary["sleepers"] = G.grade_sleepers(Hg[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
     G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)
     retro = Path("data/retro_five.json")
     _json(SITE / "results.json", dict(summary=summary, picks=records(graded), parlays=records(parlays) if parlays is not None and len(parlays) else [],
@@ -501,6 +512,11 @@ def cmd_daily(auto=False):
     seasons, pw, sched, snaps, inj, H, status, src = load_all()
     week = upcoming_week(sched, C.SEASON)
     bt, phi, k, scale, gbm = B.run_backtest(H, seasons)
+    Hg = official_solo(H)                       # grading, the blend and My board settle on the official solo count
+    cur = H[H.season == C.SEASON]
+    if "with_ast" in cur.columns and cur.solo.sum() > 0:
+        phi["__solo_official__"] = float(1 + cur.with_ast.sum() / cur.solo.sum())     # this season's rate of tackles made with an assist
+        status["solo_official_factor"] = phi["__solo_official__"]
     games = week_games(sched, C.SEASON, week)
     status["season_over"] = not games           # every game of the season (playoffs included) is in the books: grade, keep the record, project nothing
     if games:
@@ -523,21 +539,21 @@ def cmd_daily(auto=False):
     json.dump(games, open(CACHE / "games.json", "w"), indent=1)
     status["international_games"] = [f"{g['away']} at {g['home']}, {g['edmonton']} Edmonton" for g in games if g["international"]]
     live = _live_rows()
-    graded, summary = G.grade(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
+    graded, summary = G.grade(Hg[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
     summary["live_graded"] = int((graded.get("graded_by") == "live").sum()) if len(graded) else 0
-    blend = BL.estimate(H[["season", "week", "team", "name_key", "comb", "solo_t"]], C.SEASON)
+    blend = BL.estimate(Hg[["season", "week", "team", "name_key", "comb", "solo_t"]], C.SEASON)   # lines are set on the official count
     BL.save(blend)
     status["blend"] = blend
     if blend:
         print("daily: blend per market " + "; ".join(f"{k}: {v['w']:.2f} line, line {v['bias_line']:+.2f}, model {v['bias_model']:+.2f} ({v['n']} lines)" for k, v in blend.items()))
     # the official box score for every defender-game this season, so the owner's own board can grade any bet (not only the model's picks)
-    hs = H[(H.season == C.SEASON) & H.comb.notna()]
+    hs = Hg[(Hg.season == C.SEASON) & Hg.comb.notna()]
     actuals = {}
     for r in hs.itertuples():
         actuals.setdefault(str(int(r.week)), {})[f"{r.team}|{r.name_key}"] = [int(r.comb), int(r.solo_t), int(r.comb - r.solo_t)]   # combined, solo, assists
         actuals[str(int(r.week))][f"id:{r.player_id}"] = actuals[str(int(r.week))][f"{r.team}|{r.name_key}"]                    # the same row by league id, for bets that carry one
     _json(SITE / "actuals.json", dict(season=C.SEASON, weeks=actuals))   # H has zero-tackle games from snap counts, so "played, no tackles" is not "did not play"
-    parlays, psum = G.grade_parlays(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)   # H: zero-tackle games too, so a leg can settle
+    parlays, psum = G.grade_parlays(Hg[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)   # H: zero-tackle games too, so a leg can settle
     summary["parlays"] = psum
     G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)
     lines = O.upcoming_only(O.latest_lines(C.SEASON, week))
@@ -549,7 +565,7 @@ def cmd_daily(auto=False):
         # it, so a grade seen on the site is the grade the record keeps (2026-11-05: an A shown all morning was never logged)
         G.log_picks(bets, C.SEASON, week, _stamp)
         G.log_sleepers(bets, C.SEASON, week, _stamp)
-    sleepers, summary["sleepers"] = G.grade_sleepers(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
+    sleepers, summary["sleepers"] = G.grade_sleepers(Hg[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
     bets = mark_five(bets, C.SEASON, week)
     write_site(P, bets, bt, graded, summary, week, status, lines_pulled=None if lines.empty else str(lines.pulled_at.max()), parlays=parlays, sleepers=sleepers)
     write_week_lines(P, C.SEASON, week)

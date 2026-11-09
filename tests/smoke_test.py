@@ -466,7 +466,9 @@ check(len(games) > 10 and all({"home", "away", "kickoff", "international"} <= se
 from pipeline import sources as _S, odds as _O
 _pw = pd.DataFrame(dict(solo=[2, 1], with_ast=[1, 0], ast=[1, 2]))
 _pf = _S.apply_tackle_formula(_pw, "solo+with_ast+ast")
-check(list(_pf.solo_t) == [3, 1] and list(_pf.comb) == [4, 3], "a tackle made with an assist counts as a solo tackle (the official count)")
+_hg = R.official_solo(_pf.assign(season=2026, week=1, team="X", name_key="p", player_id="1", group="LB"))
+check(list(_pf.solo_t) == [2, 1] and list(_pf.solo_off) == [3, 1] and list(_pf.comb) == [4, 3] and list(_hg.solo_t) == [3, 1],
+      "the model trains on solo alone (stable across seasons); grading uses the official count, a tackle with an assist as solo")
 _lk = pd.DataFrame([dict(season=2026, week=99, player=f"P{i}", team="AAA", group="LB", market="player_solo_tackles", side="Under", line=3.5, book="DK",
                          lock=90 - i, grade=g, lock_block="", commence_time="2099-01-01T18:00:00Z", five=False) for i, g in enumerate(["B", "A"])])
 _lk = G.mark_locks(_lk, 2026, 99)

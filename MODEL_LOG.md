@@ -1448,6 +1448,19 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-09, afternoon MST (the two solo counts: train on the stable one, price and grade on the official one)
+- Correction to audit fix 11, found within the hour by running the daily: switching the model's own solo series to the
+  official count (solo + tackle with assist) lifted every solo projection about 7% (Turner 1.79 -> 2.06), far more
+  than this season's 2.4%. nflverse's tackle-with-assist share has collapsed across seasons: 15.8% of official solo
+  in 2023, 11.5% in 2024, 3.4% in 2025, 2.4% in 2026, while solo alone is stable (league solo share 0.541, 0.533,
+  0.535, 0.530). The backtest's solo level calibration pools 2023-2026, so it carried the 2023-24 rate into 2026.
+- Now: the model trains on solo alone (`solo_t`, the stable series); its solo projections are scaled to the official
+  count by this season's rate (`__solo_official__`, 1 + with_ast/solo this season = 1.024; a "Official count" step in
+  each card's build); grading, the blend, My board's actuals and the live grader all settle on the official count
+  (`solo_off`, `run.official_solo`). The corrected record (200-183) was already graded on the official count.
+- Revert: none (a correction). Re-check the rate weekly: if nflverse changes its tackle-with-assist recording again,
+  the current season's rate follows it.
+
 ### 2026-11-09, evening MST (audit: 23 defects fixed; the corrected record; the retro run)
 Owner: "find at least 10 errors, fix them, then run the numbers retroactively." Three independent code reviews
 (grading/records, projection/pricing, data/odds; each read its area cold and verified on data) plus the statistical
@@ -1485,7 +1498,9 @@ checks above. Every finding below was re-verified before it was fixed; smoke che
 11. Solo tackles had two definitions: the model and the official grader used nflverse's solo (a "tackle with assist"
    booked as an assist), ESPN's box score (the live grader, and the official count books settle on) counts it as solo
    (523 of 523 week-9 defenders). 2-3% of solo tackles in 2025-26, 13% in 2024: solo projections ran low and solo
-   Unders were flattered. solo_t = solo + with_ast now, everywhere. On the board, weeks 7-9: solo Unders 61.3% (+15.1%)
+   Unders were flattered. Grading now uses the official count everywhere; the model trains on solo alone and scales
+   to the official count by this season's rate (see the next-later entry: the first version of this fix moved the
+   training series too and inflated solo projections 7%). On the board, weeks 7-9: solo Unders 61.3% (+15.1%)
    by the old count, 60.0% (+12.7%) by the official one. Part of week 9's "solo-share jump" was this definition
    mixing (ESPN finals against nflverse weeks).
 12. One-sided Bally Bet rows went into the consensus line (Jordyn Brooks 25.5 Over-only against DraftKings' 8.5 made a
@@ -2901,7 +2916,9 @@ Open, with what would justify them:
   lines. Measure a correction against the claim before the correction. The board is each game's latest pull, never
   the last price of every line ever seen. Join box scores on team and name (norm_name strips Jr/II). One solo
   definition across the model, the grader and the books (official: solo + tackle with assist). Never take a median
-  of American odds. A failing step must not stop the steps after it.
+  of American odds. A failing step must not stop the steps after it. A stat whose recording drifts across seasons
+  (nflverse's tackle with assist: 16% of official solo in 2023, 2% in 2026) must not be pooled into a training series:
+  train on the stable part, adjust to the settled count with the current season's rate.
 - Two probabilities live on each line: the pricer's (`model_over`, shrunk toward the market by PROB_SHRINK) and the
   claim (shrunk toward 50% by CLAIM_SHRINK, plus the segment correction). The return bars used the first, so a pick
   could clear 6% while its claim did not beat the price. Any bar on "edge" must be checked at the claim.
