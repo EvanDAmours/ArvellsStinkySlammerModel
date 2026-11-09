@@ -462,5 +462,30 @@ check(p1 and p1["key"] == "2026-10-25 prekick-06:30", "international game pulled
 games = json.loads((tmp / "data/cache/games.json").read_text())
 check(len(games) > 10 and all({"home", "away", "kickoff", "international"} <= set(g) for g in games), f"this week's games written with kickoff and international flag ({len(games)})")
 
+# ---- audit 2026-11-09: each fix keeps its behaviour
+from pipeline import sources as _S, odds as _O
+_pw = pd.DataFrame(dict(solo=[2, 1], with_ast=[1, 0], ast=[1, 2]))
+_pf = _S.apply_tackle_formula(_pw, "solo+with_ast+ast")
+check(list(_pf.solo_t) == [3, 1] and list(_pf.comb) == [4, 3], "a tackle made with an assist counts as a solo tackle (the official count)")
+_lk = pd.DataFrame([dict(season=2026, week=99, player=f"P{i}", team="AAA", group="LB", market="player_solo_tackles", side="Under", line=3.5, book="DK",
+                         lock=90 - i, grade=g, lock_block="", commence_time="2099-01-01T18:00:00Z", five=False) for i, g in enumerate(["B", "A"])])
+_lk = G.mark_locks(_lk, 2026, 99)
+check(not _lk[_lk.grade == "B"].five.any() and _lk[_lk.grade == "A"].five.all(), "a lock must be an A: a 72+ score the claimed-edge gate made a B is never a lock")
+_sc = pd.DataFrame([dict(season=2026, week=8, side="Under", market="player_solo_tackles", group="CB", p_claim=0.62, segment_adj=0.08, model_over=0.3,
+                         result="Win" if i < 14 else "Loss", units=0.5 if i < 14 else -1.0) for i in range(20)])
+_segs, _ = G.segment_calibration(_sc)
+check(abs(_segs["Under solo CB"]["claimed"] - 0.54) < 1e-9, "the segment correction is measured against the claim before its own correction")
+_od = Path("data/odds/2026/wk98"); _od.mkdir(parents=True, exist_ok=True)
+pd.DataFrame([dict(event_id="E1", commence_time="2099-01-01T18:00:00Z", book="DK", market="player_solo_tackles", player="Pat", line=3.5, over_odds=-110, under_odds=-110, pulled_at="20990101T100000Z")]).to_csv(_od / "20990101T100000Z.csv", index=False)
+pd.DataFrame([dict(event_id="E1", commence_time="2099-01-01T18:00:00Z", book="DK", market="player_solo_tackles", player="Pat", line=2.5, over_odds=-110, under_odds=-110, pulled_at="20990101T120000Z")]).to_csv(_od / "20990101T120000Z.csv", index=False)
+_ll, _al = _O.latest_lines(2026, 98), _O.all_lines(2026, 98)
+check(list(_ll.line) == [2.5] and sorted(_al.line) == [2.5, 3.5], "a line the book moved leaves the board (pricing), but My board still finds it")
+_st = pd.DataFrame(dict(season=[2026, 2026], week=[7, 7], team=["MIN", "SEA"], name_key=["byronmurphy", "byronmurphy"], comb=[3, 3], solo_t=[2, 1]))
+_mp = G._merge_stats(pd.DataFrame(dict(season=[2026], week=[7], team=["MIN"], name_key=["byronmurphy"])), _st.assign(ast_t=_st.comb - _st.solo_t))
+check(int(_mp.solo.iloc[0]) == 2 and int(_mp.comb.iloc[0]) == 3, "two players sharing a name are graded apart by team")
+check(G.lock_blocked(pd.DataFrame(dict(lock_block=["not a pick at the last pull"]))).all(), "a logged pick the board stopped making is blocked from the locks")
+_L2 = pd.DataFrame(dict(player=["Pat"] * 3, market=["player_solo_tackles"] * 3, line=[3.5, 3.5, 25.5], over_odds=[-110, -105, -150], under_odds=[-110, -115, np.nan]))
+_two = _L2.over_odds.notna() & _L2.under_odds.notna()
+check(float(_L2[_two].line.median()) == 3.5, "the consensus line comes from books quoting both sides (an Over-only 25.5 does not move it)")
 print("\nALL CHECKS PASSED" if not fails else f"\n{len(fails)} CHECK(S) FAILED")
 sys.exit(1 if fails else 0)

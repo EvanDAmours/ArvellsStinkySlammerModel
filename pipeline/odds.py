@@ -242,12 +242,25 @@ def load_snapshots(season, week):
 
 
 def latest_lines(season, week):
-    """Most recent price for every (book, market, player, line) among games that haven't kicked off at the latest pull."""
+    """Each game's current board: the lines of its most recent pull. A pull fetches every book and market of a game in
+    one call, so a line missing from the game's latest pull is one the book has moved or taken down. (Until 2026-11-09
+    this kept the last price of every line ever seen that week: 21 graded picks, 4 of them A grades and a lock, were
+    logged on lines no book was offering, e.g. Dante Trader Jr. Under 3.5 at -169 when both books showed 2.5.)"""
     s = load_snapshots(season, week)
     if s.empty:
         return s
     s = s.sort_values("pulled_at")
+    s = s[s.pulled_at == s.groupby("event_id").pulled_at.transform("max")]
     return s.drop_duplicates(["event_id", "book", "market", "player", "line"], keep="last")
+
+
+def all_lines(season, week):
+    """The last price of every (book, market, player, line) seen this week, current or not: for My board, where a bet
+    already placed on a line the book has since moved must still be found. Never for pricing (use latest_lines)."""
+    s = load_snapshots(season, week)
+    if s.empty:
+        return s
+    return s.sort_values("pulled_at").drop_duplicates(["event_id", "book", "market", "player", "line"], keep="last")
 
 
 def upcoming_only(lines):

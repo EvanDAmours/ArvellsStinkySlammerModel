@@ -134,10 +134,13 @@ def apply_tackle_formula(pw, formula):
         pw["solo_t"] = pw.solo
     elif formula == "solo+with_ast+ast":
         pw["comb"] = pw.solo + pw.with_ast + pw.ast
-        pw["solo_t"] = pw.solo
+        pw["solo_t"] = pw.solo + pw.with_ast       # a tackle made with an assist is a solo tackle in the official count
     else:  # solo+with_ast
         pw["comb"] = pw.solo + pw.with_ast
-        pw["solo_t"] = pw.solo
+        pw["solo_t"] = pw.solo + pw.with_ast
+    # 2026-11-09 audit: solo_t was nflverse's solo alone, booking "tackle with assist" as an assist, while ESPN's box score
+    # (the official count, and what the live grader settles on) has solo = solo + with_ast for 523 of 523 week-9
+    # defenders. 2-3% of solo tackles in 2025-26 (13% in 2024): solo projections ran low and solo Unders were flattered.
     return pw
 
 

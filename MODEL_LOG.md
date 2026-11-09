@@ -62,7 +62,8 @@ does not describe his current role, or who may not play, can be a pick, never a 
    targets and missed tackles, run/pass mix, bye, injury report, absence/new team, indoors (corners), outlier
    damping; then the backtest's level calibration. A gradient-boosted corrector trained every morning on every
    defender-game since 2023 takes 60% of the final number. Solo = the combined number x his solo share (shrunk toward
-   his position's) x the league's 3-week solo drift. Counts are negative binomial with a spread per position and
+   his position's) x the league's 3-week solo drift; a solo tackle is counted as the official stats count it (a
+   tackle made with an assist is solo; 2026-11-09). Counts are negative binomial with a spread per position and
    market. Every card shows this build ("Game logic"; `model.logic_steps`), each factor with its size.
 3. **Pricing.** The mean that prices a line blends the model's number and the consensus line, per market, with the
    weight and level corrections estimated from graded weeks (`pipeline/blend.py`, about half the line). The chance of
@@ -83,8 +84,10 @@ does not describe his current role, or who may not play, can be a pick, never a 
    margin that held every week: solo Unders with the model 0.5+ under the line and his season median within a tackle
    of it; combined Overs with the model 0.5 to 1.0 over. Graded A/B/C from the model's own chance, a steady role and
    the game's volume; never the price. Own record, 1 unit each, never a lock.
-10. **Grading.** ESPN's final box score settles a pick when its game ends; the official stats confirm overnight.
-    Closing-line value against the last pull before kickoff. Records by grade, side, market, locks, parlays and
+10. **Grading.** ESPN's final box score settles a pick when its game ends; the official stats confirm overnight, by
+    team and name (or league id). Every record counts one bet per player x market x side; a pick logged after kickoff
+    or on a line its game's board was not offering is void. Closing-line value from the price we bet against the last
+    pull before kickoff; "beat the close" over closes that moved. Records by grade, side, market, locks, parlays and
     sleepers on the Track record tab; the luck table compares each kind of pick with the whole board.
 
 ## Validation protocol (do this before pushing any model change)
@@ -1031,7 +1034,11 @@ changes nothing that matters (tails 4.9%/4.8%, Brier 0.2413 in both at the poste
 both). The empirical dispersion already absorbs the plays variance; the shape difference is invisible at these
 counts. Rejected as a pricing change; the decomposition is kept for the parlay test below. Side finding worth
 keeping: at the posted lines the model's probability scores Brier 0.2413 against 0.2539 for the market's own
-no-vig price (log-loss 0.675 against 0.730).
+no-vig price (log-loss 0.675 against 0.730). **Corrected 2026-11-09 (audit):** that market number was a median of
+American odds across books (-105 and +106 make "0.5") over lines that included one-sided Bally rows. With each
+two-way book's no-vig price at its own line (882 closing rows, weeks 7-9), the market scores log-loss 0.692 on
+combined lines and 0.689 on solo against the model's 0.696 and 0.670: the market is better on combined tackles, and
+the model's solo edge is about 0.02, not 0.06. blend.py now scores it this way.
 
 **3. The team tackle budget.** Scaling a defence's projections so they sum to the plays it should face times the
 league's tackles per play (1.28) looked like a clear win on raw miss (1.6216 to 1.6089, better in every season,
@@ -1440,6 +1447,97 @@ Partly in-sample (the 0.6 line weight came from the regression on the same week)
 proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
+
+### 2026-11-09, evening MST (audit: 23 defects fixed; the corrected record; the retro run)
+Owner: "find at least 10 errors, fix them, then run the numbers retroactively." Three independent code reviews
+(grading/records, projection/pricing, data/odds; each read its area cold and verified on data) plus the statistical
+checks above. Every finding below was re-verified before it was fixed; smoke checks added for the main ones.
+
+**Fixed: grading and records**
+1. Locks never checked the grade: `mark_locks` took any 72+ lock score, and the claimed-edge gate (and solo-only rule)
+   demote the grade, not the score. Stewart (score 87.2, claimed edge +1.4%) would still have been a lock. Locks now
+   require an A.
+2. Every logged row counted as a bet: the same pick at DraftKings and theScore (and at two lines) counted 2-4 times in
+   every record, the luck table and the segment calibration (617 graded rows were 422 bets; "Under combined LB" reached
+   the 10-pick minimum only through duplicates). One bet per player x market x side now (the lock if any, else the
+   first logged); the site lists every row and totals the counted ones.
+3. The segment correction erased itself: measured against claims that already carried it, then applied to the
+   uncorrected claim. Now measured against p_claim - segment_adj (signs flipped in two segments).
+4. Phantom lines: `latest_lines` kept the last price of every line ever seen in the week, so lines the book had moved
+   stayed on the board at old prices. 26 picks (7 A, a week-8 lock: Dante Trader Jr. Under 3.5 when both books showed
+   2.5, a loss at any real line) were logged on lines no book offered. The board is now each game's latest pull; past
+   phantom picks are voided; My board keeps every line seen (`all_lines`).
+5. 31 week-7 picks were logged after kickoff (a pull before the board dropped started games): voided; log_picks now
+   refuses started games.
+6. Grading summed two players sharing a name key (norm_name strips Jr/II: the Byron Murphys MIN/SEA, the Byron Youngs
+   LA/PHI; Byron Young Under 2.5 solo was a win graded a loss). Box scores now join on team and name (picks, ESPN live
+   rows, parlay legs, the blend); name alone only when one player has it that week.
+7. The luck table: beat-the-close counted "no movement" as losing (week 9 Unders 18% shown, 61% of moved closes); the
+   side rows pooled every market's board against picks that were 59-89% solo; its "claimed" column was the pricer's
+   probability; the verdict tested "market went our way" before "we picked badly". All four fixed.
+8. Closing-line value measured from the last refresh, not the bet: `market_over` was overwritten at every pull. Now
+   kept as bet-time; and moved-line CLV uses the pricer's own spread (logged with each pick), not the default.
+9. A logged pick the board stopped making kept its A and its lock: now blocked ("not a pick at the last pull").
+10. Parlay legs were graded from the raw stats (no zero-tackle games): a leg could hang pending. Graded from the full
+   history now, with a void path for a player who did not play.
+
+**Fixed: projection and pricing**
+11. Solo tackles had two definitions: the model and the official grader used nflverse's solo (a "tackle with assist"
+   booked as an assist), ESPN's box score (the live grader, and the official count books settle on) counts it as solo
+   (523 of 523 week-9 defenders). 2-3% of solo tackles in 2025-26, 13% in 2024: solo projections ran low and solo
+   Unders were flattered. solo_t = solo + with_ast now, everywhere. On the board, weeks 7-9: solo Unders 61.3% (+15.1%)
+   by the old count, 60.0% (+12.7%) by the official one. Part of week 9's "solo-share jump" was this definition
+   mixing (ESPN finals against nflverse weeks).
+12. One-sided Bally Bet rows went into the consensus line (Jordyn Brooks 25.5 Over-only against DraftKings' 8.5 made a
+   17.0 consensus and a +62% Over pick). The consensus now uses two-way rows only (pricer and blend).
+13. Retractable roofs (ATL, IND, ARI, DAL, HOU): the schedule records "closed"/"open" only after the game, so the
+   indoor bump for corners was learned and never applied live (corners there priced ~3.4% low). An upcoming game takes
+   its stadium's usual roof state.
+14. The PFR coverage factor was centred on the live week's roster (bench DBs pulled the typical rate 17% low, regular
+   DBs factored 0.966 instead of 0.982): now centred on the backtest's training value (`__pfr_typical__`).
+15. Next man up fired for every week a regular stayed listed out; the backtest that validated the bump fires it once.
+   Now only in the first game without him.
+16. The backtest's vacancy flag looked ahead (each regular's last 75%+ game of the whole season): now causal, week by
+   week, judged by his latest game as the live rule is.
+17. The new-role spread bump skipped solo and assist lines (new-role solo var/mean 1.44 against 1.18 used): +0.25 now.
+18. Latent: pct_last read an older game when the last snap count was missing (the snaps-missing lock block could never
+   fire); a missing model number became a 0.05 mean (a near-certain Under); a team without a depth chart read every
+   player as "not a starter". All three guarded.
+19. The blend scored the market with a median of American odds (-105 and +106 make 0.5), overstating the model's
+   edge: by each book's no-vig price the market beats the model on combined lines (0.692 vs 0.696 log-loss) and the
+   model's solo edge is ~0.02, not 0.06 (the 2026-10-30 note is corrected in place).
+
+**Fixed: operations**
+20. A failing daily re-raised in the ticker, so no pull, injury refresh or live grade ran until it succeeded: the
+   pulls and live grading now carry on with the cached projections, and the daily retries at most every 30 minutes.
+21. Monday night's picks went back to pending at Tuesday's daily (the week rolled over before the live finals were
+   read): live finals now cover this week and last.
+22. A failed injury feed at pull time wiped good statuses: an empty league report skips the refresh; a failed outside
+   feed keeps the morning's reserve-list statuses (the Edmunds case).
+23. Stale comments in config (snap-trend drop power, per-snap weight).
+
+**The corrected record** (the new grader on the same picks.csv): all plays 200-183, +0.1 u (was shown 337-280,
++36.3 u); A 13-9 (was 26-13); locks 10-4 (was 11-4). Luck table, Unders, lift against the whole board: week 7 -3.4,
+week 8 -3.0, week 9 +0.1 points: through week 9 the picks did not beat the board; the market went our way. Beat the
+close on moved closes 49%, 61%, 53%. The +36 u was duplicates, phantom lines, late rows and the solo definition.
+
+**Backtest** (walk-forward, the live projection on the 2026 fold): MAE 1.5692 -> 1.5654, level-matched 1.5721 ->
+1.5696; the factor model 1.6204 -> 1.6199; every piece still beats its "without" row on level-matched error. Solo
+error is not comparable across the definitions; against the season average the model's solo edge grew 4.1% -> 5.5%.
+
+**Retro run** (every pull of weeks 7-9 replayed at its prices with the projections, segment corrections and blend the
+pipeline had then; graded by official stats, solo + with_ast, by team): Nov 8 code 232 picks 125-107 +10.3 u, A 11-6,
+locks 10-1; fixed code 195 picks 107-88 +16.3 u (+8%/bet), A 5-1, locks 6-0, sleepers 85-32 +30.3 u (A 22-2, B 36-11,
+C 27-19; the sleeper rules were chosen on these weeks: in-sample). Projection fixes are not in the replay (it uses
+the projection files of the time); the backtest above measures them. Fewer locks: about 2 a week under the new rules.
+
+**Not fixed yet** (follow-ups): ESPN injury and live rows join by name (9 of 528 week-9 ESPN names differ from the
+stats feed: Dax/Daxton Hill, Cam/Camryn Bynum...): ESPN-only statuses miss them and their live grade waits for the
+official one; the international-game plan matches teams across two weeks without a time window (latent); the
+blend's line weight uses inverse variance though model and line errors correlate 0.96 (low impact).
+
+Revert: none of the record or data fixes (they are corrections). The projection fixes revert if the 2026-fold MAE
+rises above the old 1.5692 over the next two dailies' backtests.
 
 ### 2026-11-09, evening MST (audit round: statistical checks that did not earn a change)
 Owner: "find more statistical and logical holes... at least 10 errors, fix them, run the numbers retroactively." The
@@ -2799,6 +2897,11 @@ Open, with what would justify them:
   line more than a tackle above his season median) the book usually knows a role change the history does not show,
   and the signal turns into a coin flip (9-11, 17-16). Any new "model disagrees with the line" signal needs its
   outer limit tested, not just its inner one.
+- Count one bet per player x market x side in every record and calibration: the same pick logs at two books and two
+  lines. Measure a correction against the claim before the correction. The board is each game's latest pull, never
+  the last price of every line ever seen. Join box scores on team and name (norm_name strips Jr/II). One solo
+  definition across the model, the grader and the books (official: solo + tackle with assist). Never take a median
+  of American odds. A failing step must not stop the steps after it.
 - Two probabilities live on each line: the pricer's (`model_over`, shrunk toward the market by PROB_SHRINK) and the
   claim (shrunk toward 50% by CLAIM_SHRINK, plus the segment correction). The return bars used the first, so a pick
   could clear 6% while its claim did not beat the price. Any bar on "edge" must be checked at the claim.

@@ -391,8 +391,12 @@ def _live_rows(week=None):
         return pd.DataFrame()
     try:
         week = week or int(json.load(open(CACHE / "model_state.json"))["week"])
-        rows, _ = LG.finals(pd.read_csv(G.PICKS), C.SEASON, week)
-        return rows
+        picks = pd.read_csv(G.PICKS)
+        # this week and last: the first daily of a new week must still settle last week's Monday night game until the
+        # official stats arrive (audit 2026-11-09)
+        parts = [LG.finals(picks, C.SEASON, w)[0] for w in sorted({week - 1, week}) if w >= 1]
+        parts = [p_ for p_ in parts if p_ is not None and len(p_)]
+        return pd.concat(parts, ignore_index=True) if parts else pd.DataFrame()
     except Exception as e:  # noqa: BLE001
         print(f"live grade: ESPN finals not read ({type(e).__name__}: {e})")
         return pd.DataFrame()
@@ -405,7 +409,15 @@ def cmd_live_grade(force=False):
         return
     week = int(json.load(open(CACHE / "model_state.json"))["week"])
     try:
-        live, events = LG.finals(pd.read_csv(G.PICKS), C.SEASON, week)
+        picks_now = pd.read_csv(G.PICKS)
+        live, events = pd.DataFrame(), []
+        for w in sorted({week - 1, week}):             # last week's Monday night game settles after the rollover too
+            if w < 1:
+                continue
+            lv, ev = LG.finals(picks_now, C.SEASON, w)
+            if lv is not None and len(lv):
+                live = pd.concat([live, lv], ignore_index=True)
+            events += list(ev)
     except Exception as e:  # noqa: BLE001
         print(f"live grade: ESPN not reached ({type(e).__name__}); next beat retries")
         return
@@ -424,7 +436,7 @@ def cmd_live_grade(force=False):
     H = M.prepare(pw, S.load_schedule(seasons), S.load_snaps(seasons))      # zero-tackle games from snap counts, as the daily grades
     graded, summary = G.grade(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
     summary["live_graded"] = int((graded.get("graded_by") == "live").sum()) if len(graded) else 0
-    parlays, psum = G.grade_parlays(pw, live=live)
+    parlays, psum = G.grade_parlays(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)   # H: zero-tackle games too, so a leg can settle
     summary["parlays"] = psum
     sleepers, summary["sleepers"] = G.grade_sleepers(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
     G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)
@@ -439,14 +451,22 @@ def cmd_tick():
     """One beat of the pipeline ticker (.github/workflows/ticker.yml): the daily once a day after 4:15 am Edmonton,
     then any pull slot that is due. GitHub starts scheduled jobs late and skips many; a ticker that runs for hours
     and beats every few minutes serves every slot a few minutes after its time whatever the scheduler does."""
-    if daily_due():
+    outcome, when = _last_run()
+    recent_failure = outcome == "failure" and when is not None and (dt.datetime.now(dt.timezone.utc) - when).total_seconds() < 1800
+    if daily_due() and not recent_failure:
         print("tick: the daily is due", flush=True)
         try:
             cmd_daily()
             mark_run("success")
-        except Exception:
+        except Exception as e:  # noqa: BLE001
+            # a failed daily (a feed outage, a data-shape error) must not take the pulls and the live grade down with it:
+            # they run on the cached projections, and the daily is retried at most every 30 minutes (audit 2026-11-09)
             mark_run("failure")
-            raise
+            import traceback
+            print(f"tick: the daily FAILED ({type(e).__name__}: {e}); pulls and live grading carry on with the cached projections")
+            traceback.print_exc()
+    elif daily_due():
+        print("tick: the daily failed in the last 30 minutes; retrying later", flush=True)
     try:
         cmd_live_grade()           # a game just ended: settle its picks now, not at tomorrow's daily
     except Exception as e:  # noqa: BLE001
@@ -505,7 +525,7 @@ def cmd_daily(auto=False):
     live = _live_rows()
     graded, summary = G.grade(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
     summary["live_graded"] = int((graded.get("graded_by") == "live").sum()) if len(graded) else 0
-    blend = BL.estimate(H[["season", "week", "name_key", "comb", "solo_t"]], C.SEASON)
+    blend = BL.estimate(H[["season", "week", "team", "name_key", "comb", "solo_t"]], C.SEASON)
     BL.save(blend)
     status["blend"] = blend
     if blend:
@@ -517,7 +537,7 @@ def cmd_daily(auto=False):
         actuals.setdefault(str(int(r.week)), {})[f"{r.team}|{r.name_key}"] = [int(r.comb), int(r.solo_t), int(r.comb - r.solo_t)]   # combined, solo, assists
         actuals[str(int(r.week))][f"id:{r.player_id}"] = actuals[str(int(r.week))][f"{r.team}|{r.name_key}"]                    # the same row by league id, for bets that carry one
     _json(SITE / "actuals.json", dict(season=C.SEASON, weeks=actuals))   # H has zero-tackle games from snap counts, so "played, no tackles" is not "did not play"
-    parlays, psum = G.grade_parlays(pw, live=live)
+    parlays, psum = G.grade_parlays(H[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)   # H: zero-tackle games too, so a leg can settle
     summary["parlays"] = psum
     G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)
     lines = O.upcoming_only(O.latest_lines(C.SEASON, week))
@@ -554,15 +574,22 @@ def refresh_injury_status(P, week):
         print(f"odds: injury refresh skipped ({e})")
         return P
     inj = inj[(inj.season == C.SEASON) & (inj.week == week)] if len(inj) else inj
-    inj = S.merge_injury_sources(inj, S.load_espn_injuries(C.SEASON, week))
-    inj = S.merge_injury_sources(inj, S.load_roster_out(C.SEASON, week))
+    if inj.empty:
+        # the league report did not load (every source failed): keep the morning's statuses rather than clear them all
+        print("odds: injury refresh skipped (the league report came back empty); the morning's statuses stand")
+        return P
+    espn, roster = S.load_espn_injuries(C.SEASON, week), S.load_roster_out(C.SEASON, week)
+    inj = S.merge_injury_sources(S.merge_injury_sources(inj, espn), roster)
     if inj.empty or "name_key" not in P.columns:
         return P
     status = {(r.team, r.name_key): str(r.status) for r in inj.itertuples()}
     practice = {(r.team, r.name_key): str(getattr(r, "practice", "")) for r in inj.itertuples()}
     before = P.status.fillna("").astype(str) if "status" in P.columns else pd.Series("", index=P.index)
     P = P.copy()
-    P["status"] = [status.get((t, n), "") for t, n in zip(P.team, P.name_key)]
+    reserve = {"injured reserve", "ir", "pup", "suspended"}
+    outside_failed = len(espn) == 0 or len(roster) == 0
+    P["status"] = [status.get((t, n), "") or (old if outside_failed and str(old).lower() in reserve else "")      # a reserve-list status only
+                   for t, n, old in zip(P.team, P.name_key, before)]                                                  # the outside feeds carry survives their failure
     P["practice"] = [practice.get((t, n), "") for t, n in zip(P.team, P.name_key)]
     changed = int((before.str.lower() != P.status.fillna("").astype(str).str.lower()).sum())
     print(f"odds: injury report refreshed for week {week}: {len(inj)} listings, {changed} projection statuses changed since the morning run")
@@ -645,7 +672,7 @@ WEEK_LINE_COLS = ["player", "player_id", "espn_id", "jersey", "team", "opp", "gr
 def write_week_lines(P, season, week):
     """Every line pulled this week at its last price, started games included, priced the same way as the board:
     the My board tab lets a bet be added from here after its game has kicked off or the book has pulled the line."""
-    lines = O.latest_lines(season, week)
+    lines = O.all_lines(season, week)        # every line seen this week (a line since moved or pulled can still be on a bettor's slip)
     if lines is None or len(lines) == 0 or P is None or len(P) == 0:
         _json(SITE / "lines_week.json", [])
         return

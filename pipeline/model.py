@@ -90,6 +90,14 @@ def team_games(sched):
     tg["final"] = tg.home_score.notna()
     tg["margin"] = (pd.to_numeric(tg.home_score, errors="coerce") - pd.to_numeric(tg.away_score, errors="coerce")).abs()
     tg["roof"] = tg.roof.fillna("").astype(str).str.lower()
+    # retractable roofs (ATL, IND, ARI, DAL, HOU) are recorded "closed"/"open" only after the game and blank before it:
+    # an upcoming game takes its stadium's usual state from played games, as the training rows saw (audit 2026-11-09:
+    # the indoor bump for corners was learned on "closed" and never applied live)
+    played = tg[tg.final & (tg.roof != "")]
+    if len(played):
+        usual = played.groupby("venue").roof.agg(lambda x: x.value_counts().index[0])
+        blank = (tg.roof == "") & ~tg.final
+        tg.loc[blank, "roof"] = tg.loc[blank, "venue"].map(usual).fillna("").values
     return tg
 
 
@@ -410,19 +418,20 @@ def role_signals_backtest(H):
                         for s, t, w, g, pp in zip(H.season, H.team, H.week, H.group, H.pct_prev)]
     # vacancy: a regular at the group (75%+ share in his last game for the team) absent this week, within 3 weeks of his
     # last game: the first weeks of an injury or a trade. Persistent, unlike role_signal which fires once.
-    last_seen = {}
-    for r in H.sort_values(["season", "team", "week"]).itertuples():
-        if nz(r.def_pct) >= C.VACANCY["regular_share"]:
-            last_seen[(r.season, r.team, r.player_id)] = (r.week, group.get(r.player_id))
-    reg_last = {}
-    for (s, t, pid), (w, g) in last_seen.items():
-        reg_last.setdefault((s, t), []).append((pid, w, g))
+    # Causal (audit 2026-11-09): each week sees only the regulars' 75%+ games BEFORE it. The old loop used each player's
+    # last 75%+ game of the whole season, so an absence he later returned from was never flagged (it knew the future).
     vac = set()
     for (s, t), weeks in team_weeks.items():
+        seen = {}                                   # player -> (week of his latest 75%+ game so far, group)
         for w in weeks:
-            for pid, wl, g in reg_last.get((s, t), []):
+            for pid, (wl, g) in seen.items():
                 if wl < w <= wl + C.VACANCY["recent_weeks"] and pid not in present.get((s, t, w), set()):
                     vac.add((s, t, w, g))
+            for pid in present.get((s, t, w), set()):
+                if pct.get((s, t, w, pid), 0) >= C.VACANCY["regular_share"]:
+                    seen[pid] = (w, group.get(pid))
+                else:
+                    seen.pop(pid, None)             # judged by his latest game, as the live rule reads it
     H["vacancy"] = [((s, t, w, g) in vac) for s, t, w, g in zip(H.season, H.team, H.week, H.group)]
     return H
 
@@ -453,15 +462,26 @@ def depth_factor(F):
     return pd.Series(np.where(dem, d["demoted"], np.where(pro, d["promoted"], 1.0)), index=F.index)
 
 
-def pfr_factor(F):
-    """Coverage usage (targets per game, DBs only) and missed-tackle rate, both from PFR, vs typical."""
+def pfr_typical(F):
+    """The typical coverage-target rate (targets per game, DBs with PFR rows) of a frame: the backtest stores its own so
+    the live week is centred on the training value, not on that week's roster (bench DBs pulled it 17% low)."""
+    if "targets_prev" not in F:
+        return np.nan
+    n = F.n_prev.astype(float).clip(lower=1)
+    db = F.group.isin(["CB", "S"]) & F.targets_prev.notna()
+    return float((F.targets_prev / n)[db].mean()) if db.any() else np.nan
+
+
+def pfr_factor(F, typical=None):
+    """Coverage usage (targets per game, DBs only) and missed-tackle rate, both from PFR, vs typical (the training
+    frame's rate when given)."""
     c = C.PFR
     n = F.n_prev.astype(float).clip(lower=1)
     out = pd.Series(1.0, index=F.index)
     if "targets_prev" in F:
         db = F.group.isin(["CB", "S"]) & F.targets_prev.notna()
         rate = (F.targets_prev / n).where(db)
-        typical = float(rate[db].mean()) if db.any() else np.nan
+        typical = typical if typical is not None and typical == typical and typical > 0 else (float(rate[db].mean()) if db.any() else np.nan)
         if typical and typical > 0:
             tgt = (1 + c["target_slope"] * (rate / typical - 1)).clip(*c["target_cap"]).where(db, 1.0)
             out = out * tgt.fillna(1.0)
@@ -641,7 +661,7 @@ def rest_factor(F):
 
 
 def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_snap=True, use_volume=True, use_depth=True, use_pfr=True, use_mix=True, use_rest=True, use_injury=True, use_new_role=True, use_role_shift=True,
-                  use_persnap=True, use_vacancy=True, use_dome=True, use_solo_drift=True, use_outlier_damp=True, parts=None):
+                  use_persnap=True, use_vacancy=True, use_dome=True, use_solo_drift=True, use_outlier_damp=True, parts=None, pfr_typ=None):
     """(base, mu, mu_solo). `parts`, when a dict, receives every piece of the build per row (the base, the per-snap view,
     each game factor as a multiplier, the solo share) so a card can show how the number was made; the numbers are the same."""
     k = F.group.map(C.SHRINK_GAMES_BY_GROUP).fillna(C.SHRINK_GAMES) if k is None else k
@@ -663,7 +683,7 @@ def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_sn
     if use_depth:
         xf["depth"] = depth_factor(F).values
     if use_pfr:
-        xf["pfr"] = pfr_factor(F).values
+        xf["pfr"] = pfr_factor(F, pfr_typ).values
     if use_mix:
         xf["mix"] = mix_factor(F).values
     if use_rest:
@@ -741,7 +761,7 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
         listed = {pid for ids in starters.values() for pid in ids}
         back = done[done.player_id.isin(listed) & ~done.player_id.isin(active.player_id)].drop_duplicates("player_id")[["player_id"]]
         active = pd.concat([active, back], ignore_index=True)
-    sums = {c: (c, "sum") for c in ("run_tk", "pass_tk", "runs_faced", "comps_faced", "targets", "missed", "pfr_comb", "press") if c in done.columns}
+    sums = {c: (c, lambda x: x.sum(min_count=1)) for c in ("run_tk", "pass_tk", "runs_faced", "comps_faced", "targets", "missed", "pfr_comb", "press") if c in done.columns}   # no rows -> NaN, not 0 (as the backtest's history reads)
     agg = done.groupby("player_id").agg(
         player=("player", "last"), name_key=("name_key", "last"), team=("team", "last"), group=("group", "last"),
         n_prev=("comb", "size"), comb_prev=("comb_adj", "sum"), comb_prev_raw=("comb", "sum"),
@@ -750,6 +770,9 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
     last_dc = done.sort_values("week").groupby("player_id").dc_starter.last() if "dc_starter" in done.columns else None
     lasts = done.sort_values("week").groupby("player_id").agg(last=("comb", "last"), pct_last=("def_pct", "last"), last_week=("week", "last"),
                                                               last_gameday=("gameday", "last"), last_margin=("margin", "last") if "margin" in done.columns else ("comb", "size"))
+    # the snap share of his actual last game: groupby "last" skips a missing value and would report an older game's
+    # share, hiding the "snap counts missing for his last game" lock block
+    lasts["pct_last"] = done.sort_values("week").groupby("player_id").tail(1).set_index("player_id").def_pct.reindex(lasts.index)
     if "margin" not in done.columns:
         lasts["last_margin"] = np.nan
     real = done.def_snaps.fillna(0) >= C.PERSNAP["min_game_snaps"]
@@ -842,8 +865,10 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
     F["practice"] = [practice.get((t, n), "") for t, n in zip(F.team, F.name_key)]
     out_keys = {(t, n) for (t, n), s in status.items() if str(s).lower() in OUT_STATUSES}
     regs = F[(F.pct_prev >= 0.75) & (F.n_prev >= 2)]
-    vacated = {(r.team, r.group) for r in regs.itertuples() if (r.team, r.name_key) in out_keys}
     team_last_week = done.groupby("team").week.max().to_dict()
+    # next man up fires in the first game without the regular (he played the team's last game), as the backtest defines and
+    # validated it; weeks 2-4 of an absence are carried by the backup's own last game, share model and vacancy rule
+    vacated = {(r.team, r.group) for r in regs.itertuples() if (r.team, r.name_key) in out_keys and r.last_week == team_last_week.get(r.team)}
     # a regular traded away since his old team's last game: the next man up there, exactly as for one ruled out (the
     # backtest's role signal is any regular present last game and gone this one, trades included)
     moved_all = moved_info
@@ -870,7 +895,7 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
     F["vacancy"] = [(t, g) in vac for t, g in zip(F.team, F.group)]
     # who is gone at his position, for the card: the model's context in words (the effects are in the factors)
     F["gone_regulars"] = ["; ".join(x for x in gone_by.get((t, g), []) if not x.startswith(f"{pl} (")) for t, g, pl in zip(F.team, F.group, F.player)]
-    F["dc_starter"] = [1.0 if (t in starters and pid in starters[t]) else 0.0 for t, pid in zip(F.team, F.player_id)] if starters else 0.0
+    F["dc_starter"] = [(1.0 if pid in starters[t] else 0.0) if t in starters else np.nan for t, pid in zip(F.team, F.player_id)]   # no chart: unknown (training saw 0.5)
     F["role_signal"] = [((t, g) in vacated) and not (p >= 0.75) and (t, n) not in out_keys
                         for t, g, p, n in zip(F.team, F.group, F.pct_prev.fillna(0), F.name_key)]
     return F
@@ -882,7 +907,8 @@ def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
     if F.empty:
         return F
     parts = {}
-    base, mu, mu_solo = project_frame(F, k=k, parts=parts)
+    typ = phi_by_group.get("__pfr_typical__") if isinstance(phi_by_group, dict) else None
+    base, mu, mu_solo = project_frame(F, k=k, parts=parts, pfr_typ=typ)
     mu_raw = mu.copy()
     scale_solo = phi_by_group.get("__scale_solo__", scale) if isinstance(phi_by_group, dict) else scale
     by_grp = F.group.map({g: phi_by_group.get(f"{g}|solo_scale") for g in F.group.unique()}) if isinstance(phi_by_group, dict) else pd.Series(np.nan, index=F.index)
@@ -928,6 +954,9 @@ def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
     F["phi_ast"] = F.group.map({g: phi_by_group.get(f"{g}|ast") for g in F.group.unique()}) if isinstance(phi_by_group, dict) else np.nan
     F["phi_ast"] = F.phi_ast.fillna(F.phi)
     F.loc[F.venue == "NEUTRAL", "phi_ast"] = F.phi_ast + 0.15
+    # a new role spreads his solo and assist counts too (new-role rows: solo var/mean 1.44 against 1.18 used)
+    F.loc[F.new_role, "phi_solo"] = F.phi_solo + C.NEW_ROLE.get("phi_bump_solo", 0.25)
+    F.loc[F.new_role & F.phi_ast.notna(), "phi_ast"] = F.phi_ast + C.NEW_ROLE.get("phi_bump_solo", 0.25)
     F["fair_line_ast"] = [fair_line(m, p) for m, p in zip(F.proj_ast, F.phi_ast)]
     F["season_avg"] = F.comb_prev_raw / F.n_prev.clip(lower=1)
     return F
@@ -1128,7 +1157,9 @@ def kelly_stake(claim, dec):
 
 def blend_mean(mu_model, mkt_line, kind, blend=None):
     """The pricing mean: the model's number and the consensus line, each level-corrected, weighted by the market's
-    estimated blend (pipeline/blend.py) or the default line weight."""
+    estimated blend (pipeline/blend.py) or the default line weight. NaN when the model has no number (never 0.05)."""
+    if mu_model is None or not np.isfinite(float(mu_model)):
+        return float("nan")
     b = (blend or {}).get(kind) if blend else None
     if b:
         w, bm, bl = float(b.get("w", C.LINE_WEIGHT)), float(b.get("bias_model", 0.0)), float(b.get("bias_line", 0.0))
@@ -1262,7 +1293,12 @@ def price_lines(lines, P, segments=None, blend=None):
     from pipeline.sources import norm_name
     L = lines.copy()
     L["name_key"] = L.player.map(norm_name)
-    L["mkt_line"] = L.groupby(["player", "market"]).line.transform("median")   # consensus line across books
+    # consensus line across books, from rows that quote both sides: Bally Bet posts Over-only rows, sometimes far off
+    # (2026-10-31: Jordyn Brooks 25.5 against DraftKings' 8.5 made a 17.0 "consensus" and a +62% Over pick)
+    two = L.over_odds.notna() & L.under_odds.notna()
+    med_two = L[two].groupby(["player", "market"]).line.median()
+    med_all = L.groupby(["player", "market"]).line.median()
+    L["mkt_line"] = [med_two.get((p_, m_), med_all.get((p_, m_))) for p_, m_ in zip(L.player, L.market)]
     P = P.copy()
     P["team_name"] = P.team.map(TEAM_NAMES)
     rows = []
@@ -1286,6 +1322,9 @@ def price_lines(lines, P, segments=None, blend=None):
         phi_col = "phi_solo" if solo else "phi_ast" if ast else "phi"
         phi_use = float(p.get(phi_col, p.phi)) if pd.notna(p.get(phi_col, np.nan)) else float(p.phi)
         mu = blend_mean(mu_model, r.mkt_line, kind, blend)
+        if not np.isfinite(mu):
+            rows.append({**base, "pick": "No projection", "why": "The model has no number for him this week"})
+            continue
         po_model = p_over(mu, phi_use, float(r.line))
         # informational only, never part of the grade: the model and the consensus line far apart means one of them
         # knows something; the card says so and the reader checks

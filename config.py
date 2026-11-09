@@ -65,7 +65,7 @@ SHRINK_GAMES = 1                   # weight (in games) of the prior when averagi
 # almost unshrunk, corners and linemen need a heavy pull toward last season. MAE by group fell 0.6-1.0%.
 SHRINK_GAMES_BY_GROUP = {"LB": 0.5, "S": 1.0, "CB": 3.0, "DL": 3.0}
 # Snap-share trend: last 3 games' defensive snap share vs the season share, as a multiplier (ratio ** power).
-# Rises are captured almost fully at 0.45; drops are overcorrected at that power, so they get 0.25.
+# Rises are captured almost fully at 0.45; drops are overcorrected at that power, so they get a smaller one (0.35 now).
 SNAP_TREND = dict(games=3, power_up=0.45, power_down=0.35, cap=(0.6, 1.5), min_share=0.05)
 # Tackle opportunities (opponent carries + completions + sacks) expected this game vs the ones the player has faced:
 # volume regresses to the league mean, which a season average ignores. Damped and capped: the extremes were wrong.
@@ -83,7 +83,7 @@ INJURY = dict(questionable=0.92, limited_practice=0.97)
 # landed under the model vs 56% otherwise), and his count is far more spread (variance/mean 1.9 vs 1.4). So: projection
 # x (last-game share / season share)^power, no outlier-fade signal, a wider distribution, consistency counted over
 # in-role games only, and NEVER a lock or a parlay leg until his season share catches up.
-NEW_ROLE = dict(max_prev_share=0.6, min_last_share=0.6, min_ratio=1.5, power=0.0, cap=2.5, phi_bump=0.5, in_role_share=0.7, min_in_role_games=3)   # power 0 since round 4: the per-snap base carries the role change; the flag still drives the checklist and the wider distribution
+NEW_ROLE = dict(max_prev_share=0.6, min_last_share=0.6, min_ratio=1.5, power=0.0, cap=2.5, phi_bump=0.5, phi_bump_solo=0.25, in_role_share=0.7, min_in_role_games=3)   # power 0 since round 4: the per-snap base carries the role change; the flag still drives the checklist and the wider distribution
 # Role shifts (audit after the week 8 Thursday post-mortem; 28,861 defender-games, fitted 2023-24, checked 2025-26):
 # - last game's snap share under 70% of his season share: ran 5-14% under the model -> x ratio^0.1 (bias -0.25 -> -0.02
 #   train, -0.16 -> +0.07 test; overall error -0.7%)
@@ -98,8 +98,8 @@ ROLE_SHIFT = dict(contraction_ratio=0.7, contraction_power=0.1, absence_weeks=3,
 LOCK_RULES = dict(min_in_role_games=3, overs_eligible=False)   # Overs: 28-40 live (41%) and 32-46% on all lines where the model sat above the market; never a lock or a parlay leg until 40 further Over picks hit 55%+
 # ---- Research round 4 (2026-10-30, after the McDuffie post-mortem). Per-snap projection and what hangs off it. Evidence in MODEL_LOG.
 # Per-snap base = tackles per defensive snap (games with 10+ defensive snaps only, shrunk toward last season's rate or the
-# position rate over 150 pseudo-snaps) x expected snap share x expected team defensive snaps, calibrated; blended 30% with
-# the per-game base (error -0.5% train, -0.3% test; new-role error -3%).
+# position rate over 150 pseudo-snaps) x expected snap share x expected team defensive snaps, calibrated; blended with
+# the per-game base at `weight` (0.4 now; 30% when introduced: error -0.5% train, -0.3% test; new-role error -3%).
 PERSNAP = dict(weight=0.4, pseudo_snaps=150, cal=1.097, min_game_snaps=10, min_prior_snaps=150, group_rate={"CB": 0.074, "DL": 0.066, "LB": 0.110, "S": 0.093})
 # Next-game snap share from (last game, last three, season) with weights by situation, fitted 2023-24: a jump backed by a
 # vacancy or a depth-chart listing holds; a jump in a blowout or with nothing behind it regresses; a drop half-holds.

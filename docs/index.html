@@ -1014,7 +1014,9 @@ function recFiltered() {
 }
 function renderRecPicks() {
   const sumBox = $("#rec-sum"), tBox = $("#rec-table"); if (!sumBox || !tBox) return;
-  const picks = recFiltered();
+  const rows = recFiltered();
+  // totals count each bet once: the same pick at two books or two lines is one bet (the grader marks the one it counts)
+  const picks = rows.filter((p) => p.counted !== false);
   const g = picks.filter((p) => p.result === "Win" || p.result === "Loss" || p.result === "Push");
   const w = g.filter((p) => p.result === "Win").length, l = g.filter((p) => p.result === "Loss").length, pu = g.filter((p) => p.result === "Push").length;
   const u = g.reduce((a, p) => a + (p.units || 0), 0);
@@ -1033,7 +1035,7 @@ function renderRecPicks() {
   const realisedEdge = withP.length ? withP.filter((p) => p.result === "Win").length / withP.filter((p) => p.result !== "Push").length - avgBook : null;
   sumBox.replaceChildren(
     el("div", { class: "filter-sum" },
-      el("div", {}, wl(w, l, pu), `Record (${picks.length} picks)`),
+      el("div", { title: "Each bet counted once: the same player, market and side logged at two books or two lines is one bet; the list below shows every logged row" }, wl(w, l, pu), `Record (${picks.length} bets${rows.length > picks.length ? `; ${rows.length} rows logged` : ""})`),
       el("div", {}, el("b", {}, w + l ? pct(w / (w + l)) : "–"), "Hit rate"),
       el("div", {}, units(u, 2), "Units, 1 per bet"),
       el("div", {}, roiCell(g.length ? u / g.length : null), "Return per bet"),
@@ -1053,9 +1055,9 @@ function renderRecPicks() {
   const holder = el("div", { class: "scroll" });
   tBox.replaceChildren(holder);
   const LIMIT = 60;
-  renderPicksTable(holder, picks, recShowAll ? Infinity : LIMIT);
-  if (!picks.length) holder.replaceChildren(el("div", { class: "empty" }, "No pick matches these filters."));
-  else if (!recShowAll && picks.length > LIMIT) { const b = el("button", { type: "button", class: "more-rows" }, `Show all ${picks.length} picks`); b.onclick = () => { recShowAll = true; renderRecPicks(); }; tBox.append(b); }
+  renderPicksTable(holder, rows, recShowAll ? Infinity : LIMIT);     // every logged row is listed; only the counted ones are in the totals
+  if (!rows.length) holder.replaceChildren(el("div", { class: "empty" }, "No pick matches these filters."));
+  else if (!recShowAll && rows.length > LIMIT) { const b = el("button", { type: "button", class: "more-rows" }, `Show all ${rows.length} rows`); b.onclick = () => { recShowAll = true; renderRecPicks(); }; tBox.append(b); }
 }
 
 // ---------------------------------------------------------------- Track record: parlay history

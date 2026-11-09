@@ -68,14 +68,31 @@ def estimate(pw_comb, season, weeks=None):
         if cl is None or len(cl) == 0 or st.empty:
             continue
         cl = cl.copy(); cl["name_key"] = cl.player.map(norm_name); cl["kind"] = cl.market.map(C.market_kind)
-        cons = cl.groupby(["event_id", "name_key", "kind"]).agg(line=("line", "median"), over_odds=("over_odds", "median"), under_odds=("under_odds", "median")).reset_index()
-        box = st.groupby("name_key").agg(comb=("comb", "sum"), solo=("solo_t", "sum"))
-        cons = cons.join(box, on="name_key")
-        cons = cons[cons.comb.notna()]
-        m = log[log.week == wk].drop_duplicates(["name_key", "kind"])[["name_key", "kind", "proj_model", "phi"]]
+        # two-way rows only (one-sided Bally rows skewed 24 of 264 closing consensus lines), and the market's chance as
+        # the no-vig chance of the books posting the consensus line: a median of American odds is meaningless (-105 and
+        # +106 gave 0.5) and made the market look far worse than it is (audit 2026-11-09)
+        cl = cl[cl.over_odds.notna() & cl.under_odds.notna()].copy()
+        if cl.empty:
+            continue
+        from pipeline.model import american_to_decimal
+        po, pu = 1 / cl.over_odds.map(american_to_decimal), 1 / cl.under_odds.map(american_to_decimal)
+        cl["p_nv"] = po / (po + pu)
+        keys = ["event_id", "name_key", "kind"]
+        cons = cl.groupby(keys).agg(line=("line", "median")).reset_index()
+        at = cl.merge(cons, on=keys, suffixes=("", "_c"))
+        cons = cons.join(at[at.line == at.line_c].groupby(keys).p_nv.mean().rename("p_mkt"), on=keys)
+        m = log[log.week == wk].drop_duplicates(["name_key", "kind", "team"] if "team" in log.columns else ["name_key", "kind"])
+        m = m[[c for c in ("name_key", "kind", "team", "proj_model", "phi") if c in m.columns]]
         cons = cons.merge(m, on=["name_key", "kind"], how="inner")
+        # box scores by name AND team: two players can share a name key (the Byron Youngs, the Byron Murphys)
+        if "team" in cons.columns and "team" in st.columns:
+            box = st.groupby(["name_key", "team"]).agg(comb=("comb", "sum"), solo=("solo_t", "sum")).reset_index()
+            cons = cons.merge(box, on=["name_key", "team"], how="left")
+        else:
+            cons = cons.join(st.groupby("name_key").agg(comb=("comb", "sum"), solo=("solo_t", "sum")), on="name_key")
+        cons = cons[cons.comb.notna()]
         cons["actual"] = _actual(cons.kind.values, cons.comb.values, cons.solo.values)
-        rows.append(cons[["kind", "line", "proj_model", "phi", "actual", "over_odds", "under_odds"]])
+        rows.append(cons[["kind", "line", "proj_model", "phi", "actual", "p_mkt"]])
     if not rows:
         return {}
     d = pd.concat(rows, ignore_index=True)
@@ -101,13 +118,11 @@ def _scores(part, b):
     model's number alone, and the blended mean (with this estimate's weight and corrections: in-sample, so it
     flatters the blend a little). Pushes left out."""
     from pipeline.model import american_to_decimal, p_over
-    d = part[(part.actual != part.line) & part.phi.notna()]
-    d = d[(d.over_odds.fillna(0) != 0) & (d.under_odds.fillna(0) != 0)]
+    d = part[(part.actual != part.line) & part.phi.notna() & part.p_mkt.notna()]
     if len(d) < 20:
         return {}
     y = (d.actual.values > d.line.values).astype(float)
-    po = 1 / d.over_odds.map(american_to_decimal).values; pu = 1 / d.under_odds.map(american_to_decimal).values
-    p_mkt = po / (po + pu)
+    p_mkt = d.p_mkt.values                     # the no-vig chance of the books that posted this line
     p_model = np.array([p_over(m, ph, l) for m, ph, l in zip(d.proj_model, d.phi, d.line)])
     mean = (1 - b["w"]) * (d.proj_model.values + b["bias_model"]) + b["w"] * (d.line.values + b["bias_line"])
     p_blend = np.array([p_over(max(0.05, m), ph, l) for m, ph, l in zip(mean, d.phi, d.line)])

@@ -116,6 +116,7 @@ def run_backtest(H, seasons):
                  dict(predictor="Solo tackles: season average", **_metrics(T.solo_t, T.solo_prev / T.n_prev.clip(lower=1) * T.crew_solo.fillna(1.0)))]
     for g, v in C.DEFAULT_PHI.items():
         phi_by_group.setdefault(g, v)
+    phi_by_group["__pfr_typical__"] = M.pfr_typical(T)       # the live week's coverage factor is centred on this, not on its own roster
 
     # calibration of over-probabilities at lines around each projection
     cal = []
