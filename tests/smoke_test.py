@@ -172,6 +172,19 @@ check(all((b.get("claim_ev") or -1) >= C.PICK_MIN_CLAIM_EV - 1e-9 for b in price
       "every pick beats its price by 2% at its claimed chance, every A by 4%")
 check(not any(b.get("grade") == "A" and b.get("market") not in C.A_GRADE_MARKETS for b in priced) and five.market.isin(C.A_GRADE_MARKETS).all() if len(five) else True,
       "A grades and locks are solo tackles only (combined picks that score 72+ show as a B)")
+# trades: a regular who played his team's last game shows on another team in the weekly roster before week 7
+_done = H[(H.season == 2026) & (H.week < 7)]
+_tlast = _done.groupby("team").week.max().to_dict()
+_reg = _done[(_done.week == _done.team.map(_tlast)) & (_done.def_pct >= 0.9) & (_done.group == "LB")].iloc[0]
+_F0 = M.upcoming_rows(H, sched, inj, 2026, 7, vol=vol["vol"], dc=vol["dc"], pbp_starters=vol["pbp"]["starters"])
+_other = sorted(set(_F0.team) - {_reg.team})[0]
+_F1 = M.upcoming_rows(H, sched, inj, 2026, 7, vol=vol["vol"], dc=vol["dc"], pbp_starters=vol["pbp"]["starters"], roster={str(_reg.player_id): (_other, 7)})
+_me = _F1[_F1.player_id == _reg.player_id]
+_mates = _F1[(_F1.team == _reg.team) & (_F1.group == "LB") & (_F1.player_id != _reg.player_id)]
+check(len(_me) == 1 and _me.team.iloc[0] == _other and bool(_me.team_changed.iloc[0])
+      and _mates.vacancy.all() and _mates[_mates.pct_prev.fillna(0) < 0.75].role_signal.all() and len(_mates[_mates.pct_prev.fillna(0) < 0.75])
+      and _mates.gone_regulars.str.contains(f"traded to {_other}").all(),
+      f"a trade in the weekly roster moves the player, flags his old group's vacancy and next man up, and names him on their cards ({_reg.player} {_reg.team} -> {_other})")
 _T6 = H[(H.season == 2026) & (H.n_prev >= 2)].head(400)
 _pa = {}
 _m0, _m1 = M.project_frame(_T6)[1], M.project_frame(_T6, parts=_pa)[1]

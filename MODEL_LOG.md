@@ -1431,6 +1431,32 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-09, afternoon MST (trades: the weekly roster moves a player, the next man up fires, the card names who is gone)
+- Owner: "The model should also take into account trades. Grover Stewart is getting more snaps now that DeForest
+  Buckner is gone. You led me astray on his pick." (Stewart Under 1.5 solo, a week 9 lock at -280, had 2.)
+- The facts: Buckner played 75-93% of the Colts' snaps in weeks 1-7, was inactive in week 8, played for SF in week 9.
+  Stewart's share: 61% a game in weeks 1-7, 50% in week 8 (the first game without Buckner, his lowest), 59% in week
+  9 (47 snaps because the defence was on the field about 80 snaps against 64 expected). The share did not rise; the
+  game's volume did. The model knew of the trade before week 9 (the depth chart had moved Buckner to SF; the Colts'
+  line carried the vacancy flag). Where the pick went wrong is the lock itself: claimed 75% against the price's 74%,
+  no cushion; this morning's claimed-edge gate makes it a B, not a lock.
+- Trades had three holes, fixed: (1) moves came only from the depth chart, which can lag a trade by days: the
+  league's weekly roster (`sources.roster_teams`, a row newer than his last game) now moves a player too; (2) the
+  next-man-up signal fired for a regular ruled out but not for one traded away, while the backtest's role signal
+  (which validated the bump) counts any regular present last game and gone this one: it now fires for the old team
+  in its first game after the trade; (3) a player traded to a team on a bye was dropped before his old team learned
+  he was gone: moves are now captured before the games merge. And the card says it: every player's logic text and a
+  "Teammate gone" tag name the regulars gone at his position and why (traded to X, injured reserve, out, missed the
+  last game); a moved player's text says first games for the new team, priced down, never a lock until he settles.
+- Evidence the bump belongs on trades: 28 mid-season moves of regulars since 2023. In the old team's first game
+  without him, rotation and backup players at his position rose 6-14 points of snap share and 0.2-1.4 tackles (DL:
+  40% -> 50%, +0.62 tackles, n=21); full-time teammates did not gain (LB +0.36, CB -0.03, S -0.51). The same shape as
+  injuries; too few trades to size a separate bump, so the validated ROLE_BUMP applies.
+- Live check (the daily on a scratch copy, week 9): six moves detected, Buckner IND -> SF among them; Stewart's card
+  names Buckner (83% of the snaps in his last game, traded to SF), Reese's names Edmunds (injured reserve).
+- Revert: a roster move that puts a player on the wrong team (he then plays for the old one): check the moved list
+  in the daily's output each week.
+
 ### 2026-11-09, afternoon MST (football logic in numbers: the owner's reads tested, an injured-reserve blind spot, the logic shown)
 - Owner: the model is all numbers and no logic; Arvell Reese (rookie LB, Tremaine Edmunds out, divisional game,
   "better every game") should have been a lock on Over 7.5 and went 12; Deonte Banks (press-man corner) Under hit.

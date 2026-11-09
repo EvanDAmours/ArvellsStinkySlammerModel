@@ -720,7 +720,7 @@ def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_sn
     return pd.Series(base, index=F.index), pd.Series(mu, index=F.index), pd.Series(mu_solo, index=F.index)
 
 
-def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_starters=None):
+def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_starters=None, roster=None):
     """Feature rows for every active defender whose team plays in `week`: anyone with a game in the last four
     weeks, plus anyone listed as a starter on the current depth chart (a starter back from injury)."""
     tg = team_games(sched)
@@ -769,6 +769,7 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
     F["gap_weeks"] = week - pd.to_numeric(F.last_week, errors="coerce")
     # a mid-season team change shows on the depth chart before he plays for the new team: move him and flag him
     F["team_changed"] = False
+    F["team_from"] = F.team
     if dc is not None and len(dc) and "date" in dc.columns:
         cur = dc[(dc.season == season) & dc["date"].notna()]
         if len(cur):
@@ -778,6 +779,16 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
             F.loc[moved, "team"] = F.loc[moved, "dc_team"]
             F.loc[moved, "team_changed"] = True
             F = F.drop(columns=["dc_team", "dc_date"])
+    # the league's weekly roster: a trade shows there within days (2026-11-09: owner, after DeForest Buckner left IND).
+    # Only a roster row newer than his last game moves him; a new team on a bye drops him from this week (he is gone).
+    if roster:
+        cur = [roster.get(str(pid)) for pid in F.player_id]
+        new_t = pd.Series([c[0] if c else None for c in cur], index=F.index)
+        new_w = pd.Series([c[1] if c else -1 for c in cur], index=F.index)
+        moved_r = new_t.notna() & (new_t != F.team) & (new_w > pd.to_numeric(F.last_week, errors="coerce").fillna(99)) & ~F.team_changed.astype(bool)
+        F.loc[moved_r, "team"] = new_t[moved_r]
+        F.loc[moved_r, "team_changed"] = True
+    moved_info = F.loc[F.team_changed.astype(bool) & (F.team_from != F.team), ["player_id", "team", "team_from", "group", "pct_last", "last_week"]].copy()   # before the games merge drops a player whose new team is on a bye
     F = F.merge(games[["team", "game_id", "venue", "spread_dog", "is_home", "opp_team", "gameday", "gametime", "final", "rest", "margin", "roof"]], on="team", how="inner")
     F["season"], F["week"] = season, week
     ts, lg_snaps = team_snaps_for(H, season, week)
@@ -832,21 +843,33 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
     out_keys = {(t, n) for (t, n), s in status.items() if str(s).lower() in OUT_STATUSES}
     regs = F[(F.pct_prev >= 0.75) & (F.n_prev >= 2)]
     vacated = {(r.team, r.group) for r in regs.itertuples() if (r.team, r.name_key) in out_keys}
+    team_last_week = done.groupby("team").week.max().to_dict()
+    # a regular traded away since his old team's last game: the next man up there, exactly as for one ruled out (the
+    # backtest's role signal is any regular present last game and gone this one, trades included)
+    moved_all = moved_info
+    for r in moved_all.itertuples():
+        if (r.pct_last if r.pct_last == r.pct_last else 0) >= 0.75 and r.last_week == team_last_week.get(r.team_from):
+            vacated.add((r.team_from, r.group))
+    moved_to = {r.player_id: r.team for r in moved_all.itertuples()}
     # vacancy (persistent): a regular by his last game's share who is out, has moved, or missed the team's last game,
     # within the last three weeks. Regulars include players no longer in F (gone from the roster) via `done`.
     vc = C.VACANCY
     last_rows = done.sort_values("week").groupby("player_id").tail(1)
-    team_last_week = done.groupby("team").week.max().to_dict()
-    vac = set()
+    vac, gone_by = set(), {}
     for r in last_rows.itertuples():
         if (r.def_pct if r.def_pct == r.def_pct else 0) < vc["regular_share"] or week - r.week > vc["recent_weeks"]:
             continue
         listed_now = r.team in starters and r.player_id in starters[r.team]
         missed = r.week < team_last_week.get(r.team, r.week) and not listed_now      # missed the last game and not listed back as a starter
-        gone = (r.team, r.name_key) in out_keys or missed or r.player_id in set(F.loc[F.team_changed, "player_id"])
+        traded = r.player_id in moved_to and moved_to[r.player_id] != r.team
+        gone = (r.team, r.name_key) in out_keys or missed or traded
         if gone:
             vac.add((r.team, r.group))
+            why = f"traded to {moved_to[r.player_id]}" if traded else str(status.get((r.team, r.name_key)) or "").lower() or "missed the last game"
+            gone_by.setdefault((r.team, r.group), []).append(f"{r.player} ({r.def_pct:.0%} of the snaps in his last game; {why})")
     F["vacancy"] = [(t, g) in vac for t, g in zip(F.team, F.group)]
+    # who is gone at his position, for the card: the model's context in words (the effects are in the factors)
+    F["gone_regulars"] = ["; ".join(x for x in gone_by.get((t, g), []) if not x.startswith(f"{pl} (")) for t, g, pl in zip(F.team, F.group, F.player)]
     F["dc_starter"] = [1.0 if (t in starters and pid in starters[t]) else 0.0 for t, pid in zip(F.team, F.player_id)] if starters else 0.0
     F["role_signal"] = [((t, g) in vacated) and not (p >= 0.75) and (t, n) not in out_keys
                         for t, g, p, n in zip(F.team, F.group, F.pct_prev.fillna(0), F.name_key)]
@@ -1018,7 +1041,10 @@ def rundown(p, line, side, kind, mu_model, mu, p_side, claim, ev, pick, why, fl,
     st = str(p.get("status", "")).lower()
     if st == "questionable":
         nud.append("listed questionable (priced 8% down; the bet voids if he sits)")
-    if _flag(p.get("vacancy_rule", False)) or _flag(p.get("vacancy", False)):
+    gone = str(p.get("gone_regulars") or "").strip()
+    if gone and gone.lower() != "nan":
+        nud.append(f"gone at his position: {gone}")
+    elif _flag(p.get("vacancy_rule", False)) or _flag(p.get("vacancy", False)):
         nud.append("a regular at his position is out or gone, so his share is read from his last game")
     if new_role:
         nud.append("a part-timer who just played a starter's snaps; his history describes someone else")
@@ -1184,6 +1210,11 @@ def logic_steps(p, kind="combined", min_effect=0.0):
     text = f"How the model built {total:.1f} {unit}: " + "; ".join(bits) + "."
     if kind == "assists":
         text += " Assists are the combined number less the solo one."
+    gone = str(p.get("gone_regulars") or "").strip() if hasattr(p, "get") else ""
+    if gone and gone.lower() != "nan":
+        text += f" Gone at his position (the vacancy and next-man-up effects above already price it): {gone}."
+    if _flag(p.get("team_changed", False)) if hasattr(p, "get") else False:
+        text += f" He was traded or moved: first games for {p.get('team')}, priced down and never a lock until he settles."
     return steps, text
 
 
@@ -1413,7 +1444,7 @@ def price_lines(lines, P, segments=None, blend=None):
                      "lock": lock, "grade": grade, "sleeper": sleeper,
                      "sleeper_ev": (ev_o if sleeper == "Over" else ev_u) if sleeper else None,
                      "sleeper_grade": s_grade, "sleeper_p": s_p, "sleeper_note": s_note, "sleeper_med": s_med,
-                     "logic": lg_text or None, "logic_chips": [[lab, round(e, 3)] for lab, e, _ in lg_steps if e is not None and abs(e) >= 0.03] or None})
+                     "logic": lg_text or None, "gone_regulars": (str(p.get("gone_regulars")) if str(p.get("gone_regulars") or "").strip() not in ("", "nan") else None), "logic_chips": [[lab, round(e, 3)] for lab, e, _ in lg_steps if e is not None and abs(e) >= 0.03] or None})
     out = pd.DataFrame(rows)
     if "ev" in out:
         out = out.sort_values("ev", ascending=False, na_position="last")

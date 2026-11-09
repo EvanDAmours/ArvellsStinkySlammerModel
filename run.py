@@ -484,7 +484,8 @@ def cmd_daily(auto=False):
     games = week_games(sched, C.SEASON, week)
     status["season_over"] = not games           # every game of the season (playoffs included) is in the books: grade, keep the record, project nothing
     if games:
-        F = M.upcoming_rows(H, sched, inj, C.SEASON, week, vol=src["vol"], dc=src["dc"], pbp_starters=src["pbp"]["starters"])
+        F = M.upcoming_rows(H, sched, inj, C.SEASON, week, vol=src["vol"], dc=src["dc"], pbp_starters=src["pbp"]["starters"],
+                            roster=S.roster_teams(C.SEASON, week))      # trades: the weekly roster moves a player before the depth chart does
         P = M.finalize_projections(F, phi, scale=scale, gbm=gbm)
         P = attach_game_logs(P, H, C.SEASON, week)
         P, status["fantasypros_rows"] = attach_consensus(P, C.SEASON, week)

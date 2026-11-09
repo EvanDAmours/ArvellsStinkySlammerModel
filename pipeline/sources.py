@@ -385,6 +385,35 @@ ROSTER_OUT = {"RES": "injured reserve", "PUP": "injured reserve", "NFI": "injure
               "SUS": "suspended", "EXE": "out"}
 
 
+_ROSTERS = {}
+
+
+def rosters_weekly(season):
+    """The league's weekly rosters for a season (nflverse), fetched once per run. Empty on synthetic data or a failure."""
+    if os.environ.get("TACKLE_FAKE_DATA"):
+        return pd.DataFrame()
+    if season not in _ROSTERS:
+        try:
+            r = _nflreadpy("load_rosters_weekly", seasons=[season])
+            r = r[r.gsis_id.notna()].copy()
+            r["week"] = pd.to_numeric(r.week, errors="coerce")
+            _ROSTERS[season] = r
+        except Exception as e:  # noqa: BLE001
+            print(f"  weekly rosters: {type(e).__name__}: {e}")
+            return pd.DataFrame()
+    return _ROSTERS[season]
+
+
+def roster_teams(season, week):
+    """player id -> (team, roster week) from each player's latest weekly-roster row at or before `week`: where the
+    league has him now. A trade shows here within days, often before the depth charts move him."""
+    r = rosters_weekly(season)
+    if r is None or len(r) == 0:
+        return {}
+    r = r[r.week <= week].sort_values("week").groupby("gsis_id").tail(1)
+    return {str(g): (str(t), int(w)) for g, t, w in zip(r.gsis_id, r.team, r.week)}
+
+
 def load_roster_out(season, week):
     """Players the league's weekly roster has on a reserve list (injured reserve, PUP, NFI), suspended or exempt as of
     `week` (his latest roster row at or before it), plus anyone the week's own rows list inactive. Rows like
@@ -392,15 +421,9 @@ def load_roster_out(season, week):
     cols = ["season", "week", "team", "name_key", "player_id", "status", "practice"]
     if os.environ.get("TACKLE_FAKE_DATA"):
         return pd.DataFrame(columns=cols)
-    try:
-        r = _nflreadpy("load_rosters_weekly", seasons=[season])
-    except Exception as e:  # noqa: BLE001
-        print(f"  roster status: {type(e).__name__}: {e}")
-        return pd.DataFrame(columns=cols)
+    r = rosters_weekly(season)
     if r is None or len(r) == 0 or "status" not in r.columns:
         return pd.DataFrame(columns=cols)
-    r = r[r.gsis_id.notna()].copy()
-    r["week"] = pd.to_numeric(r.week, errors="coerce")
     r = r[r.week <= week].sort_values("week")
     last = r.groupby("gsis_id").tail(1)
     st = last.status.astype(str).str.upper()
