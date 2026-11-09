@@ -102,6 +102,187 @@ does not describe his current role, or who may not play, can be a pick, never a 
 4. Record the change here: date, what, why, evidence, and what would make us revert it.
 5. Never fit a parameter to the same week used to judge it and call it validated. Mark it provisional.
 
+## Open issues register (review of 2026-11-09, evening MST, at the owner's request)
+
+The owner asked for a review of the whole model and of this file: mathematical issues, what a more rigorous
+calculation needs, and logistical oversights. Nothing in the model was changed by the review (one operational fix:
+the ticker hand-over, in the changelog). Every number was computed that evening on: the closing lines of weeks 7-9
+(745 lines, one per player and market, official box scores), the corrected record (400 counted bets), and the
+walk-forward history with the current code (31,467 games, 67 season-weeks). **Each item is OPEN until an entry in
+the changelog closes it.** Read this section before proposing a change: several items explain why earlier tests
+came out the way they did.
+
+### A. Mathematical issues, most consequential first
+
+**A1. Pricing reads the line and ignores the price on it.** `blend_mean` mixes the model's number with the posted
+line. A line at -190 and the same line at +150 are different statements; the market's own mean is the one that
+reproduces its no-vig chance at that line, and it sits 0.24 above the line on average (sd 0.32, from -0.29 to
++1.06). Consequences measured at the close: on combined lines where the market gives the Under less than 45% (69
+lines) the market says 43.3%, the pricer 47.3%, and the Under won 37.7%; the pricer rated 27 of them Unders worth
+6%+, and they returned -18.2% a bet. Of all 61 combined Unders it rated 6%+, the 39 at plus money won 41.0% (they
+needed 46.9%), -12.0% a bet; the other 22 won 59.1%, +12.3%. Pricing from the market-implied mean instead of the
+raw line (same 0.49 weight, no level corrections): combined log-loss 0.6939 -> 0.6901, better than the market's
+own 0.6918, which the current blend is not. On solo lines the current blend scored better (0.6716 vs 0.6759) in
+weeks 7-8 and worse in week 9 (0.688 vs 0.685): ignoring the price tilts every plus-money Under upward, which
+paid while the whole solo market ran high and stops paying when it does not. The pricer rated 235 of the 390
+solo closing lines (60% of the board) Unders worth 6%+, and 92 of the 96 where the market gave the Under less
+than 45%: that is one market-wide position, not selection. The "combined line runs low" level correction is the
+same artefact: actual minus line +0.23 (t = 4.6 with weeks as the unit), actual minus the market-implied mean
+-0.05 (t = -0.8).
+
+**A2. The claimed chance is anchored at 50%.** claim = 0.5 + 0.6 x (p - 0.5) + segment correction. Shrinking
+toward a coin flip is right only for a price near even: it raises a plus-money side toward 50% and can never
+clear a short price. Corrected record, weeks 8-9: solo claimed 59.3%, hit 53% (94-85); combined claimed 56.6%, hit
+49% (20-21). By price (audit set): priced under 45%: claimed 57%, hit 48%; 45-52%: 56% vs 50%; 52-58%: 60% vs 61%;
+claims of 67%+ hit 15 of 16. A regression of the outcome on the market's no-vig log-odds and the model-minus-market
+gap, with a level per week, gives the gap a weight of +0.47 (se 0.27) on combined and +0.57 (se 0.28) on solo
+(by week +0.14, +0.83, +0.48 and +0.11, +0.82, +0.82): the model's disagreement looks worth about half its size,
+on three weeks. The mathematically consistent claim is the market's fair chance moved by a fraction of the
+model's disagreement, not the pricer's chance moved toward 50%. Related tests already in this log: shrinking the
+probability toward the market on top of the blend (rejected on week 7 picks) and one fitted calibration map
+(rejected: it learned the week). What is new: every line rather than picks, three weeks, a market anchor with a
+level per week, and no new fitted number if the weight stays at the blend's 0.5.
+
+**A3. The week is the unit, not the pick.** Every solo Under on the board won 68%, 64% and 53% in weeks 7, 8, 9
+(binomial noise at that size: 4 points; observed spread: 8), a shared weekly shock of about 6.5 points of hit
+rate (-0.60, -0.37, +0.18 in log-odds beyond the price). Every standard error, n/(n+k) shrink and "t" in this
+log before today treats picks or lines as independent and is too confident by about a factor of two. With weeks as the
+unit: the solo level correction is -0.13 +/- 0.18 (t = -0.7); the model's log-loss advantage over the market on
+solo is +0.0125 a line (weeks +0.009, +0.024, +0.003) and on combined it is the market by 0.006 (-0.013, +0.005,
+-0.012); the segment corrections flip sign week to week (Under solo CB +8.0 then -1.4). Corrections with a
+three-week half-life are fitting the shock.
+
+**A4. Stakes ignore that the picks are one bet.** Week 9: 140 counted bets, 121 of them solo Unders (86%); 64.6
+units staked of a 100-unit bankroll, 59.9 on the Sunday, 57.1 on solo Unders. Each stake is a quarter of Kelly as
+if the bets were independent; with the weekly shock the variance of 130 such bets is about 3.2 times the
+independent figure, so the book as a whole was near 0.8 Kelly, on claimed edges (59%) that have not shown up
+(53%). The 4-unit cap per game does not bind the shared factor. There is no cap per slate or per kind of bet.
+
+**A5. No edge has been demonstrated, and the fastest measure says none yet.** Corrected record 200-183, +0.1 u;
+lift over the whole board -3.4, -3.0, +0.1 points by week. No-vig closing-line value: -2.75 points (se 0.20) on
+399 bets (-2.96, -1.93, -3.22 by week); 7%, 18% and 10% of bets beat the fair closing price; a two-way -110 that
+never moves scores -2.4. A record cannot settle it this season: with a weekly swing near 15% of stake on a book
+like week 9's, a true +5% edge needs about 34 weeks to show at two standard errors. The locks are 10-4 (71%
++/- 24) at prices that need 58% to break even; 30 to 45 more this season leaves +/- 14 at best.
+
+**A6. Factors are kept on differences smaller than their noise, and the yardstick targets the median.** Each
+factor removed in turn, per-game difference tested with season-weeks as the unit, on absolute miss (the
+protocol's measure) and on Poisson deviance (the right score for a mean). Supported: coverage targets and missed
+tackles (t = -9.6), per-snap base (-8.7 on miss), next man up (-5.0), outlier damping (-3.0, deviance only),
+depth chart (-2.4, miss only). Not distinguishable from zero on either: opponent volume (-1.4; -2.1 on the solo miss), indoors, spread tilt,
+injury report, bye, vacancy rule, snap trend, run/pass mix, new role (its power is 0), and the stat crew (t =
++0.5 and +0.9 on combined, +0.1 and +0.2 on solo; a venue's solo share correlates 0.45, 0.32 and -0.09 from one
+season to the next). Role shift improves the miss (t = -4.9) and worsens the deviance (+2.1): it lowers the level
+for those players, which helps a median and hurts a mean, and the pricer uses the number as a mean. By the
+protocol's own rule three rows fail today (without stat crew 1.6170, without outlier damping 1.6171, without
+rest days 1.6168, against the full model's 1.6171) and nothing flags it. The smoke test's "stat-crew factor
+improves accuracy" is true of synthetic data with planted crews. Every weight, power and cap was tuned on the
+same history the table scores.
+
+**A7. What the backtest certifies is not what the board prices with.** Calibration, the PIT check and the spread
+are computed for the factor model at made-up lines around its own number, with a 6-point tolerance, which is
+wider than the edges being bet. The board prices with the factor model x 60% corrector, blended with the line.
+Best-fit variance/mean around that final projection for players at 60%+ of snaps (walk-forward, 2025-26): LB 1.38
+(used 1.57), S 1.29 (1.45), CB 1.24 (1.26), DL 1.07 (1.02); solo LB 1.21 (1.21), S 1.14 (1.19), CB 1.21 (1.10), DL
+1.01 (0.91). The effect on a probability is under a point (checked), so this is second order; so is the missing
+allowance for thin history (variance/mean 1.40 with two prior games, 1.26 with five or more). The form itself
+(variance = spread x mean) is sound: it scores slightly better out of sample than variance = mean + a x mean^2.
+
+**A8. The level for starters moves by season.** Final projection, walk-forward, actual minus projection: players
+at 80-95% of snaps -0.08 in 2025 and +0.11 in 2026; at 95%+ -0.09 and +0.16; under 30% of snaps +0.15 (+9%) in
+both. Players with lines in weeks 7-9: +0.26 (weeks +0.20, +0.14, +0.45; t = 2.7): the model ran about 4.5% low on
+exactly the players it prices, which leans every combined pick toward the Under (combined picks 20-21 at a 57%
+claim). The level calibration is one number over every defender and every season.
+
+**A9. The lock score.** A hand-weighted sum that has never been fitted. On 778 lines (the pricer's side at the
+close) the pricer's own chance predicts the result (log-odds weight +1.11, t = 3.6); "cleared this line in his
+games" adds nothing (-0.21, t = -0.5) and games in role nothing (+0.02, t = 0.1); the two carry 30% of the score
+and the first correlates 0.44 with the chance it sits beside. The fade above a 20% return, the far-from-line flag
+and the sleeper ceiling are three patches for one fact (a large disagreement with the book is mostly model
+error) that A2's weight handles in one place. Corrected record by score, solo Unders, weeks 8-9: under 55: 32-32;
+55-65: 33-31; 65-72: 18-14; 72+: 11-7 (61% +/- 23).
+
+**A10. Thresholds from three weeks, most from the uncorrected record.** The evidence quoted in config.py for the
+signal bar (3-9), the 55% claim floor (44-64), the return fade (33% of 15), the Over bars (28-40), Kelly against
+the ladder (+21.2 u vs +18.1) and the lock floor (5-1) was counted on rows with duplicates, late picks and phantom
+lines. Re-counted on the corrected record: a claimed edge under 2% went 15-27 and 2% or more 99-79, in both
+weeks, so that gate stands; above 2% there is no dose-response (2-4%: 13-2; 4-8%: 15-13; 8-15%: 30-25; 15%+:
+41-39); A grades at 4%+ 8-2, below 4-6 (20 bets). The sleeper rules and grades are in-sample by construction.
+Dozens of slices were examined to find these; some would look this good by chance. 100 changelog entries in 17
+days against three graded weeks: no rule set has been left alone long enough to be measured.
+
+**A11. Parlays.** The price logged is the product of the legs' prices even when two legs are in one game (week 8
+Thursday: 3.677 = the product); a book prices a same-game parlay of two Unders below the product. The
+correlation ratio corrects the chance only. The chance is a product of claims that A2 says are mis-anchored.
+
+**A12. Smaller.** The no-vig split is proportional, which is biased at short and long prices by about a point
+(it only feeds closing-line value and the market's score). The solo share's own uncertainty is not in the solo
+spread. The regime-robust solo price scored better in all three weeks and was shelved because it failed as a
+lock filter, which is not what it was for: re-test it as the solo pricer on out-of-sample lines.
+
+### B. What a more rigorous calculation looks like (proposal; each step under the validation protocol)
+
+1. **One probability per line.** From the model's number and the market's implied mean: the market's fair chance,
+   moved by a fixed fraction (0.5, the blend's present weight) of the model's disagreement. That one number gives
+   the return, the pick, the claim, the grade and the stake. It retires the raw-line blend, both level
+   corrections, the shrink toward 50%, the claim floor, the return fade and the segment correction. **Needs the
+   owner's decision**: the vision says a claim is never pulled toward the book. Under this rule a pick's edge is
+   still entirely the model's disagreement; agreement with the book never makes a pick.
+2. **An error bar on every number**, with weeks as the unit; picks and grades on the lower bound of the edge.
+3. **Stakes for the book as a whole**: a cap per slate and per kind of bet, and Kelly divided by the correlation.
+4. **Evidence rules**: freeze the rule set for four weeks; test candidates in the shadow on `data/lines_log.csv`
+   (every priced line has been logged with its claim since 2026-11-09); judge on log-loss against the market's
+   fair closing price and on no-vig closing-line value; show every record with its interval.
+5. **Projection**: judge pieces on Poisson deviance with a paired test over season-weeks, drop what does not
+   clear it, calibrate the level by snap share and season, estimate the spread around the projection that is
+   priced, walk-forward.
+6. **Re-derive or delete** every threshold in A10 on the corrected record.
+
+### C. Logistical oversights
+
+1. **Odds credits run out before the month does (urgent).** The Actions log of 2026-11-09 15:00 UTC: PARLAY_API_KEY
+   is rejected as invalid (401), so there is one key, with about 194 credits left after Monday's pulls. A normal
+   week costs about 140 (three markets a game): week 10 leaves about 55, and the Saturday pull of week 11 takes
+   the key under the 25-credit floor, so the Sunday of November 22, Thanksgiving week and November 29 get no
+   lines. Remedies: a valid second key, a paid plan, or fewer credits a pull (the assists market, a trial tab
+   that can never be a pick, is a third of the cost).
+2. **The scheduler** fired no scheduled run for 11 hours on 2026-11-09; the 1 pm pull ran at 2:39 pm. Fixed the
+   same evening (changelog: each run starts the next). Everything still runs on one platform; an outside
+   heartbeat that starts a run when none has committed for an hour would cover a failed hand-over.
+3. **The repository is public.** data/picks.csv, the projections, every odds snapshot and this file are readable
+   by anyone without the password that seals the site; the seal protects the site only. A private repository
+   would need paid Actions minutes for a ticker that runs all day. The odds provider's terms on republishing
+   its data should be read.
+4. **The standing post-mortem has never run.** The scheduled task has no repository attached; on 2026-11-09 it
+   ended after 66 seconds and reported success. Its instructions also quote facts today's corrections replaced.
+5. **The "closing" price is an hour old.** The last pull that priced a game came a median 48, 138 and 60 minutes
+   before kickoff in weeks 7-9, and 3 hours or more for 5, 3 and 1 games. Closing-line value and every "at the
+   close" test are against that price, not the close.
+6. **Settlement.** The record grades on the official stats as they stand the next morning; books settle when the
+   game ends and do not reopen for stat corrections. The live result should be kept as the settlement and the
+   official numbers used for the model. That books count a tackle with an assist as solo is inferred from ESPN,
+   not confirmed: one settled slip would do it (Nohl Williams Under 2.5 solo, week 9: 2 solo and 1 with an
+   assist, a loss if the book counts 3).
+7. **Prices on the board are not Alberta prices.** theScore Bet's lines are its US feed; three books post tackle
+   lines on the feed (DraftKings, theScore Bet, Bally Bet's Overs only); bet365 is not carried. The record is at
+   feed prices and at no stake limit.
+8. **The validation protocol is prose.** Nothing checks it: three factors fail its rule today (A6).
+9. **Same-game parlays** are recorded at a price no book pays (A11).
+10. **ESPN names**: 9 of 528 week-9 names differ from the stats feed, so an ESPN-only status misses those players
+    and their live grade waits for the official one (from the audit, still open).
+
+### D. This file
+
+1. 270 KB, about 3,100 lines, 100 changelog entries, 51 pitfalls, no index. "Read MODEL_LOG.md first" cannot be
+   done in full by a person or a session, and experiments get repeated or their caveats lost. Proposed: a current
+   specification (the "How the model works" section, kept under 150 lines), a decision register (rule, value,
+   evidence, sample, in or out of sample, date, revert condition; one line each), a rejected-experiments
+   register (one line each), this open-issues register, and everything else as an archive.
+2. Evidence in entries before 2026-11-09 was counted on the uncorrected record (for example "A 16-2" in the week 8
+   post-mortem) and carries no erratum.
+3. Stale items: backlog decisions "after weeks 8-9"; standing watches that predate the corrections; the scheduled
+   task's instructions.
+
 ## Research: where the model was missing (2026-10-26, evening MDT)
 
 Question from the owner: what are we not using that predicts tackles? Method: one leakage-free table of 36,379
@@ -1448,6 +1629,16 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-09, evening MST (review of the model and this file; the ticker hands over to its successor)
+- The owner asked for a review: mathematical issues, what a more rigorous calculation needs, logistical oversights.
+  The findings are the "Open issues register" near the top of this file (A1-A12, B, C1-C10, D); nothing in the
+  model was changed.
+- One operational fix. GitHub fired no scheduled run from 09:38 to 20:38 UTC on 2026-11-09; the ticker run in
+  progress ended at 17:31 and the 1 pm Edmonton pull waited until 2:39 pm. `ticker.yml` now ends with a step that
+  starts the next run (`gh workflow run`, the job's own token, `if: always()`); the schedule stays as the fallback
+  and the concurrency group still allows one run at a time. Smoke check added. Revert: remove the step if runs
+  ever stack or loop faster than one per five and a half hours.
+
 ### 2026-11-09, afternoon MST (the two solo counts: train on the stable one, price and grade on the official one)
 - Correction to audit fix 11, found within the hour by running the daily: switching the model's own solo series to the
   official count (solo + tackle with assist) lifted every solo projection about 7% (Turner 1.79 -> 2.06), far more
@@ -2792,7 +2983,8 @@ Open, with what would justify them:
 - Opponent pace / plays per game as a feature: needs play-by-play; check whether it moves the backtest.
 - Alternate-line markets (`player_tackles_assists_alternate`): more lines to shop, double the credit cost per game.
 - Role-change signal: 0-3 so far. Keep logging; judge at 30 picks.
-- Second key: fix `PARLAY_API_KEY` so Saturday pulls stay inside the credit budget.
+- Second key: fix `PARLAY_API_KEY` so Saturday pulls stay inside the credit budget. **Urgent as of 2026-11-09:** the key is
+  rejected as invalid and the one working key runs dry in week 11 (open issues register, C1).
 - Single-game slates can come up short of three locks now that the corrector sits closer to the line (week 7
   Monday replay: one lock, Kenny Clark at exactly the 55 floor, nothing else above 50). Options, none adopted without evidence: a lower
   floor on single-game slates, or filling the three with the best scores and marking any below 55 as "lean".
@@ -2919,6 +3111,13 @@ Open, with what would justify them:
   of American odds. A failing step must not stop the steps after it. A stat whose recording drifts across seasons
   (nflverse's tackle with assist: 16% of official solo in 2023, 2% in 2026) must not be pooled into a training series:
   train on the stable part, adjust to the settled count with the current season's rate.
+- The week is the unit of evidence: picks in one week share a shock of about 6.5 points of hit rate, so a count of
+  picks overstates what is known by a factor of two to three, and a correction with a short memory fits the shock.
+- A line is not a mean: the same line at -190 and at +150 says different things. Anything that uses the line as a
+  number must use the price with it (the market-implied mean).
+- A factor "proved" on synthetic data with the effect planted is not proved; and a difference in average miss in
+  the fourth decimal is not a finding without its standard error over season-weeks.
+- GitHub's scheduler can drop every scheduled run for half a day: nothing may depend on it alone.
 - Two probabilities live on each line: the pricer's (`model_over`, shrunk toward the market by PROB_SHRINK) and the
   claim (shrunk toward 50% by CLAIM_SHRINK, plus the segment correction). The return bars used the first, so a pick
   could clear 6% while its claim did not beat the price. Any bar on "edge" must be checked at the claim.

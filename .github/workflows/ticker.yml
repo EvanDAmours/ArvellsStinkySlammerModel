@@ -53,3 +53,10 @@ jobs:
             s=$(python run.py sleep 2>/dev/null || echo 300)
             echo "next beat in $s s"; sleep "$s"
           done
+      # Hand over: the schedule above is only a fallback. On 2026-11-09 GitHub fired no scheduled run for 11 hours
+      # (09:38 to 20:38 UTC); the run in progress ended at 17:31 and the 1 pm Edmonton pull waited until 2:39 pm for
+      # the next one. A run that ends now starts its successor itself (workflow_dispatch works with the job's own
+      # token); the concurrency group still allows one run at a time and at most one waiting.
+      - name: Start the next run
+        if: always()
+        run: gh workflow run ticker.yml --ref "${{ github.ref_name }}" || echo "could not start the next run; the schedule will"

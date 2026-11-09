@@ -451,6 +451,10 @@ check(_due_after and not _due_before and not _done_today and _retry, f"the ticke
 import yaml as _y
 _tk = _y.safe_load((ROOT / ".github/workflows/ticker.yml").read_text()); _dy = _y.safe_load((ROOT / ".github/workflows/daily.yml").read_text()); _od = _y.safe_load((ROOT / ".github/workflows/odds.yml").read_text())
 check("schedule" in (_tk.get(True) or _tk.get("on")) and "schedule" not in (_dy.get(True) or _dy.get("on")) and "schedule" not in (_od.get(True) or _od.get("on")), "the ticker is the only scheduled workflow; daily and odds are by hand")
+_steps = _tk["jobs"]["tick"]["steps"]
+check("workflow_dispatch" in (_tk.get(True) or _tk.get("on")) and "gh workflow run ticker.yml" in str(_steps[-1].get("run")) and _steps[-1].get("if") == "always()"
+      and _tk["permissions"].get("actions") == "write" and "GH_TOKEN" in _tk["jobs"]["tick"]["env"],
+      "a ticker run that ends starts the next one itself (the scheduler dropped 11 hours of runs on 2026-11-09)")
 intl = [dict(game_id="2026_07_NO_PIT", home="PIT", away="NO", kickoff=_at(2026, 10, 25, 7, 30).isoformat(), international=True)]
 p12 = R.auto_plan(now=_at(2026, 10, 24, 19, 50), games=intl)   # Saturday 7:50 pm, before the 8 pm slot
 check(p12 and p12.get("teams") == ("PIT", "NO") and p12["key"].endswith("12h"), "international game pulled in the 12 h window even when the run is late")
