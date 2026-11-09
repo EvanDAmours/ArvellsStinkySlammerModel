@@ -175,8 +175,15 @@ check(not any(b.get("grade") == "A" and b.get("market") not in C.A_GRADE_MARKETS
 _sl = [b for b in priced if b.get("sleeper")]
 _lo, _hi = C.SLEEPER["comb_over"]
 check(all((b["sleeper"] == "Over" and C.market_kind(b["market"]) == "combined" and _lo <= b["proj_model"] - b["line"] < _hi) or
-          (b["sleeper"] == "Under" and C.market_kind(b["market"]) == "solo" and b["proj_model"] - b["line"] <= C.SLEEPER["solo_under"]) for b in _sl)
-      and all(b.get("sleeper_ev") is not None and (C.SLEEPER["min_ev"] is None or b["sleeper_ev"] >= C.SLEEPER["min_ev"] - 1e-9) for b in _sl), f"sleepers follow the rule: combined Overs 0.5 to 1.5 under the model, solo Unders 0.5+ over it ({len(_sl)} on the board)")
+          (b["sleeper"] == "Under" and C.market_kind(b["market"]) == "solo" and b["proj_model"] - b["line"] <= C.SLEEPER["solo_under"]
+           and b.get("sleeper_med") is not None and b["sleeper_med"] >= b["line"] + C.SLEEPER["solo_hist"] - 1e-9) for b in _sl)
+      and all(b.get("sleeper_ev") is not None and (C.SLEEPER["min_ev"] is None or b["sleeper_ev"] >= C.SLEEPER["min_ev"] - 1e-9) for b in _sl),
+      f"sleepers follow the rule: combined Overs {_lo} to {_hi} over the line, solo Unders 0.5+ under it with his median within a tackle ({len(_sl)} on the board)")
+check(all(b.get("sleeper_grade") in ("A", "B", "C") and 0 < (b.get("sleeper_p") or 0) < 1 and f"Grade {b['sleeper_grade']}" in str(b.get("sleeper_note")) for b in _sl)
+      and not any(b["sleeper"] == "Over" and b.get("sleeper_grade") == "A" for b in _sl)
+      and all(b.get("sleeper_grade") == "C" or ("steady role" in str(b.get("sleeper_note"))) for b in _sl)
+      and all((b.get("sleeper_grade") != "A") or b["sleeper_p"] >= C.SLEEPER["a_model"] - 1e-9 or (b.get("exp_opps") or 99) < C.SLEEPER["a_opps"] for b in _sl),
+      f"every sleeper carries a grade, the model's own chance and a summary; combined Overs never an A; an A has a 70%+ chance or a low-volume game ({dict(pd.Series([b.get('sleeper_grade') for b in _sl]).value_counts()) if _sl else {}})")
 _slc = pd.read_csv(tmp / "data/sleepers.csv") if (tmp / "data/sleepers.csv").exists() else pd.DataFrame()
 check((len(_slc) > 0) == (len(_sl) > 0) and (len(_slc) == 0 or _slc.duplicated(["season", "week", "player", "market", "side"]).sum() == 0), f"sleepers logged once per player, market and side ({len(_slc)} rows)")
 if len(_slc):
@@ -184,7 +191,8 @@ if len(_slc):
     pd.DataFrame([dict(season=2026, week=6, player=_rowp.player, market="player_tackles_assists", side="Over", line=float(_rowp.comb) - 0.5, odds=100,
                        book="DraftKings", commence_time="2026-10-18T17:00:00Z")]).to_csv(G.SLEEPERS, index=False)
     _gs, _ss = G.grade_sleepers(pw)
-    check(list(_gs.result) == ["Win"] and _ss["all"]["wins"] == 1 and abs(_ss["all"]["units"] - 1.0) < 1e-9, f"a sleeper grades on the box score ({list(_gs.result)})")
+    check(list(_gs.result) == ["Win"] and _ss["all"]["wins"] == 1 and abs(_ss["all"]["units"] - 1.0) < 1e-9 and "by_grade" in _ss, f"a sleeper grades on the box score, with a record by grade ({list(_gs.result)})")
+    check({"sleeper_grade", "sleeper_p", "sleeper_note"} <= set(_slc.columns) and _slc.sleeper_grade.isin(["A", "B", "C"]).all(), "logged sleepers keep their grade, chance and summary")
     _slc.to_csv(G.SLEEPERS, index=False)
 pj = json.loads((tmp / "docs/data/parlays.json").read_text())
 check(all(l["market"] == "player_tackles_assists" for q in pj for l in q["legs"]), "parlay legs are combined-tackle lines only")

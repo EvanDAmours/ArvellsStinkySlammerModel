@@ -1085,6 +1085,42 @@ def blend_mean(mu_model, mkt_line, kind, blend=None):
     return max(0.05, (1 - w) * (float(mu_model) + bm) + w * (float(mkt_line) + bl))
 
 
+def sleeper_grade(side, p_model, exp_opps, unsteady):
+    """A sleeper's grade from the model's own evidence only (config.SLEEPER): a steady role for A or B; a solo Under is an A
+    with a 70%+ model chance or a low-volume game (under 50 expected tackle opportunities); a combined Over is at most a B.
+    Returns (grade, reason)."""
+    sl = C.SLEEPER
+    if unsteady:
+        return "C", "role not settled: " + ", ".join(unsteady)
+    if side == "Under":
+        strong = [t for ok, t in ((p_model >= sl["a_model"], f"the model's own chance is {sl['a_model']:.0%} or more"),
+                                  (exp_opps is not None and exp_opps < sl["a_opps"], f"his defence expects fewer than {sl['a_opps']:.0f} tackle opportunities")) if ok]
+        if strong:
+            return "A", "steady role, and " + " and ".join(strong)
+        return "B", f"steady role, but neither a {sl['a_model']:.0%}+ model chance nor a low-volume game"
+    if p_model >= sl["b_model_over"]:
+        return "B", f"steady role and a {sl['b_model_over']:.0%}+ model chance (combined Overs top out at B until their record earns an A)"
+    return "C", f"model chance under {sl['b_model_over']:.0%}"
+
+
+def sleeper_note(side, kind, mu, line, phi, p_model, log_raw, exp_opps, grade, why):
+    """One short paragraph for the site: the model's number against the line, its own chance of the side from its count
+    distribution, the player's season against the line, the game's volume and the grade with its reason."""
+    k_under, k_over = int(math.floor(line)), int(math.floor(line)) + 1
+    unit = "solo tackles" if kind == "solo" else "tackles + assists"
+    target = f"{k_under} or fewer" if side == "Under" else f"{k_over} or more"
+    spread = "Poisson" if abs(phi - 1) < 0.02 else (f"{phi:.2f}x Poisson spread" if phi > 1 else f"tighter than Poisson ({phi:.2f}x)")
+    parts = [f"Model {mu:.1f} {unit} against a line of {line:g} ({mu - line:+.1f}).",
+             f"The model's own chance of {target}: {p_model:.0%} (its count model, {spread})."]
+    if log_raw:
+        n_side = sum(1 for x in log_raw if (x <= k_under if side == "Under" else x >= k_over))
+        parts.append(f"His season: median {float(np.median(log_raw)):g}, {target} in {n_side} of {len(log_raw)} games.")
+    if exp_opps is not None:
+        parts.append(f"His defence expects {exp_opps:.0f} tackle opportunities (carries + completions + sacks; league about 50).")
+    parts.append(f"Grade {grade}: {why}.")
+    return " ".join(parts)
+
+
 def price_lines(lines, P, segments=None, blend=None):
     """Evaluate every posted line against the projection; return one row per line with EV, pick and confidence grade.
     blend: per-market line weights and level corrections (pipeline/blend.py), else the default line weight."""
@@ -1194,15 +1230,27 @@ def price_lines(lines, P, segments=None, blend=None):
             grade, capped = "B", True                               # (not a lock_block: that would also bar it from the combined-only parlays)
         # a sleeper: the model's own number, before the blend with the line, disagrees with the book by a margin that held in
         # every live week (config.SLEEPER); tracked on its own record whether or not the bars make it a pick
-        sl, sleeper = C.SLEEPER, ""
+        sl, sleeper, s_grade, s_p, s_note, s_med = C.SLEEPER, "", None, None, None, None
         if not flagged and not thin:
             g_ = float(mu_model) - float(r.line)
             ok_o = d_o is not None and (sl["min_ev"] is None or ev_o >= sl["min_ev"])
             ok_u = d_u is not None and (sl["min_ev"] is None or ev_u >= sl["min_ev"])
+            med = float(np.median(log_raw)) if log_raw else float("nan")
             if kind == "combined" and sl["comb_over"][0] <= g_ < sl["comb_over"][1] and ok_o:
                 sleeper = "Over"
-            elif solo and g_ <= sl["solo_under"] and ok_u:
+            elif solo and g_ <= sl["solo_under"] and ok_u and med == med and med >= float(r.line) + sl.get("solo_hist", -99):
                 sleeper = "Under"
+            if sleeper:
+                po_m = p_over(float(mu_model), phi_use, float(r.line))
+                s_p = float(po_m if sleeper == "Over" else 1 - po_m)
+                s_med = med if med == med else None
+                unsteady = [nm for ok, nm in ((new_role, "new role"), (fl["reduced_role"], "reduced role"), (fl["absence"] or fl["missed_game"], "back from absence"),
+                                              (fl["new_team"], "new team"), (uncertain, "questionable"), (snaps_missing, "snap count missing"),
+                                              (in_role_n < C.LOCK_RULES["min_in_role_games"], f"only {in_role_n} games in this role")) if ok]
+                eo = p.get("exp_opps", np.nan)
+                eo = float(eo) if pd.notna(eo) else None
+                s_grade, s_why = sleeper_grade(sleeper, s_p, eo, unsteady)
+                s_note = sleeper_note(sleeper, kind, float(mu_model), float(r.line), phi_use, s_p, log_raw, eo, s_grade, s_why)
         if flagged:
             why = f"His own status is {p.status or 'uncertain'}: wait for the final report"
         elif thin:
@@ -1236,7 +1284,7 @@ def price_lines(lines, P, segments=None, blend=None):
         if capped and pick != "Pass":
             why += "; scores as an A, shown as a B: A grades and locks are solo tackles only (combined claims ran 9 points high in weeks 7-9)"
         if sleeper:
-            why += f"; sleeper: the model's own number is {float(mu_model):.1f} against a line of {float(r.line):g}"
+            why += f"; sleeper ({sleeper}, grade {s_grade}): the model's own number is {float(mu_model):.1f} against a line of {float(r.line):g}"
         rows.append({**base, "team": p.team, "opp": p.opp_team, "group": p.group, "jersey": None if pd.isna(p.get("jersey", np.nan)) else int(p.get("jersey")), "proj": float(mu), "proj_model": float(mu_model),
                      "player_id": None if pd.isna(p.get("player_id", np.nan)) else str(p.get("player_id")), "espn_id": None if pd.isna(p.get("espn_id", np.nan)) else str(p.get("espn_id")).split(".")[0],
                      "exp_opps": None if pd.isna(p.get("exp_opps", np.nan)) else float(p.get("exp_opps")),
@@ -1260,7 +1308,8 @@ def price_lines(lines, P, segments=None, blend=None):
                      "fp_solo": None if pd.isna(p.get("fp_solo", np.nan)) else float(p.get("fp_solo")),
                      "fp_rel": None if ast or pd.isna(p.get("fp_rel_solo" if solo else "fp_rel_comb", np.nan)) else float(p.get("fp_rel_solo" if solo else "fp_rel_comb")),
                      "lock": lock, "grade": grade, "sleeper": sleeper,
-                     "sleeper_ev": (ev_o if sleeper == "Over" else ev_u) if sleeper else None})
+                     "sleeper_ev": (ev_o if sleeper == "Over" else ev_u) if sleeper else None,
+                     "sleeper_grade": s_grade, "sleeper_p": s_p, "sleeper_note": s_note, "sleeper_med": s_med})
     out = pd.DataFrame(rows)
     if "ev" in out:
         out = out.sort_values("ev", ascending=False, na_position="last")

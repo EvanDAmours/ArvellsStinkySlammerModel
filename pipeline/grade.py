@@ -725,7 +725,7 @@ def write_five_log(P, summary, path, parlays=None):
 SLEEPERS = Path("data/sleepers.csv")
 SLEEPER_KEY = ["season", "week", "player", "market", "side"]
 SLEEPER_COLS = SLEEPER_KEY + ["player_id", "team", "opp", "group", "line", "book", "odds", "proj_model", "gap", "ev", "pick", "grade",
-                              "event_id", "commence_time", "first_seen", "pulled_at"]
+                              "sleeper_grade", "sleeper_p", "sleeper_med", "exp_opps", "sleeper_note", "event_id", "commence_time", "first_seen", "pulled_at"]
 
 
 def log_sleepers(bets, season, week, pulled_at):
@@ -800,9 +800,11 @@ def grade_sleepers(pw_comb, live=None):
     def rec(d):
         g = d[d.result.isin(["Win", "Loss"])]
         w = int((g.result == "Win").sum())
+        cl = pd.to_numeric(g.sleeper_p, errors="coerce").dropna() if "sleeper_p" in g.columns else pd.Series(dtype=float)
         return dict(bets=int(len(d)), wins=w, losses=int(len(g) - w), pushes=int((d.result == "Push").sum()), pending=int((d.result == "Pending").sum()),
-                    units=float(d.units.sum()), hit=float(w / len(g)) if len(g) else None)
-    summary = dict(all=rec(S), by_kind={k: rec(d) for k, d in S.groupby("kind")},
+                    units=float(d.units.sum()), hit=float(w / len(g)) if len(g) else None, model_chance=float(cl.mean()) if len(cl) else None)
+    sg = S.sleeper_grade.fillna("ungraded").astype(str) if "sleeper_grade" in S.columns else pd.Series("ungraded", index=S.index)
+    summary = dict(all=rec(S), by_kind={k: rec(d) for k, d in S.groupby("kind")}, by_grade={g: rec(d) for g, d in S.groupby(sg)},
                    by_week=[dict(season=int(s), week=int(w), **rec(d)) for (s, w), d in S.groupby(["season", "week"])],
                    review_after=C.SLEEPER["review_after"], review_hit=C.SLEEPER["review_hit"])
     return S.drop(columns=["name_key"]), summary

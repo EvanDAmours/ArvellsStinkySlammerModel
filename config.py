@@ -15,7 +15,18 @@ A_GRADE_MARKETS = ("player_solo_tackles",)  # an A grade only in these markets; 
 # combined ones (an Over needs a 10% return and a 55% claim after shrinking). Tracked as theoretical picks on their own record, never a lock.
 # min_ev None: no price filter. Re-priced through the pipeline, the combined band went 35-21 (+14%/bet) at every price but 7-10 where the
 # pricer (which leans on the line) also called the Over +EV; the rule was found on the model's number alone and is kept that way.
-SLEEPER = dict(comb_over=(0.5, 1.5), solo_under=-0.5, min_ev=None, review_after=40, review_hit=0.55)
+# Sleeper rules refined 2026-11-09 (weeks 7-9 re-priced at the close, Sunday night included; provisional, chosen on these weeks):
+# - combined Overs only 0.5 to 1.0 above the line: 0.5-1.0 went 44-22 (67%), 1.0-1.5 went 9-11 (each week 50% or worse on the whole board
+#   too: 47% of 19) -- when the model is that far off, the book usually knows a role change the history does not show.
+# - solo Unders only when his season median is within a tackle of the line (`solo_hist`): 44-9 (83%) against 17-16 when the line sits more
+#   than a tackle above his median (whole board: 83% of 48 vs 56% of 27).
+# Sleeper grade (`sleeper_grade`), from the model's own evidence only (never the price): a steady role (no role change, absence, new team or
+# questionable tag, 3+ games in role) is required for A or B. Solo Under A: steady and either the model's own chance of the Under is 70%+
+# (`a_model`) or his defence expects fewer than 50 tackle opportunities (`a_opps`; carries + completions + sacks, league ~50): 20-2 in
+# weeks 7-9; B the other steady ones 18-6; C 6-1. Combined Over B: steady and a model chance of 57%+ (`b_model_over`) 17-6; C 27-16. No
+# combined A until its record earns one. Expect the A record to come down out of sample: the A conditions were chosen on these weeks.
+SLEEPER = dict(comb_over=(0.5, 1.0), solo_under=-0.5, solo_hist=-1.0, min_ev=None, a_model=0.70, a_opps=50.0, b_model_over=0.57,
+               review_after=40, review_hit=0.55, review_a_after=20, review_a_hit=0.70)
 
 
 def market_kind(market):

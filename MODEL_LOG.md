@@ -1431,6 +1431,43 @@ proof. The old rules on the same lines: 116 picks, 59-57, -3.1 units.
 
 ## Changelog
 
+### 2026-11-09, morning MST (sleepers: tighter rules, a grade, a summary and the math on each)
+- Owner: "explain the sleepers in depth... provide a brief summary of each on the website every time... grade the
+  sleepers. I want these to hit frequently." Data: every line of weeks 7-9 re-priced at the close by the live pricer
+  (`price_lines`, walk-forward projection frames for weeks 7-8, the week-9 frame), box scores official for 7-8 and
+  ESPN finals for week 9 with Sunday night; 173 sleepers under the old rules (172 graded), and the whole board (393
+  solo, 391 combined lines at the consensus line) as the larger check. Features tested, model side only: the model's
+  own chance (negative binomial at its own mean), model-line gap, consistency, games in role, role flags,
+  questionable, depth, position, line, snap trend, expected tackle opportunities, stat crew, opponent tackles
+  allowed, spread, season snap share, season mean/median/last game/last-3 against the line, game-to-game spread,
+  own solo share against the book's solo/combined ratio.
+- Under the old rules: combined Overs 53-33 (62%, +10%/bet), solo Unders 61-25 (71%, +19%). The model's own chance
+  was honest on them (Unders 71% claimed, 71% hit; Overs 58%, 62%).
+- **Rules tightened** (config.SLEEPER): combined Overs only 0.5 to 1.0 over the line (1.0-1.5 went 9-11; whole board
+  47% of 19, 50% or worse in each week, against 67% of 66 for 0.5-1.0); solo Unders only when his season median is
+  within a tackle of the line (`solo_hist`; 44-9 vs 17-16; whole board 83% of 48 vs 56% of 27, ahead in every
+  week). Same principle both ways: a huge disagreement with the line usually means the book knows a role change the
+  history does not show. The history check does NOT separate our ordinary picks (A 75% within vs 78% beyond), so it
+  is a sleeper rule only.
+- **Sleeper grade** (`model.sleeper_grade`), the model's own evidence only, never the price: steady role required for
+  A/B (no role change, absence, new team, questionable, missing snap count; 3+ games in role). Solo Under A: steady
+  and a 70%+ model chance or under 50 expected tackle opportunities (`a_opps`; the projection's volume factor is
+  damped, and low-volume Unders hit 83% vs 65%). Combined Over at most B (57%+ model chance). Live code at the close,
+  weeks 7-9: A 21-3 (88%; 9-1, 7-0, 5-2), B 35-12 (74%), C 33-17 (66%); all kept 89-32 (74%, +27%/bet); dropped by
+  the tighter rules 26-27. The model's own chance runs conservative on the kept ones (Unders 69% vs 82% hit, Overs 56%
+  vs 67%): the grade uses it as an ordering. PROVISIONAL: the cuts and the A conditions were chosen on the weeks they
+  are scored on; expect the live A rate to be lower.
+- **On the site**: each sleeper card carries its grade and a summary written by the pricer (`sleeper_note`): the
+  model's number against the line, its own chance of the side from its count model with the spread, his season
+  (median, games on the side), his defence's expected tackle opportunities, and the grade with its reason. The box
+  has a "How sleepers work" section with the full math and evidence, the record by grade, and this week's settled
+  sleepers. data/sleepers.csv keeps grade, chance, median, volume and summary; the record splits by grade.
+- Not adopted: consistency (non-monotonic; 0.7-0.9 Unders hit 59% vs 81% below 0.7: it tracks a line far above his
+  history, which the history check now covers), spread, stat crew, opponent tackles allowed, snap trend, position
+  (all mixed across weeks).
+- Revert/review: each kind comes off if it hits under 55% over its next 40; the A rule is reviewed if A sleepers hit
+  under 70% over their next 20 (`review_a_after`, `review_a_hit`).
+
 ### 2026-11-09, morning MST (claimed-edge gate: a pick must beat its price at its own claimed chance)
 - Week 9 post-mortem (above): the A losses were picks whose claimed chance only matched the price. `claim_ev` =
   claimed chance x decimal odds - 1 on every priced line; a pick needs `PICK_MIN_CLAIM_EV` 2%, an A (and so a lock)
@@ -2638,6 +2675,10 @@ Open, with what would justify them:
   books without notice.
 - Count a pick once per player, market and side when judging a grade: the same pick logged at DraftKings and theScore
   Bet doubles its weight in a record (week 9's A grades read 10-9 with duplicates, 9-6 without).
+- A model-vs-line disagreement has a ceiling: past about a tackle (combined model more than 1.0 over the line, a solo
+  line more than a tackle above his season median) the book usually knows a role change the history does not show,
+  and the signal turns into a coin flip (9-11, 17-16). Any new "model disagrees with the line" signal needs its
+  outer limit tested, not just its inner one.
 - Two probabilities live on each line: the pricer's (`model_over`, shrunk toward the market by PROB_SHRINK) and the
   claim (shrunk toward 50% by CLAIM_SHRINK, plus the segment correction). The return bars used the first, so a pick
   could clear 6% while its claim did not beat the price. Any bar on "edge" must be checked at the claim.

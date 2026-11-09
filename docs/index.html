@@ -189,7 +189,7 @@ table.mine-compact tr.mine-expand td { white-space: normal; padding: 4px 0 10px;
 .intl { display: inline-block; padding: 1px 6px; border-radius: 6px; background: #2c5aa0; color: #fff; font-size: 0.75rem; margin-left: 6px; vertical-align: middle; }
 .parlay-box { border: 2px solid #2c5aa0; border-radius: 10px; padding: 10px 12px 8px; margin: 0 0 16px; }
 .sleepers { border-color: #7a4fb5; } .sleepers > summary { cursor: pointer; padding: 2px 0 6px; }
-.sleeper-row { border-top: 1px solid var(--line, #ddd); padding: 6px 0; } .sleeper-row .note { margin: 2px 0; } .sleeper-row .tail { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.sleeper-row { border-top: 1px solid var(--line, #ddd); padding: 6px 0; } .sleeper-row .sleeper-sum { color: var(--ink); } .sleepers strong.ok { color: #1f8a4c; } .sleepers strong.no { color: #c0392b; } .sleeper-math h4 { margin: 10px 0 4px; } .sleeper-math p, .sleeper-math li { font-size: 0.92rem; line-height: 1.45; } .sleeper-row .note { margin: 2px 0; } .sleeper-row .tail { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .parlay-box h3 { margin: 0 0 4px; font: 700 1.1rem/1.2 var(--cond); }
 .parlay-box .terms { display: flex; flex-wrap: wrap; gap: 4px 22px; margin: 6px 0 8px; font-variant-numeric: tabular-nums; }
 .parlay-box .terms b { font: 700 1.25rem/1.1 var(--cond); display: block; }
@@ -534,21 +534,61 @@ function sleeperBox(all) {
       return lx !== ly ? lx > ly : (x.sleeper === "Over" ? x.over_odds : x.under_odds) > (y.sleeper === "Over" ? y.over_odds : y.under_odds); };
     if (o != null && (!cur || better(b, cur))) best.set(k, b);
   }
-  const rows = [...best.values()].sort((a, b) => Math.abs(b.proj_model - b.line) - Math.abs(a.proj_model - a.line));
+  const gOrd = { A: 0, B: 1, C: 2 };
+  const rows = [...best.values()].sort((a, b) => (gOrd[a.sleeper_grade] ?? 3) - (gOrd[b.sleeper_grade] ?? 3) || (b.sleeper_p ?? 0) - (a.sleeper_p ?? 0));
   if (!rows.length && !(sum && sum.all && sum.all.bets)) return null;
   const rec = (r) => (r && (r.wins + r.losses) ? `${r.wins}-${r.losses}${r.pushes ? "-" + r.pushes : ""} (${pct(r.hit)}), ${r.units >= 0 ? "+" : ""}${num(r.units, 1)}u` : "no graded games yet");
-  const kinds = sum && sum.by_kind ? Object.entries(sum.by_kind).map(([k, r]) => `${k} ${rec(r)}`).join(" · ") : "";
+  const counts = ["A", "B", "C"].map((g) => [g, rows.filter((b) => b.sleeper_grade === g).length]).filter(([, n]) => n);
   const wrap = el("details", { class: "parlay-box sleepers", open: rows.length ? "" : null },
-    el("summary", {}, el("strong", {}, `Sleepers · ${rows.length} open`), sum && sum.all && sum.all.bets ? ` · record ${rec(sum.all)}` : ""));
-  wrap.append(el("p", { class: "note" }, "Lines where the model's own number, before it is blended with the book's line, disagrees with the book by a margin that held in every week we have tracked: combined tackles where the model is half a tackle to a tackle and a half above the line (take the Over), and solo tackles where it is half a tackle or more below (take the Under). At the close in weeks 7 to 9 these went 48-25 and 60-22. The pick bars hide most of the combined ones, so they show here, on their own record at 1 unit each. Never a lock; if they hit under 55% over the next 40, they come off." + (kinds ? ` Season: ${kinds}.` : "")));
+    el("summary", {}, el("strong", {}, `Sleepers · ${rows.length} open`), counts.length ? ` (${counts.map(([g, n]) => `${n} ${g}`).join(", ")})` : "", sum && sum.all && sum.all.bets ? ` · record ${rec(sum.all)}` : ""));
+  const byG = sum && sum.by_grade ? ["A", "B", "C"].filter((g) => sum.by_grade[g]).map((g) => el("span", { class: "gchip" }, el("span", { class: `grade ${g}` }, g), rec(sum.by_grade[g]))) : [];
+  if (byG.length) wrap.append(el("div", { class: "grade-chips note" }, "Record by grade: ", ...byG));
+  wrap.append(el("p", { class: "note" }, "Lines where the model's own number, before it is blended with the book's line, disagrees with the book by a margin that held in every week tracked: solo tackles with the model half a tackle or more under the line (and his own season within a tackle of it), and combined tackles with the model half a tackle to a tackle over. Each is graded from the model's own evidence; the price never enters. Never a lock; tracked at 1 unit each. In weeks 7 to 9 at the close: A 21-3, B 35-12, C 33-17 (chosen on those same weeks, so expect less)."));
+  wrap.append(sleeperMath());
+  // this week's settled sleepers, graded: what each grade actually did
+  const wk = DATA.meta?.week, settled = (DATA.results?.sleepers || []).filter((r) => r.week === wk && ["Win", "Loss", "Push"].includes(r.result));
+  if (settled.length) {
+    const w = settled.filter((r) => r.result === "Win").length, l = settled.filter((r) => r.result === "Loss").length;
+    const sd = el("details", { class: "legend" }, el("summary", {}, `Settled this week: ${w}-${l}`));
+    for (const r of settled.sort((a, b) => (gOrd[a.sleeper_grade] ?? 3) - (gOrd[b.sleeper_grade] ?? 3)))
+      sd.append(el("div", { class: "note" }, el("span", { class: `grade ${r.sleeper_grade || "C"}` }, r.sleeper_grade || "?"),
+        `${r.player} ${r.side} ${num(r.line)} ${(MARKET[r.market] || "").toLowerCase()} (${odds(r.odds)}): ${r.actual == null ? "" : num(r.actual, 0)} · `, el("strong", { class: r.result === "Win" ? "ok" : r.result === "Loss" ? "no" : "" }, r.result)));
+    wrap.append(sd);
+  }
   for (const b of rows) {
     const side = b.sleeper, o = side === "Over" ? b.over_odds : b.under_odds, isPick = b.pick === side;
     wrap.append(el("div", { class: "sleeper-row" },
-      el("div", {}, el("strong", {}, `${b.player}${b.jersey != null ? ` #${b.jersey}` : ""}`), ` ${b.team || ""}${b.opp ? " vs " + b.opp : ""} · `, el("strong", {}, `${side} ${num(b.line)} ${(MARKET[b.market] || "").toLowerCase()}`), ` ${odds(o)} at ${b.book}`),
-      el("div", { class: "note" }, `Model ${num(b.proj_model, 1)} vs line ${num(b.line)} (${b.proj_model - b.line >= 0 ? "+" : ""}${num(b.proj_model - b.line, 1)})${b.sleeper_ev != null ? ` · return ${b.sleeper_ev >= 0 ? "+" : ""}${Math.round(b.sleeper_ev * 100)}%` : ""}${isPick ? ` · also a ${b.grade || ""} pick` : " · not a pick on the board"}${betKick(b) ? ` · ${when(b.commence_time)}` : ""}`),
+      el("div", {}, el("span", { class: `grade ${b.sleeper_grade || "C"}`, title: "Sleeper grade" }, b.sleeper_grade || "?"), el("strong", {}, `${b.player}${b.jersey != null ? ` #${b.jersey}` : ""}`), ` ${b.team || ""}${b.opp ? " vs " + b.opp : ""} · `, el("strong", {}, `${side} ${num(b.line)} ${(MARKET[b.market] || "").toLowerCase()}`), ` ${odds(o)} at ${b.book}`),
+      el("div", { class: "note sleeper-sum" }, b.sleeper_note || `Model ${num(b.proj_model, 1)} vs line ${num(b.line)}.`),
+      el("div", { class: "note" }, `${b.sleeper_p != null ? `Model's own chance ${pct(b.sleeper_p)}` : ""}${b.sleeper_ev != null ? ` · the pricer's return ${b.sleeper_ev >= 0 ? "+" : ""}${Math.round(b.sleeper_ev * 100)}% (it leans on the line; not part of the grade)` : ""}${isPick ? ` · also a ${b.grade || ""} pick` : " · not a pick on the board"}${betKick(b) ? ` · ${when(b.commence_time)}` : ""}`),
       el("div", { class: "tail" }, betLink(b, side), addButton(b))));
   }
   return wrap;
+}
+
+// the sleepers' math, in full, for anyone who wants to check it
+function sleeperMath() {
+  const P = (t) => el("p", {}, t), L = (...items) => el("ul", {}, ...items.map((t) => el("li", {}, t)));
+  return el("details", { class: "legend sleeper-math" }, el("summary", {}, "How sleepers work: the math, the evidence, the grades"),
+    el("h4", {}, "1. The model's own number"),
+    P("For every defender the model projects tackles from his own data: 60% from his tackles per game this season (shrunk toward last season or his position), 40% from his tackles per defensive snap times the share of snaps he is expected to play times the snaps his defence is expected to be on the field. Then game factors: the opponent's expected volume, the stat crew at the venue, depth chart, injury report, run/pass mix. A second model (gradient boosting, trained every morning on every defender-game since 2023) takes 60% of the final number. Solo tackles: that number times his solo share (his solo tackles over his total, shrunk toward his position's share). The result is μ, the model's own number, before any blend with the book's line. The pricer blends μ with the line for its picks; sleepers do not."),
+    el("h4", {}, "2. From a number to a chance"),
+    P("Tackles are counts, so the model treats them as a negative binomial with mean μ and variance φ·μ, where φ (the spread, measured per position on 28,000+ games) is about 1.2 for solo tackles; φ = 1 would be Poisson. The model's own chance of a side is a sum over that distribution: for an Under at a line L, P(X ≤ ⌊L⌋) = P(X=0) + P(X=1) + … + P(X=⌊L⌋); for an Over, 1 minus that. Worked example: μ = 2.5 solo tackles, φ = 1.2, line 3.5: P(3 or fewer) = 75%. At μ = 3.6 against 4.5 it is 70%. A combined Over at μ = 6.3, φ = 1.3, line 5.5: P(6 or more) = 58%. On the sleepers of weeks 7 to 9 this chance ran conservative: solo Unders averaged a 69% model chance and hit 82%; combined Overs averaged 56% and hit 67%. The grades lean on it as an ordering (A sleepers averaged 71%, B 63%, C 57%), not as a promise."),
+    el("h4", {}, "3. What makes a sleeper"),
+    L("Solo Under: μ at least half a tackle under the line, and his season median within a tackle of the line (median ≥ L − 1).",
+      "Combined Over: μ between half a tackle and a full tackle over the line (L + 0.5 ≤ μ < L + 1.0).",
+      "Not out or doubtful, at least 3 games of data. No price filter: inside these bands the ones the pricer also rated +EV did no better."),
+    P("The evidence, every line at the close in weeks 7 to 9 re-priced by the live code: solo Unders under these rules 45-10, combined Overs 44-22. The outer limits are where the book usually knows something the history does not (a bigger role, a teammate out): combined Overs with μ more than a tackle over the line went 9-11, and solo Unders whose line sat more than a tackle above his median went 17-16. On the whole board the same splits held: 83% vs 56% for the solo history check, 67% vs 47% for the combined cut, in every week."),
+    el("h4", {}, "4. Grades (the model's own evidence; the price never enters)"),
+    L("Steady role is required for A or B: no new role, reduced role, return from absence, new team or questionable tag, a known snap count, 3+ games in his current role.",
+      "A (solo Unders only): steady, and either the model's own chance is 70%+ or his defence expects fewer than 50 tackle opportunities (expected carries + completions + sacks it faces, from both teams' season rates; the league runs about 50). Fewer chances to tackle is the Under's friend, and the projection only takes part of it (its volume factor is damped). Weeks 7-9: 21-3.",
+      "B: steady, without either A condition (solo), or a combined Over with a 57%+ model chance. Weeks 7-9: 35-12.",
+      "C: passes the sleeper rule but the role is not settled, or a combined Over under 57%. Weeks 7-9: 33-17.",
+      "Combined Overs top out at B until their own record earns an A."),
+    el("h4", {}, "5. What these numbers cannot promise"),
+    L("The cuts and grades were chosen on the same three weeks they are scored on. The live record will be lower, the A rate most of all. Judge them on the record by grade above, not on 21-3.",
+      "Solo Unders share one risk: a week when stat crews credit more solo tackles (week 9: 55% of tackles solo, up from 50%) hurts every solo Under at once, sleepers included (A went 5-2 that week).",
+      "Each kind comes off if it hits under 55% over its next 40; the A rule is reviewed if A sleepers hit under 70% over their next 20."));
 }
 
 function renderPlays() {
@@ -1759,7 +1799,7 @@ function glossTerms() {
       ["Pick bar, Over bar, claim floor", "The three thresholds a line must clear to be a play: expected return of " + signedPct(pickBar) + ", " + signedPct(overBar) + " for Overs (the model's Overs have hit well under half, so they carry a higher bar), and a claimed chance of " + pct(claimMin) + " (a plus-money side with a coin-flip claim is not a play, however long the price)."],
       ["Pass", "A line that is priced but does not clear the bars. The board shows every live line with the model's read of both sides when no pick clears the bar, so a Pass is still a read, not a blank."],
       ["Claimed edge", "The return a pick makes at the price if our claimed chance is right: claimed chance times the decimal odds, minus 1. A pick needs 2% and an A needs 4%. Week 9's A losses were mostly heavy-juice Unders whose claimed chance only matched the price: picks with a claimed edge under 0 went 12-20 in weeks 8 and 9, A picks with 4% or more went 13-2."],
-      ["Sleeper", "A line where the model's own number, before it is blended with the book's line, disagrees with the book by a margin that held in every week tracked: combined tackles with the model half a tackle to a tackle and a half above the line (Over), solo tackles with the model half a tackle or more below it (Under). Kept on its own record at 1 unit each, never a lock. See the Sleepers box on the Plays tab."],
+      ["Sleeper", "A line where the model's own number, before it is blended with the book's line, disagrees with the book by a margin that held in every week tracked: solo tackles with the model half a tackle or more under the line and his season median within a tackle of it (Under), combined tackles with the model half a tackle to a tackle over (Over). Graded A, B or C from the model's own chance, his role and the game's volume; never the price. Kept on its own record at 1 unit each, never a lock. The full math is in the Sleepers box on the Plays tab."],
       ["Lock score", "A 0 to 100 score from the model's own evidence: expected return, claimed chance, how often he has cleared this line this season (at his expected snap share), games of data in his current role, and a role or outlier signal behind the pick. It never uses whether the book agrees. " + bars.A + " and up is an A (solo tackles only, with a claimed edge of 4% or more; otherwise it shows as a B), " + bars.B + " to " + (bars.A - 1) + " a B, below that a C."],
       ["Grade (A, B, C)", "The lock score in three bands. A: the model is confident and the price is wrong by a lot, backed by his game log. B: a real edge with one weak spot. C: clears the bar on price alone. The Track record tab tests whether A beats B beats C; the stakes follow the grades."],
       ["Lock", "A pick the model strongly believes in: an A-grade score on a lock-eligible pick. There are at most a few per slate day, and a day with no A has no lock, because a lock is never the best of a thin board. Locks are the green-edged cards and the 'Locks' record on the Track record tab."],
