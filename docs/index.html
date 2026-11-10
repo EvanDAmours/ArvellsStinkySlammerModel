@@ -124,7 +124,8 @@ details.trial > summary > b { flex: 1 1 12ch; } details.trial > summary .trial-n
 .wi-form input[type=number] { width: 6.5em; } .wi-form .wi-grades { display: inline-flex; gap: 10px; align-items: center; } .wi-form .wi-grades label { gap: 4px; color: var(--ink); }
 .wi-out { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 0 0 10px; }
 .wi-out .rec-card .big { font-size: 1.7rem; }
-@media (max-width: 640px) { .wi-form label { flex: 1 1 46%; min-width: 0; } .wi-form select { flex: 1 1 0; min-width: 0; } .wi-form .wi-grades, .wi-form label.wide { flex: 1 1 100%; } }
+@media (max-width: 640px) { .wi-form label { flex: 1 1 46%; min-width: 0; } .wi-form select { flex: 1 1 0; min-width: 0; } .wi-form .wi-grades, .wi-form label.wide { flex: 1 1 100%; } .wi-form .wi-grades label { flex: 0 0 auto; } }
+#rec-whatif .wrap1 td:first-child, #rec-whatif td:nth-child(2) { white-space: normal; }
 .only-phone { display: none; } @media (max-width: 640px) { .only-phone { display: inline; } #rec-table td:nth-child(3) { white-space: normal; } }
 .ledger-t td:nth-child(2) { white-space: normal; } .ledger-t td small { display: block; color: var(--muted); font-size: 0.82rem; }
 @media (max-width: 640px) { .ledger-t th:nth-child(4), .ledger-t td:nth-child(4) { display: none; } }
@@ -980,61 +981,82 @@ function recCards(r, s, lw) {
       sn ? `Since week ${sn.from_week}, on ${sn.lines} closing lines. Above zero: the model's chance beat the book's.` : `On ${sb.lines} closing lines of weeks ${(sb.weeks || [])[0]} to ${(sb.weeks || []).slice(-1)[0]}, which the rules were chosen on. Above zero: the model's chance beat the book's.`) : "");
 }
 // ---- what would it have paid: a unit value, a set of picks, and the money they made
-const WI = { unit: 10, src: "", from: null, to: null, grades: null, stake: "flat" };
+const WI = { unit: 10, src: "", from: null, to: null, grades: null, stake: "flat", kind: "", side: "", groups: new Set() };
 try { const u = parseFloat(localStorage.getItem("unit-value")); if (u > 0) WI.unit = u; } catch (e) { /* fine */ }
+const WI_KIND = { solo: "Solo tackles", combined: "Tackles + assists", assists: "Assists" }, WI_POS = { LB: "Linebackers", S: "Safeties", CB: "Corners", DL: "Defensive line" };
 function whatIfSources(r, lw) {
-  // each source as rows of one week and one grade: bets, wins, losses and the units won at one unit a pick
-  const add = (m, week, grade, p) => { const k = `${week}|${grade}`; const x = m.get(k) || { week, grade, wins: 0, losses: 0, units: 0 }; if (p.result === "Win") x.wins++; else x.losses++; x.units += p.units || 0; m.set(k, x); };
+  // each source as rows of {week, grade, kind, side, group, wins, losses, units at one unit a pick}: one row a pick where the
+  // picks themselves are on the site (this season), one row a cell where only the replay's totals are (earlier seasons)
+  const rowOf = (p, week) => ({ week, grade: p.grade || "none", kind: kindOf(p.market), side: p.side, group: p.group || posOf(p) || "", wins: p.result === "Win" ? 1 : 0, losses: p.result === "Loss" ? 1 : 0, units: p.units || 0, pick: p });
   const out = [], season = DATA.meta?.season ?? "";
   const live = (r.picks || []).filter((p) => decided(p)), retro = r.retro?.weeks || [];
-  const now = new Map();
-  for (const w of retro) if (w.week < lw) for (const p of (w.all_picks || [])) if (p.result === "Win" || p.result === "Loss") add(now, w.week, p.grade || "none", p);
-  for (const p of live) if (p.week >= lw) add(now, p.week, p.grade || "none", p);
-  if (now.size) out.push({ key: "now", label: `The new model, ${season}`, note: `Weeks before ${lw} are a replay: what today's rules would have picked on those weeks' lines, not bets that were made. From week ${lw} they are the picks as made.`, rows: [...now.values()] });
-  const then = new Map(); for (const p of live) if (p.week < lw) add(then, p.week, p.grade || "none", p);
-  if (then.size) out.push({ key: "then", label: `As bet at the time, ${season}`, note: "The picks this site actually made in those weeks, under the rules and grades it ran on then.", rows: [...then.values()] });
+  const now = [];
+  for (const w of retro) if (w.week < lw) for (const p of (w.all_picks || [])) if (p.result === "Win" || p.result === "Loss") now.push(rowOf(p, w.week));
+  for (const p of live) if (p.week >= lw) now.push(rowOf(p, p.week));
+  if (now.length) out.push({ key: "now", label: `The new model, ${season}`, note: `Weeks before ${lw} are a replay: what today's rules would have picked on those weeks' lines, not bets that were made. From week ${lw} they are the picks as made.`, rows: now });
+  const then = live.filter((p) => p.week < lw).map((p) => rowOf(p, p.week));
+  if (then.length) out.push({ key: "then", label: `As bet at the time, ${season}`, note: "The picks this site actually made in those weeks, under the rules and grades it ran on then.", rows: then });
   for (const x of [...(r.replays?.seasons || [])].reverse()) { if (x.season === season) continue;
-    const rows = x.by_week.flatMap((w) => Object.entries(w.by_grade || {}).filter(([, y]) => typeof y === "object").map(([g, y]) => ({ week: w.week, grade: g, wins: y.wins, losses: y.losses, units: y.units })));
+    const rows = x.cells ? x.cells.map(([week, grade, kind, side, group, wins, losses, units]) => ({ week, grade, kind, side, group, wins, losses, units }))
+      : x.by_week.flatMap((w) => Object.entries(w.by_grade || {}).filter(([, y]) => typeof y === "object").map(([g, y]) => ({ week: w.week, grade: g, kind: "", side: "", group: "", wins: y.wins, losses: y.losses, units: y.units })));
     if (rows.length) out.push({ key: `s${x.season}`, label: `The new model, ${x.season} (replayed)`, note: `A replay of the ${x.season} season's lines under today's rules: what it would have picked, not bets that were made.`, rows }); }
   return out;
 }
 function whatIfSection(r, s, lw) {
   const sources = whatIfSources(r, lw); if (!sources.length) return null;
-  const sec = section("What would it have paid?", "Put in what one unit is worth to you, pick a starting week and the grades you would have bet, and see the money.");
+  const sec = section("What would it have paid?", "Put in what one unit is worth to you, then choose the weeks, the grades and the kind of pick you would have bet, and see the money.");
   sec.id = "rec-whatif";
   const form = el("div", { class: "wi-form" }), outBox = el("div");
   sec.append(form, outBox);
   const gu = DATA.meta?.grading?.units || { A: 1, B: 0.5, C: 0.25 };
   const draw = () => {
     const src = sources.find((x) => x.key === WI.src) || sources[0]; WI.src = src.key;
-    const weeks = [...new Set(src.rows.map((x) => x.week))].sort((a, b) => a - b), grades = ["A", "B", "C", "none"].filter((g) => src.rows.some((x) => x.grade === g));
+    const has = (f) => [...new Set(src.rows.map(f).filter(Boolean))];
+    const weeks = has((x) => x.week).sort((a, b) => a - b), grades = ["A", "B", "C", "none"].filter((g) => src.rows.some((x) => x.grade === g));
+    const kinds = ["solo", "combined", "assists"].filter((k) => src.rows.some((x) => x.kind === k)), groups = ["LB", "S", "CB", "DL"].filter((g) => src.rows.some((x) => x.group === g));
     if (!weeks.includes(WI.from)) WI.from = weeks[0]; if (!weeks.includes(WI.to) || WI.to < WI.from) WI.to = weeks[weeks.length - 1];
     if (!WI.grades || ![...WI.grades].some((g) => grades.includes(g))) WI.grades = new Set(grades.includes("A") ? ["A"] : grades);
+    if (WI.kind && !kinds.includes(WI.kind)) WI.kind = "";
     const sel = (label, value, opts, set, cls) => { const e = el("select", { "aria-label": label }, ...opts.map(([v, t]) => { const o = el("option", { value: String(v) }, t); if (String(v) === String(value)) o.selected = true; return o; })); e.addEventListener("change", () => { set(e.value); draw(); }); return el("label", cls ? { class: cls } : {}, label, e); };
+    const boxes = (label, all, set, show, aria) => el("span", { class: "wi-grades" }, el("span", { class: "muted" }, label), ...all.map((g) => { const c = el("input", { type: "checkbox", "aria-label": `${aria} ${g}` }); c.checked = set.has(g); c.addEventListener("change", () => { if (c.checked) set.add(g); else set.delete(g); result(); }); return el("label", { title: WI_POS[g] || "" }, c, show(g)); }));
     const unit = el("input", { type: "number", min: "0", step: "1", inputmode: "decimal", value: String(WI.unit), "aria-label": "What one unit is worth, in dollars" });
     unit.addEventListener("input", () => { const v = parseFloat(unit.value); WI.unit = v > 0 ? v : 0; try { localStorage.setItem("unit-value", String(WI.unit)); } catch (e) { /* fine */ } result(); });
-    const gbox = el("span", { class: "wi-grades" }, el("span", { class: "muted" }, "Grades"), ...grades.map((g) => { const c = el("input", { type: "checkbox" }); c.checked = WI.grades.has(g); c.addEventListener("change", () => { if (c.checked) WI.grades.add(g); else WI.grades.delete(g); result(); }); return el("label", {}, c, g === "none" ? "no grade" : el("span", { class: `grade ${g}` }, g)); }));
     form.replaceChildren(el("label", {}, "One unit = $", unit),
       sel("Picks", WI.src, sources.map((x) => [x.key, x.label]), (v) => { WI.src = v; WI.from = null; WI.to = null; }, "wide"),
       sel("From", WI.from, weeks.map((w) => [w, `Week ${w}`]), (v) => { WI.from = +v; }), sel("To", WI.to, weeks.filter((w) => w >= WI.from).map((w) => [w, `Week ${w}`]), (v) => { WI.to = +v; }),
-      gbox,
+      boxes("Grades", grades, WI.grades, (g) => (g === "none" ? "no grade" : el("span", { class: `grade ${g}` }, g)), "Grade"),
+      kinds.length > 1 ? sel("Market", WI.kind, [["", "All markets"], ...kinds.map((k) => [k, WI_KIND[k]])], (v) => { WI.kind = v; }) : "",
+      sel("Side", WI.side, [["", "Overs and Unders"], ["Under", "Unders"], ["Over", "Overs"]], (v) => { WI.side = v; }),
+      groups.length ? boxes("Positions", groups, WI.groups, (g) => g, "Position") : "",
       sel("Stake", WI.stake, [["flat", "1 unit on every pick"], ["grade", `By grade (A ${gu.A}, B ${gu.B}, C ${gu.C} units)`]], (v) => { WI.stake = v; }, "wide"));
     const result = () => {
       const stakeOf = (g) => (WI.stake === "grade" ? (gu[g] ?? gu.C ?? 0.25) : 1);
-      const rows = src.rows.filter((x) => x.week >= WI.from && x.week <= WI.to && WI.grades.has(x.grade));
-      const tot = rows.reduce((a, x) => ({ w: a.w + x.wins, l: a.l + x.losses, u: a.u + x.units * stakeOf(x.grade), st: a.st + (x.wins + x.losses) * stakeOf(x.grade) }), { w: 0, l: 0, u: 0, st: 0 });
+      const pos = [...WI.groups].filter((g) => groups.includes(g));           // none ticked means every position
+      const rows = src.rows.filter((x) => x.week >= WI.from && x.week <= WI.to && WI.grades.has(x.grade) && (!WI.kind || x.kind === WI.kind) && (!WI.side || x.side === WI.side) && (!pos.length || pos.includes(x.group)));
+      const sum = (xs) => xs.reduce((a, x) => ({ w: a.w + x.wins, l: a.l + x.losses, u: a.u + x.units * stakeOf(x.grade), st: a.st + (x.wins + x.losses) * stakeOf(x.grade) }), { w: 0, l: 0, u: 0, st: 0 });
+      const tot = sum(rows);
       const usd = (u) => { const v = u * WI.unit, a = Math.abs(v); return `${v < 0 ? "-" : "+"}$${a >= 1000 ? Math.round(a).toLocaleString() : a.toFixed(2)}`; }, cls = (u) => (u > 0 ? "pos" : u < 0 ? "neg" : "");
       const card = (c, title, big, sub) => el("div", { class: `rec-card ${c}` }, el("h4", {}, title), el("div", { class: "big" }, ...big), el("div", { class: "sub" }, sub));
-      const n = tot.w + tot.l, gl = [...WI.grades].filter((g) => grades.includes(g)).map((g) => (g === "none" ? "ungraded" : g)).join(", ") || "no";
-      const byWeek = weeks.filter((w) => w >= WI.from && w <= WI.to).map((w) => { const x = rows.filter((y) => y.week === w); return { w, wins: x.reduce((a, y) => a + y.wins, 0), losses: x.reduce((a, y) => a + y.losses, 0), u: x.reduce((a, y) => a + y.units * stakeOf(y.grade), 0) }; });
-      let run = 0; const tb = byWeek.map((x) => { run += x.u; return [`Week ${x.w}${src.key === "now" ? (x.w < lw ? " (replay)" : " (live)") : ""}`, x.wins + x.losses ? wl(x.wins, x.losses) : el("span", { class: "muted" }, "no pick"), el("b", { class: cls(x.u) }, x.wins + x.losses ? usd(x.u) : ""), el("b", { class: cls(run) }, usd(run))]; });
+      const n = tot.w + tot.l;
+      const what = [[...WI.grades].filter((g) => grades.includes(g)).map((g) => (g === "none" ? "ungraded" : g)).join(", ") || "no", WI.kind ? WI_KIND[WI.kind].toLowerCase() : "", WI.side ? `${WI.side}${n === 1 ? "" : "s"}` : `pick${n === 1 ? "" : "s"}`, pos.length ? `(${pos.join(", ")})` : ""].filter(Boolean).join(" ");
+      const byWeek = weeks.filter((w) => w >= WI.from && w <= WI.to).map((w) => ({ w, ...sum(rows.filter((y) => y.week === w)) }));
+      let run = 0; const tb = byWeek.map((x) => { run += x.u; return [`Week ${x.w}${src.key === "now" ? (x.w < lw ? " (replay)" : " (live)") : ""}`, x.w + x.l ? wl(x.w, x.l) : el("span", { class: "muted" }, "no pick"), el("b", { class: cls(x.u) }, x.w + x.l ? usd(x.u) : ""), el("b", { class: cls(run) }, usd(run))]; });
+      // the same selection cut by grade, by position and by market and side
+      const cut = (label, keyOf, order) => { const m = new Map(); for (const x of rows) { const k = keyOf(x); if (!m.has(k)) m.set(k, []); m.get(k).push(x); }
+        return [...m.entries()].sort((a, b) => (order ? order.indexOf(a[0]) - order.indexOf(b[0]) : String(a[0]).localeCompare(String(b[0])))).map(([k, xs]) => { const t = sum(xs); return [`${label}${k || "not known"}`, wl(t.w, t.l), t.w + t.l ? pct(t.w / (t.w + t.l)) : "", el("b", { class: cls(t.u) }, usd(t.u))]; }); };
+      const breakdown = [...cut("Grade ", (x) => (x.grade === "none" ? "none yet" : x.grade), ["A", "B", "C", "none yet"]), ...cut("", (x) => WI_POS[x.group] || x.group, Object.values(WI_POS)), ...cut("", (x) => `${WI_KIND[x.kind] || x.kind} ${x.side}s`)];
+      const picks = rows.filter((x) => x.pick).sort((a, b) => b.week - a.week || ({ A: 0, B: 1, C: 2 }[a.grade] ?? 3) - ({ A: 0, B: 1, C: 2 }[b.grade] ?? 3));
+      const keep = (id, label, ...kids) => { const d = more(label, ...kids); d.id = id; return keepOpen(d); };
       outBox.replaceChildren(
         el("div", { class: "wi-out" },
           card(tot.u >= 0 ? "rc-live" : "rc-old", "You would be", [el("span", { class: cls(tot.u) }, n ? usd(tot.u) : "$0")], n ? `${tot.u >= 0 ? "+" : ""}${num(tot.u, 1)} units on ${num(tot.st, 1)} staked (${tot.st ? signedPct(tot.u / tot.st) : "–"}).` : "No pick matches."),
-          card("rc-replay", "Record", [wl(tot.w, tot.l), el("small", {}, n ? pct(tot.w / n) : "")], `${n} ${gl} pick${n === 1 ? "" : "s"}, week ${WI.from}${WI.to !== WI.from ? ` to ${WI.to}` : ""}.`),
+          card("rc-replay", "Record", [wl(tot.w, tot.l), el("small", {}, n ? pct(tot.w / n) : "")], `${n} ${what}, week ${WI.from}${WI.to !== WI.from ? ` to ${WI.to}` : ""}.`),
           card("rc-replay", "Money out", [`$${Math.round(tot.st * WI.unit).toLocaleString()}`], `${WI.stake === "grade" ? "The grade's units" : "One unit"} on each, at $${num(WI.unit, WI.unit % 1 ? 2 : 0)} a unit. About $${n && byWeek.length ? Math.round(tot.st * WI.unit / byWeek.length).toLocaleString() : 0} a week.`)),
-        byWeek.length > 1 ? (() => { const d = more("Week by week", el("div", { class: "scroll" }, table([["Week"], ["Record"], ["That week", "n"], ["Running total", "n"]], tb))); d.id = "rec-whatif-weeks"; return keepOpen(d); })() : "",
-        el("p", { class: "note" }, src.note + " Each pick at the price logged for it; a push or a void returns the stake and is left out."));
+        byWeek.length > 1 ? keep("rec-whatif-weeks", "Week by week", el("div", { class: "scroll" }, table([["Week"], ["Record"], ["That week", "n"], ["Running total", "n"]], tb))) : "",
+        n ? keep("rec-whatif-cuts", "Broken down: by grade, position, market and side", el("div", { class: "scroll" }, table([["These picks, by"], ["Record"], ["Hit rate", "n"], ["Up or down", "n"]], breakdown))) : "",
+        picks.length ? keep("rec-whatif-picks", `The picks themselves (${picks.length})`, el("div", { class: "scroll", style: "max-height:460px;overflow:auto" }, ph(table([[""], ["Pick"], ["Result"], ["Had", "n"], ["Price", "n"], ["Up or down", "n"]],
+          picks.slice(0, 400).map((x) => { const p = x.pick; return [p.grade ? el("span", { class: `grade ${p.grade}` }, p.grade) : "", el("span", {}, `${p.player} `, el("b", {}, `${p.side === "Under" ? "U" : "O"} ${num(p.line)}`), ` ${({ solo: "solo", assists: "assists" })[x.kind] || "tackles"}`, el("small", { class: "muted" }, ` · wk ${x.week}${x.group ? ` · ${x.group}` : ""}`)), p.result, p.actual == null ? "" : num(p.actual, 0), odds(p.odds), el("b", { class: cls(x.units * stakeOf(x.grade)) }, usd(x.units * stakeOf(x.grade)))]; })), "4 5"))) : "",
+        el("p", { class: "note" }, src.note + " Each pick at the price logged for it; a push or a void returns the stake and is left out." + (pos.length ? "" : groups.length ? " No position ticked means every position." : "")));
     };
     result();
   };

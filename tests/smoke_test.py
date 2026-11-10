@@ -500,6 +500,9 @@ check(all(k in _html for k in ("rec-history", "function historySection", "rec-pi
 check(all(k in _html for k in ("rec-whatif", "function whatIfSection", "unit-value")) and all(abs(sum(g["units"] for g in w["by_grade"].values()) - w["units"]) < 1e-6
       and sum(g["wins"] + g["losses"] for g in w["by_grade"].values()) == w["wins"] + w["losses"] for e in _rs.get("seasons", []) for w in e["by_week"]),
       "the Track record tab has the unit-value calculator, and the replayed seasons carry each week's units by grade (they add up to the week)")
+check(all(k in _html for k in ('aria-label": `${aria} ${g}`', "rec-whatif-cuts", "rec-whatif-picks")) and all(e.get("cells") and sum(c[5] for c in e["cells"]) == e["plays"]["wins"]
+      and sum(c[6] for c in e["cells"]) == e["plays"]["losses"] and abs(sum(c[7] for c in e["cells"]) - e["plays"]["units"]) < 0.05 and {c[2] for c in e["cells"]} <= {"solo", "combined", "assists"} for e in _rs.get("seasons", [])),
+      "the calculator filters by market, side and position, and each replayed season's cells (week, grade, market, side, position) add up to its record")
 
 _sg = json.loads((tmp / "data" / "cache" / "segments.json").read_text()) if (tmp / "data" / "cache" / "segments.json").exists() else {}
 check(all("n_eff" in v and v["n_eff"] <= v["n"] + 1e-9 for v in _sg.values()) if _sg else True, f"segment calibration carries the recency-weighted count ({len(_sg)} segments)")

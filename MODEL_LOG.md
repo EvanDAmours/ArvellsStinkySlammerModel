@@ -871,6 +871,23 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-10, 2:26 pm (the calculator filters by market, side and position, and lists the picks)
+
+Owner: "I want to be able to sort too. Like with the new model last week if I wanted to bet solo under A graded CB
+S what would my results have been." The site only.
+
+"What would it have paid?" now also takes a market (solo, tackles + assists, assists), a side (Overs, Unders or
+both) and positions (LB, S, CB, DL; none ticked means all). Under the answer: the same selection broken down by
+grade, by position and by market and side, and, for this season's sources, the picks themselves with each one's
+result and dollars. The owner's example (new model, week 9, A, solo Unders, corners and safeties, $25 a unit):
+3-1, +$29.83.
+
+`data/replay_seasons.json` carries each replayed season as cells of week, grade, market, side and position
+(`tools/season_test.py`), so 2025 and 2024 filter the same way; their individual picks are not on the site.
+Checked in a browser against sums made independently from the replay's own files, four selections across three
+sources, at phone and desktop widths. Smoke test 183 of 183 (one new check: each season's cells add up to its
+record). Revert: `git revert` of this commit.
+
 ### 2026-11-10, 2:14 pm (Track record: "What would it have paid?", a unit value turned into dollars)
 
 Owner: "In the track record, I want to be able to input your unit value and see how much you would be up if you

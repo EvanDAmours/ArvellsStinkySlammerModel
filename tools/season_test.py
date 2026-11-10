@@ -78,7 +78,10 @@ def summary(P, season):
     for w, x in P.groupby("week"):
         by_week.append(dict(week=int(w), **r(x), by_grade={g: dict(wins=int(y.win.sum()), losses=int((~y.win).sum()), units=float(y.units.sum())) for g, y in x.groupby("grade")}))
     wk = P.groupby("week").st.sum()
-    return dict(season=int(season), weeks=weeks, plays=r(P), by_grade=[dict(grade=g, **r(x)) for g, x in P.groupby("grade")],
+    # the same picks cut fine enough for the site's calculator: week, grade, market, side, position -> wins, losses, units at 1 a pick
+    cells = [[int(w), str(g), KIND.get(m, m), str(sd), str(gp), int(x.win.sum()), int((~x.win).sum()), round(float(x.units.sum()), 4)]
+             for (w, g, m, sd, gp), x in P.assign(group=P["group"].fillna("")).groupby(["week", "grade", "market", "side", "group"])]
+    return dict(season=int(season), weeks=weeks, plays=r(P), cells=cells, by_grade=[dict(grade=g, **r(x)) for g, x in P.groupby("grade")],
                 locks=r(P[P.five.fillna(False).astype(bool)]), by_week=by_week, weeks_up_at_stakes=int((wk > 0).sum()), worst_week=float(wk.min()), best_week=float(wk.max()))
 
 
