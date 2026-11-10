@@ -15,13 +15,14 @@ KEY = ["season", "week", "player", "market", "side", "line", "book"]
 
 
 def size_stakes(bets):
-    """Size the slate as one book (config.STAKE, config.ENGINE['rho']). Every pick arrives with its own stake: a quarter of
-    Kelly at the cautious chance. Here, per bet (one per player, market and side, taken at the line and book where its own
-    stake is largest, so the caps hold whichever of his lines is bet): (1) the picks of one kind (side x market) on one
-    slate day rise and fall together, so each stake is divided by 1 + (N - 1) x rho for the N of them; (2) at most
-    game_cap units on one game, kind_cap on one kind a slate day and slate_cap on a slate day, the stakes concerned scaled
-    down together; (3) nothing falls under the minimum. Every other row of the same bet (another book, another line) is
-    scaled by the same factor. `stake_raw` keeps each row's stake before sizing and `slate_n` the N."""
+    """Size the slate (config.STAKE). Every pick arrives with its own stake: the grade's units (A 1, B 0.5, C 0.25) since
+    2026-11-10, a quarter of Kelly at the cautious chance before. Here, per bet (one per player, market and side, taken at
+    the line and book where its own stake is largest, so the caps hold whichever of his lines is bet): (1) under the older
+    Kelly mode only, the picks of one kind (side x market) on one slate day rise and fall together, so each stake is
+    divided by 1 + (N - 1) x rho for the N of them; (2) at most game_cap units on one game, kind_cap on one kind a slate day
+    and slate_cap on a slate day, the stakes concerned scaled down together; (3) nothing falls under the minimum. Every
+    other row of the same bet (another book, another line) is scaled by the same factor. `stake_raw` keeps each row's stake
+    before sizing and `slate_n` the N."""
     if bets is None or len(bets) == 0 or "stake" not in bets.columns or "event_id" not in bets.columns:
         return bets
     b = bets.copy()
@@ -37,7 +38,9 @@ def size_stakes(bets):
     slate = slate_of(main.commence_time) if "commence_time" in main.columns else pd.Series("", index=main.index)
     kind = main.side.astype(str) + " " + main.market.map(C.market_kind).astype(str)
     n_kind = main.groupby([slate, kind]).player.transform("size").astype(float)
-    st = main.stake.astype(float) / (1 + (n_kind - 1) * rho)
+    # by grade (config.STAKE["mode"] == "grade"): the ladder is the stake and only the caps touch it; else the Kelly stake,
+    # divided for the picks of its kind on the slate
+    st = main.stake.astype(float) if c.get("mode") == "grade" else main.stake.astype(float) / (1 + (n_kind - 1) * rho)
     for keys, cap in ((main.event_id.astype(str), c["game_cap"]), ([slate, kind], c["kind_cap"]), (slate, c["slate_cap"])):
         tot = st.groupby(keys).transform("sum")
         st = st * (cap / tot).clip(upper=1.0)
@@ -702,17 +705,19 @@ def engine_era(Pc):
     own, el = num(E, "p_model"), num(E, "edge_low")
     old_a = (own >= a_bar) & (el >= C.ENGINE["b_edge_low"])         # what an A was until 2026-11-09: sure on the model's own chance
     flagged = E["why"].astype(str).str.contains("solo share:", regex=False) if "why" in E.columns else pd.Series(False, index=E.index)
+    wtxt = E["why"].astype(str) if "why" in E.columns else pd.Series("", index=E.index)
+    blocked_ = E["lock_block"].fillna("").astype(str).str.len() > 0 if "lock_block" in E.columns else pd.Series(False, index=E.index)
+    old_sleeper_a = wtxt.str.contains("sleeper (", regex=False) & ~blocked_ & (E.market.isin(C.A_GRADE_MARKETS) if "market" in E.columns else False)
     solo_under = (kind == "solo") & (side == "Under")
     out["watches"] = [
-        watch("E4", "A picks", "An A is a pick that is also a sleeper on the same side. Read at 30 graded: it stays only if these hit 60% or better and beat the B and C picks.", E[grade == "A"], of=30, bar=0.60),
-        watch("E4", "The A rule it replaced", f"Picks with a cautious edge of 2%+ and a model chance of {a_bar:.0%}+, whatever their grade now. Counted beside the new A, so the two rules can be told apart.", E[old_a], of=30),
-        watch("E5", "Combined A picks", "A picks and locks go back to solo only if these hit under 55% over their first 20.", E[(grade == "A") & (kind == "combined")], of=20, bar=0.55),
+        watch("H1", "A picks", f"A solo Under pick on a line the book set at {C.HOLES['book_share']:.0%} or more of its own combined line, also a sleeper, the checklist clear. Replayed on 21 weeks of two seasons: 106-35. Read at 30 graded: it stays only if these hit 60% or better and beat the B and C picks.", E[grade == "A"], of=30, bar=0.60),
+        watch("H1", "B picks", "Every other solo Under pick on such a line. Replayed: 210-106. Read at 40: these must beat the C picks, or B and C become one grade.", E[grade == "B"], of=40, bar=0.58),
+        watch("H1", "C picks", "Every other pick. Replayed: 621-428 (59%; 55% on the 2026 weeks). Read at 100: under 52.4%, the break-even at the usual price, C picks are shown as leans and not staked.", E[grade == "C"], of=100, bar=0.524),
+        watch("E4", "The A rules it replaced", f"Picks that are also a sleeper on the same side with a clear checklist (the A until 2026-11-10), whatever their grade now.", E[old_sleeper_a], of=30),
         watch("E6", "Over picks", "Re-read at 40. The candidate is to show Overs as leans only.", E[side == "Over"], of=40),
+        watch("H1", "Solo Under picks on an unflagged line", "The other half of the hole: 207-165 replayed, 48-54 on the 2026 weeks. Read at 40: under 52.4%, they stop being picks.", E[solo_under & ~flagged], of=40, bar=0.524),
+        watch("S3", "Stakes by grade", "A 1 unit, B 0.5, C 0.25. Read after week 13: the units won at these stakes against the same picks at one size.", E[grade.isin(["A", "B", "C"])]),
         watch("E5", "Locks", "The target is 70% over the season.", E[five], bar=0.70),
-        # the book-share flag (config.HOLES, open issue 15): the card's "solo share:" clause, in no grade until it is read here
-        watch("H1", "Solo Under picks on a flagged line", f"The book's solo line is {C.HOLES['book_share']:.0%} or more of its own combined line. Replayed on 21 weeks (2025 weeks 4 to 18, 2026 weeks 4 to 9) these went 316-141 and the unflagged ones 207-165. Read after week 13: at 58% or better here and ahead of the unflagged, the flag becomes an input to the A grade.", E[solo_under & flagged], of=30, bar=0.58),
-        watch("H1", "Solo Under picks on an unflagged line", "The other half of the same test.", E[solo_under & ~flagged], of=30),
-        watch("H1", "Solo Over picks on a flagged line", "Replayed on 21 weeks: 8-19, losing in each of four stretches. Read at 15: under 45%, the Over is no pick on a flagged line.", E[(kind == "solo") & (side == "Over") & flagged], of=15),
     ]
     return out
 

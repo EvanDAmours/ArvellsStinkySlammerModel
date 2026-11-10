@@ -196,10 +196,11 @@ def scoreboard(frame, min_lines=20, live_week=None):
     note = None if not since else f"margin {since['engine_minus_market']:+.4f}" + ("" if since["se"] is None else f", give or take {2 * since['se']:.4f}")
     row = lambda rule, name, what, state: dict(rule=rule, name=name, what=what, n=n_wk, of=need, unit="weeks", bar=None, wins=None, losses=None, hit=None, hit_lo=None,
                                                hit_hi=None, claimed=None, model_said=None, state=state, note=note)
-    watches = [row("E2", "The engine's weight (0.65 solo, 0.35 combined)", f"Moved toward the book if the engine's margin over the book since week {live_week} is negative by more than twice its give or take, read after week {int(live_week) + need - 1}; raised only by the same test.",
-                   "running" if n_wk < need or t_ is None else "fails" if t_ <= -2 else "holds"),
-               row("S1", "Stakes on the cautious chance", "Sized on the win chance instead once the engine's margin over the book is positive by more than twice its give or take.",
-                   "running" if n_wk < need or t_ is None else "met" if t_ >= 2 else "not met")]
+    watches = [row("E2", f"The engine's weight ({engine_betas('solo')[0]:g} solo, {engine_betas('combined')[0]:g} combined)", f"Moved toward the book if the engine's margin over the book since week {live_week} is negative by more than twice its give or take, read after week {int(live_week) + need - 1}; raised only by the same test.",
+                   "running" if n_wk < need or t_ is None else "fails" if t_ <= -2 else "holds")]
+    if C.STAKE.get("mode") != "grade":          # the Kelly stake's own condition; stakes by grade are counted with the picks (grade.engine_era, S3)
+        watches.append(row("S1", "Stakes on the cautious chance", "Sized on the win chance instead once the engine's margin over the book is positive by more than twice its give or take.",
+                   "running" if n_wk < need or t_ is None else "met" if t_ >= 2 else "not met"))
     # the engine's side on every line at the best closing price, and what each tier did
     od, ud = d.over_dec.values.astype(float), d.under_dec.values.astype(float)
     over = (p_eng * od - 1) > ((1 - p_eng) * ud - 1)

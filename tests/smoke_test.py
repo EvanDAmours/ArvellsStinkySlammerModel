@@ -197,11 +197,17 @@ check(sum(1 for b in bets if b.get("five")) == len(five), "locks marked on the b
 parlays = pd.read_csv(tmp / "data/parlays.csv") if (tmp / "data/parlays.csv").exists() else pd.DataFrame()
 check(len(parlays) >= 2 and parlays.parlay_id.nunique() >= 1 and parlays.groupby("parlay_id").size().between(2, 4).all(), f"recommended parlay built ({parlays.parlay_id.nunique() if len(parlays) else 0} parlay, {len(parlays)} legs)")
 check(len(parlays) and parlays.player.nunique() == len(parlays) and parlays.units.between(0.1, 1.0).all(), "parlay legs are distinct players with a stake between 0.1 and 1 unit")
-_a_ok = (lambda b: b.get("sleeper") == b.get("pick")) if _E.get("a_rule") == "sleeper" else (lambda b: b["edge_low"] >= _E["b_edge_low"] - 1e-9 and b["p_model"] >= _E["a_model"] - 1e-9)
-check(all(_a_ok(b) and b["edge_low"] >= _E["pick_edge_low"] - 1e-9 and not b.get("lock_block") and b["market"] in C.A_GRADE_MARKETS for b in priced if b.get("grade") == "A")
-      and all(b["edge_low"] >= _E["b_edge_low"] - 1e-9 for b in priced if b.get("grade") == "B") and all(b["edge_low"] < _E["b_edge_low"] for b in priced if b.get("grade") == "C")
+# the grade since 2026-11-10: it follows the book's own solo share (config.HOLES). A solo Under pick on a flagged line is a B, an A
+# when it is also a sleeper with a clear checklist; every other pick is a C; a solo Over on a flagged line is no pick at all
+_hole = lambda b: "the book's solo line is" in str(b.get("why", "")) and C.market_kind(b["market"]) == "solo"
+_hu = lambda b: _hole(b) and b.get("pick") == "Under"
+_isa = lambda b: _hu(b) and b.get("sleeper") == "Under" and not b.get("lock_block") and b["market"] in C.A_GRADE_MARKETS
+_graded = [b for b in priced if b.get("grade")]
+check(_E.get("a_rule") == "hole" and all(b["edge_low"] >= _E["pick_edge_low"] - 1e-9 for b in _graded)
+      and all(_isa(b) for b in _graded if b["grade"] == "A") and all(_hu(b) and not _isa(b) for b in _graded if b["grade"] == "B") and all(not _hu(b) for b in _graded if b["grade"] == "C")
+      and any(b["grade"] in ("A", "B") for b in _graded) and not any(_hole(b) and b.get("pick") == "Over" for b in priced)
       and (five.market.isin(C.A_GRADE_MARKETS).all() if len(five) else True),
-      f"an A is a pick the sleeper rule names on the same side (the older rule: a cautious edge of 2%+ and a model chance of 70%+), with a clear checklist and a market that can carry one; a B has the edge; a C is a pick short of it ({dict(pd.Series([b.get('grade') for b in priced if b.get('grade')]).value_counts())})")
+      f"an A is a solo Under pick on a line the book set high against its own combined line, also a sleeper, checklist clear; a B any other such pick; a C every other pick; no solo Over pick on such a line ({dict(pd.Series([b.get('grade') for b in _graded]).value_counts())})")
 # Rule 0 (CLAUDE.md): a pick is never graded, ranked or chosen by whether the book agrees with it. At a fixed model chance and a
 # fixed margin, moving the book's fair chance toward the model's must never raise the cautious edge (what chooses a pick) or the
 # grade; the lock score (what ranks) is the model's own chance and does not see the book at all. (The stake is not part of the
@@ -368,7 +374,7 @@ _leg = lambda side, ev="E1", mu=5.5: dict(mu=mu, phi=1.4, exp_opps=50.0, line=5.
 _uu, _uo, _diff = M.parlay_corr_ratio([_leg("Under"), _leg("Under")]), M.parlay_corr_ratio([_leg("Under"), _leg("Over")]), M.parlay_corr_ratio([_leg("Under"), _leg("Under", ev="E2")])
 check(1.0 < _uu < 1.2 and 0.8 < _uo < 1.0 and _diff == 1.0, f"parlay legs on one defence share the plays draw (UU {_uu:.3f}, UO {_uo:.3f}, other game {_diff})")
 check(all("corr_ratio" in q for q in pj) if pj else True, "parlays carry the correlation ratio")
-# stakes: quarter Kelly per pick within the clip, capped per game, logged with the pick
+# stakes: the grade's units per pick (A 1, B 0.5, C 0.25), capped per game, kind and slate day, logged with the pick
 _pk = [b for b in _ba if b["pick"] in ("Over", "Under") and b.get("best_price") is not False]
 check(_pk and all(b.get("stake") is not None and C.STAKE["min"] - 1e-9 <= b["stake"] <= C.STAKE["max"] + 1e-9 for b in _pk), f"every pick carries a stake inside the clip ({len(_pk)} picks)")
 _bets_once = {}                                             # one bet per player, market and side: the caps hold for his largest stake among his lines and books
@@ -381,15 +387,16 @@ for b in _bets_once.values():
     _byg[b["event_id"]] = _byg.get(b["event_id"], 0) + b["stake"]; _bys[_sl8] = _bys.get(_sl8, 0) + b["stake"]; _byk[(_sl8, _kd)] = _byk.get((_sl8, _kd), 0) + b["stake"]
 _slack = C.STAKE["min"] * len(_bets_once)                   # the floor of 0.1u a pick can lift a capped total a little
 check(_byg and max(_byg.values()) <= C.STAKE["game_cap"] + _slack and max(_bys.values()) <= C.STAKE["slate_cap"] + _slack and max(_byk.values()) <= C.STAKE["kind_cap"] + _slack
-      and all(b.get("stake_raw") is not None and b["stake"] <= b["stake_raw"] + 1e-9 and (b.get("slate_n") or 0) >= 1 for b in _pk),
-      f"the slate is sized as one book: caps per game, per kind and per slate day (most on a game {max(_byg.values()) if _byg else 0:.2f}u, a kind {max(_byk.values()) if _byk else 0:.2f}u, a day {max(_bys.values()) if _bys else 0:.2f}u over {len(_bets_once)} bets)")
+      and all(b.get("stake_raw") is not None and b["stake"] <= b["stake_raw"] + 1e-9 and (b.get("slate_n") or 0) >= 1 for b in _pk)
+      and C.STAKE.get("mode") == "grade" and all(abs(b["stake_raw"] - C.GRADE_UNITS[b["grade"]]) < 1e-9 for b in _pk if b.get("grade")),
+      f"the stake is the grade's units, held to the caps per game, per kind and per slate day (most on a game {max(_byg.values()) if _byg else 0:.2f}u, a kind {max(_byk.values()) if _byk else 0:.2f}u, a day {max(_bys.values()) if _bys else 0:.2f}u over {len(_bets_once)} bets)")
 _one = pd.DataFrame([dict(player=f"P{i}", market="player_solo_tackles", side="Under", pick="Under", stake=2.0, edge_low=0.03, event_id=f"G{i // 2}", commence_time="2099-01-03T18:00:00Z", best_price=True) for i in range(12)])
 _sz = G.size_stakes(_one)
 check(abs(_sz.stake.sum() - C.STAKE["kind_cap"]) < 1e-6 and _sz.groupby("event_id").stake.sum().max() <= C.STAKE["game_cap"] + 1e-9 and (_sz.slate_n == 12).all() and (_sz.stake_raw == 2.0).all()
       and abs(G.size_stakes(_one.head(1)).stake.iloc[0] - 2.0) < 1e-9,
-      f"twelve like picks on one slate are divided for their number and held to the cap for one kind ({_sz.stake.sum():.2f}u in all); a lone pick keeps its stake")
+      f"twelve like picks on one slate are held to the cap for one kind ({_sz.stake.sum():.2f}u in all); a lone pick keeps its stake")
 check(abs(M.kelly_stake(0.553, 1.909) - min(C.STAKE["max"], max(C.STAKE["min"], C.STAKE["kelly_fraction"] * ((0.553 * 0.909 - 0.447) / 0.909) * 100))) < 1e-9 and M.kelly_stake(0.45, 1.909) is None
-      and abs(M.kelly_stake(1 / 1.909, 1.909) - C.STAKE["min"]) < 1e-9, "the stake is a quarter of Kelly at the cautious chance: the minimum when it only breaks even there, none below")
+      and abs(M.kelly_stake(1 / 1.909, 1.909) - C.STAKE["min"]) < 1e-9, "the older Kelly stake still computes (a quarter of Kelly at the cautious chance: the minimum when it only breaks even there, none below)")
 _lo, _hi = G.hit_interval(10, 4, 3); _lo2, _hi2 = G.hit_interval(100, 40, 3); _lo3, _hi3 = G.hit_interval(100, 40, 140)
 check(_lo < 10 / 14 < _hi and _hi - _lo > 0.35 and (_hi2 - _lo2) > (_hi3 - _lo3) and G.hit_interval(0, 0) == (None, None),
       f"a record's likely range is wide on few bets and wider when the bets share weeks (10-4: {_lo:.0%} to {_hi:.0%})")
@@ -420,7 +427,7 @@ check(len(_cf) >= 30 and _sb and _sb["lines"] >= 30 and _sb["log_loss"]["engine"
 check({"p_low", "p_model", "edge_low", "tier", "market_over"} <= set(pd.read_csv(tmp / "data" / "lines_log.csv").columns), "the line log keeps the engine's read of every line, picked or not, so a rule can be scored later without having been live")
 # in-sample and out-of-sample are kept apart: a week before the engine's first week is never called a test of it
 _sb_live = _EV.scoreboard(_cf, live_week=6)
-check(_sb["since"] is None and _sb["live_week"] == C.ENGINE_LIVE["week"] and all(r["since"] is None for r in _sb["shadow"]) and [w["state"] for w in _sb["watches"]] == ["running", "running"] and _sb["watches"][0]["n"] == 0
+check(_sb["since"] is None and _sb["live_week"] == C.ENGINE_LIVE["week"] and all(r["since"] is None for r in _sb["shadow"]) and [w["state"] for w in _sb["watches"]] == ["running"] * (1 if C.STAKE.get("mode") == "grade" else 2) and _sb["watches"][0]["n"] == 0
       and _sb_live["since"]["lines"] == _sb_live["lines"] and abs(_sb_live["since"]["engine_minus_market"] - _sb_live["engine_minus_market"]) < 1e-12 and _sb_live["since"]["t"] is None
       and all(r["since"]["lines"] == _sb_live["lines"] for r in _sb_live["shadow"]) and _sb_live["watches"][0]["n"] == 1 and _sb_live["watches"][0]["state"] == "running",
       "the scoreboard reports the weeks since the engine apart from the weeks its weight was chosen on, and reads no verdict before the weeks are in")
@@ -442,8 +449,11 @@ check(abs(_sh["beta_by_kind"][0] - _sgm(C.SHADOW["beta_by_kind"]["combined"] * _
 check(M.engine_betas("solo") == (0.65, 0.325) and M.engine_betas("combined") == (0.35, 0.175) and M.engine_betas("assists") == (C.ENGINE["beta"], C.ENGINE["beta"] * C.ENGINE["low_ratio"])
       and M.engine_grade(0.001, 0.62, False, "player_solo_tackles", sleeper_match=True) == "A" and M.engine_grade(0.05, 0.9, False, "player_solo_tackles", sleeper_match=False) == "B"
       and M.engine_grade(0.001, 0.9, False, "player_solo_tackles", sleeper_match=False) == "C" and M.engine_grade(0.05, 0.9, True, "player_solo_tackles", sleeper_match=True) == "B"
-      and M.engine_grade(-0.01, 0.9, False, "player_solo_tackles", sleeper_match=True) is None and M.engine_grade(0.05, 0.9, False, "player_assists", sleeper_match=True) == "B",
-      "the model's disagreement weighs 0.65 on solo lines and 0.35 on combined, and an A is a pick that is also a sleeper with a clear checklist")
+      and M.engine_grade(-0.01, 0.9, False, "player_solo_tackles", sleeper_match=True) is None and M.engine_grade(0.05, 0.9, False, "player_assists", sleeper_match=True) == "B"
+      and M.engine_grade(0.001, 0.6, False, "player_solo_tackles", sleeper_match=True, hole=True) == "A" and M.engine_grade(0.2, 0.9, True, "player_solo_tackles", sleeper_match=True, hole=True) == "B"
+      and M.engine_grade(0.2, 0.9, False, "player_solo_tackles", sleeper_match=False, hole=True) == "B" and M.engine_grade(0.2, 0.95, False, "player_solo_tackles", sleeper_match=True, hole=False) == "C"
+      and M.engine_grade(-0.01, 0.9, False, "player_solo_tackles", sleeper_match=True, hole=True) is None,
+      "the model's disagreement weighs 0.65 on solo lines and 0.35 on combined, and the grade follows the book's solo share: A a flagged solo Under that is also a sleeper with a clear checklist, B any other flagged solo Under, C the rest, whatever the edge")
 # the early look at the whole week runs on its trial dates only, as an "early" pull; the solo-share gap is logged, not used
 _od = dt.date.fromisoformat(C.OPENER_DATES[0])
 _op = R.auto_plan(now=dt.datetime.combine(_od, dt.time(10, 5), tzinfo=R.EDMONTON).astimezone(dt.timezone.utc), games=[], served=set())
@@ -451,7 +461,7 @@ _no = R.auto_plan(now=dt.datetime.combine(_od + dt.timedelta(days=14), dt.time(1
 check(_op is not None and len(_op["days"]) == 5 and _op["days"][0] == str(_od + dt.timedelta(days=1)) and _no is None and R.OPENER_SLOT in R.slots_on(_od) and R.OPENER_SLOT not in R.slots_on(_od + dt.timedelta(days=14)),
       "the early look at the whole week is pulled on its trial Wednesdays and on no other")
 _whys = " ".join(str(b.get("why", "")) for b in _ba)
-check("solo share:" in _whys and "in no grade" in _whys and "hot:" not in _whys and "part-time:" not in _whys, "the card names the measurement on trial (the book's solo share) where it applies, says it is in no grade, and no longer names the two flags that failed out of sample")
+check("solo share:" in _whys and "that is what makes this a" in _whys and "hot:" not in _whys and "part-time:" not in _whys, "the card names the book's solo share where it applies and says it is what makes the pick an A or a B; the two flags that failed out of sample are gone")
 _ll = pd.read_csv(tmp / "data" / "lines_log.csv")
 check("share_gap" in _ll.columns and "level" in _ll.columns and (_ll[_ll.market == "player_solo_tackles"].share_gap.notna().any() if (_ll.market == "player_solo_tackles").any() else True),
       "the line log carries the solo-share gap and the lined-player level for every line")
@@ -471,13 +481,13 @@ _ep = pd.DataFrame(dict(season=_lv["season"], week=[_lv["week"] - 1, _lv["week"]
 _era = G.engine_era(_ep); _wt = {w["name"]: w for w in _era["watches"]}; _none = G.engine_era(_ep.iloc[0:1])
 check(_era["bets"] == 4 and _era["wins"] == 2 and _era["losses"] == 2 and _era["pending"] == 1 and abs(_era["units"] - (-0.1)) < 1e-9 and abs(_era["units_at_stake"] - (1.6 - 0.1 + 0.55 - 1.0)) < 1e-9 and abs(_era["staked"] - 3.6) < 1e-9
       and len(_era["by_week"]) == 2 and _wt["A picks"]["n"] == 2 and _wt["A picks"]["of"] == 30 and _wt["A picks"]["state"] == "running" and abs(_wt["A picks"]["model_said"] - 0.725) < 1e-9
-      and _wt["Combined A picks"]["n"] == 2 and _wt["Over picks"]["n"] == 1 and _wt["Locks"]["wins"] == 1 and _wt["Locks"]["losses"] == 1 and _wt["Locks"]["state"] == "running"
+      and _wt["B picks"]["n"] == 1 and _wt["B picks"]["wins"] == 1 and _wt["C picks"]["n"] == 1 and _wt["Over picks"]["n"] == 1 and _wt["Locks"]["wins"] == 1 and _wt["Locks"]["losses"] == 1 and _wt["Locks"]["state"] == "running"
       and _era["locks"]["bets"] == 2 and {g["grade"] for g in _era["by_grade"]} == {"A", "B", "C"} and sum(c["bets"] for c in _era["calibration"]) == 4
       and _none["bets"] == 0 and len(_none["watches"]) == 8 and all(w["state"] == "running" for w in _none["watches"])
-      and _wt["Solo Under picks on a flagged line"]["wins"] == 1 and _wt["Solo Under picks on a flagged line"]["n"] == 1 and _wt["Solo Under picks on an unflagged line"]["n"] == 0,
+      and _wt["Solo Under picks on an unflagged line"]["n"] == 0 and _wt["Stakes by grade"]["n"] == 4,
       f"the record since the engine leaves out the weeks before it and counts each condition of the decision register ({_era['wins']}-{_era['losses']}, {len(_era['watches'])} conditions)")
 _evd = "\n".join(G._evidence_sections(dict(scoreboard=_sb_live, era=_era, bets=5, wins=3, losses=2, pushes=0, units=0.8, hit_lo=0.2, hit_hi=0.9, by_grade=G.record_by_grade(_ep), by_side_market=[])))
-check(all(k in _evd for k in ("## Against the market", "(out of sample)", "### Candidates in the shadow", "## Since the engine", "Conditions of the decision register on trial", "| E2 The engine's weight (0.65 solo, 0.35 combined) |", "| E4 A picks |", "## All plays to date"))
+check(all(k in _evd for k in ("## Against the market", "(out of sample)", "### Candidates in the shadow", "## Since the engine", "Conditions of the decision register on trial", "| E2 The engine's weight (0.65 solo, 0.35 combined) |", "| H1 A picks |", "## All plays to date"))
       and "likely range" in _evd and "No graded closing lines yet." in "\n".join(G._evidence_sections({})),
       "the weekly log carries the evidence in plain text: the scoreboard with the weeks since the engine apart, the shadow, the engine's own record, the conditions on trial")
 check(all(k in _html for k in ("rec-trial", "Rules on trial", "Candidates in the shadow", "sb.since", "s.era")), "site shows the out-of-sample verdict, the candidates in the shadow and the rules on trial")

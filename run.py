@@ -997,7 +997,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
     now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes")
     games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
     meta = dict(generated_at=now, season=C.SEASON, week=week, lines_pulled=lines_pulled, next_pull=next_pull(games=games), pull_schedule=pull_schedule(games=games), **status,
-                grading=dict(engine=C.ENGINE, bars=C.GRADE_BARS, units=C.GRADE_UNITS, locks=C.LOCKS_PER_SLATE, lock_min=C.LOCK_MIN_SCORE, clv=C.CLV_BARS, clv_pct=C.CLV_PCT_BARS,
+                grading=dict(engine=C.ENGINE, bars=C.GRADE_BARS, units=C.GRADE_UNITS, hole_share=C.HOLES["book_share"], locks=C.LOCKS_PER_SLATE, lock_min=C.LOCK_MIN_SCORE, clv=C.CLV_BARS, clv_pct=C.CLV_PCT_BARS,
                              stake=C.STAKE, frozen_until=C.FROZEN_UNTIL, corrector_weight=C.GBM["weight"], factors=C.FACTORS,
                              parlay=dict(min_model=C.PARLAY_MIN_PROB, fallback=C.PARLAY_FALLBACK_PROB, legs=list(C.PARLAY_LEGS))))
     prev = SEAL.read_json(SITE / "meta.json")

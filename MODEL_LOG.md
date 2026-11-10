@@ -109,27 +109,31 @@ does not describe his current role, or who may not play, can be a pick, never a 
      line is passed;
    - the **model's own chance**: from its number and spread at that line, held inside 2% to 98%;
    - the **win chance**: logit(p) = logit(fair) + w x [logit(model) - logit(fair)], with w = 0.65 on solo lines,
-     0.35 on combined and 0.5 on assists (the model has beaten the book on solo lines and not on combined);
+     0.35 on combined and 0.5 on assists (on 25 weeks of closing lines of 2025 and 2026 the solo weight is confirmed
+     and nothing beats these by t 2: open issue 22);
    - the **cautious chance**: the same with half of w;
    - the return at the win chance and the **cautious edge** (cautious chance x decimal odds - 1) at this book's
      price. The side with the better return is the line's side.
 5. **Pick, lean, no pick.** A pick has a cautious edge of zero or better. A lean has 2%+ at the win chance and is
    under water at the cautious one: shown, logged, never staked. Never a pick: a player ruled out or doubtful,
    fewer than 3 games of data, and an Under on a next-man-up backup the share model expects under 60% of the snaps
-   (the projection runs 16% low on exactly those), and a line that does not fit the player (one book alone on the
-   player and market, the model's own chance 93%+: a mis-posted line or another player of the same name).
-6. **Grades and the lock score.** A: a pick that is also a sleeper on the same side (item 11), checklist clear,
-   in a market that can carry an A (solo and combined; assists is a trial market). B: cautious edge of 2%+. C: any
-   other pick. The lock score is the model's own chance out of 100. Combined projections carry the level for
-   players who get lines (actual over projected on the season's earlier lined games; decision R7).
+   (the projection runs 16% low on exactly those), a line that does not fit the player (one book alone on the
+   player and market, the model's own chance 93%+: a mis-posted line or another player of the same name), and a
+   solo Over on a line the book has set at 58% or more of its own combined line (item 6: decision H1).
+6. **Grades and the lock score** (since 2026-11-10, noon; decision H1). The grade follows the book's own solo
+   share: its solo line divided by its combined line for the same player (the consensus lines). At 58% or more the
+   line is flagged (`config.HOLES`). A: a solo Under pick on a flagged line that is also a sleeper (item 11), the
+   checklist clear. B: any other solo Under pick on a flagged line. C: every other pick. The size of the cautious
+   edge no longer sets a grade. The lock score is the model's own chance out of 100. Combined projections carry
+   the level for players who get lines (actual over projected on the season's earlier lined games; decision R7).
 7. **The checklist** (never a lock, an A or a parlay leg): new role, next man up, reduced role, back from absence,
    new team, fewer than 3 games in his current role, questionable, snap counts missing for his last game, an Over.
 8. **Locks.** A picks only, highest model chance first, one per player, at most 3 on a one-game slate day and 5
    otherwise, at most two of a kind (side x market x position). A slate with no A has no lock.
-9. **Stakes** (`grade.size_stakes`, `config.STAKE`). Each pick starts at a quarter of Kelly on a 100-unit bankroll
-   at its cautious chance (0.1 to 3 units). Then the slate is sized as one book: each stake is divided by
-   1 + (N - 1) x 0.02 for the N picks of its kind (side x market) that slate day, and stakes are scaled down
-   together to at most 4 units a game, 10 a kind a day, 15 a day.
+9. **Stakes** (`grade.size_stakes`, `config.STAKE`, mode "grade" since 2026-11-10; decision S3). The stake is the
+   grade's units: A 1, B 0.5, C 0.25. Stakes are scaled down together only to stay within 5 units a game, 20 a kind
+   (side x market) a slate day and 25 a slate day, which happens on about one slate day in nine. The quarter-Kelly
+   stake and the divisor for like picks remain in the code (mode "kelly").
 10. **Parlays.** One per slate day, 2 or 3 legs, combined tackles only (books refuse solo legs in a same-game
     parlay). A leg must be a pick, lock-eligible, with a model chance of 60%+ (56% if too few), at most two of a
     kind. The chance is the product of the legs' win chances times the same-defence correlation ratio. When two
@@ -265,7 +269,17 @@ in-sample. The full write-up is Research round 11.
 - **E3. Cautious chance = the same at 0.25; a pick has a cautious edge of zero or better; a lean has 2%+ at the win
   chance.** The closing lines: picks 68-45 (60%, +17% a bet); cautious edge 0 to 2%: 37-25; 2%+: 31-20; leans 72-68
   (-1.3%); no pick 264-228 (+0.1%). Provisional (round numbers, looked at on those weeks).
-- **E4. Grades: B at a cautious edge of 2%+, A with a model chance of 70%+ and a clear checklist.** The closing
+- **H1. The grade follows the book's own solo share; no solo Over pick on a flagged line.** Since 2026-11-10, noon,
+  on the owner's go-ahead ("take creative liberty... do whatever you think is best"); it replaces E4 and the A rule
+  of R7. A: a solo Under pick on a line the book set at 58%+ of its own combined line, also a sleeper, checklist
+  clear. B: any other solo Under pick on such a line. C: every other pick. Evidence: the flag itself is confirmed
+  out of sample twice (176-103 on 2026 weeks 1 to 6, 609-363 on 2025, after it was found on weeks 7 to 9); replayed
+  on 21 weeks, A 106-35 (75%), B 210-106 (66%), C 621-428 (59%), in that order in each of four stretches, where the
+  cautious edge ordered nothing (B 60%, C 60%); the engine's solo Over picks on flagged lines 8-19, losing in each
+  stretch. The B and C definitions were drawn on those same 21 weeks: in-sample. Revert, read on weeks 10 to 13
+  and on at 30 A, 40 B and 100 C picks ("Rules on trial"): A under 60% or not ahead of B and C, back to the sleeper
+  rule (`a_rule="sleeper"`); B not ahead of C, B and C become one grade; C under 52.4%, C picks become leans.
+- **E4 (replaced by H1). Grades: B at a cautious edge of 2%+, A with a model chance of 70%+ and a clear checklist.** The closing
   lines: 13-6. Replay of weeks 7 to 9: A 10-6, B 20-21, C 73-58: the order is not there yet (ranges overlap).
   Built only from numbers that cannot improve with the book's agreement (rule 5 above). Provisional.
 - **E5. The lock score is the model's own chance; locks are A picks, highest first,** 3 a one-game slate day, 5
@@ -284,10 +298,18 @@ in-sample. The full write-up is Research round 11.
 - **E8. Not a pick:** out, doubtful or on a reserve list; fewer than 3 games.
 
 **Stakes and parlays**
-- **S1. A quarter of Kelly at the cautious chance, 0.1 to 3 units.** Sized on the cautious chance because no edge
+- **S3. The stake is the grade's units: A 1, B 0.5, C 0.25,** with caps of 5 units a game, 20 a kind a slate day
+  and 25 a slate day as a safety net. Since 2026-11-10, noon (owner's go-ahead, as H1); it replaces S1 and S2. On 21
+  replayed weeks the Kelly stakes returned what one size did (+19.9% against +20% a unit) and lost on 2026 weeks 4
+  to 6 where flat bets won; replayed with the ladder: +131.0 units on 560 staked (+23.4%) against +143.1 on 719
+  (+19.9%), a worst week of -0.1 units against -4.5, +18.8% against +6.5% on the 2026 weeks, a staked profit in 20
+  of 21 weeks against 18. Fewer units are out (27 a week against 34), so the same bankroll wins a little less in
+  total and risks less; a larger unit restores it. A stake is now a round number on 99% of picks. Revert to
+  `mode="kelly"` if, over weeks 10 to 13, the ladder's return per unit is under the same picks' return at one size.
+- **S1 (replaced by S3). A quarter of Kelly at the cautious chance, 0.1 to 3 units.** Sized on the cautious chance because no edge
   is proven: a pick that only just passes gets the minimum. Move to the win chance when the scoreboard's margin
   over the book is two standard errors positive.
-- **S2. The slate as one book:** divide by 1 + (N - 1) x 0.02 per kind per slate day; caps of 4 units a game, 10 a
+- **S2 (replaced by S3). The slate as one book:** divide by 1 + (N - 1) x 0.02 per kind per slate day; caps of 4 units a game, 10 a
   kind a day, 15 a day. 0.02 is the weekly shock as a correlation (6.5 points of hit rate against a binomial
   spread of 49). Week 9 as bet: 59.9 of 100 units on one Sunday. Replay under these rules: 19.5, 20.1 and 29.5
   units a week, -0.0 units on 69.1 staked, against +17.7 at one unit a bet: the stakes did not help, because C
@@ -305,7 +327,10 @@ in-sample. The full write-up is Research round 11.
 - **R4. Frozen until 2026-12-08** (rule 6 above). Lifted once by the owner on 2026-11-09 for six named changes
   (changelog, 10 pm), before week 10 had a line. On 2026-11-10 the solo share was corrected as a defect (P6), on the
   owner's instruction to test on the season's past lines and correct what they show, again before week 10 had a
-  line. It stands again: no pricing rule, bar or stake moved on 2026-11-10.
+  line. Lifted again by the owner at noon on 2026-11-10 ("take creative liberty... do whatever you think is best")
+  for H1 and S3, with two seasons of past lines behind them and week 10 still without a line. It stands again
+  from there: the weights, the pick test, the caps and the grades do not move before 2026-12-08 unless a defect
+  is found or a revert condition is met.
 - **R7. Changed 2026-11-09, 10 pm, at the owner's instruction** (they amend E2, E4 and E5 above; evidence in the
   changelog, all of it in-sample):
   - *E2:* the weight is 0.65 on solo lines and 0.35 on combined (assists 0.5); the cautious chance is half of it.
@@ -433,6 +458,8 @@ record where they concern picks.
 - **A wider spread for thin histories** (2026-11-09; round 11): best-fit spread around the final projection by prior games 1.28 (2 games), 1.27 (3-4), 1.26 (5-7), 1.25 (8+): nothing to allow for.
 
 ### Pricing, calibration and pick rules
+- **Combined weight 0.5 in place of 0.35, by replay** (2026-11-10, noon; 21 weeks): 289 more picks (14 a week), nearly all combined Unders, 158-131 between them: +4.0 units on 71 more staked (+5.6% against +23.4% for the rest), and 36-46 on the 2026 weeks. More to bet for less a unit. The scoreboard's small gain (+0.0018, t +2.3) does not turn into picks worth taking.
+- **A wider A** (2026-11-10, noon): every flagged solo Under with a clear checklist as an A: 229-97 (70%) on 15 a week, against 106-35 (75%) on 7 with the sleeper margin as well. The sleeper margin separates within the flag (73% against 65%), so it stays in the A.
 - **Part-time players' solo Unders and Rotowire's confirmation** (2026-11-10 candidates; rejected 11:40 am on the 2025 season): under 85% of the snaps 188-142 (57%) against 59% for the rest of the solo board; the share-gap or part-time lines with Rotowire's solo number well under the line 123-73 (63%) against 421-283 (60%) without. Off the card; `tools/holes.py` still scores them.
 - **A different weight on the model** (2026-11-10, 11:40 am; 25 weeks of two seasons): nothing clears t 2 leaving one week out (open issue 22). Solo 0.65 confirmed.
 - **The hot player's combined Over** (2026-11-10, 8:30 am candidate; rejected 11 am): last three games half a tackle over his season average. 75-47 on weeks 7 to 9 where it was found, 36-45 (-13% a bet) on weeks 1 to 6. Off the card; still scored by `tools/holes.py`.
@@ -529,10 +556,10 @@ and C9. What remains, and what the rebuild itself turned up:
    market (0.35 combined, 0.65 solo); (d) the in-season level by share class. (a) to (c) are scored by the daily
    since 2026-11-09 with their numbers fixed (decision R6). (d) changes the projection, not the price: it is not in
    the shadow and needs the full test (it is in the rejected register with its numbers).
-3. **Grades do not order yet.** Replay of weeks 7 to 9: A 10-6 (claimed 70%), B 20-21 (53%), C 73-58 (55%). Stakes
-   that follow the cautious edge therefore did not beat flat stakes (-0.0 units on 69.1 staked against +17.7 flat).
-   Every range overlaps; judged at 30 graded A picks. If A still claims 70% and hits near 60%, a ceiling on the
-   model's own chance is the candidate.
+3. **Grades order in the replay; the live weeks have to show it.** Under H1 the 21 replayed weeks give A 75%, B 66%,
+   C 59%, in order in each of four stretches, at DraftKings' prices too (65-18, 117-61, 409-279). B and C were
+   defined on those weeks. C on the 2026 weeks alone is 153-131 (54%, about +9% a bet at the logged prices): the
+   thinnest part of the board, and the first to become leans if weeks 10 to 13 do not hold it up.
 4. **The profit in the replay is a pocket.** (Four of those lineman wins were the mis-posted Sam Williams lines,
    now barred; under the rules of 2026-11-09, 10 pm, linemen are 13-2, linebackers 48-44, safeties 34-25, corners
    22-14.) Linemen 16-2 (+14.4 units of +17.7), the assists trial 17-11;
@@ -575,10 +602,8 @@ and C9. What remains, and what the rebuild itself turned up:
     Dropped on the 2025 season: part-time players' solo Unders (188-142, 57%, against 59% for the rest), Rotowire's
     confirmation (123-73 with it, 63%, against 60% without), the hot player's combined Over (201-241).
 16. **Closed 2026-11-10: the solo share was over-dispersed.** Adopted (P6; changelog, 11 am).
-18. **Stakes add nothing yet.** On 2026 weeks 4 to 6 they lost where flat bets won (-3.0 units staked against +11.1
-    flat); on the 21 replayed weeks they returned the same as flat (+19.9% against +20%; stakes over a unit 114-58,
-    stakes of a quarter unit or less 382-231). Sizing by the cautious edge is not yet shown to beat one size.
-    Related: issue 3.
+18. **Stakes: now by grade (S3).** The Kelly stakes added nothing over one size on 21 replayed weeks; the ladder
+    does, because the grade orders and the cautious edge did not. The live count is under "Rules on trial".
 19. **Overs.** Combined Over picks at the closing lines of 2026 were 3-11; in the 21 replayed weeks 44-37 (+9% a
     bet), so no case against them. Solo Over picks are 37-43 (-6%), and all of that loss is the flagged lines
     (8-19; unflagged 29-24): issue 15.
@@ -815,6 +840,62 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 ## Changelog
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
+
+### 2026-11-10, noon (the grade and the stake rebuilt on what two seasons of lines show; no solo Over on a flagged line)
+
+Owner: "Take creative liberty. I trust you to do whatever you think is best to ensure the model is easiest to bet
+and gives us the best return." The freeze is lifted for this entry (R4). Week 10 has no line yet, so the engine's
+live record starts under these rules. Everything below was decided on the 21 replayed weeks of the entry before
+(2025 weeks 4 to 18, 2026 weeks 4 to 9) and the 27 weeks of closing lines behind them.
+
+**What the replays said about the old rules.** A picks won (72%); B and C were the same bet (60% each): the size
+of the cautious edge, which set B against C and the stake, ordered nothing, and the stakes returned what one size
+did. One thing did order every kind of pick in every stretch: the book's own solo share (open issue 15).
+
+| the engine's picks, 21 weeks | 2025 wk 4-11 | 2025 wk 12-18 | 2026 wk 4-6 | 2026 wk 7-9 | all |
+|---|---|---|---|---|---|
+| solo Under, flagged line | 186-83 | 67-33 | 23-12 | 40-13 | 316-141 (69%) |
+| solo Under, unflagged | 87-60 | 72-51 | 15-22 | 33-32 | 207-165 (56%) |
+| solo Over, flagged line | 1-3 | 4-6 | 1-5 | 2-5 | 8-19 (30%) |
+| every other pick | 128-83 | 181-103 | 57-42 | 48-35 | 414-263 (61%) |
+
+**Changed** (decisions H1 and S3):
+1. **Grades.** A: a solo Under pick on a flagged line (the book's solo line 58%+ of its own combined line) that is
+   also a sleeper, checklist clear. B: any other solo Under pick on a flagged line. C: every other pick.
+2. **No solo Over pick on a flagged line.**
+3. **Stakes by grade:** A 1 unit, B 0.5, C 0.25; caps of 5 a game, 20 a kind a day, 25 a day as a safety net.
+4. **The site:** the board sorts by grade first; the legend, the card's stake line, the locks box, the glossary and
+   "Rules on trial" say the rules above; the replay record is the one under them.
+
+**Replayed under the new rules** (`res/v1_25`, `v1_26`), against the rules of this morning:
+
+| | before | new rules |
+|---|---|---|
+| picks | 945-588 (62%) | 937-569 (62%) |
+| A / B / C | 134-53 / 433-283 / 378-252 (72%, 60%, 60%) | 106-35 / 210-106 / 621-428 (75%, 66%, 59%) |
+| A, B, C a week | 9, 34, 30 | 7, 15, 50 |
+| locks | 43-17 | 38-12 |
+| units at the stakes | +143.1 on 719 (+19.9%) | +131.0 on 560 (+23.4%) |
+| 2026 weeks alone | +10.7 on 166 (+6.5%) | +25.4 on 135 (+18.8%) |
+| weeks with a profit at the stakes | 18 of 21 | 20 of 21 |
+| worst week | -4.5 units | -0.1 units |
+| DraftKings alone, A / B / C | 85-28 / 259-168 / 251-173 | 65-18 / 117-61 / 409-279 |
+
+Fewer units are out (27 a week against 34), so the total won is a little lower and the risk lower still; the unit
+is the owner's to size. 99% of stakes are exactly 1, 0.5 or 0.25.
+
+**Tested and not adopted** (rejected register): the combined weight at 0.5 (more picks for less a unit, and a loss
+on the 2026 weeks), and a wider A.
+
+**What this is not.** The flag is confirmed out of sample twice; the grade built on it, the Over block and the
+ladder were drawn on the same 21 weeks they are scored on. 2025 was a soft year for the books (open issue 1), the
+replays read one closing snapshot a week with the final injury report, and the best price is across three books.
+Weeks 10 to 13 decide: each rule has its number under "Rules on trial" and its revert in the register.
+
+**Validation.** Smoke test 180 of 180 (the grade check now tests H1 on a synthetic board that carries flagged solo
+lines; the stake check tests the ladder and the caps). A real daily in a scratch copy: clean, the site's data
+carries the rules, the page renders with no script error. Replays of both seasons on the final code: the table
+above. The Test workflow on GitHub read after the push.
 
 ### 2026-11-10, 11:40 am (last season's lines: the edge holds on 2025; one more flag dropped; a final validation run)
 
@@ -1521,3 +1602,7 @@ Never tested; each with what would justify it. Anything tested and dropped is in
 - **A good year for a side is not a good model.** In 2025 every solo Under at the best closing price returned
   +10.8% with no model at all. A record on a season is read against that season's board, and the best price
   across three books is not the price one bettor gets.
+- **When a number is supposed to rank picks, check that it ranks them.** The cautious edge set B against C and the
+  size of every stake for a day and a half on three weeks of closing lines (37-25 against 31-20). On 21 weeks it
+  ranked nothing. Before a number sets a grade or a stake, the record by its buckets is read on weeks it was not
+  chosen on, and again whenever more weeks arrive.

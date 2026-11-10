@@ -198,7 +198,9 @@ ENGINE = dict(beta=0.5, beta_low=0.25,
               rho=0.02,
               beta_by_kind=dict(combined=0.35, solo=0.65),   # the weight by market since 2026-11-09 (owner's instruction): the model has beaten the book on solo lines and not on combined
               low_ratio=0.5,         # the cautious chance counts the disagreement at this share of the weight
-              a_rule="sleeper",      # A: a pick that is also a sleeper on the same side (the model's number and the line apart by the sleeper margin), checklist clear
+              a_rule="hole",         # since 2026-11-10 the grade follows the book's own solo share (HOLES): A a solo Under pick on a flagged line that is also a
+                                     # sleeper, checklist clear; B any other solo Under pick on a flagged line; C every other pick ("sleeper": the rule of 2026-11-09)
+              hole_over_block=True,  # no solo Over pick on a flagged line: the engine's went 8-19 on 21 replayed weeks, losing in each of four stretches
               misfit_model=0.93)     # a line only one book posts, on which the model's own chance is this or more: the line does not fit this player (a mis-posted line or a wrong match), no pick              # how alike two picks of one kind on one slate are: the weekly shock (6.5 points of hit rate on solo Unders) as a correlation
 FROZEN_UNTIL = "2026-12-08"          # evidence rule: no bar, weight or cap in ENGINE, STAKE, FACTORS or GBM changes before this date (four graded weeks)
                                      # unless a defect is found; candidates are tested in the shadow on data/lines_log.csv and reported, not adopted
@@ -225,14 +227,19 @@ MIN_GAMES_FOR_PICK = 3
 # The lock score is the model's own chance of the pick's side, out of 100: the model's evidence and nothing else. It ranks the locks.
 LOCK_MIN_SCORE = 100 * ENGINE["a_model"]
 GRADE_BARS = dict(A=LOCK_MIN_SCORE, B=None)      # kept for the site's legend: an A needs this score (and the cautious edge and the checklist)
-GRADE_UNITS = dict(A=1.0, B=0.5, C=0.25)   # the grade ladder, kept for the record's "units at grade stake"; the stake on a pick is STAKE below
+GRADE_UNITS = dict(A=1.0, B=0.5, C=0.25)   # the grade ladder: the stake on a pick since 2026-11-10 (STAKE["mode"] == "grade"), before the caps
 # Stake per pick: a quarter of the Kelly fraction of a 100-unit bankroll AT THE CAUTIOUS CHANCE, so a pick that only just survives the
 # cautious test gets the minimum. Then the slate is sized as one book, because its picks are not independent (week 9: 59.9 of 100 units
 # were out on one Sunday, 86% of them on solo Unders, each sized as if alone): every stake is divided by 1 + (N - 1) x rho for the N picks
 # of its kind (side x market) on its slate day, and capped per game, per kind per slate and per slate (scaled down together).
 # Revert / raise: move to the win chance (not the cautious one) once the engine has beaten the market's fair close by two standard
 # errors with weeks as the unit (Track record, "Against the market").
-STAKE = dict(bankroll=100.0, kelly_fraction=0.25, min=0.1, max=3.0, game_cap=4.0, kind_cap=10.0, slate_cap=15.0)
+# Since 2026-11-10 (owner's go-ahead): mode "grade". The stake is the grade's units (GRADE_UNITS) and the caps below are a safety net
+# that bind on about one slate day in nine. On 21 replayed weeks the Kelly stakes above returned what one size did (+19.9% against
+# +20%): the cautious edge did not order picks. The grade does (75%, 66%, 59%): replayed with the ladder, +131.0 on 560 units (+23.4%)
+# against +143.1 on 719 (+19.9%), a worst week of -0.1 units against -4.5, and +18.8% against +6.5% on the 2026 weeks. Back to "kelly" if the ladder's return per unit over weeks 10 to 13
+# is under the same picks' return at one size (Rules on trial, S3).
+STAKE = dict(mode="grade", bankroll=100.0, kelly_fraction=0.25, min=0.1, max=3.0, game_cap=5.0, kind_cap=20.0, slate_cap=25.0)
 # Closing-line value: among picks whose closing number differed from ours, the share that moved our way. Below
 # ~52% is indistinguishable from noise over a few hundred bets (standard error ~3% at 300); sharp bettors sustain
 # 55-60% and 60%+ is rare. Shown in the site legend.

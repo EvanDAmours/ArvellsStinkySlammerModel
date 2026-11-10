@@ -1148,17 +1148,22 @@ def engine_betas(kind):
     return b, b * float(e.get("low_ratio", e["beta_low"] / e["beta"]))
 
 
-def engine_grade(edge_low, p_model_side, blocked, market=None, sleeper_match=None):
-    """A, B or C for a pick, from numbers that cannot improve when the book agrees more. A (config.ENGINE["a_rule"] ==
-    "sleeper"): a pick that is also a sleeper on the same side, the lock checklist clear, a market that can carry an A.
-    With the older rule ("model"): a cautious edge of 2%+ and the model's own chance at a_model or more. B: a cautious edge
-    of 2%+. C: a pick short of that. None when it is not a pick. sleeper_match None means the caller does not know: the
-    older rule is used."""
+def engine_grade(edge_low, p_model_side, blocked, market=None, sleeper_match=None, hole=None):
+    """A, B or C for a pick, from numbers that cannot improve when the book agrees more. None when it is not a pick.
+    config.ENGINE["a_rule"] == "hole" (since 2026-11-10): `hole` says the pick is a solo Under on a line the book has set at
+    config.HOLES["book_share"] or more of its own combined line. A: such a pick that is also a sleeper on the same side,
+    the lock checklist clear. B: any other such pick. C: every other pick. On 21 replayed weeks of two seasons these went
+    75%, 66% and 59%, in that order in each of four stretches; the cautious edge did not order picks at all.
+    "sleeper" (2026-11-09): A is a pick that is also a sleeper on the same side, checklist clear, a market that can carry
+    one; B a cautious edge of 2%+; C a pick short of that. Older ("model"): A is a cautious edge of 2%+ with the model's
+    own chance at a_model or more. A caller that does not pass `hole` (or `sleeper_match`) gets the rule before it."""
     e = C.ENGINE
     if edge_low is None or pd.isna(edge_low) or edge_low < e["pick_edge_low"]:
         return None
     can_a = not blocked and (market is None or market in C.A_GRADE_MARKETS)
-    if e.get("a_rule") == "sleeper" and sleeper_match is not None:
+    if e.get("a_rule") == "hole" and hole is not None and sleeper_match is not None:
+        return ("A" if sleeper_match and can_a else "B") if hole else "C"
+    if e.get("a_rule") in ("sleeper", "hole") and sleeper_match is not None:
         if sleeper_match and can_a:
             return "A"
         return "B" if edge_low >= e["b_edge_low"] else "C"
@@ -1522,8 +1527,14 @@ def price_lines(lines, P, segments=None, blend=None):
         # the projection runs 16% low on exactly these (config.LOCK_RULES), and a book that posts a line on him knows he plays
         sp_ = p.get("share_pred", np.nan)
         blind_under = role_now and side == "Under" and not C.LOCK_RULES.get("next_man_up_under", False) and not (pd.notna(sp_) and float(sp_) >= C.PHI_SHARE_SPLIT)
+        # the book's own solo share (config.HOLES): its solo line as a share of its combined line for the same player. At
+        # 58% or more the solo Under has won two in three over two seasons, and the engine's Over picks there lost 8-19
+        comb_line = med_two.get((r.player, "player_tackles_assists")) if solo else None
+        book_share = float(r.mkt_line) / float(comb_line) if comb_line is not None and pd.notna(comb_line) and float(comb_line) > 0 else None
+        hole = book_share is not None and book_share >= C.HOLES["book_share"]
+        hole_over = hole and side == "Over" and bool(e_.get("hole_over_block", False))
         tier = "pick" if edge_low >= e_["pick_edge_low"] else "lean" if ev >= e_["lean_edge"] else "pass"
-        if flagged or thin or blind_under or misfit:
+        if flagged or thin or blind_under or misfit or hole_over:
             tier = "pass"
         pick = side if tier == "pick" else "Pass"
         lock = 100.0 * p_model_side                                   # the lock score: the model's own chance of this side
@@ -1559,16 +1570,16 @@ def price_lines(lines, P, segments=None, blend=None):
                 at_price = f"At this price: win chance {s_win:.0%} against {1 / s_dec:.0%} to break even ({s_ev:+.0%}); {verdict}."
                 s_note = sleeper_note(sleeper, kind, mu_model, line, phi_use, s_p, log_raw, eo, s_grade, s_why, at_price)
         # the solo-share gap: a measurement, logged for every solo line, used by no rule
-        share_gap = own_share = book_share = None
-        comb_line = med_two.get((r.player, "player_tackles_assists")) if solo else None
-        if solo and comb_line is not None and pd.notna(comb_line) and float(comb_line) > 0 and league_share == league_share:
+        share_gap = own_share = None
+        if book_share is not None and league_share == league_share:
             k_ = C.SHARE_GAP["k"]
             own_share = (sum(_log(p, "log_solo")) + k_ * league_share) / (sum(_log(p, "log_comb")) + k_)
-            book_share = float(r.mkt_line) / float(comb_line)
             share_gap = float(own_share - book_share)
         # the grade, once the sleeper is known: an A is a pick the sleeper rule also names on the same side
-        grade = engine_grade(edge_low, p_model_side, bool(block), r.market, sleeper_match=(sleeper == side)) if tier == "pick" else None
-        not_a = tier == "pick" and grade != "A" and sleeper == side and (bool(block) or r.market not in C.A_GRADE_MARKETS)   # an A but for the checklist or the market
+        hole_under = bool(hole and side == "Under")
+        grade = engine_grade(edge_low, p_model_side, bool(block), r.market, sleeper_match=(sleeper == side), hole=hole_under) if tier == "pick" else None
+        by_hole = e_.get("a_rule") == "hole"
+        not_a = tier == "pick" and grade != "A" and sleeper == side and (bool(block) or r.market not in C.A_GRADE_MARKETS) and (hole_under or not by_hole)   # an A but for the checklist or the market
         num = f"win chance {p_side:.0%} against {1 / dec:.0%} to break even at this price ({ev:+.0%}); at the cautious chance {p_low:.0%} ({edge_low:+.0%}). Model alone {p_model_side:.0%}, the book's fair price {fair_side:.0%}"
         if flagged:
             why = f"His own status is {p.status or 'uncertain'}: wait for the final report"
@@ -1580,6 +1591,9 @@ def price_lines(lines, P, segments=None, blend=None):
         elif blind_under:
             why = (f"No pick: he is the next man up (a regular at his position is out) and the model expects him at {float(sp_):.0%} of the snaps" if pd.notna(sp_) else "No pick: he is the next man up (a regular at his position is out)") + \
                   f". On backups like this the projection has run 16% low, so its Under is not an edge; the numbers, for the record: {num}"
+        elif hole_over:
+            why = (f"No pick: the book's solo line is {book_share:.0%} of its own combined line for him, and on lines like that the Under has won two in three over two seasons; "
+                   f"the model's Over picks on them went 8-19. The numbers, for the record: {num}")
         elif tier == "pass":
             why = f"No edge: {side} {line:g}, {num}"
         elif tier == "lean":
@@ -1610,10 +1624,12 @@ def price_lines(lines, P, segments=None, blend=None):
                 why += f"; a sleeper on this side too, which would make it an A, shown as a {grade}: " + ("the lock checklist is not clear" if block else "this market cannot carry an A yet")
         if sleeper:
             why += f"; sleeper ({sleeper}, grade {s_grade}): the model's own number is {mu_model:.1f} against a line of {line:g}"
-        # the measurement on trial (config.HOLES, tools/holes.py; open issue 15), named on the card and used by no rule
-        if book_share is not None and book_share >= C.HOLES["book_share"]:
-            why += (f"; solo share: the book's solo line is {book_share:.0%} of its own combined line for him (he has made {own_share:.0%} of his tackles solo), and solo Unders on lines "
-                    f"at {C.HOLES['book_share']:.0%} or more have won about two in three over the last two seasons (a measurement on trial, in no grade)")
+        # the book's own solo share, named on the card (config.HOLES; MODEL_LOG decision H1): it sets the grade of a solo Under
+        if hole:
+            own_txt = f" (he has made {own_share:.0%} of his tackles solo)" if own_share is not None else ""
+            why += (f"; solo share: the book's solo line is {book_share:.0%} of its own combined line for him{own_txt}, and solo Unders on lines "
+                    f"at {C.HOLES['book_share']:.0%} or more have won about two in three over the last two seasons"
+                    + (": that is what makes this a " + str(grade) if by_hole and grade in ("A", "B") else "" if by_hole else " (a measurement on trial, in no grade)"))
         lg_steps, lg_text = logic_steps(p, kind)
         mu_eng = implied_mean(po, phi_use, line)                       # the engine's win chance read back as a number of tackles
         mkt_mean = implied_mean(fair, phi_use, line)                   # the book's fair price read back the same way
@@ -1628,7 +1644,7 @@ def price_lines(lines, P, segments=None, blend=None):
                      "season_avg": float(p.season_avg), "last": None if pd.isna(p["last"]) else float(p["last"]),
                      "n_prev": int(p.n_prev), "consistency": consistency, "cons_hits": int(sum(hits)), "cons_n": len(hits),
                      "mkt_side": float(fair_side), "payout": None if dec is None else float(dec - 1),
-                     "stake": kelly_stake(p_low, dec) if tier == "pick" else None,
+                     "stake": (float(C.GRADE_UNITS.get(grade, 0.0)) or None if C.STAKE.get("mode") == "grade" else kelly_stake(p_low, dec)) if tier == "pick" else None,
                      "international": str(p.get("venue", "")) == "NEUTRAL", "depth": p.get("dc_status", ""), "uncertain": bool(uncertain),
                      "new_role": bool(new_role), "snap_jump": None if pd.isna(p.get("snap_jump", np.nan)) else float(p.get("snap_jump")),
                      "reduced_role": fl["reduced_role"], "absence": bool(fl["absence"] or fl["missed_game"]), "new_team": fl["new_team"],
