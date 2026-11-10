@@ -29,6 +29,10 @@ on:
         description: "Folder to save under (blank = data/odds)"
         required: false
         default: ""
+      season:
+        description: "Season (blank = the current one)"
+        required: false
+        default: ""
 permissions:
   contents: write
 concurrency:
@@ -47,13 +51,13 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - run: python run.py history --weeks "${{ github.event.inputs.weeks }}" --markets "${{ github.event.inputs.markets }}" --hours-before "${{ github.event.inputs.hours_before }}" --at "${{ github.event.inputs.at }}" --max-games "${{ github.event.inputs.max_games }}" --dir "${{ github.event.inputs.dir }}"
+      - run: python run.py history --weeks "${{ github.event.inputs.weeks }}" --markets "${{ github.event.inputs.markets }}" --hours-before "${{ github.event.inputs.hours_before }}" --at "${{ github.event.inputs.at }}" --max-games "${{ github.event.inputs.max_games }}" --dir "${{ github.event.inputs.dir }}" --season "${{ github.event.inputs.season || 0 }}"
       - name: Save snapshots
         run: |
           git config user.name "tackle-bot"
           git config user.email "tackle-bot@users.noreply.github.com"
           git add data/odds data/odds_early 2>/dev/null || git add data/odds
-          git diff --cached --quiet || git commit -m "Past lines: ${{ github.event.inputs.markets }} weeks ${{ github.event.inputs.weeks }}"
+          git diff --cached --quiet || git commit -m "Past lines: ${{ github.event.inputs.season }} ${{ github.event.inputs.markets }} weeks ${{ github.event.inputs.weeks }}"
           for i in 1 2 3 4; do
             git pull --rebase -X theirs && git push && break
             git rebase --abort 2>/dev/null || true
