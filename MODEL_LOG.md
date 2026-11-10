@@ -693,6 +693,13 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-09, 10:45 pm (a free check of the odds keys)
+
+**What.** `python run.py keys` and a by-hand workflow, "Check odds keys" (`.github/workflows/keys.yml`): for each
+key name in `config.ODDS_KEY_ENV`, whether a secret is set, whether the Odds API accepts it, and the credits left.
+It uses the free events call and prints names and counts only. **Why.** The owner added a key and asked whether it
+works; until now the only way to find out was to wait for a pull. **Revert.** Delete the workflow and the command.
+
 ### 2026-11-09, 10 pm (six changes at the owner's instruction, before week 10 has a line)
 
 Owner, after asking what would find better hits and being given six ideas: "do 1-6." That lifts the freeze for

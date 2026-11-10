@@ -1,0 +1,19 @@
+name: Check odds keys
+# By hand only. Says whether each Odds API key is set and accepted, and how many credits it has left.
+# The call it makes is free; it prints names and counts, never a key.
+on:
+  workflow_dispatch: {}
+jobs:
+  keys:
+    runs-on: ubuntu-latest
+    env:
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      PARLAY_API_KEY: ${{ secrets.PARLAY_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python run.py keys

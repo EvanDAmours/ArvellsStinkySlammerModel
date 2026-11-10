@@ -619,6 +619,24 @@ def cmd_tick():
         print("tick: no odds key in the environment; pulls skipped")
 
 
+def cmd_keys():
+    """Check every Odds API key without spending a credit (the events call is free): set or not, accepted or rejected,
+    credits left. Prints names and counts only, never a key."""
+    keys = {name: os.environ.get(name, "") for name in C.ODDS_KEY_ENV}
+    left = O.credits_left({n: k for n, k in keys.items() if k})
+    for name in C.ODDS_KEY_ENV:
+        if not keys[name]:
+            print(f"keys: {name}: not set (no secret of this name reaches the job)")
+        elif left.get(name) is None:
+            print(f"keys: {name}: set, but the Odds API could not be reached or gave no count")
+        elif left[name] == 0.0:
+            print(f"keys: {name}: REJECTED by the Odds API, or out of credits")
+        else:
+            print(f"keys: {name}: works, {left[name]:.0f} credits left")
+    known = [v for v in left.values() if v]
+    print(f"keys: {len(known)} working key(s), {sum(known):.0f} credits in all")
+
+
 def cmd_sleep(now=None):
     """Seconds the ticker should sleep: until the next pull slot or the next daily, between 60 and 900."""
     now = now or dt.datetime.now(dt.timezone.utc)
@@ -972,7 +990,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["daily", "odds", "seal", "history", "tick", "sleep", "watch", "live-grade"])
+    ap.add_argument("cmd", choices=["daily", "odds", "seal", "history", "tick", "sleep", "watch", "live-grade", "keys"])
     ap.add_argument("--test", action="store_true", help="watch: raise one test alert")
     ap.add_argument("--hours", type=float, default=None)
     ap.add_argument("--auto", action="store_true")
@@ -984,6 +1002,8 @@ if __name__ == "__main__":
     else:
         if a.cmd == "history":
             cmd_history([int(w) for w in a.weeks.split(",") if w.strip()], [m for m in a.markets.split(",") if m.strip()])
+        elif a.cmd == "keys":
+            cmd_keys()
         elif a.cmd == "tick":
             cmd_tick()
         elif a.cmd == "live-grade":
