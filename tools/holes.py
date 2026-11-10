@@ -22,8 +22,7 @@ from pipeline import odds as O          # noqa: E402
 from pipeline.model import american_to_decimal as dec  # noqa: E402
 from pipeline.sources import norm_name  # noqa: E402
 
-PART_TIME = 0.85        # under this share of the snaps this season
-HOT = 0.5               # his last three games average this many tackles or more over his season average
+PART_TIME, HOT = C.HOLES["part_time"], C.HOLES["hot"]      # the same numbers the card's flags use
 
 
 def frame(H, season, weeks=None):

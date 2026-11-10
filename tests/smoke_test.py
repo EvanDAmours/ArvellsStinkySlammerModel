@@ -449,6 +449,8 @@ _op = R.auto_plan(now=dt.datetime.combine(_od, dt.time(10, 5), tzinfo=R.EDMONTON
 _no = R.auto_plan(now=dt.datetime.combine(_od + dt.timedelta(days=14), dt.time(10, 5), tzinfo=R.EDMONTON).astimezone(dt.timezone.utc), games=[], served=set())
 check(_op is not None and len(_op["days"]) == 5 and _op["days"][0] == str(_od + dt.timedelta(days=1)) and _no is None and R.OPENER_SLOT in R.slots_on(_od) and R.OPENER_SLOT not in R.slots_on(_od + dt.timedelta(days=14)),
       "the early look at the whole week is pulled on its trial Wednesdays and on no other")
+_whys = " ".join(str(b.get("why", "")) for b in _ba)
+check(("part-time:" in _whys or "hot:" in _whys or "solo share:" in _whys) and "in no grade" in _whys, "the card names the measurements on trial (solo share, part-time, hot) where they apply, and says they are in no grade")
 _ll = pd.read_csv(tmp / "data" / "lines_log.csv")
 check("share_gap" in _ll.columns and "level" in _ll.columns and (_ll[_ll.market == "player_solo_tackles"].share_gap.notna().any() if (_ll.market == "player_solo_tackles").any() else True),
       "the line log carries the solo-share gap and the lined-player level for every line")

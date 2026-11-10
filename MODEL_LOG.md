@@ -748,6 +748,14 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-10, 11 am (the part-time and hot flags on the card)
+
+At the owner's request the two candidates of the sweep are named in a card's "why" where they apply, as the
+solo-share gap already was: "part-time" on a solo line (under 85% of the snaps this season) and "hot" on a
+combined line (last three games half a tackle or more over his season average). `config.HOLES` holds the two
+numbers, shared with `tools/holes.py`. Each clause says it is a measurement on trial and in no grade; no pick,
+grade or stake reads them. Smoke test 180 of 180. Revert: remove the two clauses in `model.price_lines`.
+
 ### 2026-11-10, 10 am (a sweep of the closing lines for other holes: two more candidates, written down before week 10)
 
 Owner, after the solo-share gap: "are there any other holes in the books' lines like that?" Twelve things knowable

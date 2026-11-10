@@ -1610,6 +1610,12 @@ def price_lines(lines, P, segments=None, blend=None):
                 why += f"; a sleeper on this side too, which would make it an A, shown as a {grade}: " + ("the lock checklist is not clear" if block else "this market cannot carry an A yet")
         if sleeper:
             why += f"; sleeper ({sleeper}, grade {s_grade}): the model's own number is {mu_model:.1f} against a line of {line:g}"
+        # two more measurements on trial (config.HOLES, tools/holes.py), named on the card and used by no rule
+        lp_all, lc_all = _log(p, "log_pct"), _log(p, "log_comb")
+        if solo and lp_all and float(np.mean(lp_all)) < C.HOLES["part_time"]:
+            why += f"; part-time: he has played {float(np.mean(lp_all)):.0%} of the snaps this season, and part-time players' solo Unders have run well (a measurement on trial, in no grade)"
+        if kind == "combined" and len(lc_all) >= 4 and float(np.mean(lc_all[-3:]) - np.mean(lc_all)) >= C.HOLES["hot"]:
+            why += f"; hot: his last three games average {float(np.mean(lc_all[-3:])):.1f} against {float(np.mean(lc_all)):.1f} for the season, and hot players' combined Overs have run well (a measurement on trial, in no grade)"
         if share_gap is not None and share_gap <= C.SHARE_GAP["flag"]:
             why += f"; solo share: he has made {own_share:.0%} of his tackles solo and the book's two lines imply {book_share:.0%} (a measurement on trial, in no grade)"
         lg_steps, lg_text = logic_steps(p, kind)

@@ -63,6 +63,10 @@ ODDS_BOOKMAKERS = [
 # league's, minus the share the book's two lines imply (solo line / combined line). At `flag` or below, the book's solo line
 # is high for the way he makes his tackles: on weeks 7 to 9 those solo Unders went 96-39 at the close, picked or not.
 SHARE_GAP = dict(k=25.0, flag=-0.04)
+# Two more candidates from the sweep of 2026-11-10 (tools/holes.py), named on the card and in no rule: a part-time player's
+# solo Under (under `part_time` of the snaps this season) and a hot player's combined Over (his last three games `hot`
+# tackles or more over his season average).
+HOLES = dict(part_time=0.85, hot=0.5)
 OPENER_DATES = ("2026-11-11", "2026-11-18")          # Wednesdays with an early look at the whole week's lines (weeks 10 and 11): a trial, see MODEL_LOG
 ODDS_KEY_ENV = ["ODDS_API_KEY", "PARLAY_API_KEY"]   # GitHub secrets holding Odds API keys, used in this order
 MIN_CREDITS_LEFT = 25              # a key with fewer credits left this month is skipped; pulling stops when every key is below it
