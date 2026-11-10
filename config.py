@@ -59,6 +59,11 @@ ODDS_BOOKMAKERS = [
     # 888 ("sport888", UK feed), BET99 ("bet99_ca_on", paid API plans only). PointsBet Canada and Betano
     # are not on the Alberta roster, and Play Alberta, Stake, DAZN Bet, Tonybet, PowerPlay are not on the API.
 ]
+# The solo-share gap (a measurement since 2026-11-10, in no rule): his own solo share to date, shrunk over `k` tackles of the
+# league's, minus the share the book's two lines imply (solo line / combined line). At `flag` or below, the book's solo line
+# is high for the way he makes his tackles: on weeks 7 to 9 those solo Unders went 96-39 at the close, picked or not.
+SHARE_GAP = dict(k=25.0, flag=-0.04)
+OPENER_DATES = ("2026-11-11", "2026-11-18")          # Wednesdays with an early look at the whole week's lines (weeks 10 and 11): a trial, see MODEL_LOG
 ODDS_KEY_ENV = ["ODDS_API_KEY", "PARLAY_API_KEY"]   # GitHub secrets holding Odds API keys, used in this order
 MIN_CREDITS_LEFT = 25              # a key with fewer credits left this month is skipped; pulling stops when every key is below it
 # The credit budget (2026-11-09; run.credit_budget). A pull costs one credit per market per game. Before every scheduled pull the

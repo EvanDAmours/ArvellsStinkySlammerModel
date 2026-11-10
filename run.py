@@ -55,6 +55,17 @@ PULL_SLOTS = {
     6: [(10 * 60, "today")],                          # Sunday 10 am: the slate with the inactives known (ties with the pre-kickoff pull on a normal week, so one pull)
     0: [(9 * 60, "mon"), (13 * 60, "mon")],           # Monday 9 am and 1 pm: the Monday game
 }
+# An early look at the whole week (Thursday to Monday), on the dates in config.OPENER_DATES only: a trial of how far
+# the first posted lines sit from the closing ones (owner's request, 2026-11-10).
+OPENER_SLOT = (10 * 60, "week")                   # Wednesday 10 am Edmonton
+
+
+def slots_on(day):
+    """The fixed slots of an Edmonton date: PULL_SLOTS for its weekday, plus the early look on a trial date."""
+    extra = [OPENER_SLOT] if str(day) in getattr(C, "OPENER_DATES", ()) else []
+    return list(PULL_SLOTS.get(day.weekday(), [])) + extra
+
+
 INTL_WINDOWS_H = (12,)             # international games (early-morning kickoffs) also get a pull this many hours before kickoff; the hour-before pull comes from the schedule
 PRE_KICK_MIN = 60                  # every game: one pull this many minutes before its kickoff (Edmonton time), covering every game that day not yet started
 PRE_KICK_CLUSTER_MIN = 30          # kickoffs within this many minutes of each other share one pre-kickoff pull
@@ -128,10 +139,10 @@ def auto_plan(now=None, games=None, served=None):
     today = local.date()
     d = lambda n: str(today + dt.timedelta(days=n))
     due = []
-    for slot, what in PULL_SLOTS.get(local.weekday(), []):
+    for slot, what in slots_on(today):
         key = f"{today} {slot // 60:02d}:{slot % 60:02d}"
         if local.hour * 60 + local.minute >= slot and key not in served:
-            days = {"thu_fri": [d(0), d(1)], "sat": [d(1)], "sat_sun": [d(0), d(1)], "fri_weekend": [d(1), d(2)], "sun": [d(1)], "mon": [d(0)], "today": [d(0)]}[what]
+            days = {"week": [d(n) for n in range(1, 6)], "thu_fri": [d(0), d(1)], "sat": [d(1)], "sat_sun": [d(0), d(1)], "fri_weekend": [d(1), d(2)], "sun": [d(1)], "mon": [d(0)], "today": [d(0)]}[what]
             due.append((slot, dict(days=days, key=key, reason=f"{local.strftime('%A')} {slot // 60:02d}:{slot % 60:02d} slot (run at {local.strftime('%H:%M')}): games on {days}")))
     # every game day: one pull an hour before each cluster of kickoffs, from the schedule, covering every game that day
     # not yet started (a run that comes late because GitHub stalled still serves it; started games are simply skipped)
@@ -162,7 +173,7 @@ def next_pull(now=None, games=None):
     local = now.astimezone(EDMONTON)
     for n in range(8):
         day = local.date() + dt.timedelta(days=n)
-        slots = [m for m, _ in PULL_SLOTS.get(day.weekday(), [])] + [m for m, _ in kickoff_slots(games, day)]
+        slots = [m for m, _ in slots_on(day)] + [m for m, _ in kickoff_slots(games, day)]
         for m in sorted(slots):
             t = dt.datetime.combine(day, dt.time(m // 60, m % 60), tzinfo=EDMONTON)
             if t > local:
@@ -212,7 +223,7 @@ def pull_schedule(now=None, games=None, days=7):
     out = []
     for n in range(days + 1):
         day = local.date() + dt.timedelta(days=n)
-        slots = [(m, f"{day} {m // 60:02d}:{m % 60:02d}", "fixed") for m, _ in PULL_SLOTS.get(day.weekday(), [])]
+        slots = [(m, f"{day} {m // 60:02d}:{m % 60:02d}", "fixed") for m, _ in slots_on(day)]
         slots += [(m, k, "prekick") for m, k in kickoff_slots(games, day)]
         for m, key, kind in sorted(slots):
             at = dt.datetime.combine(day, dt.time(max(m, 0) // 60, max(m, 0) % 60), tzinfo=EDMONTON).astimezone(dt.timezone.utc)
@@ -287,13 +298,13 @@ def scheduled_pulls(now, kickoffs, until):
         for m, key in kickoff_slots(games, day):
             at = at_of(m); seen.add(m)
             out.append((at, "prekick", on({day}, at), sum(1 for k in ks if at < k <= at + win), key))
-        for m, what in PULL_SLOTS.get(day.weekday(), []):
+        for m, what in slots_on(day):
             if m in seen:
                 continue                                  # the same minute as a pre-kickoff pull: one pull
             at = at_of(m)
-            dates = {"thu_fri": {d(0), d(1)}, "sat": {d(1)}, "sat_sun": {d(0), d(1)}, "fri_weekend": {d(1), d(2)}, "sun": {d(1)}, "mon": {d(0)}, "today": {d(0)}}[what]
+            dates = {"week": {d(n) for n in range(1, 6)}, "thu_fri": {d(0), d(1)}, "sat": {d(1)}, "sat_sun": {d(0), d(1)}, "fri_weekend": {d(1), d(2)}, "sun": {d(1)}, "mon": {d(0)}, "today": {d(0)}}[what]
             n = on(dates, at)
-            out.append((at, "sat" if what == "sat_sun" else "early" if what in ("thu_fri", "mon") else "look", n, n, f"{day} {m // 60:02d}:{m % 60:02d}"))
+            out.append((at, "sat" if what == "sat_sun" else "early" if what in ("thu_fri", "mon", "week") else "look", n, n, f"{day} {m // 60:02d}:{m % 60:02d}"))
         day += dt.timedelta(days=1)
     return sorted(p_ for p_ in out if p_[0] < until)
 

@@ -529,6 +529,10 @@ and C9. What remains, and what the rebuild itself turned up:
 11. **Prices are not Alberta prices.** theScore Bet's lines are its US feed; three books post tackle lines on the
     feed; bet365 is not carried. That a tackle made with an assist settles as solo at the book is inferred from
     ESPN, not confirmed: one settled slip would do it (Nohl Williams Under 2.5 solo, week 9).
+15. **The solo-share gap (candidate, the strongest so far).** Solo Unders where the book's two lines imply a higher
+    solo share than the player's own went 96-39 at the close in weeks 7 to 9, most of them lines the model passed on
+    (changelog, 2026-11-10, 9 am). Logged from week 10 (`share_gap`). Read at the end of week 13: if those Unders hit
+    58% or better out of sample and beat the rest of the solo board, make it a pick rule and an A input.
 12. **Closing-line value and the prices disagree.** On the replay's picks the price logged beat the closing price
     of the same line (+29.9 units against +25.0 on 186 picks), yet the no-vig closing-line value of the same picks
     is -2 points. One of the two is measured wrong (the vig widening near kickoff, or the conversion through the
@@ -698,6 +702,36 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 ## Changelog
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
+
+### 2026-11-10, 9 am (an early look at the week for weeks 10 and 11; the solo-share gap measured and logged)
+
+Owner: "add one early pull for week 10 and 11, and test solo share per player."
+
+**The early look** (`config.OPENER_DATES`, `run.OPENER_SLOT`, `run.slots_on`). Wednesday 10 am Edmonton on
+2026-11-11 and 2026-11-18: every game from Thursday to Monday, an "early" pull in the credit budget (about 28
+credits each on two markets). It is a normal pull: lines priced, picks logged at the price of the moment. With 500
+credits the budget runs every scheduled pull on two markets; the assists trial market stays out (540 needed).
+Why: on the replay the price when a pick first appeared beat the closing price of the same line (+29.9 units
+against +25.0), and books sharpen prop lines through the week; nothing earlier than Thursday had ever been pulled.
+Read after week 11: how far Wednesday's lines and prices sit from the close, and what Wednesday's picks did.
+Revert: empty `OPENER_DATES` (it ends by itself after 2026-11-18).
+
+**The solo-share gap** (`config.SHARE_GAP`; `share_gap` on every solo line in `data/lines_log.csv`; a clause in
+the card's "why"; in no grade, pick or stake). On the 386 players with both lines at the close in weeks 7 to 9:
+- The book's solo line is not a flat share of its combined line, as this log had said: it follows the player's
+  own share (correlation 0.59, slope 0.94; mean 0.57). But it follows it loosely, and his own share (shrunk over
+  25 tackles) still predicts the share he actually posts beyond the book's (coefficient 0.62, t 2.5).
+- Gap = his share minus the book's implied share. Solo Unders at the close with a gap of -0.04 or less: 96-39
+  (71%, +25% a bet), in each week: 36-12, 35-16, 25-11. With a gap above -0.04: 136-111, and 46-54 in week 9, the
+  one week the whole board did not go Under.
+- It is not the model's picks restated: of those 135 lines the model picked 49 (35-14) and passed on 86, which
+  went 61-25. The model's solo Under picks without the gap went 35-29 (16-17 in week 9).
+Three weeks, one definition tried, thresholds in round steps; the weeks are the unit and all three agree. Not
+adopted (the freeze): from week 10 the gap is in the line log, so weeks 10 to 13 score it out of sample with no
+further code. Candidate rule if it holds: a solo Under with a gap of -0.04 or less is a pick and an A input.
+Script: scratchpad `res/n4_soloshare.py`.
+
+**Validation.** Smoke test 179 of 179 in the clean environment (two new checks).
 
 ### 2026-11-10, 6 am (five more ideas tested at the owner's request: none adopted)
 

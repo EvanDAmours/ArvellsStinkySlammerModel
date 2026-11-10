@@ -1427,6 +1427,10 @@ def price_lines(lines, P, segments=None, blend=None):
     L["fair_cons"] = [cons["mean"].get(k_, np.nan) if len(cons) else np.nan for k_ in key3]
     L["books_n"] = [int(cons["size"].get(k_, 0)) if len(cons) else 0 for k_ in key3]
     books_pm = L.groupby(["player", "market"]).book.nunique().to_dict()      # how many books post this player and market at all
+    # the league's solo share to date, from every projected player's game log (for the solo-share gap, config.SHARE_GAP)
+    _tot = lambda col: float(sum(sum(_log(row, col)) for row in P[[col]].to_dict("records"))) if col in P.columns else 0.0
+    lg_solo, lg_comb = _tot("log_solo"), _tot("log_comb")
+    league_share = lg_solo / lg_comb if lg_comb > 0 else float("nan")
     P = P.copy()
     P["team_name"] = P.team.map(TEAM_NAMES)
     rows = []
@@ -1554,6 +1558,14 @@ def price_lines(lines, P, segments=None, blend=None):
                            "no edge for the pricing engine at this price")
                 at_price = f"At this price: win chance {s_win:.0%} against {1 / s_dec:.0%} to break even ({s_ev:+.0%}); {verdict}."
                 s_note = sleeper_note(sleeper, kind, mu_model, line, phi_use, s_p, log_raw, eo, s_grade, s_why, at_price)
+        # the solo-share gap: a measurement, logged for every solo line, used by no rule
+        share_gap = own_share = book_share = None
+        comb_line = med_two.get((r.player, "player_tackles_assists")) if solo else None
+        if solo and comb_line is not None and pd.notna(comb_line) and float(comb_line) > 0 and league_share == league_share:
+            k_ = C.SHARE_GAP["k"]
+            own_share = (sum(_log(p, "log_solo")) + k_ * league_share) / (sum(_log(p, "log_comb")) + k_)
+            book_share = float(r.mkt_line) / float(comb_line)
+            share_gap = float(own_share - book_share)
         # the grade, once the sleeper is known: an A is a pick the sleeper rule also names on the same side
         grade = engine_grade(edge_low, p_model_side, bool(block), r.market, sleeper_match=(sleeper == side)) if tier == "pick" else None
         not_a = tier == "pick" and grade != "A" and sleeper == side and (bool(block) or r.market not in C.A_GRADE_MARKETS)   # an A but for the checklist or the market
@@ -1598,11 +1610,13 @@ def price_lines(lines, P, segments=None, blend=None):
                 why += f"; a sleeper on this side too, which would make it an A, shown as a {grade}: " + ("the lock checklist is not clear" if block else "this market cannot carry an A yet")
         if sleeper:
             why += f"; sleeper ({sleeper}, grade {s_grade}): the model's own number is {mu_model:.1f} against a line of {line:g}"
+        if share_gap is not None and share_gap <= C.SHARE_GAP["flag"]:
+            why += f"; solo share: he has made {own_share:.0%} of his tackles solo and the book's two lines imply {book_share:.0%} (a measurement on trial, in no grade)"
         lg_steps, lg_text = logic_steps(p, kind)
         mu_eng = implied_mean(po, phi_use, line)                       # the engine's win chance read back as a number of tackles
         mkt_mean = implied_mean(fair, phi_use, line)                   # the book's fair price read back the same way
         eng = dict(p_model=p_model_side, fair=fair_side, p=p_side, p_low=p_low, ev=ev, edge_low=edge_low, mkt_mean=mkt_mean)
-        rows.append({**base, **ident, "proj": float(mu_eng), "proj_model": mu_model, "level": level, "misfit": bool(misfit), "mkt_mean": float(mkt_mean),
+        rows.append({**base, **ident, "proj": float(mu_eng), "proj_model": mu_model, "level": level, "misfit": bool(misfit), "share_gap": share_gap, "mkt_mean": float(mkt_mean),
                      "exp_opps": None if pd.isna(p.get("exp_opps", np.nan)) else float(p.get("exp_opps")),
                      "mkt_line": float(r.mkt_line), "books_n": int(r.books_n), "phi": phi_use, "model_over": po, "model_over_low": po_low, "model_over_own": po_model, "market_over": fair,
                      "ev": ev, "side": side, "far_from_line": bool(far_from_line),
@@ -1632,7 +1646,7 @@ def price_lines(lines, P, segments=None, blend=None):
     # every column the log, the sizing and the site read exists even when no line on this board could be priced (a pull of
     # one-sided prices only, or of players the model does not carry): the replay of week 8 crashed on a missing column
     for c_, d_ in (("ev", np.nan), ("side", None), ("lock", np.nan), ("tier", None), ("grade", None), ("stake", np.nan), ("proj", np.nan), ("proj_model", np.nan),
-                   ("level", 1.0), ("misfit", False), ("p_claim", np.nan), ("p_low", np.nan), ("p_model", np.nan), ("edge_low", np.nan), ("market_over", np.nan), ("model_over", np.nan), ("sleeper", ""),
+                   ("level", 1.0), ("misfit", False), ("share_gap", np.nan), ("p_claim", np.nan), ("p_low", np.nan), ("p_model", np.nan), ("edge_low", np.nan), ("market_over", np.nan), ("model_over", np.nan), ("sleeper", ""),
                    ("lock_block", ""), ("payout", np.nan), ("segment", None), ("team", None), ("opp", None), ("group", None), ("phi", np.nan), ("exp_opps", np.nan)):
         if c_ not in out.columns:
             out[c_] = d_

@@ -443,6 +443,15 @@ check(M.engine_betas("solo") == (0.65, 0.325) and M.engine_betas("combined") == 
       and M.engine_grade(0.001, 0.9, False, "player_solo_tackles", sleeper_match=False) == "C" and M.engine_grade(0.05, 0.9, True, "player_solo_tackles", sleeper_match=True) == "B"
       and M.engine_grade(-0.01, 0.9, False, "player_solo_tackles", sleeper_match=True) is None and M.engine_grade(0.05, 0.9, False, "player_assists", sleeper_match=True) == "B",
       "the model's disagreement weighs 0.65 on solo lines and 0.35 on combined, and an A is a pick that is also a sleeper with a clear checklist")
+# the early look at the whole week runs on its trial dates only, as an "early" pull; the solo-share gap is logged, not used
+_od = dt.date.fromisoformat(C.OPENER_DATES[0])
+_op = R.auto_plan(now=dt.datetime.combine(_od, dt.time(10, 5), tzinfo=R.EDMONTON).astimezone(dt.timezone.utc), games=[], served=set())
+_no = R.auto_plan(now=dt.datetime.combine(_od + dt.timedelta(days=14), dt.time(10, 5), tzinfo=R.EDMONTON).astimezone(dt.timezone.utc), games=[], served=set())
+check(_op is not None and len(_op["days"]) == 5 and _op["days"][0] == str(_od + dt.timedelta(days=1)) and _no is None and R.OPENER_SLOT in R.slots_on(_od) and R.OPENER_SLOT not in R.slots_on(_od + dt.timedelta(days=14)),
+      "the early look at the whole week is pulled on its trial Wednesdays and on no other")
+_ll = pd.read_csv(tmp / "data" / "lines_log.csv")
+check("share_gap" in _ll.columns and "level" in _ll.columns and (_ll[_ll.market == "player_solo_tackles"].share_gap.notna().any() if (_ll.market == "player_solo_tackles").any() else True),
+      "the line log carries the solo-share gap and the lined-player level for every line")
 # a pull rebuilds the projections when a player expected to play is ruled out (or cleared) since the morning
 _rb = pd.DataFrame(dict(team=["AAA", "AAA", "BBB", "AAA"], player=["Starter", "Backup", "Other", "Deep"], status=["", "", "out", ""], share_pred=[0.9, 0.4, 0.8, 0.05]))
 _ra = _rb.assign(status=["out", "questionable", "", "out"])
@@ -612,6 +621,7 @@ check("workflow_dispatch" in (_tk.get(True) or _tk.get("on")) and "gh workflow r
       "a ticker run that ends starts the next one itself (the scheduler dropped 11 hours of runs on 2026-11-09)")
 # the odds-credit budget: what is worth most per credit is kept longest
 _U = dt.timezone.utc
+_openers, C.OPENER_DATES = C.OPENER_DATES, ()      # the budget walk below is the standing schedule; the trial early looks are checked on their own
 def _week_of(thu):
     t0 = dt.datetime(thu.year, thu.month, thu.day, tzinfo=_U); iso = lambda d, h, m: (t0 + dt.timedelta(days=d, hours=h, minutes=m)).isoformat()
     return [iso(1, 1, 15)] + [iso(3, 18, 0)] * 9 + [iso(3, 21, 5)] * 2 + [iso(3, 21, 25)] * 2 + [iso(4, 1, 20), iso(5, 1, 15)]
@@ -632,6 +642,7 @@ _gr = R.govern("2026-11-15 prekick-11:00", _rich)
 check(all(_ran["prekick"]) and all(_ran["early"]) and _ran["sat"][0] and not all(_ran["sat"]) and not any(_ran["look"][:2]) and _cr >= C.MIN_CREDITS_LEFT - 1e-9
       and _gr["run"] and not _gr["cluster"] and len(_gr["markets"]) == len(C.ODDS_MARKETS) and R.govern("x 12h", _rich)["run"],
       f"on 185 credits every game keeps its pre-kickoff pull and the Thursday and Monday looks, the first Saturday look runs and later ones wait, and the month ends above the floor ({_cr:.0f} left; spent {_spent})")
+C.OPENER_DATES = _openers
 intl = [dict(game_id="2026_07_NO_PIT", home="PIT", away="NO", kickoff=_at(2026, 10, 25, 7, 30).isoformat(), international=True)]
 p12 = R.auto_plan(now=_at(2026, 10, 24, 19, 50), games=intl)   # Saturday 7:50 pm, before the 8 pm slot
 check(p12 and p12.get("teams") == ("PIT", "NO") and p12["key"].endswith("12h"), "international game pulled in the 12 h window even when the run is late")
