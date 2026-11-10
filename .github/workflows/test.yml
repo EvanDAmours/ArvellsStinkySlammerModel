@@ -1,7 +1,7 @@
 name: Test
 on:
   push:
-    paths: ["pipeline/**", "run.py", "config.py", "tests/**"]
+    paths: ["pipeline/**", "run.py", "config.py", "tests/**", "tools/**", "requirements.txt", ".github/workflows/**", "docs/index.html"]
   workflow_dispatch: {}
 jobs:
   smoke:

@@ -23,4 +23,6 @@
 5. `python tests/smoke_test.py` must pass before every push. `TACKLE_FAKE_DATA=1 TACKLE_FAKE_ODDS=1` run the
    pipeline on synthetic data.
 6. Secrets: `ODDS_API_KEY` and `PARLAY_API_KEY` are GitHub Actions secrets. Never print or commit their values.
-7. Schedules are in UTC in `.github/workflows/*.yml`; the user is in Edmonton (Mountain time).
+7. Schedules are in UTC in `.github/workflows/*.yml`; the user is in Edmonton (UTC-6 all year since 2026-11-01).
+8. After every push, read the result of the Test workflow on GitHub: it runs the smoke test on a clean machine
+   with only `requirements.txt` installed. A red check is a failed push, whatever the test said locally.

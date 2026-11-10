@@ -39,7 +39,9 @@ moves toward the model. The locks are ranked by the model's own chance, which do
 
 **Dates and times in this log are Edmonton local time** (MDT or MST, whichever is in force on that date), and
 every schedule in the project is defined in Edmonton time. Entries from 2026-10-23 to 2026-10-26 were written
-against UTC timestamps; from 2026-10-26 (MDT) onward they are local.
+against UTC timestamps; from 2026-10-26 (MDT) onward they are local. Alberta stays on UTC-6 all year from
+2026-11-01 ("Alberta Time": the clocks did not go back); entries from that date that say "MST" mean Edmonton local
+time, six hours behind UTC.
 
 The memory of this project, in two files since 2026-11-09:
 
@@ -194,6 +196,8 @@ Protocol before pushing a change to the model, pricing, bars, stakes, schedule o
    missing-column crash of the rebuild were both found this way, not by the smoke test.
 5. Record the change here: changelog entry, register line, revert condition.
 6. Never fit a parameter to the weeks used to judge it and call it validated.
+7. After the push, read the result of the Test workflow on GitHub. It runs the smoke test on a clean machine with
+   only `requirements.txt` installed; a red check there is a failed push, whatever the test said by hand.
 
 ## Decision register
 
@@ -636,6 +640,26 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-09, 7 pm (the test on GitHub had been failing for a week, unread)
+
+**What.** `PyYAML` and `scipy` added to `requirements.txt`, pinned. The smoke test now reads every import in the
+code and in itself and fails when a library is not in that file. The Test workflow also runs when
+`requirements.txt`, a workflow file, `tools/` or `docs/index.html` changes. Protocol step 7 added: after a push,
+read the Test workflow's result.
+
+**Why.** Checking the rebuild's push, the Test workflow turned out to have failed on every push since 2026-11-03
+(runs 50 to 79): `ModuleNotFoundError: No module named 'yaml'`. The smoke test has parsed the workflow files with
+PyYAML since 2026-11-02, the library was never in `requirements.txt`, and it is installed on every machine the
+test had been run on by hand, so it passed there. The pipeline itself never imports it, which is why the ticker
+and the daily kept working. For a week the only run of the test on a clean machine was red and nobody read it;
+the rebuild was pushed under the same red check (its code had passed the test locally, 168 of 168). `scipy` is
+imported by the backtest since the rebuild and arrived only as a dependency of scikit-learn.
+
+**Evidence.** Reproduced in a clean Python 3.12 environment built from `requirements.txt` alone, as the runner
+does: the same error at the same line. With the two lines added: 169 of 169 in that environment.
+
+**Revert.** None needed; removing either line turns the test red.
+
 ### 2026-11-09, night MST (the rebuild: one chance per line, the slate sized as one book, the projection judged on regulars, the memory restructured)
 
 Owner, after the review of that evening: "Take full creative liberty in how to make this the most rigorous model
@@ -731,6 +755,11 @@ Never tested; each with what would justify it. Anything tested and dropped is in
 - Codespaces secrets are invisible to Actions. Only Actions secrets work.
 - A library the pipeline imports must be in requirements.txt; the runner installs only that file (the seal step
   failed on `cryptography`, 2026-11-02). A step that protects published output must stop the publish when it fails.
+  The same holds for a library only the test imports: `PyYAML` was missing from 2026-11-03 to 2026-11-09. The smoke
+  test now checks every import against the file.
+- **A test that passes by hand is not the gate; the run on the clean machine is.** The Test workflow failed on every
+  push for a week (2026-11-03 to 2026-11-09) while the same test passed wherever it was run by hand, and nobody
+  opened the red check. After every push, read the workflow's result (protocol step 7).
 - A colon inside a workflow step name breaks the YAML, and GitHub then reports the workflow as having no triggers:
   every schedule and manual run stops without an error anywhere visible. The smoke test now parses every workflow
   file (found 2026-11-02 after the seal step was added; about three hours of pulls lost).

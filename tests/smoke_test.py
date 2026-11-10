@@ -445,6 +445,24 @@ log = (tmp / "data/weekly_five.md").read_text()
 check(isinstance(summary.get("luck"), list) and all({"hit", "market_base", "lift", "verdict"} <= set(r) for r in summary["luck"]) and "Luck or skill" in (tmp / "data/weekly_five.md").read_text(), f"luck check computed against the whole market ({len(summary.get('luck') or [])} rows) and written to the weekly log")
 check("Locks record: 1-1" in log and "| 2026 wk 6 | 2 | 1-1 |" in log and "Parlays record: 1-0" in log, "locks and parlays log written with records, week line and parlay line")
 
+# every library the code or this test imports must be in requirements.txt: the runner installs only that file, and a
+# library that happens to be on the machine the test is written on hides the gap (cryptography on 2026-11-02; PyYAML from
+# 2026-11-03 to 2026-11-09, when this test failed on GitHub on every push and passed everywhere else)
+import ast as _pyast
+_req = {l.split("==")[0].strip().lower() for l in (ROOT / "requirements.txt").read_text().splitlines() if l.strip() and not l.lstrip().startswith("#")}
+_dist_name = {"yaml": "pyyaml", "sklearn": "scikit-learn"}                 # import name -> the name it is installed under
+_own = {p.stem for p in ROOT.glob("*.py")} | {p.name for p in ROOT.iterdir() if p.is_dir()}
+_libs = set()
+for _f in [p for pat in ("*.py", "pipeline/*.py", "tests/*.py", "tools/*.py", "research/*.py") for p in ROOT.glob(pat)]:
+    for _n in _pyast.walk(_pyast.parse(_f.read_text())):
+        if isinstance(_n, _pyast.Import):
+            _libs |= {a.name.split(".")[0] for a in _n.names}
+        elif isinstance(_n, _pyast.ImportFrom) and _n.module and not _n.level:
+            _libs.add(_n.module.split(".")[0])
+_libs -= set(sys.stdlib_module_names) | _own
+_unlisted = sorted(m for m in _libs if _dist_name.get(m, m).lower() not in _req)
+check(len(_libs) >= 6 and not _unlisted, f"every library the code and this test import is pinned in requirements.txt ({len(_libs)} libraries; unlisted: {', '.join(_unlisted) or 'none'})")
+
 # every workflow file must parse: a colon in a step name silently removed every trigger on 2026-11-02 (pulls stopped)
 import yaml as _yaml
 for _wf in sorted((ROOT / ".github/workflows").glob("*.yml")):

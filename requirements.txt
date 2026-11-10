@@ -7,3 +7,7 @@ polars==2.0.0
 nflreadpy==0.1.5
 scikit-learn==1.9.1
 cryptography==50.0.1
+# Imported directly by the code or the smoke test, so listed here and not left to arrive with another package:
+# PyYAML was missing from 2026-11-03 to 2026-11-09 and the Test workflow failed on every push in between.
+scipy==1.18.1
+PyYAML==6.0.3
