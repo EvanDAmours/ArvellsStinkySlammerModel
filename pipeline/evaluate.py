@@ -22,14 +22,14 @@ import pandas as pd
 import config as C
 from pipeline import linelog as LL
 from pipeline import odds as O
-from pipeline.model import american_to_decimal, engine_chance, fair_over, p_over
+from pipeline.model import american_to_decimal, engine_betas, engine_chance, fair_over, p_over
 from pipeline.sources import norm_name
 
 
 def closing_frame(pw_comb, season, weeks=None):
     """pw_comb: player-week rows with name_key, team, season, week, comb, solo_t (the official box scores). Only weeks with
     logged numbers, two-way closing lines and box scores count. Empty frame when nothing is graded yet."""
-    cols = ["week", "kind", "line", "p_mkt", "over_dec", "under_dec", "proj_model", "phi", "actual", "books"]
+    cols = ["week", "kind", "line", "p_mkt", "over_dec", "under_dec", "proj_model", "phi", "actual", "books", "level"]
     if not LL.LOG.exists():
         return pd.DataFrame(columns=cols)
     log = pd.read_csv(LL.LOG)
@@ -58,7 +58,8 @@ def closing_frame(pw_comb, season, weeks=None):
         at = at[at.line == at.line_c]                                     # the books posting the consensus line
         cons = cons.join(at.groupby(keys).agg(p_mkt=("p_nv", "mean"), over_dec=("od", "max"), under_dec=("ud", "max"), books=("p_nv", "size")), on=keys)
         m = log[log.week == wk].drop_duplicates(["name_key", "kind", "team"] if "team" in log.columns else ["name_key", "kind"])
-        m = m[[c for c in ("name_key", "kind", "team", "proj_model", "phi") if c in m.columns]]
+        m = m.assign(level=pd.to_numeric(m["level"], errors="coerce").fillna(1.0) if "level" in m.columns else 1.0)     # the lined-player level the number was priced with
+        m = m[[c for c in ("name_key", "kind", "team", "proj_model", "phi", "level") if c in m.columns]]
         cons = cons.merge(m, on=["name_key", "kind"], how="inner")
         # box scores by name AND team: two players can share a name key (the Byron Youngs, the Byron Murphys)
         if "team" in cons.columns and "team" in st.columns:
@@ -87,9 +88,28 @@ def _cluster(v, g):
     return m, float(math.sqrt(((s["sum"] - m * s["size"]) ** 2).sum()) / s["size"].sum() * math.sqrt(len(s) / (len(s) - 1)))
 
 
-SHADOW_NAMES = (("beta_by_kind", "A weight per market (0.35 combined, 0.65 solo)"),
+def lined_level(frame, week, kinds=None, shrink=None, clip=None):
+    """{kind: factor} for `week`: actual over projected on the season's lined games before it, on the model's number before
+    any level (proj_model / level), shrunk n / (n + shrink) and clipped. 1.0 for a kind with no earlier lined game."""
+    cfg = C.LINED_LEVEL
+    kinds, shrink, clip = kinds or cfg["kinds"], cfg["shrink"] if shrink is None else shrink, clip or cfg["clip"]
+    out = {k_: 1.0 for k_ in kinds}
+    if frame is None or len(frame) == 0:
+        return out
+    v = frame[frame.proj_model.notna() & frame.actual.notna() & (frame.week < week)]
+    lv = pd.to_numeric(v["level"], errors="coerce").fillna(1.0) if "level" in v.columns else pd.Series(1.0, index=v.index)
+    raw = v.proj_model / lv.clip(lower=0.5)
+    for k_ in kinds:
+        sel = (v.kind == k_).values
+        if sel.sum() and raw[sel].sum() > 0:
+            r = 1 + (v.actual[sel].sum() - raw[sel].sum()) / raw[sel].sum() * sel.sum() / (sel.sum() + shrink)
+            out[k_] = float(np.clip(r, *clip))
+    return out
+
+
+SHADOW_NAMES = (("beta_by_kind", "The flat weight of 0.5 in both markets (the rule until 2026-11-09)"),
                 ("centred", "The combined gap centred on the week's own mean"),
-                ("lined_level", "A level for lined players from the season's earlier lined games"))
+                ("lined_level", "The level for lined players on solo lines too"))
 
 
 def _shadow(v, e):
@@ -100,19 +120,20 @@ def _shadow(v, e):
     pk = np.clip(v.p_mkt.values.astype(float), 1e-4, 1 - 1e-4)
     pm = np.clip([p_over(m, ph, l) for m, ph, l in zip(v.proj_model, v.phi, v.line)], 0.02, 0.98)
     gap = logit(pm) - logit(pk)
+    eng = np.array([engine_betas(k_)[0] for k_ in v.kind], dtype=float)
     out = {}
     beta = np.array([s["beta_by_kind"].get(k_, e["beta"]) for k_ in v.kind], dtype=float)
     out["beta_by_kind"] = sig(logit(pk) + beta * gap)
     centre = pd.Series(gap).groupby([v.week.values, v.kind.values]).transform("mean").values
     centre = np.where(v.kind.isin(s["centre_kinds"]).values, centre, 0.0)
-    out["centred"] = sig(logit(pk) + e["beta"] * (gap - centre))
+    out["centred"] = sig(logit(pk) + eng * (gap - centre))
     ratio = np.ones(len(v))
-    for (w, k_), pos in v.reset_index(drop=True).groupby(["week", "kind"]).indices.items():
-        prev = v[(v.week.values < w) & (v.kind.values == k_)]
-        if len(prev) and prev.proj_model.sum() > 0:
-            ratio[pos] = 1 + (prev.actual.sum() - prev.proj_model.sum()) / prev.proj_model.sum() * len(prev) / (len(prev) + s["level_shrink"])
+    for w in sorted(set(v.week)):
+        lv = lined_level(v, w, kinds=s["level_kinds"], shrink=s["level_shrink"])
+        for k_, r in lv.items():
+            ratio[((v.week == w) & (v.kind == k_)).values] = r
     pm_l = np.clip([p_over(m * r, ph, l) for m, r, ph, l in zip(v.proj_model, ratio, v.phi, v.line)], 0.02, 0.98)
-    out["lined_level"] = sig(logit(pk) + e["beta"] * (logit(pm_l) - logit(pk)))
+    out["lined_level"] = sig(logit(pk) + eng * (logit(pm_l) - logit(pk)))
     return out
 
 
@@ -133,8 +154,8 @@ def scoreboard(frame, min_lines=20, live_week=None):
     y = (d.actual.values > d.line.values).astype(float)
     p_model = np.clip([p_over(m, ph, l) for m, ph, l in zip(d.proj_model, d.phi, d.line)], 0.02, 0.98)
     p_mkt = d.p_mkt.values.astype(float)
-    p_eng = np.array([engine_chance(a, b, e["beta"]) for a, b in zip(p_model, p_mkt)])
-    p_low = np.array([engine_chance(a, b, e["beta_low"]) for a, b in zip(p_model, p_mkt)])
+    p_eng = np.array([engine_chance(a, b, engine_betas(k_)[0]) for a, b, k_ in zip(p_model, p_mkt, d.kind)])
+    p_low = np.array([engine_chance(a, b, engine_betas(k_)[1]) for a, b, k_ in zip(p_model, p_mkt, d.kind)])
     wk = d.week.values
     ll = dict(market=_ll(p_mkt, y), model=_ll(p_model, y), engine=_ll(p_eng, y))
     diff = ll["market"] - ll["engine"]                       # positive: the engine's chance was the better forecast
@@ -175,7 +196,7 @@ def scoreboard(frame, min_lines=20, live_week=None):
     note = None if not since else f"margin {since['engine_minus_market']:+.4f}" + ("" if since["se"] is None else f", give or take {2 * since['se']:.4f}")
     row = lambda rule, name, what, state: dict(rule=rule, name=name, what=what, n=n_wk, of=need, unit="weeks", bar=None, wins=None, losses=None, hit=None, hit_lo=None,
                                                hit_hi=None, claimed=None, model_said=None, state=state, note=note)
-    watches = [row("E2", "The engine's weight (0.5)", f"Moved toward the book if the engine's margin over the book since week {live_week} is negative by more than twice its give or take, read after week {int(live_week) + need - 1}; raised only by the same test.",
+    watches = [row("E2", "The engine's weight (0.65 solo, 0.35 combined)", f"Moved toward the book if the engine's margin over the book since week {live_week} is negative by more than twice its give or take, read after week {int(live_week) + need - 1}; raised only by the same test.",
                    "running" if n_wk < need or t_ is None else "fails" if t_ <= -2 else "holds"),
                row("S1", "Stakes on the cautious chance", "Sized on the win chance instead once the engine's margin over the book is positive by more than twice its give or take.",
                    "running" if n_wk < need or t_ is None else "met" if t_ >= 2 else "not met")]

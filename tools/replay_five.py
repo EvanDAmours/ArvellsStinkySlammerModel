@@ -63,6 +63,7 @@ def projections_as_of(season, week, loaded=None):
         roster = None
     F = M.upcoming_rows(H, sched, inj, season, week, vol=src["vol"], dc=src["dc"], pbp_starters=src["pbp"]["starters"], roster=roster)
     P = R.attach_game_logs(M.finalize_projections(F, phi, scale=scale, gbm=gbm), H, season, week)
+    P["lined_level"] = R.lined_level_now(H, week)       # from the live line log's earlier weeks only
     for c in ("jersey", "espn_id", "fp_comb", "fp_solo", "fp_rel_comb", "fp_rel_solo"):
         if c not in P.columns:
             P[c] = np.nan

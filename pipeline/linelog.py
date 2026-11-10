@@ -12,7 +12,7 @@ import pandas as pd
 
 LOG = Path("data/lines_log.csv")
 LOG_COLS = ["season", "week", "player", "player_id", "team", "market", "proj_model", "phi", "exp_opps", "share_pred", "pulled_at", "line", "book", "side", "odds",
-            "market_over", "model_over_own", "p_claim", "p_low", "p_model", "claim_ev", "edge_low", "tier", "grade", "pick", "lock", "lock_block"]
+            "market_over", "model_over_own", "p_claim", "p_low", "p_model", "claim_ev", "edge_low", "tier", "grade", "pick", "lock", "lock_block", "level"]
 
 
 def log_model_numbers(bets, season, week, stamp):

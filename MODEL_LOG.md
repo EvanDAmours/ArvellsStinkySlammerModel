@@ -106,17 +106,20 @@ does not describe his current role, or who may not play, can be a pick, never a 
      that quote both sides of exactly that line. A one-sided price is priced against those books; with none, the
      line is passed;
    - the **model's own chance**: from its number and spread at that line, held inside 2% to 98%;
-   - the **win chance**: logit(p) = logit(fair) + 0.5 x [logit(model) - logit(fair)];
-   - the **cautious chance**: the same with 0.25;
+   - the **win chance**: logit(p) = logit(fair) + w x [logit(model) - logit(fair)], with w = 0.65 on solo lines,
+     0.35 on combined and 0.5 on assists (the model has beaten the book on solo lines and not on combined);
+   - the **cautious chance**: the same with half of w;
    - the return at the win chance and the **cautious edge** (cautious chance x decimal odds - 1) at this book's
      price. The side with the better return is the line's side.
 5. **Pick, lean, no pick.** A pick has a cautious edge of zero or better. A lean has 2%+ at the win chance and is
    under water at the cautious one: shown, logged, never staked. Never a pick: a player ruled out or doubtful,
    fewer than 3 games of data, and an Under on a next-man-up backup the share model expects under 60% of the snaps
-   (the projection runs 16% low on exactly those).
-6. **Grades and the lock score.** B: cautious edge of 2%+. A: a B whose model's own chance is 70%+ and whose
-   checklist is clear, in a market that can carry an A (solo and combined; assists is a trial market). C: a pick
-   short of B. The lock score is the model's own chance out of 100.
+   (the projection runs 16% low on exactly those), and a line that does not fit the player (one book alone on the
+   player and market, the model's own chance 93%+: a mis-posted line or another player of the same name).
+6. **Grades and the lock score.** A: a pick that is also a sleeper on the same side (item 11), checklist clear,
+   in a market that can carry an A (solo and combined; assists is a trial market). B: cautious edge of 2%+. C: any
+   other pick. The lock score is the model's own chance out of 100. Combined projections carry the level for
+   players who get lines (actual over projected on the season's earlier lined games; decision R7).
 7. **The checklist** (never a lock, an A or a parlay leg): new role, next man up, reduced role, back from absence,
    new team, fewer than 3 games in his current role, questionable, snap counts missing for his last game, an Over.
 8. **Locks.** A picks only, highest model chance first, one per player, at most 3 on a one-game slate day and 5
@@ -293,14 +296,29 @@ in-sample. The full write-up is Research round 11.
 - **R3. The odds-credit budget:** the richest schedule the credits can pay for; the pull an hour before kickoff is
   the last thing to go. The Sunday 10 am look duplicates that pull since the clocks changed (the early games kick
   off at noon Edmonton now) and is the first to go.
-- **R4. Frozen until 2026-12-08** (rule 6 above).
+- **R4. Frozen until 2026-12-08** (rule 6 above). Lifted once by the owner on 2026-11-09 for six named changes
+  (changelog, 10 pm), before week 10 had a line; it stands again.
+- **R7. Changed 2026-11-09, 10 pm, at the owner's instruction** (they amend E2, E4 and E5 above; evidence in the
+  changelog, all of it in-sample):
+  - *E2:* the weight is 0.65 on solo lines and 0.35 on combined (assists 0.5); the cautious chance is half of it.
+    Same revert test as E2, read on weeks 10 to 13; the flat 0.5 is in the shadow.
+  - *E4/E5:* an A is a pick that is also a sleeper on the same side, checklist clear; locks are A picks, the
+    model's own chance highest first. It stays only if A picks hit 60% or better over their first 30 and beat B and
+    C; else back to the old rule (cautious edge 2%+ and a model chance of 70%+), which is counted beside it.
+  - *Combined level:* combined projections of the week times actual over projected on the season's earlier lined
+    games (shrunk n / (n + 100), clipped 0.9 to 1.1). Off if that ratio falls inside 0.99 to 1.01 over four weeks
+    or the scoreboard's combined margin is worse with it. Solo has no level.
+  - *Misfit:* one book alone on the player and market and a model chance of 93%+ is no pick.
+  - *Role news:* a pull rebuilds the projections when a player expected at 30%+ of the snaps is newly out or
+    newly cleared.
 - **R5. The record and the scoreboard are split at the engine's first week** (`config.ENGINE_LIVE`: 2026 week 10).
   Weeks 7 to 9 chose the rules and test nothing. The conditions of E2, E4, E5, E6 and S1 are counted by the daily on
   the weeks since (`grade.engine_era`, the scoreboard's `since` and `watches`) and shown on the site ("Rules on
   trial") and in `data/weekly_five.md`. E2 and S1 are read after week 13, on weeks 10 to 13. Since 2026-11-09.
 - **R6. Three candidates run in the shadow** (`config.SHADOW`, `evaluate._shadow`), scored on every closing line and
-  never used for a pick: a weight per market (0.35 combined, 0.65 solo); the combined gap centred on the week's own
-  mean; a level for lined players from the season's earlier lined games (shrunk n / (n + 100)). On weeks 7 to 9,
+  never used for a pick. Since 2026-11-09, 10 pm (R7): the flat weight of 0.5 that the weight per market replaced;
+  the combined gap centred on the week's own mean; the level for lined players on solo lines too. Until then: a
+  weight per market (0.35 combined, 0.65 solo); the centred gap; a level for lined players. On weeks 7 to 9,
   where they were found (880 lines): +0.0012 (t +1.9), +0.0009 (t +7.7: the same small gain three weeks running)
   and +0.0012 (t +1.0) of log-loss against the engine. Adoption is decided after 2026-12-08, on the weeks from week
   10 on only: the gain over the engine positive by two standard errors with weeks as the unit, and positive in at
@@ -477,7 +495,9 @@ and C9. What remains, and what the rebuild itself turned up:
    that follow the cautious edge therefore did not beat flat stakes (-0.0 units on 69.1 staked against +17.7 flat).
    Every range overlaps; judged at 30 graded A picks. If A still claims 70% and hits near 60%, a ceiling on the
    model's own chance is the candidate.
-4. **The profit in the replay is a pocket.** Linemen 16-2 (+14.4 units of +17.7), the assists trial 17-11;
+4. **The profit in the replay is a pocket.** (Four of those lineman wins were the mis-posted Sam Williams lines,
+   now barred; under the rules of 2026-11-09, 10 pm, linemen are 13-2, linebackers 48-44, safeties 34-25, corners
+   22-14.) Linemen 16-2 (+14.4 units of +17.7), the assists trial 17-11;
    linebackers 42-39 and safeties 29-32, most of the board, are at break-even. Either the books hang linemen's
    lines too high or three weeks were kind. Watch by position.
 5. **Next man up.** The final projection is 12% low on these backups out of sample (16% on the ones it expects
@@ -503,7 +523,14 @@ and C9. What remains, and what the rebuild itself turned up:
 11. **Prices are not Alberta prices.** theScore Bet's lines are its US feed; three books post tackle lines on the
     feed; bet365 is not carried. That a tackle made with an assist settles as solo at the book is inferred from
     ESPN, not confirmed: one settled slip would do it (Nohl Williams Under 2.5 solo, week 9).
-12. **Smaller.** The proportional no-vig split is off by about a point at very short and long prices. The solo
+12. **Closing-line value and the prices disagree.** On the replay's picks the price logged beat the closing price
+    of the same line (+29.9 units against +25.0 on 186 picks), yet the no-vig closing-line value of the same picks
+    is -2 points. One of the two is measured wrong (the vig widening near kickoff, or the conversion through the
+    mean in `grade.no_vig_clv`). Until it is settled, do not read the CLV tile as "we bet too early".
+13. **Role news is untested.** The rebuild at pull time (R7) is a mechanism with no record: watch the first Sunday
+    for a rebuild in the ticker's log and what it changed. The same goes for lines that do not fit the player:
+    count how many the guard removes a week.
+14. **Smaller.** The proportional no-vig split is off by about a point at very short and long prices. The solo
     share's own uncertainty is not in the solo spread. A same-game parlay's price is our estimate, not the book's.
     The regime-robust solo price (archive, 2026-11-08) has not been tried as the solo model. ESPN spells 9 of 528
     names differently from the stats feed. An outside heartbeat for the scheduler would cover a failed hand-over.
@@ -666,6 +693,56 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-09, 10 pm (six changes at the owner's instruction, before week 10 has a line)
+
+Owner, after asking what would find better hits and being given six ideas: "do 1-6." That lifts the freeze for
+these six and nothing else; it stands again until 2026-12-08. All of it is live from week 10's first pull, so
+`config.ENGINE_LIVE` still marks the first week none of it was chosen on. Each was measured first; two of the six
+did not turn out the way they were pitched, and the entry says so.
+
+1. **Role news rebuilds the projections at pull time** (`run.role_news`, `run.reproject_on_news`). A pull already
+   refreshed each player's status, but a starter ruled out after the 4:15 am run only made his own lines a pass:
+   his backup's snaps and the next-man-up flag waited for the next morning. Now a player expected at 30%+ of the
+   snaps who is newly out (or newly cleared), on a team that has not kicked off, triggers one rebuild (the daily,
+   90 seconds, no credits) before the pull prices anything. No evidence yet beyond the mechanism: it cannot be
+   replayed (the week's injury report in the replay is the final one). Revert: remove the call in `cmd_odds`.
+2. **A level for lined players, combined only** (`config.LINED_LEVEL`, `evaluate.lined_level`). Pitched as "fix the
+   lean toward Unders". Measured: on combined the model ran 3 to 4% under the box score of lined players in each of
+   weeks 7, 8 and 9 (actual over projected 1.03, 1.04, 1.04), so each week's combined numbers are now multiplied by
+   that ratio from the season's earlier lined games (shrunk, clipped to 0.9 to 1.1; 1.018 for week 10). On solo the
+   pitch was wrong: the model ran 9 to 14% HIGH in weeks 7 and 8 and 7% low in week 9, so the solo lean to the Under
+   is the book's line, not the model's level; a solo level would only chase the last two weeks. Solo is left alone
+   and its level runs in the shadow.
+3. **A weight per market: 0.65 on solo, 0.35 on combined** (`ENGINE["beta_by_kind"]`, `model.engine_betas`; assists
+   stay at 0.5; the cautious chance is half the weight). Log-loss on the 880 closing lines 0.6833 against 0.6845
+   flat (book 0.6913), and better on the rebuilt projection's numbers too (0.6853 against 0.6864). Combined picks at
+   the close fall from 52 to 16: the model has no edge to claim there. The flat 0.5 runs in the shadow.
+4. **An A is a pick that is also a sleeper on the same side** (`ENGINE["a_rule"]`, `model.engine_grade`), checklist
+   clear. Was: cautious edge 2%+ and the model's own chance 70%+. Replay under the old rule: picks that were also
+   sleepers 19-7, the rest 84-78; the old A 10-6, of which four wins were the mis-posted Sam Williams lines (6-6
+   without). Rule 0 holds: a sleeper is the model's number against the line, and a book that agrees more moves the
+   line toward the model and ends the sleeper. The old A is counted beside the new one ("Rules on trial").
+5. **When to bet: no rule.** Pitched as "we lose to the close, so bet later". Measured on the replay's picks whose
+   line was the same at the close (186): +29.9 units at the price logged against +25.0 at the closing price, so
+   the price when a pick first appears has been the better one. Picks first logged inside two hours of kickoff
+   went 13-7. Nothing supports waiting. The no-vig closing-line value reads -2 points on the same picks, which
+   contradicts the prices themselves: open issue 12.
+6. **A line that does not fit the player is not a pick** (`ENGINE["misfit_model"]`). Only one book posts the
+   player and market, and the model's own chance is 93% or more: theScore's "Sam Williams" (8.5 tackles + assists,
+   4.5 solo, for a rotational lineman projected 2.6) was the top lock of weeks 8 and 9 in the replay. The card says
+   to check the name on the slip.
+
+**Replay of weeks 7 to 9 with all six** (in-sample for all of it, and the sleeper rules were themselves found on
+these weeks): 117-85 (58%), +28.6 units at one a bet, +7.4 on 73.3 at the stakes; A 25-6, B 34-36, C 58-43; locks
+8-1; solo Unders 71-47; combined 16-12. Before: 103-85, +17.7, -0.0 on 69.1; A 10-6; locks 6-4. An A record of
+25-6 on the weeks its rule was written from is a description, not a forecast: expect far less.
+
+**Validation.** Smoke test 176 of 176 in the clean environment (new checks: the weights, the A rule, the level on
+earlier weeks only and on the number before any level, role news). Real daily in a scratch copy, clean.
+
+**Revert.** `config.py`: drop `beta_by_kind` (flat 0.5), `a_rule="model"`, `misfit_model=2`, `LINED_LEVEL` kinds
+empty; remove the `reproject_on_news` call. Or restore `config.py`, `pipeline/` and `run.py` from commit 54f182d.
+
 ### 2026-11-09, 9 pm (the out-of-sample test written into the code before week 10 has a line; the evidence in plain text)
 
 **What.** Nothing that chooses, grades or sizes a pick changes (the freeze holds). Four additions to how the
@@ -824,6 +901,13 @@ Never tested; each with what would justify it. Anything tested and dropped is in
   failed on `cryptography`, 2026-11-02). A step that protects published output must stop the publish when it fails.
   The same holds for a library only the test imports: `PyYAML` was missing from 2026-11-03 to 2026-11-09. The smoke
   test now checks every import against the file.
+- **Measure a pitch before building it.** Two of six ideas given to the owner as likely gains were wrong once
+  measured (2026-11-09): "the model leans Under, fix its level" (on solo the model was high, not low, in two weeks
+  of three) and "we lose to the close, bet later" (the logged price beat the closing price). Say what is measured
+  and what is a guess when proposing.
+- **A book's line for a name is not always that player's line.** theScore posted a linebacker's numbers under "Sam
+  Williams" two weeks running; the model matched a lineman and called it 98%. A line far outside a player's range
+  that only one book posts is a data question before it is an edge.
 - **A verdict read on the weeks a rule was chosen on is not a verdict.** The site's "Against the market" line read
   a t of +1.9 from weeks 7 to 9, the weeks the engine's weight was fitted on. A split that is only in the log's
   prose gets forgotten the first good week: it is in the code now (`config.ENGINE_LIVE`), and the candidates'

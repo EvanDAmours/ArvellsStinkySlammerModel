@@ -181,7 +181,11 @@ ENGINE = dict(beta=0.5, beta_low=0.25,
               lean_edge=0.02,        # a lean: this much at the win chance but under water at the cautious one. Shown and logged, never staked (72-68 at the close)
               b_edge_low=0.02,       # B: cautious edge of 2%+
               a_model=0.70,          # A: a B whose model's own chance is 70%+ and whose lock checklist is clear
-              rho=0.02)              # how alike two picks of one kind on one slate are: the weekly shock (6.5 points of hit rate on solo Unders) as a correlation
+              rho=0.02,
+              beta_by_kind=dict(combined=0.35, solo=0.65),   # the weight by market since 2026-11-09 (owner's instruction): the model has beaten the book on solo lines and not on combined
+              low_ratio=0.5,         # the cautious chance counts the disagreement at this share of the weight
+              a_rule="sleeper",      # A: a pick that is also a sleeper on the same side (the model's number and the line apart by the sleeper margin), checklist clear
+              misfit_model=0.93)     # a line only one book posts, on which the model's own chance is this or more: the line does not fit this player (a mis-posted line or a wrong match), no pick              # how alike two picks of one kind on one slate are: the weekly shock (6.5 points of hit rate on solo Unders) as a correlation
 FROZEN_UNTIL = "2026-12-08"          # evidence rule: no bar, weight or cap in ENGINE, STAKE, FACTORS or GBM changes before this date (four graded weeks)
                                      # unless a defect is found; candidates are tested in the shadow on data/lines_log.csv and reported, not adopted
 CLAIM_SHRINK = 0.6                   # legacy: only to read the claimed chance of picks logged before the engine (through week 9) that carry none
@@ -191,9 +195,13 @@ CLAIM_SHRINK = 0.6                   # legacy: only to read the claimed chance o
 ENGINE_LIVE = dict(season=2026, week=10, read_after_week=13)   # decisions E2 and S1 are read after week 13, on weeks 10 to 13
 # Candidates scored in the shadow on every closing line and never used for a pick (MODEL_LOG, open issue 2). Written
 # down on 2026-11-09, before week 10 had a line: changing a number here restarts that candidate's test.
-SHADOW = dict(beta_by_kind=dict(combined=0.35, solo=0.65),   # a weight per market instead of 0.5 for both
+SHADOW = dict(beta_by_kind=dict(combined=0.5, solo=0.5),      # the flat weight of 0.5 that the weight by market replaced on 2026-11-09
               centre_kinds=("combined",),                    # the model's gap to the book centred on the week's own mean gap, for these markets
-              level_shrink=100)                              # a level for lined players from the season's earlier lined games, shrunk n / (n + this)
+              level_kinds=("solo",), level_shrink=100)       # the level for lined players applied to solo lines too (adopted for combined only)
+# The level for players who get lines: the model's combined number ran 3 to 4% under the box score of lined players in each of
+# weeks 7, 8 and 9. Each week's combined projections are multiplied by actual over projected on the season's earlier lined
+# games, shrunk n / (n + shrink) and clipped. Solo is left alone: there the model ran high two weeks and low the third.
+LINED_LEVEL = dict(kinds=("combined",), shrink=100, clip=(0.9, 1.1))
 
 # --- betting rules ---
 FADE_GAP = 3.0                     # last game this many tackles from his average counts as an outlier (the damping factor and the card's wording)

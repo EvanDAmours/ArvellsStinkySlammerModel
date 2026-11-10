@@ -424,16 +424,30 @@ check(_sb["since"] is None and _sb["live_week"] == C.ENGINE_LIVE["week"] and all
       and all(r["since"]["lines"] == _sb_live["lines"] for r in _sb_live["shadow"]) and _sb_live["watches"][0]["n"] == 1 and _sb_live["watches"][0]["state"] == "running",
       "the scoreboard reports the weeks since the engine apart from the weeks its weight was chosen on, and reads no verdict before the weeks are in")
 # the candidates in the shadow, on lines where each has a known answer
-_sv = pd.DataFrame(dict(week=[1, 1, 2, 2, 2], kind=["combined", "combined", "combined", "combined", "solo"], line=[4.5] * 5, p_mkt=[0.5] * 5, proj_model=[4.0, 6.0, 4.0, 6.0, 4.0], phi=[1.2] * 5, actual=[8.0, 12.0, 3.0, 9.0, 2.0]))
+_sv = pd.DataFrame(dict(week=[1, 1, 2, 2, 2, 1], kind=["combined", "combined", "combined", "combined", "solo", "solo"], line=[4.5] * 6, p_mkt=[0.5] * 6, proj_model=[4.0, 6.0, 4.0, 6.0, 4.0, 5.0], phi=[1.2] * 6, actual=[8.0, 12.0, 3.0, 9.0, 2.0, 10.0], level=[1.0] * 6))
 _sh = _EV._shadow(_sv, C.ENGINE)
 _pm = np.clip([M.p_over(m, 1.2, 4.5) for m in _sv.proj_model], 0.02, 0.98); _lgt = lambda p: np.log(p / (1 - p)); _sgm = lambda z: 1 / (1 + np.exp(-z))
-_ratio2 = 1 + (20.0 - 10.0) / 10.0 * 2 / (2 + C.SHADOW["level_shrink"])          # week 1's two combined lines came in at twice their projections
+_bc, _bs = M.engine_betas("combined")[0], M.engine_betas("solo")[0]
+_ratio_solo = min(C.LINED_LEVEL["clip"][1], 1 + (10.0 - 5.0) / 5.0 * 1 / (1 + C.SHADOW["level_shrink"]))          # week 1's solo line came in at twice its projection
+_lv = _EV.lined_level(_sv, 2)
 check(abs(_sh["beta_by_kind"][0] - _sgm(C.SHADOW["beta_by_kind"]["combined"] * _lgt(_pm[0]))) < 1e-9 and abs(_sh["beta_by_kind"][4] - _sgm(C.SHADOW["beta_by_kind"]["solo"] * _lgt(_pm[4]))) < 1e-9
-      and abs(_sh["centred"][0] + _sh["centred"][1] - 1) < 1e-9 and abs(_sh["centred"][4] - M.engine_chance(_pm[4], 0.5, C.ENGINE["beta"])) < 1e-9
-      and abs(_sh["lined_level"][0] - M.engine_chance(_pm[0], 0.5, C.ENGINE["beta"])) < 1e-9
-      and abs(_sh["lined_level"][2] - M.engine_chance(min(0.98, max(0.02, M.p_over(4.0 * _ratio2, 1.2, 4.5))), 0.5, C.ENGINE["beta"])) < 1e-9 and _sh["lined_level"][2] > _sh["lined_level"][0]
-      and abs(_sh["lined_level"][4] - M.engine_chance(_pm[4], 0.5, C.ENGINE["beta"])) < 1e-9,
-      "the three candidates in the shadow compute what they are written down as (a weight per market, the combined gap centred on its week, a level from earlier lined games only)")
+      and abs(_sh["centred"][0] + _sh["centred"][1] - 1) < 1e-9 and abs(_sh["centred"][4] - M.engine_chance(_pm[4], 0.5, _bs)) < 1e-9
+      and abs(_sh["lined_level"][0] - M.engine_chance(_pm[0], 0.5, _bc)) < 1e-9
+      and abs(_sh["lined_level"][4] - M.engine_chance(min(0.98, max(0.02, M.p_over(4.0 * _ratio_solo, 1.2, 4.5))), 0.5, _bs)) < 1e-9 and _sh["lined_level"][4] > M.engine_chance(_pm[4], 0.5, _bs)
+      and abs(_lv["combined"] - min(C.LINED_LEVEL["clip"][1], 1 + (20.0 - 10.0) / 10.0 * 2 / (2 + C.LINED_LEVEL["shrink"]))) < 1e-9 and _EV.lined_level(_sv, 1)["combined"] == 1.0
+      and abs(_EV.lined_level(_sv.assign(level=1.02, proj_model=_sv.proj_model * 1.02), 2)["combined"] - _lv["combined"]) < 1e-9,
+      "the candidates in the shadow compute what they are written down as, and the level for lined players uses earlier lined games only, on the model's number before any level")
+# the weight by market, and the grade: an A is a pick the sleeper rule also names; agreement from the book never earns it
+check(M.engine_betas("solo") == (0.65, 0.325) and M.engine_betas("combined") == (0.35, 0.175) and M.engine_betas("assists") == (C.ENGINE["beta"], C.ENGINE["beta"] * C.ENGINE["low_ratio"])
+      and M.engine_grade(0.001, 0.62, False, "player_solo_tackles", sleeper_match=True) == "A" and M.engine_grade(0.05, 0.9, False, "player_solo_tackles", sleeper_match=False) == "B"
+      and M.engine_grade(0.001, 0.9, False, "player_solo_tackles", sleeper_match=False) == "C" and M.engine_grade(0.05, 0.9, True, "player_solo_tackles", sleeper_match=True) == "B"
+      and M.engine_grade(-0.01, 0.9, False, "player_solo_tackles", sleeper_match=True) is None and M.engine_grade(0.05, 0.9, False, "player_assists", sleeper_match=True) == "B",
+      "the model's disagreement weighs 0.65 on solo lines and 0.35 on combined, and an A is a pick that is also a sleeper with a clear checklist")
+# a pull rebuilds the projections when a player expected to play is ruled out (or cleared) since the morning
+_rb = pd.DataFrame(dict(team=["AAA", "AAA", "BBB", "AAA"], player=["Starter", "Backup", "Other", "Deep"], status=["", "", "out", ""], share_pred=[0.9, 0.4, 0.8, 0.05]))
+_ra = _rb.assign(status=["out", "questionable", "", "out"])
+_news = R.role_news(_rb, _ra, now=dt.datetime(2020, 1, 1, tzinfo=dt.timezone.utc))
+check(sorted(n[1] for n in _news) == ["Other", "Starter"] and R.role_news(_rb, _rb) == [], f"a starter ruled out or cleared since the morning is news that rebuilds the projections; a new questionable tag or a deep reserve is not ({_news})")
 # the record of the engine's own weeks: picks before its first week are out, the register's conditions count the right picks
 _lv = C.ENGINE_LIVE
 _ep = pd.DataFrame(dict(season=_lv["season"], week=[_lv["week"] - 1, _lv["week"], _lv["week"], _lv["week"], _lv["week"] + 1, _lv["week"] + 1], player=list("abcdef"),
@@ -446,10 +460,10 @@ check(_era["bets"] == 4 and _era["wins"] == 2 and _era["losses"] == 2 and _era["
       and len(_era["by_week"]) == 2 and _wt["A picks"]["n"] == 2 and _wt["A picks"]["of"] == 30 and _wt["A picks"]["state"] == "running" and abs(_wt["A picks"]["model_said"] - 0.725) < 1e-9
       and _wt["Combined A picks"]["n"] == 2 and _wt["Over picks"]["n"] == 1 and _wt["Locks"]["wins"] == 1 and _wt["Locks"]["losses"] == 1 and _wt["Locks"]["state"] == "running"
       and _era["locks"]["bets"] == 2 and {g["grade"] for g in _era["by_grade"]} == {"A", "B", "C"} and sum(c["bets"] for c in _era["calibration"]) == 4
-      and _none["bets"] == 0 and len(_none["watches"]) == 4 and all(w["state"] == "running" for w in _none["watches"]),
+      and _none["bets"] == 0 and len(_none["watches"]) == 5 and all(w["state"] == "running" for w in _none["watches"]),
       f"the record since the engine leaves out the weeks before it and counts each condition of the decision register ({_era['wins']}-{_era['losses']}, {len(_era['watches'])} conditions)")
 _evd = "\n".join(G._evidence_sections(dict(scoreboard=_sb_live, era=_era, bets=5, wins=3, losses=2, pushes=0, units=0.8, hit_lo=0.2, hit_hi=0.9, by_grade=G.record_by_grade(_ep), by_side_market=[])))
-check(all(k in _evd for k in ("## Against the market", "(out of sample)", "### Candidates in the shadow", "## Since the engine", "Conditions of the decision register on trial", "| E2 The engine's weight (0.5) |", "| E4 A picks |", "## All plays to date"))
+check(all(k in _evd for k in ("## Against the market", "(out of sample)", "### Candidates in the shadow", "## Since the engine", "Conditions of the decision register on trial", "| E2 The engine's weight (0.65 solo, 0.35 combined) |", "| E4 A picks |", "## All plays to date"))
       and "likely range" in _evd and "No graded closing lines yet." in "\n".join(G._evidence_sections({})),
       "the weekly log carries the evidence in plain text: the scoreboard with the weeks since the engine apart, the shadow, the engine's own record, the conditions on trial")
 check(all(k in _html for k in ("rec-trial", "Rules on trial", "Candidates in the shadow", "sb.since", "s.era")), "site shows the out-of-sample verdict, the candidates in the shadow and the rules on trial")

@@ -1141,17 +1141,29 @@ def kelly_stake(p_low, dec):
     return float(np.clip(c["kelly_fraction"] * kelly_fraction(p_low, dec) * c["bankroll"], c["min"], c["max"]))
 
 
-def engine_grade(edge_low, p_model_side, blocked, market=None):
-    """A, B or C for a pick, from two numbers that cannot improve when the book agrees more: the cautious edge and the
-    model's own chance. A: cautious edge of 2%+, the model's own chance 70%+, the lock checklist clear, a market that can
-    carry an A. B: cautious edge of 2%+. C: a pick short of that. None when it is not a pick."""
+def engine_betas(kind):
+    """(weight, cautious weight) of the model's disagreement for a market kind: config.ENGINE["beta_by_kind"], else "beta"."""
+    e = C.ENGINE
+    b = float((e.get("beta_by_kind") or {}).get(kind, e["beta"]))
+    return b, b * float(e.get("low_ratio", e["beta_low"] / e["beta"]))
+
+
+def engine_grade(edge_low, p_model_side, blocked, market=None, sleeper_match=None):
+    """A, B or C for a pick, from numbers that cannot improve when the book agrees more. A (config.ENGINE["a_rule"] ==
+    "sleeper"): a pick that is also a sleeper on the same side, the lock checklist clear, a market that can carry an A.
+    With the older rule ("model"): a cautious edge of 2%+ and the model's own chance at a_model or more. B: a cautious edge
+    of 2%+. C: a pick short of that. None when it is not a pick. sleeper_match None means the caller does not know: the
+    older rule is used."""
     e = C.ENGINE
     if edge_low is None or pd.isna(edge_low) or edge_low < e["pick_edge_low"]:
         return None
-    if edge_low >= e["b_edge_low"]:
-        if p_model_side >= e["a_model"] and not blocked and (market is None or market in C.A_GRADE_MARKETS):
+    can_a = not blocked and (market is None or market in C.A_GRADE_MARKETS)
+    if e.get("a_rule") == "sleeper" and sleeper_match is not None:
+        if sleeper_match and can_a:
             return "A"
-        return "B"
+        return "B" if edge_low >= e["b_edge_low"] else "C"
+    if edge_low >= e["b_edge_low"]:
+        return "A" if p_model_side >= e["a_model"] and can_a else "B"
     return "C"
 
 
@@ -1414,6 +1426,7 @@ def price_lines(lines, P, segments=None, blend=None):
     key3 = list(zip(L.player, L.market, L.line))
     L["fair_cons"] = [cons["mean"].get(k_, np.nan) if len(cons) else np.nan for k_ in key3]
     L["books_n"] = [int(cons["size"].get(k_, 0)) if len(cons) else 0 for k_ in key3]
+    books_pm = L.groupby(["player", "market"]).book.nunique().to_dict()      # how many books post this player and market at all
     P = P.copy()
     P["team_name"] = P.team.map(TEAM_NAMES)
     rows = []
@@ -1439,7 +1452,9 @@ def price_lines(lines, P, segments=None, blend=None):
         if mu_model is None or not np.isfinite(float(mu_model)):
             rows.append({**base, "pick": "No projection", "why": "The model has no number for him this week"})
             continue
-        mu_model, line = float(mu_model), float(r.line)
+        # the level for players who get lines (config.LINED_LEVEL), set by the daily from the season's earlier lined games
+        level = float(p.get("lined_level", 1.0)) if kind in C.LINED_LEVEL["kinds"] and pd.notna(p.get("lined_level", np.nan)) else 1.0
+        mu_model, line = float(mu_model) * level, float(r.line)
         fair = float(r.fair_cons) if pd.notna(r.fair_cons) else float("nan")
         ident = dict(team=p.team, opp=p.opp_team, group=p.group, jersey=None if pd.isna(p.get("jersey", np.nan)) else int(p.get("jersey")),
                      player_id=None if pd.isna(p.get("player_id", np.nan)) else str(p.get("player_id")), espn_id=None if pd.isna(p.get("espn_id", np.nan)) else str(p.get("espn_id")).split(".")[0])
@@ -1447,7 +1462,11 @@ def price_lines(lines, P, segments=None, blend=None):
             rows.append({**base, **ident, "proj_model": mu_model, "pick": "Pass", "why": "One-sided price, and no book quotes both sides of this line: there is no fair chance to price it against"})
             continue
         po_model = float(np.clip(p_over(mu_model, phi_use, line), 0.02, 0.98))     # the model's own chance of the Over
-        po, po_low = engine_chance(po_model, fair, e_["beta"]), engine_chance(po_model, fair, e_["beta_low"])
+        beta, beta_low = engine_betas(kind)
+        po, po_low = engine_chance(po_model, fair, beta), engine_chance(po_model, fair, beta_low)
+        # a line no other book posts, which the model's own number puts beyond doubt, does not belong to this player as the
+        # model knows him: theScore's "Sam Williams" 8.5 (a rotational lineman projected 2.6) was the top lock two weeks running
+        misfit = max(po_model, 1 - po_model) >= e_.get("misfit_model", 2.0) and int(books_pm.get((r.player, r.market), 0)) <= 1
         # informational only, never part of the grade: the model and the consensus line far apart means one of them
         # knows something; the card says so and the reader checks
         far_from_line = abs(mu_model - float(r.mkt_line)) / max(1.0, float(r.mkt_line)) >= 0.25
@@ -1500,12 +1519,10 @@ def price_lines(lines, P, segments=None, blend=None):
         sp_ = p.get("share_pred", np.nan)
         blind_under = role_now and side == "Under" and not C.LOCK_RULES.get("next_man_up_under", False) and not (pd.notna(sp_) and float(sp_) >= C.PHI_SHARE_SPLIT)
         tier = "pick" if edge_low >= e_["pick_edge_low"] else "lean" if ev >= e_["lean_edge"] else "pass"
-        if flagged or thin or blind_under:
+        if flagged or thin or blind_under or misfit:
             tier = "pass"
         pick = side if tier == "pick" else "Pass"
-        grade = engine_grade(edge_low, p_model_side, bool(block), r.market) if tier == "pick" else None
         lock = 100.0 * p_model_side                                   # the lock score: the model's own chance of this side
-        not_a = (grade == "B" and p_model_side >= e_["a_model"] and edge_low >= e_["b_edge_low"])       # an A but for the checklist or the market
         # a sleeper: the model's own number disagrees with the line by a margin that held in every live week (config.SLEEPER);
         # a frozen rule set tracked on its own record whether or not the engine makes the line a pick
         sl, sleeper, s_grade, s_p, s_note, s_med, s_ev = C.SLEEPER, "", None, None, None, None, None
@@ -1537,11 +1554,17 @@ def price_lines(lines, P, segments=None, blend=None):
                            "no edge for the pricing engine at this price")
                 at_price = f"At this price: win chance {s_win:.0%} against {1 / s_dec:.0%} to break even ({s_ev:+.0%}); {verdict}."
                 s_note = sleeper_note(sleeper, kind, mu_model, line, phi_use, s_p, log_raw, eo, s_grade, s_why, at_price)
+        # the grade, once the sleeper is known: an A is a pick the sleeper rule also names on the same side
+        grade = engine_grade(edge_low, p_model_side, bool(block), r.market, sleeper_match=(sleeper == side)) if tier == "pick" else None
+        not_a = tier == "pick" and grade != "A" and sleeper == side and (bool(block) or r.market not in C.A_GRADE_MARKETS)   # an A but for the checklist or the market
         num = f"win chance {p_side:.0%} against {1 / dec:.0%} to break even at this price ({ev:+.0%}); at the cautious chance {p_low:.0%} ({edge_low:+.0%}). Model alone {p_model_side:.0%}, the book's fair price {fair_side:.0%}"
         if flagged:
             why = f"His own status is {p.status or 'uncertain'}: wait for the final report"
         elif thin:
             why = f"Only {int(p.n_prev)} games of data"
+        elif misfit:
+            why = (f"No pick: this line does not fit him. Only {r.book} posts it and the model's number is {mu_model:.1f} against a line of {line:g}: a mis-posted line or another player of the same name. "
+                   f"Check the name on the slip before touching it; the numbers, for the record: {num}")
         elif blind_under:
             why = (f"No pick: he is the next man up (a regular at his position is out) and the model expects him at {float(sp_):.0%} of the snaps" if pd.notna(sp_) else "No pick: he is the next man up (a regular at his position is out)") + \
                   f". On backups like this the projection has run 16% low, so its Under is not an edge; the numbers, for the record: {num}"
@@ -1572,14 +1595,14 @@ def price_lines(lines, P, segments=None, blend=None):
             if block:
                 why += "; not lock-eligible: " + ", ".join(block)
             if not_a:
-                why += f"; the numbers of an A (cautious edge {edge_low:+.0%}, model {p_model_side:.0%}), shown as a B: " + ("the lock checklist is not clear" if block else "this market cannot carry an A yet")
+                why += f"; a sleeper on this side too, which would make it an A, shown as a {grade}: " + ("the lock checklist is not clear" if block else "this market cannot carry an A yet")
         if sleeper:
             why += f"; sleeper ({sleeper}, grade {s_grade}): the model's own number is {mu_model:.1f} against a line of {line:g}"
         lg_steps, lg_text = logic_steps(p, kind)
         mu_eng = implied_mean(po, phi_use, line)                       # the engine's win chance read back as a number of tackles
         mkt_mean = implied_mean(fair, phi_use, line)                   # the book's fair price read back the same way
         eng = dict(p_model=p_model_side, fair=fair_side, p=p_side, p_low=p_low, ev=ev, edge_low=edge_low, mkt_mean=mkt_mean)
-        rows.append({**base, **ident, "proj": float(mu_eng), "proj_model": mu_model, "mkt_mean": float(mkt_mean),
+        rows.append({**base, **ident, "proj": float(mu_eng), "proj_model": mu_model, "level": level, "misfit": bool(misfit), "mkt_mean": float(mkt_mean),
                      "exp_opps": None if pd.isna(p.get("exp_opps", np.nan)) else float(p.get("exp_opps")),
                      "mkt_line": float(r.mkt_line), "books_n": int(r.books_n), "phi": phi_use, "model_over": po, "model_over_low": po_low, "model_over_own": po_model, "market_over": fair,
                      "ev": ev, "side": side, "far_from_line": bool(far_from_line),
@@ -1609,7 +1632,7 @@ def price_lines(lines, P, segments=None, blend=None):
     # every column the log, the sizing and the site read exists even when no line on this board could be priced (a pull of
     # one-sided prices only, or of players the model does not carry): the replay of week 8 crashed on a missing column
     for c_, d_ in (("ev", np.nan), ("side", None), ("lock", np.nan), ("tier", None), ("grade", None), ("stake", np.nan), ("proj", np.nan), ("proj_model", np.nan),
-                   ("p_claim", np.nan), ("p_low", np.nan), ("p_model", np.nan), ("edge_low", np.nan), ("market_over", np.nan), ("model_over", np.nan), ("sleeper", ""),
+                   ("level", 1.0), ("misfit", False), ("p_claim", np.nan), ("p_low", np.nan), ("p_model", np.nan), ("edge_low", np.nan), ("market_over", np.nan), ("model_over", np.nan), ("sleeper", ""),
                    ("lock_block", ""), ("payout", np.nan), ("segment", None), ("team", None), ("opp", None), ("group", None), ("phi", np.nan), ("exp_opps", np.nan)):
         if c_ not in out.columns:
             out[c_] = d_

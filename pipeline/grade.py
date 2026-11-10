@@ -699,8 +699,11 @@ def engine_era(Pc):
     out["model_calibration"] = buckets("p_model", [0.0, 0.55, 0.6, 0.65, 0.7, 0.8, 1.01])      # the model's own chance (the lock score, the A bar)
     out["locks"] = rec(E[five])
     a_bar = C.ENGINE["a_model"]
+    own, el = num(E, "p_model"), num(E, "edge_low")
+    old_a = (own >= a_bar) & (el >= C.ENGINE["b_edge_low"])         # what an A was until 2026-11-09: sure on the model's own chance
     out["watches"] = [
-        watch("E4", "A picks", f"Read at 30 graded. They claim a model chance of {a_bar:.0%} or more; if they hit near 60%, a ceiling on the model's own chance is the candidate.", E[grade == "A"], of=30),
+        watch("E4", "A picks", "An A is a pick that is also a sleeper on the same side. Read at 30 graded: it stays only if these hit 60% or better and beat the B and C picks.", E[grade == "A"], of=30, bar=0.60),
+        watch("E4", "The A rule it replaced", f"Picks with a cautious edge of 2%+ and a model chance of {a_bar:.0%}+, whatever their grade now. Counted beside the new A, so the two rules can be told apart.", E[old_a], of=30),
         watch("E5", "Combined A picks", "A picks and locks go back to solo only if these hit under 55% over their first 20.", E[(grade == "A") & (kind == "combined")], of=20, bar=0.55),
         watch("E6", "Over picks", "Re-read at 40. The candidate is to show Overs as leans only.", E[side == "Over"], of=40),
         watch("E5", "Locks", "The target is 70% over the season.", E[five], bar=0.70),

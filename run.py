@@ -504,6 +504,18 @@ def official_solo(H):
     return Hg
 
 
+def lined_level_now(H, week):
+    """The combined level for this week's lined players (config.LINED_LEVEL), 1.0 when it cannot be worked out."""
+    try:
+        Hg = official_solo(H)
+        lv = EV.lined_level(EV.closing_frame(Hg[["season", "week", "team", "name_key", "comb", "solo_t"]], C.SEASON), week)
+        print(f"daily: level for lined players this week: {lv}")
+        return float(lv.get("combined", 1.0))
+    except Exception as e:  # noqa: BLE001
+        print(f"daily: lined-player level skipped ({type(e).__name__}: {e})")
+        return 1.0
+
+
 def scoreboard(Hg):
     """The engine against the market's fair closing price on every line the model had a number for (pipeline/evaluate.py)."""
     try:
@@ -653,6 +665,7 @@ def cmd_daily(auto=False):
         P = M.finalize_projections(F, phi, scale=scale, gbm=gbm)
         P = attach_game_logs(P, H, C.SEASON, week)
         P, status["fantasypros_rows"] = attach_consensus(P, C.SEASON, week)
+        P["lined_level"] = lined_level_now(H, week)       # the level for players who get lines, from the season's earlier lined games
     else:
         print(f"daily: no game left on the {C.SEASON} schedule (week {week}); the season is over, so the record is graded and nothing is projected")
         P, status["fantasypros_rows"] = pd.DataFrame(), 0
@@ -731,6 +744,56 @@ def refresh_injury_status(P, week):
     return P
 
 
+ROLE_NEWS = CACHE / "role_news.json"
+
+
+def role_news(before, after, now=None, min_share=0.3):
+    """Players whose availability changed since the projections were built: ruled out (or doubtful, or to a reserve list)
+    since, or cleared since, expected to play at least `min_share` of the snaps, on a team that has not kicked off.
+    [(team, player, old status, new status)]. A change like this moves his teammates' snaps, which a status refresh
+    alone does not: the projections have to be rebuilt."""
+    if before is None or after is None or len(before) == 0 or "status" not in after.columns:
+        return []
+    now = now or dt.datetime.now(dt.timezone.utc)
+    try:
+        games = json.load(open(CACHE / "games.json"))
+        started = {t for g in games for t in (g["home"], g["away"]) if dt.datetime.fromisoformat(g["kickoff"]) <= now}
+    except (OSError, ValueError, KeyError):
+        started = set()
+    out_ = lambda v: str(v).strip().lower() in M.OUT_STATUSES
+    old = before.status.fillna("").astype(str) if "status" in before.columns else pd.Series("", index=before.index)
+    share = pd.to_numeric(after.get("share_pred"), errors="coerce").fillna(0.0) if "share_pred" in after.columns else pd.Series(1.0, index=after.index)
+    news = []
+    for i in after.index:
+        o, n = old.get(i, ""), str(after.at[i, "status"] if pd.notna(after.at[i, "status"]) else "")
+        if out_(o) != out_(n) and share.get(i, 0.0) >= min_share and after.at[i, "team"] not in started:
+            news.append((str(after.at[i, "team"]), str(after.at[i, "player"]), o, n))
+    return news
+
+
+def reproject_on_news(P0, P, week):
+    """Rebuild the projections before a pull prices anything when a player who was expected to play is now out (or the
+    reverse): the next man up and the shares of everyone at his position change with it. Each piece of news triggers one
+    rebuild (data/cache/role_news.json); a rebuild that fails leaves the morning's projections in place."""
+    news = role_news(P0, P)
+    try:
+        seen = set(map(tuple, json.loads(ROLE_NEWS.read_text()).get(str(week), [])))
+    except (OSError, ValueError, AttributeError):
+        seen = set()
+    fresh = [n for n in news if (n[0], n[1], n[3]) not in seen]
+    if not fresh:
+        return P
+    print("odds: availability changed since the projections were built: " + "; ".join(f"{pl} ({t}) {o or 'active'} -> {n or 'active'}" for t, pl, o, n in fresh)
+          + ". Rebuilding the projections before pricing.", flush=True)
+    try:
+        ROLE_NEWS.write_text(json.dumps({str(week): sorted(seen | {(n[0], n[1], n[3]) for n in fresh})}))
+        cmd_daily()
+        return refresh_injury_status(pd.read_csv(CACHE / "projections.csv"), week)
+    except Exception as e:  # noqa: BLE001
+        print(f"odds: the rebuild failed ({type(e).__name__}: {e}); pricing with the morning's projections and the refreshed statuses")
+        return P
+
+
 def cmd_odds(hours=None, auto=False):
     keys = {name: os.environ[name] for name in C.ODDS_KEY_ENV if os.environ.get(name)}
     if not keys and os.environ.get("TACKLE_FAKE_ODDS"):
@@ -767,7 +830,7 @@ def cmd_odds(hours=None, auto=False):
         print(f"odds: {pulled_key} {rule['why']}")
         _budget_to_meta(budget)
         return
-    P = refresh_injury_status(P, week)   # only when a pull is happening: the report as it stands now
+    P = reproject_on_news(P, refresh_injury_status(P, week), week)   # only when a pull is happening: the report as it stands now, and new projections if it moved a role
     if auto:
         pulled_key, skipped_keys = plan.pop("key"), plan.pop("also_served", [])
         mark_served([pulled_key] + skipped_keys)
