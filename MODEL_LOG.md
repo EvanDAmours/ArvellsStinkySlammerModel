@@ -871,6 +871,24 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-10, 2:14 pm (Track record: "What would it have paid?", a unit value turned into dollars)
+
+Owner: "In the track record, I want to be able to input your unit value and see how much you would be up if you
+were to bet one unit per pick... if I went back to week eight and I put one unit on all of the A's, what I would
+be." The site only; no rule, number or pick changes.
+
+A section under the cards: one unit's worth in dollars (kept in the browser), which picks (the new model this
+season: replayed before week 10, live from it; the picks as bet at the time; the new model replayed on 2025 and on
+2024), from which week to which, which grades, and one unit on every pick or the grade's units. It answers with
+the dollars up or down, the record, the money put out and about how much a week, and a week-by-week table with a
+running total. Each source says under the answer whether it is a replay or real bets.
+
+`data/replay_seasons.json` now carries each week's wins, losses and units by grade (`tools/season_test.py`), which
+the calculator needs for 2024 and 2025. Checked in a browser against sums made independently from the same data:
+A picks of weeks 8 and 9 of the replay 14-1, +$205.29 at $25 a unit; A and B of weeks 4 to 9 63-25, +$608.96 flat
+and +$473.62 at the grade's units; 2025 A and B 253-116. The unit value survives a reload; phone and desktop
+widths; no script error. Smoke test 182 of 182 (one new check). Revert: `git revert` of this commit.
+
 ### 2026-11-10, 2 pm (My board repackaged the same way; both tabs made to read well on a phone)
 
 Owner: "Ensure the same goes for the My Board page. Cross ref both for mobile and ensure pleasurable viewing

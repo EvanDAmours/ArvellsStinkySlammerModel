@@ -497,6 +497,9 @@ _res = json.loads((tmp / "docs" / "data" / "results.json").read_text())
 check(all(k in _html for k in ("rec-history", "function historySection", "rec-picks-list", "function recCards", "function foldOf")) and "replays" in _res
       and all({"season", "plays", "by_grade", "by_week"} <= set(e) and e["plays"]["wins"] + e["plays"]["losses"] == sum(g["wins"] + g["losses"] for g in e["by_grade"]) for e in _rs.get("seasons", [])),
       f"the Track record tab carries the then-and-now section, keeps the pick list behind a dropdown and gets the replayed seasons ({[e['season'] for e in _rs.get('seasons', [])]})")
+check(all(k in _html for k in ("rec-whatif", "function whatIfSection", "unit-value")) and all(abs(sum(g["units"] for g in w["by_grade"].values()) - w["units"]) < 1e-6
+      and sum(g["wins"] + g["losses"] for g in w["by_grade"].values()) == w["wins"] + w["losses"] for e in _rs.get("seasons", []) for w in e["by_week"]),
+      "the Track record tab has the unit-value calculator, and the replayed seasons carry each week's units by grade (they add up to the week)")
 
 _sg = json.loads((tmp / "data" / "cache" / "segments.json").read_text()) if (tmp / "data" / "cache" / "segments.json").exists() else {}
 check(all("n_eff" in v and v["n_eff"] <= v["n"] + 1e-9 for v in _sg.values()) if _sg else True, f"segment calibration carries the recency-weighted count ({len(_sg)} segments)")

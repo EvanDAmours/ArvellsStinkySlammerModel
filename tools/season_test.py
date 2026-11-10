@@ -76,7 +76,7 @@ def summary(P, season):
     weeks = sorted(int(w) for w in P.week.unique())
     by_week = []
     for w, x in P.groupby("week"):
-        by_week.append(dict(week=int(w), **r(x), by_grade={g: f"{int(y.win.sum())}-{int((~y.win).sum())}" for g, y in x.groupby("grade")}))
+        by_week.append(dict(week=int(w), **r(x), by_grade={g: dict(wins=int(y.win.sum()), losses=int((~y.win).sum()), units=float(y.units.sum())) for g, y in x.groupby("grade")}))
     wk = P.groupby("week").st.sum()
     return dict(season=int(season), weeks=weeks, plays=r(P), by_grade=[dict(grade=g, **r(x)) for g, x in P.groupby("grade")],
                 locks=r(P[P.five.fillna(False).astype(bool)]), by_week=by_week, weeks_up_at_stakes=int((wk > 0).sum()), worst_week=float(wk.min()), best_week=float(wk.max()))

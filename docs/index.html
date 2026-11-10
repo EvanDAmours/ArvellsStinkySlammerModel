@@ -119,6 +119,12 @@ details.trial > summary > b { flex: 1 1 12ch; } details.trial > summary .trial-n
 #mine-body button.reset.danger { color: #c0392b; } #mine-body .fold-body > .reset { margin-top: 10px; }
 #mine-body > .section { border-top: 1px solid var(--line); padding-top: 18px; margin-top: 22px; }
 .mine-note { color: var(--muted); font-size: 0.85rem; margin: -4px 0 10px; }
+.wi-form { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 8px 0 10px; }
+.wi-form label { font-size: 0.88rem; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; } .wi-form select, .wi-form input[type=number] { font: inherit; color: var(--ink); padding: 4px 6px; }
+.wi-form input[type=number] { width: 6.5em; } .wi-form .wi-grades { display: inline-flex; gap: 10px; align-items: center; } .wi-form .wi-grades label { gap: 4px; color: var(--ink); }
+.wi-out { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 0 0 10px; }
+.wi-out .rec-card .big { font-size: 1.7rem; }
+@media (max-width: 640px) { .wi-form label { flex: 1 1 46%; min-width: 0; } .wi-form select { flex: 1 1 0; min-width: 0; } .wi-form .wi-grades, .wi-form label.wide { flex: 1 1 100%; } }
 .only-phone { display: none; } @media (max-width: 640px) { .only-phone { display: inline; } #rec-table td:nth-child(3) { white-space: normal; } }
 .ledger-t td:nth-child(2) { white-space: normal; } .ledger-t td small { display: block; color: var(--muted); font-size: 0.82rem; }
 @media (max-width: 640px) { .ledger-t th:nth-child(4), .ledger-t td:nth-child(4) { display: none; } }
@@ -973,6 +979,68 @@ function recCards(r, s, lw) {
     sb.lines ? card(sn ? "rc-live" : "rc-replay", "Against the book's own price", [el("span", { class: (sn ? sn.engine_minus_market : sb.engine_minus_market) > 0 ? "pos" : "neg" }, sg4(sn ? sn.engine_minus_market : sb.engine_minus_market))],
       sn ? `Since week ${sn.from_week}, on ${sn.lines} closing lines. Above zero: the model's chance beat the book's.` : `On ${sb.lines} closing lines of weeks ${(sb.weeks || [])[0]} to ${(sb.weeks || []).slice(-1)[0]}, which the rules were chosen on. Above zero: the model's chance beat the book's.`) : "");
 }
+// ---- what would it have paid: a unit value, a set of picks, and the money they made
+const WI = { unit: 10, src: "", from: null, to: null, grades: null, stake: "flat" };
+try { const u = parseFloat(localStorage.getItem("unit-value")); if (u > 0) WI.unit = u; } catch (e) { /* fine */ }
+function whatIfSources(r, lw) {
+  // each source as rows of one week and one grade: bets, wins, losses and the units won at one unit a pick
+  const add = (m, week, grade, p) => { const k = `${week}|${grade}`; const x = m.get(k) || { week, grade, wins: 0, losses: 0, units: 0 }; if (p.result === "Win") x.wins++; else x.losses++; x.units += p.units || 0; m.set(k, x); };
+  const out = [], season = DATA.meta?.season ?? "";
+  const live = (r.picks || []).filter((p) => decided(p)), retro = r.retro?.weeks || [];
+  const now = new Map();
+  for (const w of retro) if (w.week < lw) for (const p of (w.all_picks || [])) if (p.result === "Win" || p.result === "Loss") add(now, w.week, p.grade || "none", p);
+  for (const p of live) if (p.week >= lw) add(now, p.week, p.grade || "none", p);
+  if (now.size) out.push({ key: "now", label: `The new model, ${season}`, note: `Weeks before ${lw} are a replay: what today's rules would have picked on those weeks' lines, not bets that were made. From week ${lw} they are the picks as made.`, rows: [...now.values()] });
+  const then = new Map(); for (const p of live) if (p.week < lw) add(then, p.week, p.grade || "none", p);
+  if (then.size) out.push({ key: "then", label: `As bet at the time, ${season}`, note: "The picks this site actually made in those weeks, under the rules and grades it ran on then.", rows: [...then.values()] });
+  for (const x of [...(r.replays?.seasons || [])].reverse()) { if (x.season === season) continue;
+    const rows = x.by_week.flatMap((w) => Object.entries(w.by_grade || {}).filter(([, y]) => typeof y === "object").map(([g, y]) => ({ week: w.week, grade: g, wins: y.wins, losses: y.losses, units: y.units })));
+    if (rows.length) out.push({ key: `s${x.season}`, label: `The new model, ${x.season} (replayed)`, note: `A replay of the ${x.season} season's lines under today's rules: what it would have picked, not bets that were made.`, rows }); }
+  return out;
+}
+function whatIfSection(r, s, lw) {
+  const sources = whatIfSources(r, lw); if (!sources.length) return null;
+  const sec = section("What would it have paid?", "Put in what one unit is worth to you, pick a starting week and the grades you would have bet, and see the money.");
+  sec.id = "rec-whatif";
+  const form = el("div", { class: "wi-form" }), outBox = el("div");
+  sec.append(form, outBox);
+  const gu = DATA.meta?.grading?.units || { A: 1, B: 0.5, C: 0.25 };
+  const draw = () => {
+    const src = sources.find((x) => x.key === WI.src) || sources[0]; WI.src = src.key;
+    const weeks = [...new Set(src.rows.map((x) => x.week))].sort((a, b) => a - b), grades = ["A", "B", "C", "none"].filter((g) => src.rows.some((x) => x.grade === g));
+    if (!weeks.includes(WI.from)) WI.from = weeks[0]; if (!weeks.includes(WI.to) || WI.to < WI.from) WI.to = weeks[weeks.length - 1];
+    if (!WI.grades || ![...WI.grades].some((g) => grades.includes(g))) WI.grades = new Set(grades.includes("A") ? ["A"] : grades);
+    const sel = (label, value, opts, set, cls) => { const e = el("select", { "aria-label": label }, ...opts.map(([v, t]) => { const o = el("option", { value: String(v) }, t); if (String(v) === String(value)) o.selected = true; return o; })); e.addEventListener("change", () => { set(e.value); draw(); }); return el("label", cls ? { class: cls } : {}, label, e); };
+    const unit = el("input", { type: "number", min: "0", step: "1", inputmode: "decimal", value: String(WI.unit), "aria-label": "What one unit is worth, in dollars" });
+    unit.addEventListener("input", () => { const v = parseFloat(unit.value); WI.unit = v > 0 ? v : 0; try { localStorage.setItem("unit-value", String(WI.unit)); } catch (e) { /* fine */ } result(); });
+    const gbox = el("span", { class: "wi-grades" }, el("span", { class: "muted" }, "Grades"), ...grades.map((g) => { const c = el("input", { type: "checkbox" }); c.checked = WI.grades.has(g); c.addEventListener("change", () => { if (c.checked) WI.grades.add(g); else WI.grades.delete(g); result(); }); return el("label", {}, c, g === "none" ? "no grade" : el("span", { class: `grade ${g}` }, g)); }));
+    form.replaceChildren(el("label", {}, "One unit = $", unit),
+      sel("Picks", WI.src, sources.map((x) => [x.key, x.label]), (v) => { WI.src = v; WI.from = null; WI.to = null; }, "wide"),
+      sel("From", WI.from, weeks.map((w) => [w, `Week ${w}`]), (v) => { WI.from = +v; }), sel("To", WI.to, weeks.filter((w) => w >= WI.from).map((w) => [w, `Week ${w}`]), (v) => { WI.to = +v; }),
+      gbox,
+      sel("Stake", WI.stake, [["flat", "1 unit on every pick"], ["grade", `By grade (A ${gu.A}, B ${gu.B}, C ${gu.C} units)`]], (v) => { WI.stake = v; }, "wide"));
+    const result = () => {
+      const stakeOf = (g) => (WI.stake === "grade" ? (gu[g] ?? gu.C ?? 0.25) : 1);
+      const rows = src.rows.filter((x) => x.week >= WI.from && x.week <= WI.to && WI.grades.has(x.grade));
+      const tot = rows.reduce((a, x) => ({ w: a.w + x.wins, l: a.l + x.losses, u: a.u + x.units * stakeOf(x.grade), st: a.st + (x.wins + x.losses) * stakeOf(x.grade) }), { w: 0, l: 0, u: 0, st: 0 });
+      const usd = (u) => { const v = u * WI.unit, a = Math.abs(v); return `${v < 0 ? "-" : "+"}$${a >= 1000 ? Math.round(a).toLocaleString() : a.toFixed(2)}`; }, cls = (u) => (u > 0 ? "pos" : u < 0 ? "neg" : "");
+      const card = (c, title, big, sub) => el("div", { class: `rec-card ${c}` }, el("h4", {}, title), el("div", { class: "big" }, ...big), el("div", { class: "sub" }, sub));
+      const n = tot.w + tot.l, gl = [...WI.grades].filter((g) => grades.includes(g)).map((g) => (g === "none" ? "ungraded" : g)).join(", ") || "no";
+      const byWeek = weeks.filter((w) => w >= WI.from && w <= WI.to).map((w) => { const x = rows.filter((y) => y.week === w); return { w, wins: x.reduce((a, y) => a + y.wins, 0), losses: x.reduce((a, y) => a + y.losses, 0), u: x.reduce((a, y) => a + y.units * stakeOf(y.grade), 0) }; });
+      let run = 0; const tb = byWeek.map((x) => { run += x.u; return [`Week ${x.w}${src.key === "now" ? (x.w < lw ? " (replay)" : " (live)") : ""}`, x.wins + x.losses ? wl(x.wins, x.losses) : el("span", { class: "muted" }, "no pick"), el("b", { class: cls(x.u) }, x.wins + x.losses ? usd(x.u) : ""), el("b", { class: cls(run) }, usd(run))]; });
+      outBox.replaceChildren(
+        el("div", { class: "wi-out" },
+          card(tot.u >= 0 ? "rc-live" : "rc-old", "You would be", [el("span", { class: cls(tot.u) }, n ? usd(tot.u) : "$0")], n ? `${tot.u >= 0 ? "+" : ""}${num(tot.u, 1)} units on ${num(tot.st, 1)} staked (${tot.st ? signedPct(tot.u / tot.st) : "–"}).` : "No pick matches."),
+          card("rc-replay", "Record", [wl(tot.w, tot.l), el("small", {}, n ? pct(tot.w / n) : "")], `${n} ${gl} pick${n === 1 ? "" : "s"}, week ${WI.from}${WI.to !== WI.from ? ` to ${WI.to}` : ""}.`),
+          card("rc-replay", "Money out", [`$${Math.round(tot.st * WI.unit).toLocaleString()}`], `${WI.stake === "grade" ? "The grade's units" : "One unit"} on each, at $${num(WI.unit, WI.unit % 1 ? 2 : 0)} a unit. About $${n && byWeek.length ? Math.round(tot.st * WI.unit / byWeek.length).toLocaleString() : 0} a week.`)),
+        byWeek.length > 1 ? (() => { const d = more("Week by week", el("div", { class: "scroll" }, table([["Week"], ["Record"], ["That week", "n"], ["Running total", "n"]], tb))); d.id = "rec-whatif-weeks"; return keepOpen(d); })() : "",
+        el("p", { class: "note" }, src.note + " Each pick at the price logged for it; a push or a void returns the stake and is left out."));
+    };
+    result();
+  };
+  draw();
+  return sec;
+}
 function historySection(r, s, lw) {
   // then and now: what was bet under the rules of the time, beside what today's rules pick on the same weeks' lines
   const retro = (r.retro?.weeks || []), seasons = r.replays?.seasons || [];
@@ -1019,7 +1087,7 @@ function historySection(r, s, lw) {
       `${x.weeks_up_at_stakes} of ${x.by_week.length}`, ab ? `${ab.weeks_better} of ${ab.weeks}` : ""]; });
   const seasonFolds = seasons.map((x) => keepOpen(el("details", { class: "fold", id: `rec-hist-s${x.season}` }, el("summary", {}, el("b", { class: "t" }, `${x.season} week by week`), el("span", { class: "s" }, wl(x.plays.wins, x.plays.losses), `, worst week ${x.worst_week >= 0 ? "+" : ""}${num(x.worst_week, 1)}u, best ${x.best_week >= 0 ? "+" : ""}${num(x.best_week, 1)}u at the stakes`)),
     el("div", { class: "fold-body" }, el("div", { class: "scroll" }, ph(table([["Week"], ["Record"], ["Units at the stakes", "n"], ["Hit rate", "n"], ["A"], ["B"], ["C"], ["Staked", "n"]],
-      [...x.by_week].reverse().map((w) => [`Week ${w.week}`, wl(w.wins, w.losses), units(w.units_at_stake, 1), w.hit == null ? "" : pct(w.hit), w.by_grade?.A || "", w.by_grade?.B || "", w.by_grade?.C || "", num(w.staked, 1)]), "5 6 7 8")))))));
+      [...x.by_week].reverse().map((w) => [`Week ${w.week}`, wl(w.wins, w.losses), units(w.units_at_stake, 1), w.hit == null ? "" : pct(w.hit), ...["A", "B", "C"].map((g) => { const y = w.by_grade?.[g]; return !y ? "" : typeof y === "string" ? y : wl(y.wins, y.losses); }), num(w.staked, 1)]), "5 6 7 8")))))));
   const sec = section("Then and now: what was bet, and what the new model would have picked",
     `Two different things, side by side. "As bet then" is every pick this site actually made, under the rules it ran on at the time, with its real result. "New model, replayed" is today's rules run over the same weeks' stored lines after the fact: what it would have picked, not what was bet. From week ${lw} the two are the same thing, and the left column is the live record.`,
     weeks.length ? el("div", { class: "scroll" }, cmp) : null,
@@ -1207,8 +1275,9 @@ function renderRecord() {
 
   const lw = s.era?.since?.week ?? s.scoreboard?.live_week ?? 10;
   box.append(recCards(r, s, lw));
-  const jumps = [["rec-trial", "Rules on trial"], ["rec-market", "Against the market"], ["rec-more", "Locks, parlays, sleepers and more"], ["rec-picks", "Every pick"], ["rec-history", "Then and now"]];
+  const jumps = [["rec-whatif", "What would it have paid?"], ["rec-trial", "Rules on trial"], ["rec-market", "Against the market"], ["rec-more", "Locks, parlays, sleepers and more"], ["rec-picks", "Every pick"], ["rec-history", "Then and now"]];
   box.append(el("nav", { class: "jump", "aria-label": "Track record sections" }, ...jumps.map(([id, label]) => { const a = el("a", { href: `#${id}` }, label); a.onclick = (e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); }; return a; })));
+  const wi = whatIfSection(r, s, lw); if (wi) box.append(wi);
   if (parts.trial) box.append(parts.trial);
   if (parts.market) box.append(parts.market);
   // the rest of the record, one line each until opened
