@@ -871,6 +871,29 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-10, 2 pm (My board repackaged the same way; both tabs made to read well on a phone)
+
+Owner: "Ensure the same goes for the My Board page. Cross ref both for mobile and ensure pleasurable viewing
+experience." The site only; no rule, number or pick changes, and nothing stored on a device changes shape (the
+board and the ledger are read from the same browser storage as before).
+
+**My board:** the row of nine loose numbers is now cards (this week's board, settled so far, in play now, if the
+rest all hit), each shown only when it has something to say; the long explanation, the clear-the-week button and
+"add a bet from a game that has started" sit behind dropdowns; the season ledger opens with two cards (up or down,
+record) and one dropdown a week, each with a table of four columns (bet with its price, stake and book under it,
+result, tackles he had, profit) that fits a phone without sideways scrolling; back-up and transfer is a dropdown;
+the two unstyled buttons are styled; a voided bet is no longer counted as pending.
+
+**Phones (390 pixels wide), both tabs:** tables put the number that matters second and drop the secondary columns
+(`ph(table, "5 6")` hides those columns on a narrow screen; the full table is there on a wider one). Against the
+market: week, margin, book, engine. Every pick: grade, player, bet with its market, actual, result. Then and now:
+week, as bet, new model. Seasons: season, record, return, weeks up. Tighter type and padding in tables, cards one
+to a row, the filter bar two to a row.
+
+**Checked** at 390 and 1,100 pixels with a seeded board of 38 bets over four weeks, every dropdown closed and
+open: no script error and no sideways scroll of the page on either tab. Smoke test 181 of 181. Revert: `git
+revert` of this commit.
+
 ### 2026-11-10, 1:45 pm (the Track record tab repackaged; what was bet beside what the new model would have picked)
 
 Owner: "Clean up the way the track record page looks. Add a section at the bottom that clearly shows our historical
