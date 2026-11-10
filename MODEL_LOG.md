@@ -147,7 +147,11 @@ does not describe his current role, or who may not play, can be a pick, never a 
 14. **The scoreboard** (`pipeline/evaluate.py`, Track record: "Against the market"). The win chance on every
     closing line the model had a number for, picked or not, scored in log-loss beside the book's own fair closing
     chance, by week. The line log (`data/lines_log.csv`) keeps the engine's read of every line so any rule can be
-    scored later without having been live.
+    scored later without having been live. The weeks since the engine's first week (`config.ENGINE_LIVE`) are
+    reported by themselves: its verdict is read only there. Three candidates (`config.SHADOW`) are scored on the same
+    lines against the engine and never used. The record of the engine's own weeks, with every condition of the
+    decision register counted (`grade.engine_era`), is on the site as "Rules on trial". All of it is also written
+    in plain text to `data/weekly_five.md`, because the site's copy is sealed and a post-mortem starts from it.
 15. **Operations.** One workflow, the ticker, beats all day: the daily once after 4:15 am Edmonton, a pull at each
     slot, live grading when a game ends; a run that ends starts the next. Before each pull the odds-credit budget
     (`run.credit_budget`, `run.govern`) prices the rest of the month and keeps what is worth most per credit: the
@@ -172,14 +176,17 @@ Rules of evidence (2026-11-09; they bind every change after this date):
    closing-line value for timing.
 4. **Out of sample, or marked provisional.** Projection pieces: walk-forward by season with the corrector retrained
    per fold. Pricing rules: on weeks not used to choose them. A number looked at on the weeks it was chosen on is
-   labelled so wherever it is quoted.
+   labelled so wherever it is quoted. The engine's rules were chosen on weeks 7 to 9 of 2026; its first week is
+   `config.ENGINE_LIVE` (2026 week 10). The scoreboard and the record report the weeks from there on by themselves
+   ("since the engine"), and a revert condition in the decision register is read on those weeks alone.
 5. **Rule 0 as a test.** At a fixed model chance, more agreement from the book must never raise what chooses a
    pick (the cautious edge) or its grade. The smoke test checks it over the whole grid.
 6. **Frozen until 2026-12-08** (`config.FROZEN_UNTIL`; weeks 10 to 13). No bar, weight or cap in ENGINE, STAKE,
    FACTORS or GBM changes before then unless a defect is found (wrong arithmetic, a crash, data that is not what
    the code assumes). A candidate is tested in the shadow on the line log and written down as a candidate (open
-   issues). 100 changelog entries in 17 days against three graded weeks is why: no rule set had been left alone
-   long enough to be measured.
+   issues); its numbers are fixed in `config.SHADOW` before the weeks that test it, and the daily scores it on every
+   closing line (decision R6). 100 changelog entries in 17 days against three graded weeks is why: no rule set had
+   been left alone long enough to be measured.
 7. **After the freeze, one change at a time,** each with its revert condition written before it ships.
 
 Protocol before pushing a change to the model, pricing, bars, stakes, schedule or data sources:
@@ -287,6 +294,19 @@ in-sample. The full write-up is Research round 11.
   the last thing to go. The Sunday 10 am look duplicates that pull since the clocks changed (the early games kick
   off at noon Edmonton now) and is the first to go.
 - **R4. Frozen until 2026-12-08** (rule 6 above).
+- **R5. The record and the scoreboard are split at the engine's first week** (`config.ENGINE_LIVE`: 2026 week 10).
+  Weeks 7 to 9 chose the rules and test nothing. The conditions of E2, E4, E5, E6 and S1 are counted by the daily on
+  the weeks since (`grade.engine_era`, the scoreboard's `since` and `watches`) and shown on the site ("Rules on
+  trial") and in `data/weekly_five.md`. E2 and S1 are read after week 13, on weeks 10 to 13. Since 2026-11-09.
+- **R6. Three candidates run in the shadow** (`config.SHADOW`, `evaluate._shadow`), scored on every closing line and
+  never used for a pick: a weight per market (0.35 combined, 0.65 solo); the combined gap centred on the week's own
+  mean; a level for lined players from the season's earlier lined games (shrunk n / (n + 100)). On weeks 7 to 9,
+  where they were found (880 lines): +0.0012 (t +1.9), +0.0009 (t +7.7: the same small gain three weeks running)
+  and +0.0012 (t +1.0) of log-loss against the engine. Adoption is decided after 2026-12-08, on the weeks from week
+  10 on only: the gain over the engine positive by two standard errors with weeks as the unit, and positive in at
+  least three of the four weeks. One at most is adopted at a time, and the rule it replaces then runs in the shadow
+  against it. Four weeks make a t of 2 a weak bar (the 95% point at three degrees of freedom is 3.2), so an adopted
+  candidate is provisional. Changing a number in `config.SHADOW` restarts that candidate's test.
 
 ## Rejected experiments register
 
@@ -450,7 +470,9 @@ and C9. What remains, and what the rebuild itself turned up:
    +0.03 in 2024) and lower still on the players who had lines in weeks 7 to 9 (+0.26).
    Candidates, to be scored in the shadow through week 13 and not adopted before: (a) the combined gap centred on
    the same slate's mean; (b) a level for lined players from the season's earlier lined games; (c) a weight per
-   market (0.35 combined, 0.65 solo); (d) the in-season level by share class.
+   market (0.35 combined, 0.65 solo); (d) the in-season level by share class. (a) to (c) are scored by the daily
+   since 2026-11-09 with their numbers fixed (decision R6). (d) changes the projection, not the price: it is not in
+   the shadow and needs the full test (it is in the rejected register with its numbers).
 3. **Grades do not order yet.** Replay of weeks 7 to 9: A 10-6 (claimed 70%), B 20-21 (53%), C 73-58 (55%). Stakes
    that follow the cautious edge therefore did not beat flat stakes (-0.0 units on 69.1 staked against +17.7 flat).
    Every range overlaps; judged at 30 graded A picks. If A still claims 70% and hits near 60%, a ceiling on the
@@ -467,9 +489,12 @@ and C9. What remains, and what the rebuild itself turned up:
    November. The budget keeps every pre-kickoff pull and the Thursday and Monday looks, runs the first Saturday
    night look and leaves out later ones, the Sunday 10 am look and the assists market. A working second key or a
    paid plan restores the full schedule the next pull.
-8. **The standing post-mortem task (owner).** Its instructions were rewritten for this structure on 2026-11-09, but
-   the task still has no repository attached, so it cannot read or write anything. Until it does, post-mortems are
-   written in the owner's sessions. Week 9's Monday night game is still to be added to its post-mortem.
+8. **The standing post-mortem task.** Its instructions were rewritten for this structure on 2026-11-09. Its run of
+   that morning did have the repository (an earlier note here said it had none; the run's transcript shows a
+   checkout). It stopped after a minute because the graded detail it was told to read is sealed on the site.
+   `data/weekly_five.md` now carries that evidence in plain text, and the task is told to add the repository with
+   push access itself, or to leave its entry as a patch if the push is refused. Read what its Tuesday and Friday
+   runs produce. Week 9's Monday night game is still to be added to its post-mortem.
 9. **The repository is public (owner).** Picks, projections, every odds snapshot and this file are readable without
    the site's password. A private repository needs paid Actions minutes for a ticker that runs all day.
 10. **The closing price is an hour old** (the last pull before kickoff): closing-line value and the scoreboard are
@@ -640,6 +665,39 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-09, 9 pm (the out-of-sample test written into the code before week 10 has a line; the evidence in plain text)
+
+**What.** Nothing that chooses, grades or sizes a pick changes (the freeze holds). Four additions to how the
+model is measured:
+- `config.ENGINE_LIVE` (2026 week 10) splits the scoreboard and the record. `evaluate.scoreboard` returns `since`
+  (the weeks from the engine's first week on, by themselves) and `grade.grade` returns `era` (the record of those
+  weeks: by grade, side and market, position and week, calibration of the win chance and of the model's own
+  chance, units at one a bet and at the stakes).
+- The conditions of the decision register are counted by the daily: E2 and S1 on the scoreboard's weeks since the
+  engine, E4 (A picks, read at 30), E5 (combined A picks over their first 20; the locks against 70%) and E6 (Over
+  picks, re-read at 40) on the picks since. Each shows how far along it is and where it stands.
+- The three candidates of open issue 2 are in `config.SHADOW` with their numbers fixed, and the scoreboard scores
+  them on every closing line against the engine (`evaluate._shadow`). Their adoption rule is decision R6.
+- `data/weekly_five.md` carries all of it in plain text (`grade._evidence_sections`): the scoreboard by week with
+  the in-sample weeks marked, tiers, calibration, the shadow, the record since the engine, the conditions on
+  trial, the record to date by grade and by side and market, each with its likely range.
+- Site, Track record: the "Against the market" verdict is read only on the weeks since the engine (until week 10
+  is graded it says there is none); "Candidates in the shadow"; a new section, "Rules on trial".
+
+**Why.** The rebuild promised an out-of-sample test on weeks 10 to 13 and candidates "scored in the shadow", and
+nothing in the code told the weeks apart or scored a candidate: both would have depended on someone remembering
+to do it by hand, after seeing the results. The site's verdict line was reading a t of +1.9 from the three weeks
+the weight was chosen on. And the standing post-mortem cannot read the sealed site: its run of 2026-11-09
+stopped after a minute for want of the graded detail. Writing the test down before the data exist is the point.
+
+**Evidence.** Real daily in a scratch copy (90 seconds, no flag); the weekly log and the site read on real data.
+Weeks 7 to 9 (in-sample, 880 lines): book 0.6913, model 0.6876, engine 0.6845; the candidates 0.6833, 0.6836 and
+0.6833. With the split moved to week 8 or 9 as a check, the weeks since and the conditions count as they should.
+Smoke test 174 of 174 (five new checks: the split, each candidate on lines with a known answer, the record since
+the engine, the weekly log's sections, the site).
+
+**Revert.** Remove `ENGINE_LIVE` and `SHADOW` and the blocks that read them; no pick is affected either way.
+
 ### 2026-11-09, 7 pm (the test on GitHub had been failing for a week, unread)
 
 **What.** `PyYAML` and `scipy` added to `requirements.txt`, pinned. The smoke test now reads every import in the
@@ -757,6 +815,15 @@ Never tested; each with what would justify it. Anything tested and dropped is in
   failed on `cryptography`, 2026-11-02). A step that protects published output must stop the publish when it fails.
   The same holds for a library only the test imports: `PyYAML` was missing from 2026-11-03 to 2026-11-09. The smoke
   test now checks every import against the file.
+- **A verdict read on the weeks a rule was chosen on is not a verdict.** The site's "Against the market" line read
+  a t of +1.9 from weeks 7 to 9, the weeks the engine's weight was fitted on. A split that is only in the log's
+  prose gets forgotten the first good week: it is in the code now (`config.ENGINE_LIVE`), and the candidates'
+  numbers are fixed before their test (`config.SHADOW`).
+- **Why another session failed is in its transcript, not in its task's record.** This file said for a day that the
+  standing post-mortem had no repository attached; its run shows a checkout and a different cause (the evidence it
+  was sent to read is sealed on the site). Read the run before writing the reason down.
+- **Site tables do not wrap** (cells are `nowrap`): a column of sentences pushes the rest off the screen. Rows of
+  prose go in the stacked list (`.trials`), not in a table.
 - **A test that passes by hand is not the gate; the run on the clean machine is.** The Test workflow failed on every
   push for a week (2026-11-03 to 2026-11-09) while the same test passed wherever it was run by hand, and nobody
   opened the red check. After every push, read the workflow's result (protocol step 7).

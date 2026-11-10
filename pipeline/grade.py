@@ -636,6 +636,78 @@ def record_by_grade(P):
     return out
 
 
+def engine_era(Pc):
+    """The record of the weeks the current rules chose (config.ENGINE_LIVE on), by itself. The picks before it were made
+    under other rules and say nothing about these, and the rules themselves were chosen on those weeks; the decision
+    register's revert conditions are read here. Pc: the counted picks, graded. Always returns the same keys."""
+    s0, w0 = C.ENGINE_LIVE["season"], C.ENGINE_LIVE["week"]
+    E = Pc[(Pc.season > s0) | ((Pc.season == s0) & (Pc.week >= w0))] if Pc is not None and len(Pc) and "result" in Pc.columns else pd.DataFrame(columns=["season", "week", "result", "units"])
+    num = lambda d, c: pd.to_numeric(d[c], errors="coerce") if c in d.columns else pd.Series(np.nan, index=d.index)
+
+    def rec(d):
+        g = d[d.result.isin(["Win", "Loss", "Push"])]
+        dcd = g[g.result != "Push"]
+        w, l = int((g.result == "Win").sum()), int((g.result == "Loss").sum())
+        lo, hi = hit_interval(w, l, _weeks_of(dcd))
+        st = num(g, "stake").fillna(0.0)
+        said, own = num(dcd, "p_claim").dropna(), num(dcd, "p_model").dropna()
+        return dict(bets=int(len(g)), wins=w, losses=l, pushes=int((g.result == "Push").sum()), pending=int((d.result == "Pending").sum()),
+                    units=float(g.units.sum()) if len(g) else 0.0, staked=float(st.sum()), units_at_stake=float((g.units * st).sum()) if len(g) else 0.0,
+                    hit=(w / (w + l) if w + l else None), hit_lo=lo, hit_hi=hi,
+                    claimed=float(said.mean()) if len(said) else None, model_said=float(own.mean()) if len(own) else None)
+
+    def buckets(col, edges):
+        d = E[E.result.isin(["Win", "Loss"])]
+        p = num(d, col)
+        out = []
+        for lo_, hi_ in zip(edges[:-1], edges[1:]):
+            part = d[(p >= lo_) & (p < hi_)]
+            if len(part):
+                w = int((part.result == "Win").sum())
+                lo, hi = hit_interval(w, len(part) - w, _weeks_of(part))
+                out.append(dict(bucket=f"{lo_:.0%} to {hi_:.0%}", bets=int(len(part)), said=float(num(part, col).mean()), hit=w / len(part), hit_lo=lo, hit_hi=hi))
+        return out
+
+    def watch(rule, name, what, part, of=None, bar=None):
+        """A condition of the decision register: how far along it is and where it stands. `running` until `of` decided picks."""
+        part = part[part.result.isin(["Win", "Loss"])]
+        if of and "commence_time" in part.columns:
+            part = part.assign(_t=pd.to_datetime(part.commence_time, utc=True, errors="coerce")).sort_values("_t").head(of)
+        r = rec(part)
+        n = r["wins"] + r["losses"]
+        if (of and n < of) or r["hit"] is None:
+            state = "running"
+        elif bar is None:
+            state = "read it now"
+        elif of:                                   # a condition with a count: read on the hit rate once the count is in
+            state = "holds" if r["hit"] >= bar else "fails"
+        else:                                      # a standing target: only when the likely range is clear of it
+            state = "holds" if r["hit_lo"] >= bar else "fails" if r["hit_hi"] < bar else "running"
+        return dict(rule=rule, name=name, what=what, n=n, of=of, unit="picks", bar=bar, wins=r["wins"], losses=r["losses"], hit=r["hit"], hit_lo=r["hit_lo"], hit_hi=r["hit_hi"],
+                    claimed=r["claimed"], model_said=r["model_said"], state=state, note=None)
+
+    grade = E.grade.fillna("").astype(str) if "grade" in E.columns else pd.Series("", index=E.index)
+    kind = E.market.map(C.market_kind) if "market" in E.columns else pd.Series("", index=E.index)
+    side = E.side.fillna("").astype(str) if "side" in E.columns else pd.Series("", index=E.index)
+    five = E.five.fillna(False).astype(bool) if "five" in E.columns else pd.Series(False, index=E.index)
+    out = dict(since=dict(season=int(s0), week=int(w0)), **rec(E))
+    out["by_grade"] = record_by_grade(E)
+    out["by_side_market"] = record_by(E.assign(side_market=side + " " + kind), "side_market", ["Over combined", "Over solo", "Over assists", "Under combined", "Under solo", "Under assists"]) if len(E) else []
+    out["by_group"] = record_by(E, "group", ["DL", "LB", "S", "CB"]) if len(E) else []
+    out["by_week"] = [dict(season=int(sn), week=int(wk), **rec(part)) for (sn, wk), part in E.groupby(["season", "week"])] if len(E) else []
+    out["calibration"] = buckets("p_claim", [0.0, 0.5, 0.55, 0.6, 0.65, 0.7, 1.01])            # the win chance against what happened
+    out["model_calibration"] = buckets("p_model", [0.0, 0.55, 0.6, 0.65, 0.7, 0.8, 1.01])      # the model's own chance (the lock score, the A bar)
+    out["locks"] = rec(E[five])
+    a_bar = C.ENGINE["a_model"]
+    out["watches"] = [
+        watch("E4", "A picks", f"Read at 30 graded. They claim a model chance of {a_bar:.0%} or more; if they hit near 60%, a ceiling on the model's own chance is the candidate.", E[grade == "A"], of=30),
+        watch("E5", "Combined A picks", "A picks and locks go back to solo only if these hit under 55% over their first 20.", E[(grade == "A") & (kind == "combined")], of=20, bar=0.55),
+        watch("E6", "Over picks", "Re-read at 40. The candidate is to show Overs as leans only.", E[side == "Over"], of=40),
+        watch("E5", "Locks", "The target is 70% over the season.", E[five], bar=0.70),
+    ]
+    return out
+
+
 def _phantom(P):
     """True for a pick whose (book, market, player, line) was not on its game's board when it was logged: the game's
     latest pull at or before the pick's stamp is the board it was priced from."""
@@ -864,6 +936,10 @@ def grade(pw_comb, live=None):
                    beat_close_share=float(Pc.clv_pos[mvc].mean()) if mvc.any() else None,
                    close_moved=int(mvc.sum()), close_known=int(Pc.clv_line.notna().sum()),
                    pending=int((Pc.result == "Pending").sum()))
+    try:
+        summary["era"] = engine_era(Pc)        # the weeks the current rules chose, by themselves
+    except Exception as e:  # noqa: BLE001
+        print(f"grade: the engine-era record was skipped ({type(e).__name__}: {e})"); summary["era"] = None
     return P.drop(columns=["name_key"]), summary
 
 
@@ -923,8 +999,105 @@ def write_five_log(P, summary, path, parlays=None):
         for r in parlays.sort_values(["season", "week", "slate"]).itertuples():
             legs = "; ".join(f"{l['player']} {l['side']} {l['line']:g} ({l['result']})" for l in r.legs)
             lines.append(f"| {r.slate} (wk {r.week}) | {legs} | {'+' if r.combined_american > 0 else ''}{r.combined_american} | {r.combined_prob:.0%} | {r.units:.1f}u | {r.result} | {r.units_won:+.2f} |")
+    lines += _evidence_sections(summary or {})
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n")
+
+
+def _evidence_sections(summary):
+    """The evidence a post-mortem starts from, in plain text (the site's copy is sealed): the scoreboard against the
+    market with the weeks since the engine apart, the candidates in the shadow, the record of the engine's own weeks with
+    the decision register's conditions, and the record to date. Every record carries its likely range."""
+    pct = lambda x: "" if x is None else f"{x:.0%}"
+    rng = lambda lo, hi: "" if lo is None or hi is None else f"{lo:.0%} to {hi:.0%}"
+    sgn = lambda x, nd=4: "" if x is None else f"{x:+.{nd}f}"
+    rec = lambda r: f"{r.get('wins', 0)}-{r.get('losses', 0)}" + (f"-{r['pushes']}" if r.get("pushes") else "") + (f" ({r['pending']} pending)" if r.get("pending") else "")
+    margin = lambda m, se, t: sgn(m) + ("" if se is None else f" (give or take {se:.4f}" + ("" if t is None else f"; t {t:+.1f}") + ")")
+    live = C.ENGINE_LIVE
+    out = []
+    sb = summary.get("scoreboard") or {}
+    out += ["", "## Against the market (every logged closing line)", "",
+            "The chance each gives the Over on every line the model had a number for, picked or not, scored by log-loss against what happened (lower is better). "
+            "The closing price is the last pull before kickoff. The engine's weight was chosen on the weeks before "
+            f"{live['season']} week {live['week']}: only the weeks from there on test it.", ""]
+    if not sb:
+        out.append("No graded closing lines yet.")
+    else:
+        ll = sb["log_loss"]
+        out += ["| Weeks | Lines | Book | Model alone | Engine | Engine better than the book by |", "| --- | --- | --- | --- | --- | --- |"]
+        for w in sb.get("by_week") or []:
+            out.append(f"| wk {w['week']}{'' if w['week'] >= sb.get('live_week', live['week']) else ' (in-sample)'} | {w['lines']} | {w['market']:.4f} | {w['model']:.4f} | {w['engine']:.4f} | {sgn(w['engine_minus_market'])} |")
+        out.append(f"| All weeks | {sb['lines']} | {ll['market']:.4f} | {ll['model']:.4f} | {ll['engine']:.4f} | {margin(sb.get('engine_minus_market'), sb.get('se'), sb.get('t'))} |")
+        sn = sb.get("since")
+        if sn:
+            out.append(f"| **Since week {sn['from_week']} (out of sample)** | {sn['lines']} | {sn['log_loss']['market']:.4f} | {sn['log_loss']['model']:.4f} | {sn['log_loss']['engine']:.4f} | **{margin(sn.get('engine_minus_market'), sn.get('se'), sn.get('t'))}** |")
+        else:
+            out.append(f"| **Since week {sb.get('live_week', live['week'])} (out of sample)** | 0 | | | | no graded line yet |")
+        kinds = sb.get("by_kind") or {}
+        if kinds:
+            out += ["", "By market, all weeks: " + "; ".join(f"{k} {margin(v.get('engine_minus_market'), v.get('se'), None)} on {v['lines']} lines" for k, v in kinds.items()) + "."]
+        if sn and sn.get("by_kind"):
+            out += [f"By market, since week {sn['from_week']}: " + "; ".join(f"{k} {margin(v.get('engine_minus_market'), v.get('se'), None)} on {v['lines']} lines" for k, v in sn["by_kind"].items()) + "."]
+        tiers = [t for t in sb.get("tiers") or [] if t.get("lines")]
+        if tiers:
+            out += ["", "The engine's side on every line at the best closing price, by tier (all weeks):", "",
+                    "| Tier | Lines | Record | Hit | Likely range | Chance said | Return a bet |", "| --- | --- | --- | --- | --- | --- | --- |"]
+            out += [f"| {t['tier']} | {t['lines']} | {t['wins']}-{t['losses']} | {pct(t['hit'])} | {rng(t.get('hit_lo'), t.get('hit_hi'))} | {pct(t.get('chance'))} | {t['ret']:+.1%} |" for t in tiers]
+        cal = sb.get("calibration") or []
+        if cal:
+            out += ["", "Calibration of the engine's chance (its side on every line, all weeks): " + "; ".join(f"said {c['said']:.0%}, hit {c['hit']:.0%} ({c['lines']})" for c in cal) + "."]
+        sh = sb.get("shadow") or []
+        if sh:
+            out += ["", "### Candidates in the shadow", "",
+                    f"Scored on the same lines and never used for a pick. Their numbers were fixed on 2026-11-09 (config.SHADOW); each is decided after {C.FROZEN_UNTIL} on the weeks "
+                    f"from week {sb.get('live_week', live['week'])} on. Positive: the candidate was a better forecast than the engine.", "",
+                    "| Candidate | Log-loss | Against the engine, all weeks (in-sample included) | Since the engine, out of sample |", "| --- | --- | --- | --- |"]
+            for r in sh:
+                so = r.get("since")
+                out.append(f"| {r['name']} | {r['log_loss']:.4f} | {margin(r.get('vs_engine'), r.get('se'), r.get('t'))} | "
+                           + (f"{margin(so.get('vs_engine'), so.get('se'), so.get('t'))} on {so['lines']} lines, {so['weeks']} week(s)" if so else "no graded line yet") + " |")
+    era = summary.get("era") or {}
+    out += ["", f"## Since the engine ({live['season']} week {live['week']} on)", "",
+            "The picks the current rules chose, one bet per player, market and side. The decision register's conditions are read on these alone.", ""]
+    if not era or not (era.get("bets") or era.get("pending")):
+        out.append("No pick graded yet.")
+    else:
+        out += [f"**Record {rec(era)}" + (f" ({pct(era['hit'])}, likely range {rng(era.get('hit_lo'), era.get('hit_hi'))})" if era.get("hit") is not None else "")
+                + f", {era.get('units', 0):+.2f} units at 1 a bet, {era.get('units_at_stake', 0):+.2f} on {era.get('staked', 0):.1f} units at the stakes"
+                + (f"; win chance said {pct(era.get('claimed'))}" if era.get("claimed") is not None else "") + ".**",
+                f"Locks: {rec(era.get('locks') or {})}" + (f" ({pct(era['locks']['hit'])}, likely range {rng(era['locks'].get('hit_lo'), era['locks'].get('hit_hi'))})" if (era.get("locks") or {}).get("hit") is not None else "") + ".", "",
+                "| Week | Record | Hit | Win chance said | Units at 1 a bet | Staked | Units at the stakes |", "| --- | --- | --- | --- | --- | --- | --- |"]
+        out += [f"| {w['season']} wk {w['week']} | {rec(w)} | {pct(w['hit'])} | {pct(w.get('claimed'))} | {w['units']:+.2f} | {w['staked']:.1f} | {w['units_at_stake']:+.2f} |" for w in era.get("by_week") or []]
+        out += ["", "| Grade | Record | Hit | Likely range | Win chance said | Units at 1 a bet |", "| --- | --- | --- | --- | --- | --- |"]
+        out += [f"| {g['grade']} | {rec(g)} | {pct(g['hit'])} | {rng(g.get('hit_lo'), g.get('hit_hi'))} | {pct(g.get('claimed'))} | {g['units']:+.2f} |" for g in era.get("by_grade") or []]
+        for title, key in (("Side and market", "by_side_market"), ("Position", "by_group")):
+            rows = era.get(key) or []
+            if rows:
+                out += ["", f"| {title} | Record | Hit | Likely range | Units at 1 a bet |", "| --- | --- | --- | --- | --- |"]
+                out += [f"| {r['key']} | {rec(r)} | {pct(r['hit'])} | {rng(r.get('hit_lo'), r.get('hit_hi'))} | {r['units']:+.2f} |" for r in rows]
+        for title, key in (("Calibration of the win chance", "calibration"), ("Calibration of the model's own chance (the lock score and the A bar)", "model_calibration")):
+            rows = era.get(key) or []
+            if rows:
+                out += ["", f"{title}: " + "; ".join(f"{c['bucket']}: said {c['said']:.0%}, hit {c['hit']:.0%} of {c['bets']} ({rng(c.get('hit_lo'), c.get('hit_hi'))})" for c in rows) + "."]
+    watches = (era.get("watches") or []) + (sb.get("watches") or [])
+    if watches:
+        out += ["", "Conditions of the decision register on trial:", "", "| Rule | Condition | So far | Record | Hit | Likely range | Model said | State |", "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+        out += [f"| {w['rule']} {w.get('name', '')} | {w['what']} | {w['n']}" + (f" of {w['of']}" if w.get("of") else "") + f" {w.get('unit', 'picks')} | "
+                + (f"{w['wins']}-{w['losses']}" if w.get("wins") is not None else "") + f" | {pct(w.get('hit'))} | {rng(w.get('hit_lo'), w.get('hit_hi'))} | {pct(w.get('model_said'))} | {w['state']}" + (f": {w['note']}" if w.get("note") else "") + " |" for w in watches]
+    if summary.get("bets") or summary.get("pending"):
+        hit = summary["wins"] / max(1, summary["wins"] + summary["losses"]) if summary.get("wins") is not None else None
+        se = summary.get("clv_novig_se")
+        out += ["", "## All plays to date (every rule set)", "",
+                f"**Record {rec(summary)} ({pct(hit)}, likely range {rng(summary.get('hit_lo'), summary.get('hit_hi'))}), {summary.get('units', 0):+.2f} units at 1 a bet.**"
+                + ("" if summary.get("avg_clv_novig") is None else f" No-vig closing-line value {summary['avg_clv_novig'] * 100:+.2f} points" + ("" if se is None else f" (give or take {se * 100:.2f})") + f" on {summary.get('clv_novig_n', 0)} bets.")
+                + (f" Later stat corrections counted and not applied: {summary['stat_corrections']}." if summary.get("stat_corrections") else ""), "",
+                "| Grade | Record | Hit | Likely range | Chance said | Units at 1 a bet |", "| --- | --- | --- | --- | --- | --- |"]
+        out += [f"| {g['grade']} | {rec(g)} | {pct(g['hit'])} | {rng(g.get('hit_lo'), g.get('hit_hi'))} | {pct(g.get('claimed'))} | {g['units']:+.2f} |" for g in summary.get("by_grade") or []]
+        rows = summary.get("by_side_market") or []
+        if rows:
+            out += ["", "| Side and market | Record | Hit | Likely range | Units at 1 a bet |", "| --- | --- | --- | --- | --- |"]
+            out += [f"| {r['key']} | {rec(r)} | {pct(r['hit'])} | {rng(r.get('hit_lo'), r.get('hit_hi'))} | {r['units']:+.2f} |" for r in rows]
+    return out
 
 
 # ---------------------------------------------------------------- sleepers (config.SLEEPER), tracked on their own record

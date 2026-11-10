@@ -19,7 +19,8 @@
    (claimed vs hit), results by market, side and grade, and what changed because of it. Start from the scoreboard
    against the market and the luck table (Track record tab, `data/weekly_five.md`): a kind of pick is evidence for
    the model only where lift over the whole board and beating the close agree with the record. A record alone
-   proves nothing.
+   proves nothing. The engine's verdict and every condition in the decision register are read on the weeks since
+   the engine only (`config.ENGINE_LIVE`, "Since the engine" in `data/weekly_five.md`): weeks 7 to 9 chose the rules.
 5. `python tests/smoke_test.py` must pass before every push. `TACKLE_FAKE_DATA=1 TACKLE_FAKE_ODDS=1` run the
    pipeline on synthetic data.
 6. Secrets: `ODDS_API_KEY` and `PARLAY_API_KEY` are GitHub Actions secrets. Never print or commit their values.

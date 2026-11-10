@@ -185,6 +185,15 @@ ENGINE = dict(beta=0.5, beta_low=0.25,
 FROZEN_UNTIL = "2026-12-08"          # evidence rule: no bar, weight or cap in ENGINE, STAKE, FACTORS or GBM changes before this date (four graded weeks)
                                      # unless a defect is found; candidates are tested in the shadow on data/lines_log.csv and reported, not adopted
 CLAIM_SHRINK = 0.6                   # legacy: only to read the claimed chance of picks logged before the engine (through week 9) that carry none
+# The engine's first week. Its weight and bars were chosen on weeks 7 to 9 of 2026, so every figure from those weeks is
+# in-sample. The scoreboard and the record report the weeks from here on separately ("since the engine"), and the
+# decision register's revert conditions are read on those weeks alone.
+ENGINE_LIVE = dict(season=2026, week=10, read_after_week=13)   # decisions E2 and S1 are read after week 13, on weeks 10 to 13
+# Candidates scored in the shadow on every closing line and never used for a pick (MODEL_LOG, open issue 2). Written
+# down on 2026-11-09, before week 10 had a line: changing a number here restarts that candidate's test.
+SHADOW = dict(beta_by_kind=dict(combined=0.35, solo=0.65),   # a weight per market instead of 0.5 for both
+              centre_kinds=("combined",),                    # the model's gap to the book centred on the week's own mean gap, for these markets
+              level_shrink=100)                              # a level for lined players from the season's earlier lined games, shrunk n / (n + this)
 
 # --- betting rules ---
 FADE_GAP = 3.0                     # last game this many tackles from his average counts as an outlier (the damping factor and the card's wording)

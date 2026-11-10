@@ -417,6 +417,42 @@ check(len(_cf) >= 30 and _sb and _sb["lines"] >= 30 and _sb["log_loss"]["engine"
       and _sb["se"] is None and _sb["t"] is None and len(_sb["by_week"]) == 1 and len(_sb["tiers"]) == 4 and _sb["tiers"][0]["lines"] > 0 and _sb["tiers"][0]["hit"] > 0.9 and _sb["calibration"],
       f"the scoreboard scores the engine against the book's fair close on every line, and says nothing about sureness from a single week (market {_sb.get('log_loss', {}).get('market')}, engine {_sb.get('log_loss', {}).get('engine')})")
 check({"p_low", "p_model", "edge_low", "tier", "market_over"} <= set(pd.read_csv(tmp / "data" / "lines_log.csv").columns), "the line log keeps the engine's read of every line, picked or not, so a rule can be scored later without having been live")
+# in-sample and out-of-sample are kept apart: a week before the engine's first week is never called a test of it
+_sb_live = _EV.scoreboard(_cf, live_week=6)
+check(_sb["since"] is None and _sb["live_week"] == C.ENGINE_LIVE["week"] and all(r["since"] is None for r in _sb["shadow"]) and [w["state"] for w in _sb["watches"]] == ["running", "running"] and _sb["watches"][0]["n"] == 0
+      and _sb_live["since"]["lines"] == _sb_live["lines"] and abs(_sb_live["since"]["engine_minus_market"] - _sb_live["engine_minus_market"]) < 1e-12 and _sb_live["since"]["t"] is None
+      and all(r["since"]["lines"] == _sb_live["lines"] for r in _sb_live["shadow"]) and _sb_live["watches"][0]["n"] == 1 and _sb_live["watches"][0]["state"] == "running",
+      "the scoreboard reports the weeks since the engine apart from the weeks its weight was chosen on, and reads no verdict before the weeks are in")
+# the candidates in the shadow, on lines where each has a known answer
+_sv = pd.DataFrame(dict(week=[1, 1, 2, 2, 2], kind=["combined", "combined", "combined", "combined", "solo"], line=[4.5] * 5, p_mkt=[0.5] * 5, proj_model=[4.0, 6.0, 4.0, 6.0, 4.0], phi=[1.2] * 5, actual=[8.0, 12.0, 3.0, 9.0, 2.0]))
+_sh = _EV._shadow(_sv, C.ENGINE)
+_pm = np.clip([M.p_over(m, 1.2, 4.5) for m in _sv.proj_model], 0.02, 0.98); _lgt = lambda p: np.log(p / (1 - p)); _sgm = lambda z: 1 / (1 + np.exp(-z))
+_ratio2 = 1 + (20.0 - 10.0) / 10.0 * 2 / (2 + C.SHADOW["level_shrink"])          # week 1's two combined lines came in at twice their projections
+check(abs(_sh["beta_by_kind"][0] - _sgm(C.SHADOW["beta_by_kind"]["combined"] * _lgt(_pm[0]))) < 1e-9 and abs(_sh["beta_by_kind"][4] - _sgm(C.SHADOW["beta_by_kind"]["solo"] * _lgt(_pm[4]))) < 1e-9
+      and abs(_sh["centred"][0] + _sh["centred"][1] - 1) < 1e-9 and abs(_sh["centred"][4] - M.engine_chance(_pm[4], 0.5, C.ENGINE["beta"])) < 1e-9
+      and abs(_sh["lined_level"][0] - M.engine_chance(_pm[0], 0.5, C.ENGINE["beta"])) < 1e-9
+      and abs(_sh["lined_level"][2] - M.engine_chance(min(0.98, max(0.02, M.p_over(4.0 * _ratio2, 1.2, 4.5))), 0.5, C.ENGINE["beta"])) < 1e-9 and _sh["lined_level"][2] > _sh["lined_level"][0]
+      and abs(_sh["lined_level"][4] - M.engine_chance(_pm[4], 0.5, C.ENGINE["beta"])) < 1e-9,
+      "the three candidates in the shadow compute what they are written down as (a weight per market, the combined gap centred on its week, a level from earlier lined games only)")
+# the record of the engine's own weeks: picks before its first week are out, the register's conditions count the right picks
+_lv = C.ENGINE_LIVE
+_ep = pd.DataFrame(dict(season=_lv["season"], week=[_lv["week"] - 1, _lv["week"], _lv["week"], _lv["week"], _lv["week"] + 1, _lv["week"] + 1], player=list("abcdef"),
+                        market=["player_solo_tackles", "player_tackles_assists", "player_tackles_assists", "player_solo_tackles", "player_tackles_assists", "player_solo_tackles"],
+                        side=["Under", "Under", "Over", "Under", "Under", "Under"], grade=["A", "A", "C", "B", "A", "C"], result=["Win", "Win", "Loss", "Win", "Loss", "Pending"],
+                        units=[0.9, 0.8, -1.0, 1.1, -1.0, 0.0], stake=[1.0, 2.0, 0.1, 0.5, 1.0, 0.3], p_claim=[0.6, 0.62, 0.52, 0.58, 0.61, 0.55], p_model=[0.72, 0.74, 0.55, 0.66, 0.71, 0.6],
+                        five=[True, True, False, False, True, False], group=["CB", "LB", "LB", "S", "LB", "DL"], commence_time="2026-11-15T18:00:00Z"))
+_era = G.engine_era(_ep); _wt = {w["name"]: w for w in _era["watches"]}; _none = G.engine_era(_ep.iloc[0:1])
+check(_era["bets"] == 4 and _era["wins"] == 2 and _era["losses"] == 2 and _era["pending"] == 1 and abs(_era["units"] - (-0.1)) < 1e-9 and abs(_era["units_at_stake"] - (1.6 - 0.1 + 0.55 - 1.0)) < 1e-9 and abs(_era["staked"] - 3.6) < 1e-9
+      and len(_era["by_week"]) == 2 and _wt["A picks"]["n"] == 2 and _wt["A picks"]["of"] == 30 and _wt["A picks"]["state"] == "running" and abs(_wt["A picks"]["model_said"] - 0.725) < 1e-9
+      and _wt["Combined A picks"]["n"] == 2 and _wt["Over picks"]["n"] == 1 and _wt["Locks"]["wins"] == 1 and _wt["Locks"]["losses"] == 1 and _wt["Locks"]["state"] == "running"
+      and _era["locks"]["bets"] == 2 and {g["grade"] for g in _era["by_grade"]} == {"A", "B", "C"} and sum(c["bets"] for c in _era["calibration"]) == 4
+      and _none["bets"] == 0 and len(_none["watches"]) == 4 and all(w["state"] == "running" for w in _none["watches"]),
+      f"the record since the engine leaves out the weeks before it and counts each condition of the decision register ({_era['wins']}-{_era['losses']}, {len(_era['watches'])} conditions)")
+_evd = "\n".join(G._evidence_sections(dict(scoreboard=_sb_live, era=_era, bets=5, wins=3, losses=2, pushes=0, units=0.8, hit_lo=0.2, hit_hi=0.9, by_grade=G.record_by_grade(_ep), by_side_market=[])))
+check(all(k in _evd for k in ("## Against the market", "(out of sample)", "### Candidates in the shadow", "## Since the engine", "Conditions of the decision register on trial", "| E2 The engine's weight (0.5) |", "| E4 A picks |", "## All plays to date"))
+      and "likely range" in _evd and "No graded closing lines yet." in "\n".join(G._evidence_sections({})),
+      "the weekly log carries the evidence in plain text: the scoreboard with the weeks since the engine apart, the shadow, the engine's own record, the conditions on trial")
+check(all(k in _html for k in ("rec-trial", "Rules on trial", "Candidates in the shadow", "sb.since", "s.era")), "site shows the out-of-sample verdict, the candidates in the shadow and the rules on trial")
 
 _sg = json.loads((tmp / "data" / "cache" / "segments.json").read_text()) if (tmp / "data" / "cache" / "segments.json").exists() else {}
 check(all("n_eff" in v and v["n_eff"] <= v["n"] + 1e-9 for v in _sg.values()) if _sg else True, f"segment calibration carries the recency-weighted count ({len(_sg)} segments)")

@@ -210,6 +210,8 @@ th button { all: unset; cursor: pointer; }
 td.n, th.n { text-align: right; }
 tr:last-child td { border-bottom: 0; }
 h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
+.trials { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 18px; } .trial { padding: 10px 12px; border-bottom: 1px solid var(--line); } .trial:last-child { border-bottom: 0; }
+.trial-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; } .trial-what { color: var(--muted); font-size: 0.9rem; margin: 3px 0; max-width: 80ch; } .trial-now { font-size: 0.9rem; font-variant-numeric: tabular-nums; }
 .stat-line { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 4px 0 16px; }
 .stat-line div { font-size: 0.9rem; color: var(--muted); }
 .stat-line b { display: block; font: 700 1.7rem/1.1 var(--cond); color: var(--ink); font-variant-numeric: tabular-nums; }
@@ -882,7 +884,7 @@ function renderRecord() {
   if (!r || !r.picks || !r.picks.length) { box.append(el("div", { class: "empty" }, "No picks logged yet. Every pick the board makes is saved with the price at the time and graded against the official box score the next morning.")); return; }
   const s = r.summary || {};
   box.append(recordsBar(s));
-  const jumps = [["rec-picks", "Every pick"], ["rec-parlays", "Parlay history"], ["rec-locks", "Locks"], ["rec-market", "Against the market"], ["rec-sleepers", "Sleepers"], ["rec-grade", "By grade"], ["rec-side", "By side"], ["rec-deeper", "Luck, calibration, replays"]];
+  const jumps = [["rec-picks", "Every pick"], ["rec-parlays", "Parlay history"], ["rec-locks", "Locks"], ["rec-market", "Against the market"], ["rec-trial", "Rules on trial"], ["rec-sleepers", "Sleepers"], ["rec-grade", "By grade"], ["rec-side", "By side"], ["rec-deeper", "Luck, calibration, replays"]];
   box.append(el("nav", { class: "jump", "aria-label": "Track record sections" }, ...jumps.map(([id, label]) => { const a = el("a", { href: `#${id}` }, label); a.onclick = (e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); }; return a; })));
 
   // 1. every pick, filtered
@@ -912,24 +914,62 @@ function renderRecord() {
 
   // 3a. against the market: the engine's chance on every closing line, scored beside the book's own
   if (s.scoreboard && s.scoreboard.lines) {
-    const sb = s.scoreboard, d = sb.engine_minus_market, t = sb.t, ll = sb.log_loss || {};
-    const verdict = t == null ? "one week so far: too early to say anything" : t >= 2 ? "the engine's chances have been better than the book's own price by more than luck explains" : t <= -2 ? "the book's price has been the better forecast: the engine is adding nothing" : "no difference that luck does not explain yet";
+    const sb = s.scoreboard, d = sb.engine_minus_market, ll = sb.log_loss || {}, sn = sb.since, lw = sb.live_week ?? 10;
+    const sg4 = (x) => (x == null ? "" : (x >= 0 ? "+" : "") + num(x, 4));
+    const call = (t) => t == null ? "one week so far, too early to say anything" : t >= 2 ? "the engine's chances have been better than the book's own price by more than luck explains" : t <= -2 ? "the book's price has been the better forecast, and the engine is adding nothing" : "no difference that luck does not explain yet";
+    // the verdict is read only on the weeks the engine's rule was not chosen on
+    const verdict = sn ? `Since week ${sn.from_week}, the weeks the engine's rule was not chosen on: engine better by ${sg4(sn.engine_minus_market)}${sn.se != null ? ` (give or take ${num(2 * sn.se, 4)})` : ""} on ${sn.lines} lines. Verdict: ${call(sn.t)}.`
+      : `No verdict yet. Weeks ${(sb.weeks || []).join(", ")} are the weeks the engine's rule was chosen on, so their margin flatters it. Week ${lw} is the first that tests it.`;
     const sec = section("Against the market", "The scoreboard that can answer whether the edge is real. A win-loss record cannot this season: a true 5% edge needs about 34 weeks to show. The chance the engine gives a line can be scored against what happened, next to the chance the book's own closing price gave the same line, on every line the model had a number for, picked or not. The score is log-loss: lower is better, and 0.693 is a coin flip. Weeks are the unit, because the lines of one week win and lose together.",
       el("div", { class: "stat-line" },
         el("div", {}, el("b", {}, num(ll.market, 4)), "The book's fair price"),
         el("div", {}, el("b", {}, num(ll.model, 4)), "The model alone"),
         el("div", {}, el("b", {}, num(ll.engine, 4)), "The engine (the win chance)"),
-        el("div", {}, el("b", { class: d > 0 ? "pos" : d < 0 ? "neg" : "" }, (d >= 0 ? "+" : "") + num(d, 4)), `Engine better by${sb.se != null ? ` (give or take ${num(2 * sb.se, 4)})` : ""}`),
+        el("div", {}, el("b", { class: d > 0 ? "pos" : d < 0 ? "neg" : "" }, (d >= 0 ? "+" : "") + num(d, 4)), `Engine better by, all weeks${sb.se != null ? ` (give or take ${num(2 * sb.se, 4)})` : ""}`),
         el("div", {}, el("b", {}, String(sb.lines)), `Closing lines, weeks ${(sb.weeks || []).join(", ")}`)),
-      el("p", { class: "lead" }, `Verdict: ${verdict}.`),
+      el("p", { class: "lead" }, verdict),
       el("div", { class: "scroll" }, table([["Week"], ["Lines", "n"], ["Book", "n"], ["Model alone", "n"], ["Engine", "n"], ["Engine better by", "n"]],
-        [...(sb.by_week || [])].reverse().map((w) => [`Week ${w.week}`, w.lines, num(w.market, 4), num(w.model, 4), num(w.engine, 4), el("b", { class: w.engine_minus_market > 0 ? "pos" : "neg" }, (w.engine_minus_market >= 0 ? "+" : "") + num(w.engine_minus_market, 4))]))),
+        [...(sb.by_week || [])].reverse().map((w) => [`Week ${w.week}${w.week < lw ? " (chosen on)" : ""}`, w.lines, num(w.market, 4), num(w.model, 4), num(w.engine, 4), el("b", { class: w.engine_minus_market > 0 ? "pos" : "neg" }, (w.engine_minus_market >= 0 ? "+" : "") + num(w.engine_minus_market, 4))]))),
       (sb.tiers || []).length ? el("div", { class: "scroll" }, table([["The engine's side at the close"], ["Lines", "n"], ["Record"], ["Hit", "n"], ["Likely range", "n"], ["Chance it gave", "n"], ["Return per bet", "n"]],
         sb.tiers.map((x) => [x.tier, x.lines, x.lines ? wl(x.wins, x.losses) : "", x.lines ? pct(x.hit) : "", rangeOf(x), x.lines ? pct(x.chance) : "", x.lines ? roiCell(x.ret) : ""]))) : null,
       (sb.calibration || []).length ? more("Is the win chance honest?", el("p", {}, "Every closing line grouped by the win chance the engine gave its side, against how often that side won."),
         el("div", { class: "scroll" }, table([["Win chance given"], ["Lines", "n"], ["On average", "n"], ["Won", "n"]], sb.calibration.map((c) => [String(c.bucket).replace(/[(\]]/g, "").replace(", ", " to "), c.lines, pct(c.said, 1), pct(c.hit, 1)])))) : null,
-      more("How to read this", "Weeks 7 to 9 were priced live by the old rules with the projection of the time; the engine's rule is applied to those logged numbers after the fact, so they are the weeks the rule was chosen on. From week 10 on the lines are scored as they were priced. The closing price is the last pull before kickoff, about an hour out. The tiers use the best closing price among the books on the consensus line, one line a player and market, so they are not the picks as logged (those are the record above)."));
+      (sb.shadow || []).length ? more("Candidates in the shadow", el("p", {}, `Changes that looked promising on weeks 7 to 9 and were not adopted. Each is scored on the same closing lines with its numbers fixed before week ${lw}, and never touches a pick. One is adopted only if it beats the engine on the weeks from week ${lw} on by more than luck explains. Positive: the candidate was the better forecast.`),
+        el("div", { class: "trials" }, ...sb.shadow.map((c) => el("div", { class: "trial" },
+          el("div", { class: "trial-head" }, el("b", {}, c.name)),
+          el("div", { class: "trial-now" }, `Since week ${lw}: `, c.since ? el("b", { class: c.since.vs_engine > 0 ? "pos" : "neg" }, sg4(c.since.vs_engine)) : "no graded line yet",
+            c.since ? `${c.since.se != null ? ` (give or take ${num(2 * c.since.se, 4)})` : ""} on ${c.since.lines} lines over ${c.since.weeks} week${c.since.weeks === 1 ? "" : "s"}` : ""),
+          el("div", { class: "trial-what" }, `All weeks, the ones it was found on included: ${sg4(c.vs_engine)} against the engine (log-loss ${num(c.log_loss, 4)}).`))))) : null,
+      more("How to read this", "Weeks 7 to 9 were priced live by the old rules with the projection of the time; the engine's rule is applied to those logged numbers after the fact, so they are the weeks the rule was chosen on. From week 10 on the lines are scored as they were priced. The closing price is the last pull before kickoff, about an hour out. The tiers use the best closing price among the books on the consensus line, one line a player and market, so they are not the picks as logged (those are the record above). A positive return on the \"No pick\" row means the whole board went the engine's way in those weeks (it sides with the Under on most lines, and Unders won); what choosing added is the gap between the pick rows and that row."));
     sec.id = "rec-market"; box.append(sec);
+  }
+
+  // 3a2. rules on trial: the record of the weeks the current rules chose, against the conditions written down for each rule
+  if (s.era && (s.era.watches || []).length) {
+    const e = s.era, lw = e.since?.week ?? 10, has = (e.wins || 0) + (e.losses || 0) > 0, trials = [...(s.scoreboard?.watches || []), ...e.watches];
+    const sec = section("Rules on trial", `Each rule the model runs on was written down with the result that would undo it. The rules were chosen on weeks 7 to 9, so only picks from week ${lw} on count here, and nothing changes before ${DATA.meta?.grading?.frozen_until || "the freeze ends"} unless a defect is found.`,
+      has ? el("div", { class: "stat-line" },
+        el("div", {}, wl(e.wins, e.losses, e.pushes), `Record since week ${lw}`),
+        el("div", {}, el("b", {}, e.hit == null ? "" : pct(e.hit)), "Hit rate"),
+        rangeOf(e) ? el("div", {}, el("b", {}, rangeOf(e)), "Likely range") : "",
+        el("div", {}, el("b", {}, e.claimed == null ? "" : pct(e.claimed)), "Win chance said"),
+        el("div", {}, units(e.units), "Units, 1 per bet"),
+        el("div", {}, units(e.units_at_stake), `Units on ${num(e.staked, 1)} staked`)) : el("p", { class: "lead" }, `No pick from week ${lw} has been graded yet.`),
+      el("div", { class: "trials" }, ...trials.map((w) => el("div", { class: "trial" },
+        el("div", { class: "trial-head" }, el("b", {}, w.name || w.rule), el("span", { class: `pill ${["holds", "met"].includes(w.state) ? "ok" : w.state === "fails" ? "no" : ""}` }, w.state)),
+        el("div", { class: "trial-what" }, w.what),
+        el("div", { class: "trial-now" }, `So far: ${w.n}${w.of ? ` of ${w.of}` : ""} ${w.unit || "picks"}`,
+          ...(w.n && w.wins != null ? [", ", wl(w.wins, w.losses), w.hit == null ? "" : ` (${pct(w.hit)}${rangeOf(w) ? `, likely range ${rangeOf(w)}` : ""})`] : []),
+          w.n && w.model_said != null ? `; the model said ${pct(w.model_said)}` : "", w.note ? `; ${w.note}` : "")))),
+      has && (e.by_grade || []).length ? el("div", { class: "scroll" }, table([["Grade"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Likely range", "n"], ["Win chance said", "n"], ["Units, 1 per bet", "n"]],
+        e.by_grade.map((g) => [el("span", { class: `grade ${g.grade}` }, g.grade), g.bets, recCell(g), g.hit == null ? "" : pct(g.hit), rangeOf(g), g.claimed == null ? "" : pct(g.claimed), units(g.units, 2)]))) : null,
+      has && (e.by_week || []).length ? el("div", { class: "scroll" }, table([["Week"], ["Record"], ["Hit rate", "n"], ["Win chance said", "n"], ["Units, 1 per bet", "n"], ["Staked", "n"], ["Units at the stakes", "n"]],
+        [...e.by_week].reverse().map((w) => [`Week ${w.week}`, recCell(w), w.hit == null ? "" : pct(w.hit), w.claimed == null ? "" : pct(w.claimed), units(w.units, 2), num(w.staked, 1), units(w.units_at_stake, 2)]))) : null,
+      has && ((e.by_side_market || []).length || (e.by_group || []).length) ? more("By side, market and position", el("div", { class: "scroll" }, table([["Slice"], ["Record"], ["Hit rate", "n"], ["Likely range", "n"], ["Units, 1 per bet", "n"]],
+        [...(e.by_side_market || []), ...(e.by_group || [])].map((x) => [x.key, recCell(x), x.hit == null ? "" : pct(x.hit), rangeOf(x), units(x.units, 2)])))) : null,
+      has && (e.calibration || []).length ? more("Is the win chance honest, on the picks?", el("div", { class: "scroll" }, table([["Win chance said"], ["Picks", "n"], ["On average", "n"], ["Won", "n"], ["Likely range", "n"]],
+        e.calibration.map((c) => [c.bucket, c.bets, pct(c.said, 1), pct(c.hit, 1), rangeOf(c)])))) : null);
+    sec.id = "rec-trial"; box.append(sec);
   }
 
   // 3b. sleepers: their own record (1 unit each at the logged price), by grade, kind and week, and every one settled

@@ -8,7 +8,9 @@ the book's closing price gives the same line, on EVERY line the model had a numb
                   the Over at it, the best closing price of each side, the model's logged number and spread, the box score
   scoreboard      log-loss of the market, the model alone and the engine, by week and in all, the engine's margin over
                   the market with weeks as the unit, calibration of the engine's chance, and what each tier (pick, lean,
-                  no pick) would have returned at the closing prices
+                  no pick) would have returned at the closing prices. `since`: the same on the weeks from the engine's
+                  first week on (config.ENGINE_LIVE), the only ones its weight was not chosen on. `shadow`: the
+                  candidates of config.SHADOW scored on the same lines against the engine, never used for a pick
 
 The closing price is the last pull before kickoff (about an hour out), not the true close.
 """
@@ -85,15 +87,49 @@ def _cluster(v, g):
     return m, float(math.sqrt(((s["sum"] - m * s["size"]) ** 2).sum()) / s["size"].sum() * math.sqrt(len(s) / (len(s) - 1)))
 
 
-def scoreboard(frame, min_lines=20):
-    """The engine against the market on a closing frame. {} with fewer than `min_lines` decided lines."""
+SHADOW_NAMES = (("beta_by_kind", "A weight per market (0.35 combined, 0.65 solo)"),
+                ("centred", "The combined gap centred on the week's own mean"),
+                ("lined_level", "A level for lined players from the season's earlier lined games"))
+
+
+def _shadow(v, e):
+    """The Over's chance on every row of v under each candidate of config.SHADOW. v holds every line with a market chance
+    and a model number, pushes included: a rule that runs before kickoff cannot know which lines will push."""
+    s = C.SHADOW
+    logit, sig = (lambda p: np.log(p / (1 - p))), (lambda z: 1 / (1 + np.exp(-z)))
+    pk = np.clip(v.p_mkt.values.astype(float), 1e-4, 1 - 1e-4)
+    pm = np.clip([p_over(m, ph, l) for m, ph, l in zip(v.proj_model, v.phi, v.line)], 0.02, 0.98)
+    gap = logit(pm) - logit(pk)
+    out = {}
+    beta = np.array([s["beta_by_kind"].get(k_, e["beta"]) for k_ in v.kind], dtype=float)
+    out["beta_by_kind"] = sig(logit(pk) + beta * gap)
+    centre = pd.Series(gap).groupby([v.week.values, v.kind.values]).transform("mean").values
+    centre = np.where(v.kind.isin(s["centre_kinds"]).values, centre, 0.0)
+    out["centred"] = sig(logit(pk) + e["beta"] * (gap - centre))
+    ratio = np.ones(len(v))
+    for (w, k_), pos in v.reset_index(drop=True).groupby(["week", "kind"]).indices.items():
+        prev = v[(v.week.values < w) & (v.kind.values == k_)]
+        if len(prev) and prev.proj_model.sum() > 0:
+            ratio[pos] = 1 + (prev.actual.sum() - prev.proj_model.sum()) / prev.proj_model.sum() * len(prev) / (len(prev) + s["level_shrink"])
+    pm_l = np.clip([p_over(m * r, ph, l) for m, r, ph, l in zip(v.proj_model, ratio, v.phi, v.line)], 0.02, 0.98)
+    out["lined_level"] = sig(logit(pk) + e["beta"] * (logit(pm_l) - logit(pk)))
+    return out
+
+
+def scoreboard(frame, min_lines=20, live_week=None):
+    """The engine against the market on a closing frame. {} with fewer than `min_lines` decided lines. live_week: the
+    first week the engine chose picks (default config.ENGINE_LIVE for its season, week 1 in a later one)."""
     from pipeline.grade import hit_interval
     if frame is None or len(frame) == 0:
         return {}
-    d = frame[(frame.actual != frame.line) & frame.phi.notna() & frame.p_mkt.notna() & frame.proj_model.notna()].copy()
+    v = frame[frame.phi.notna() & frame.p_mkt.notna() & frame.proj_model.notna()].reset_index(drop=True)
+    decided = (v.actual != v.line).values
+    d = v[decided].copy()
     if len(d) < min_lines:
         return {}
     e = C.ENGINE
+    if live_week is None:
+        live_week = C.ENGINE_LIVE["week"] if C.SEASON == C.ENGINE_LIVE["season"] else 1
     y = (d.actual.values > d.line.values).astype(float)
     p_model = np.clip([p_over(m, ph, l) for m, ph, l in zip(d.proj_model, d.phi, d.line)], 0.02, 0.98)
     p_mkt = d.p_mkt.values.astype(float)
@@ -110,6 +146,39 @@ def scoreboard(frame, min_lines=20):
         sel = (d.kind == k_).values
         m_, s_ = _cluster(diff[sel], wk[sel])
         by_kind[k_] = dict(lines=int(sel.sum()), engine_minus_market=m_, se=s_)
+    # the weeks the engine's weight was not chosen on, by themselves
+    live, since = wk >= live_week, None
+    if live.any():
+        m_, s_ = _cluster(diff[live], wk[live])
+        kinds = {}
+        for k_ in sorted(set(d.kind[live])):
+            sel = live & (d.kind == k_).values
+            mk_, sk_ = _cluster(diff[sel], wk[sel])
+            kinds[k_] = dict(lines=int(sel.sum()), engine_minus_market=mk_, se=sk_)
+        since = dict(from_week=int(live_week), lines=int(live.sum()), weeks=[int(w) for w in sorted(set(wk[live]))],
+                     log_loss={k_: float(a[live].mean()) for k_, a in ll.items()}, engine_minus_market=m_, se=s_, t=(m_ / s_ if s_ else None), by_kind=kinds)
+    # the candidates in the shadow, on the same lines against the engine (positive: the candidate was the better forecast)
+    shadow, sh = [], _shadow(v, e)
+    for key, name in SHADOW_NAMES:
+        l_ = _ll(sh[key][decided], y)
+        gain = ll["engine"] - l_
+        m_, s_ = _cluster(gain, wk)
+        row = dict(key=key, name=name, log_loss=float(l_.mean()), vs_engine=m_, se=s_, t=(m_ / s_ if s_ else None),
+                   by_week=[dict(week=int(w), vs_engine=float(gain[wk == w].mean())) for w in sorted(set(wk))], since=None)
+        if live.any():
+            mo, so = _cluster(gain[live], wk[live])
+            row["since"] = dict(lines=int(live.sum()), weeks=int(len(set(wk[live]))), vs_engine=mo, se=so, t=(mo / so if so else None))
+        shadow.append(row)
+    # the two conditions of the decision register that are read here, on the weeks since the engine only
+    need = max(1, int(C.ENGINE_LIVE.get("read_after_week", live_week)) - int(live_week) + 1) if C.SEASON == C.ENGINE_LIVE["season"] else 4
+    n_wk, t_ = (len(since["weeks"]), since["t"]) if since else (0, None)
+    note = None if not since else f"margin {since['engine_minus_market']:+.4f}" + ("" if since["se"] is None else f", give or take {2 * since['se']:.4f}")
+    row = lambda rule, name, what, state: dict(rule=rule, name=name, what=what, n=n_wk, of=need, unit="weeks", bar=None, wins=None, losses=None, hit=None, hit_lo=None,
+                                               hit_hi=None, claimed=None, model_said=None, state=state, note=note)
+    watches = [row("E2", "The engine's weight (0.5)", f"Moved toward the book if the engine's margin over the book since week {live_week} is negative by more than twice its give or take, read after week {int(live_week) + need - 1}; raised only by the same test.",
+                   "running" if n_wk < need or t_ is None else "fails" if t_ <= -2 else "holds"),
+               row("S1", "Stakes on the cautious chance", "Sized on the win chance instead once the engine's margin over the book is positive by more than twice its give or take.",
+                   "running" if n_wk < need or t_ is None else "met" if t_ >= 2 else "not met")]
     # the engine's side on every line at the best closing price, and what each tier did
     od, ud = d.over_dec.values.astype(float), d.under_dec.values.astype(float)
     over = (p_eng * od - 1) > ((1 - p_eng) * ud - 1)
@@ -136,4 +205,4 @@ def scoreboard(frame, min_lines=20):
     return dict(lines=int(len(d)), weeks=[int(w) for w in sorted(set(wk))],
                 log_loss=dict(market=float(ll["market"].mean()), model=float(ll["model"].mean()), engine=float(ll["engine"].mean())),
                 engine_minus_market=mean, se=se, t=(mean / se if se else None), by_week=by_week, by_kind=by_kind, tiers=tiers, calibration=cal,
-                beta=e["beta"], beta_low=e["beta_low"])
+                beta=e["beta"], beta_low=e["beta_low"], live_week=int(live_week), since=since, shadow=shadow, watches=watches)
