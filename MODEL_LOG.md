@@ -381,6 +381,9 @@ record where they concern picks.
 - **Press-man corner read** (2026-11-09; changelog, football logic): corners allowing under 2 completions a game run +0.67 tackles above their season average next game, 4+ a game -0.92, in all three seasons; the low average regresses up.
 - **Football reads as corrector features** (2026-11-09; changelog, football logic): completions allowed, catch rate, rookie, last-three trend; 2025 fold MAE 1.5887 to 1.5883, 2026 fold 1.5769 to 1.5765. Re-open if: a new data source (e.g. charted press/man coverage).
 - **Separate next-man-up bump for trades** (2026-11-09; changelog, trades): 28 mid-season moves of regulars since 2023; backups rose 6-14 points of snap share and 0.2-1.4 tackles; too few trades to size a separate bump, so ROLE_BUMP applies.
+- **The game total and the opponent's implied points as corrector inputs** (2026-11-10; changelog): final projection, corrector retrained per fold. Regulars 2025-26 +0.0002 (t +0.3), all folds +0.0032 (t +1.4): no gain, worse in 2024. The spread and the opponent's volume already carry it. Re-open if: a play-count projection from another source.
+- **A backup quarterback for the opponent** (2026-11-10; changelog): the opponent's starter is not the one who started most of its earlier games (21% of games). Regulars 2025-26 -0.0002 (t -0.3); on the games it touches -0.0065 (t -1.7, 1,247 rows). Raw: linebackers 3.9% over their projection against a backup, corners and safeties 1.5% under. The right direction, short of the bar (t -2 on the rows it moves). Re-open if: a full extra season, or as a factor by position.
+- **Wind and cold as corrector inputs** (2026-11-10; changelog): regulars 2025-26 -0.0010 (t -1.7), 2026 alone -0.0029 (t -2.1), all folds +0.0007, and worse on the windy games themselves (+0.014, 346 rows). Raw, wind 15 mph+: linebackers +6%, corners -7% (about 100 rows each). The schedule feed has no forecast before the game, so it could not run live anyway. Re-open if: a forecast feed, with a season more of windy games.
 
 ### Projection: structure and shrinkage
 - **Per-snap rate as the whole base** (2026-10-26, round 1; 2026-10-30, round 4): rate per snap x expected snaps alone was worse (+1.7% MAE); with no per-game blend 1.7306 train / 1.7258 test. Adopted only as 40% of a blend in round 4.
@@ -447,6 +450,9 @@ record where they concern picks.
 - **Centring the model's gap on the book's level** (2026-11-09; round 11): the model sits below the book in both markets every week (gap -0.19 combined, -0.21 solo); centring on other weeks scores 0.6857, on earlier weeks 0.6821, on the same slate 0.6838, against 0.6823: helps combined, costs solo, a wash. Shadow candidate.
 - **The win chance in the grade** (2026-11-09; round 11): A at a win chance of 60%+ went 15-6 on the closing lines, but a pick can then move from B to A because the book agrees more (model 68%: B at a fair 50%, A at 53%). Breaks rule 0; the model's own chance is used instead (13-6).
 - **Ranking by the cautious edge or by Kelly** (2026-11-09; round 11): thirds of the picks by cautious edge hit 66%, 51%, 63%; by cautious Kelly 66%, 54%, 61%; by the model's own chance 53%, 54%, 74%. The lock score is the model's own chance.
+- **Books on different lines** (2026-11-10; changelog): 82 of 914 closing player-markets had books a tackle apart. The Under at the higher line 27-20 but -5.1% a bet (it costs about -155); the Over at the lower line 45-37, -7.6%; both sides as a middle -0.20 on 2 units (both won 4 of 47). The half tackle is priced in. No signal, no rule.
+- **A price better than the other books' fair chance on the same line** (2026-11-10; changelog): of 2,356 sides not one cleared the other books' no-vig chance; the best 37 (within 3%) went 15-22. Line shopping saves vig; it is not an edge by itself.
+- **A stale line after another book moved** (2026-11-10; changelog): between pulls, one book moved 4+ points and another did not: 13 chances in three weeks, 4-9. Pulls are hours apart, so most moves are seen at every book at once. Re-open if: pulls minutes apart around news (credits).
 
 ### Stakes and parlays
 - **5 units on one high-conviction pick** (2026-11-02; round 6): Williams solo Under 3.5 at -155: quarter-Kelly 3% at a 65.5% claim, but without the +8 point segment correction the claim is 57.5%, below the 60.8% break-even. Stake follows the grade.
@@ -692,6 +698,20 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 ## Changelog
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
+
+### 2026-11-10, 6 am (five more ideas tested at the owner's request: none adopted)
+
+The owner asked what else could find better picks, was given five ideas marked "measurable" or "a guess", and
+said to do them. Each was tested first; none passed, so nothing in the model changes. Numbers are in the rejected
+register (projection inputs; pricing and pick rules).
+- Books disagreeing on a line, or on a price: no edge; the books price the half tackle and never beat each
+  other's fair chance. Blind, DraftKings' Unders returned +2.3% and theScore's -0.8% over weeks 7 to 9.
+- The game total as an input: no gain. A backup quarterback for the opponent: the right direction (linebackers
+  up 4%), short of the bar. Weather: mixed, and there is no forecast before the game.
+- Stale lines after another book moved: 13 cases, 4-9.
+Scripts: scratchpad `res/n1_features.py`, `n2_books.py`, `n3_stale.py` (not in the repo). Also from the morning
+check: the first daily on the new code ran clean at 4:16 am; the four-leg parlay given to the owner on Monday
+night after kickoff lost on paper (Bishop and Turner Unders won, Cashman had 6 solo against 5.5).
 
 ### 2026-11-09, 10:45 pm (a free check of the odds keys)
 
