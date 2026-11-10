@@ -533,6 +533,9 @@ and C9. What remains, and what the rebuild itself turned up:
     solo share than the player's own went 96-39 at the close in weeks 7 to 9, most of them lines the model passed on
     (changelog, 2026-11-10, 9 am). Logged from week 10 (`share_gap`). Read at the end of week 13: if those Unders hit
     58% or better out of sample and beat the rest of the solo board, make it a pick rule and an A input.
+    Two more candidates found the same day run beside it (`tools/holes.py`): part-time players' solo Unders (82-40)
+    and hot players' combined Overs (75-47). The second cuts against the model's own damping of hot streaks: if it
+    holds, the projection's treatment of recent form on combined is the thing to re-test, not just a pick rule.
 12. **Closing-line value and the prices disagree.** On the replay's picks the price logged beat the closing price
     of the same line (+29.9 units against +25.0 on 186 picks), yet the no-vig closing-line value of the same picks
     is -2 points. One of the two is measured wrong (the vig widening near kickoff, or the conversion through the
@@ -744,6 +747,28 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 ## Changelog
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
+
+### 2026-11-10, 10 am (a sweep of the closing lines for other holes: two more candidates, written down before week 10)
+
+Owner, after the solo-share gap: "are there any other holes in the books' lines like that?" Twelve things knowable
+before kickoff were cut against the result at the closing line of weeks 7 to 9, solo and combined (about 120
+cells). With that many looks some cells are luck: only patterns with 100+ lines, the same sign in each of the
+three weeks and a plain reason were kept. Nothing is adopted; `tools/holes.py` scores them with fixed definitions
+on any weeks (790 decided lines here, best closing price of the side).
+- **Part-time players, solo Under** (under 85% of the snaps this season): 82-40 (67%, +30% a bet); by week 28-10,
+  27-12, 27-18. It is not the share gap again: without the gap they went 55-31. Reason: the book's line follows
+  his totals; a part-timer's good games came on more snaps than he will get.
+- **What is left of the solo board is a coin flip.** Solo Unders with neither the share gap nor part-time: 84-81
+  (-0.4% a bet). The "solo Under edge" of weeks 7 to 9 was these two kinds of player, not solo lines in general.
+- **Hot players, combined Over** (his last three games average half a tackle or more over his season average):
+  75-47 (61%, +21% a bet); by week 21-14, 24-17, 30-16. Reason: the line sits near the season average and trails
+  a role that has grown. The model is the other way on these (it damps a hot streak), which may be why it has no
+  edge on combined lines.
+- Seen and left: corners and linemen combined Under 74-51 (59%); lines of 5.5+ on linebackers and safeties Over
+  117-88 (57%), mostly the hot players again (big and not hot: 70-71). No sign at all: the last game alone, games
+  played, back from a missed game, how many books post him, how swingy his games are.
+Read at the end of week 13 with the share gap (open issue 15): each needs 58%+ out of sample and to beat the rest
+of its market before it becomes a rule. Sweep script: scratchpad `res/n5_holes.py`.
 
 ### 2026-11-10, 9 am (an early look at the week for weeks 10 and 11; the solo-share gap measured and logged)
 
