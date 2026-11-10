@@ -79,10 +79,9 @@ In this order, each with what it would change:
    late, does the line move toward the model, and is a pick made at 24 h still a pick at the close? Decides the
    pull schedule and when the owner bets. This season's weeks 1 to 6 already say "no difference between 16 h and
    1 h" on six weeks.
-2. **Alternate lines** (640 for a two-week sample of 2026): `player_solo_tackles_alternate` and
-   `player_tackles_assists_alternate`. Is the same opinion (solo Under on a flagged line) priced better one line up
-   or down than at the main line? If the sample says yes, a season of them (about 5,300) and a rule for which line
-   to take.
+2. **Alternate lines: answered on 2026-11-10, dropped.** Week 9 was sampled (`data/odds_alt`, 280 credits):
+   DraftKings' alternates are Over-only ladders ("4+ tackles"), with no Under to bet the flag at, and every Over on
+   them returned -5.7% (combined) and -13.8% (solo) that week. Nothing to fetch.
 3. **Assists, 2024** (about 2,700): the third season for open issue 21 (the trial market's promotion).
 4. **Assists at the close, 2026 weeks 7 and 8** (about 300): completes this season's scoreboard in three markets.
 5. **2023** (31 to probe, about 5,300 if it is there): a fourth season for the book-share flag with no model (the
@@ -542,6 +541,7 @@ record where they concern picks.
 - **Grade-ladder, flat and uncapped Kelly stakes** (2026-11-03; round 9): at 136.5 units staked the ladder made +18.1, flat +10.8, quarter Kelly +15.9, against +21.2 with the game cap (uncorrected record, A10). Re-open if: Kelly trails the ladder over the next 300 picks.
 
 ### Other markets and data sources
+- **Alternate tackle lines** (2026-11-10; week 9 of 2026 at DraftKings, 2,219 prices): Over-only ladders, so the flagged solo Under cannot be bet on them; every Over returned -5.7% (combined) and -13.8% (solo). Re-open only if a book posts two-way alternates.
 - **ESPN QBR** (2026-10-31; round 5): no loader in nflreadpy; not reachable as a table. Skipped.
 - **Special-teams tackles** (2026-10-31; round 5): the player stats have no separate column and the books settle on the same box-score total, so there is nothing to separate.
 - **PrizePicks and Underdog projection APIs** (2026-10-31; round 5): refused to scripts (HTTP 403 and HTTP 426); their lines cannot be read, so no pick-'em cross-check.
@@ -601,8 +601,8 @@ and C9. What remains, and what the rebuild itself turned up:
    The share model does not know which backup takes the snaps; a depth chart read the same morning would.
 6. **Overs.** 6-9 as picks at the closing lines, 15-20 in the replay, 28-40 live before the engine. Same test as
    Unders, never locks. Candidate: Overs as leans only. Re-read at 40 further Over picks.
-7. **Odds credits and the key's end date.** 2,174 of the paid key's 20,000 are left (2026-11-10, 1 pm) after the
-   2024 season; a live week with the assists market costs 200 to 300, so weeks 10 to 12 are covered. The plan
+7. **Odds credits and the key's end date.** About 1,890 of the paid key's 20,000 are left (2026-11-10, 1 pm) after
+   the 2024 season and a sample of alternate lines; a live week with the assists market costs 200 to 300, so weeks 10 to 12 are covered. The plan
    resets on 2026-12-01 (owner; `config.ODDS_RESET_DAY = 1` is right) and **the owner's access ends on 2026-12-10**.
    From 12-01 to 12-10 there are 20,000 more: "The December exploration" below is the plan for them. After 12-10
    the live pulls need another key in `ODDS_API_KEY` (the free plan's 500 a month pays for the pre-kickoff pulls in
@@ -877,7 +877,7 @@ Owner: "Do it" (the Over block: it went in at noon). "Plan resets Dec 1, I will 
 accordingly. Maybe Dec 1 can plan for another big exploration?"
 
 **Fetched:** the 2024 season's closing lines, solo and combined, weeks 1 to 18: 8,562 prices (`data/odds/2024`).
-Credits left: 2,174.
+Credits left: 2,174 before the alternate-lines sample below, about 1,890 after: three live weeks cost about 900.
 
 **Why 2024.** The grade (H1), the Over block and the stake ladder (S3) were drawn at noon on the 21 replayed weeks
 of 2025 and 2026 and scored on the same weeks. 2024 was not in them. Its limits: the projection of 2024 is trained
@@ -902,6 +902,10 @@ the book on 4,543 closing lines: +0.0051 (t +2.2), better in 12 of 17 weeks. The
 What it does not show: an A is rare there (one a week; 7 a week in 2025-26), so 12-5 says little, and locks were 2-2.
 
 Three seasons of replays under today's rules: 1,474-940 (61%); A 118-40, B 380-198, C 976-702.
+
+**Alternate lines, sampled** (week 9 of 2026, DraftKings, 2,219 prices): Over-only ladders, no Under. All Overs
+on them: combined hit 43% where the prices imply 45% (-5.7% a bet), solo 36% against 40% (-13.8%). The hole cannot
+be bet there and their Overs lose: off the December plan (rejected register).
 
 **Also:** `tools/season_test.py` is in the repo so this can be repeated by any session. "The December exploration"
 above is the plan for the 20,000 credits of 12-01 to 12-10, and a scheduled task wakes the owner's session for it on
