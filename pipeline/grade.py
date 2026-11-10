@@ -1056,6 +1056,12 @@ def _evidence_sections(summary):
                 so = r.get("since")
                 out.append(f"| {r['name']} | {r['log_loss']:.4f} | {margin(r.get('vs_engine'), r.get('se'), r.get('t'))} | "
                            + (f"{margin(so.get('vs_engine'), so.get('se'), so.get('t'))} on {so['lines']} lines, {so['weeks']} week(s)" if so else "no graded line yet") + " |")
+    mw = summary.get("market_watch") or []
+    if mw:
+        out += ["", "### The whole board, no model", "",
+                "Every closing line of the week: how often the Over won, against the chance the book's fair price gave it. A gap here is the level of the whole market that week; no choice of lines explains it, and a side that won because of it was not picked by skill.", "",
+                "| Week | Market | Lines | Over won | Book's fair chance of the Over |", "| --- | --- | --- | --- | --- |"]
+        out += [f"| {r['season']} wk {r['week']} | {C.market_kind(r['market'])} | {r['lines']} | {pct(r.get('over_rate'))} | {pct(r.get('market_p_over'))} |" for r in mw]
     era = summary.get("era") or {}
     out += ["", f"## Since the engine ({live['season']} week {live['week']} on)", "",
             "The picks the current rules chose, one bet per player, market and side. The decision register's conditions are read on these alone.", ""]

@@ -492,9 +492,10 @@ and C9. What remains, and what the rebuild itself turned up:
 8. **The standing post-mortem task.** Its instructions were rewritten for this structure on 2026-11-09. Its run of
    that morning did have the repository (an earlier note here said it had none; the run's transcript shows a
    checkout). It stopped after a minute because the graded detail it was told to read is sealed on the site.
-   `data/weekly_five.md` now carries that evidence in plain text, and the task is told to add the repository with
-   push access itself, or to leave its entry as a patch if the push is refused. Read what its Tuesday and Friday
-   runs produce. Week 9's Monday night game is still to be added to its post-mortem.
+   `data/weekly_five.md` now carries that evidence in plain text. Its sessions are set up to push to a branch of
+   their own (`claude/relaxed-heisenberg`), so a push to this branch may be refused: the task is told to push its
+   entry to its own branch then, or to leave a patch, and to say where; the entry then needs merging. Read what its
+   Tuesday and Friday runs produce. Week 9's Monday night game is still to be added to its post-mortem.
 9. **The repository is public (owner).** Picks, projections, every odds snapshot and this file are readable without
    the site's password. A private repository needs paid Actions minutes for a ticker that runs all day.
 10. **The closing price is an hour old** (the last pull before kickoff): closing-line value and the scoreboard are
@@ -679,8 +680,11 @@ model is measured:
 - The three candidates of open issue 2 are in `config.SHADOW` with their numbers fixed, and the scoreboard scores
   them on every closing line against the engine (`evaluate._shadow`). Their adoption rule is decision R6.
 - `data/weekly_five.md` carries all of it in plain text (`grade._evidence_sections`): the scoreboard by week with
-  the in-sample weeks marked, tiers, calibration, the shadow, the record since the engine, the conditions on
-  trial, the record to date by grade and by side and market, each with its likely range.
+  the in-sample weeks marked, tiers, calibration, the shadow, the whole board with no model (how often the Over
+  won each week against the book's fair chance), the record since the engine, the conditions on trial, the record
+  to date by grade and by side and market, each with its likely range.
+- The standing post-mortem's instructions rewritten around that file, the freeze (it measures and records, it
+  changes nothing) and one entry a week. `data/cache/blend.json`, a leftover of the retired blend, removed.
 - Site, Track record: the "Against the market" verdict is read only on the weeks since the engine (until week 10
   is graded it says there is none); "Candidates in the shadow"; a new section, "Rules on trial".
 
