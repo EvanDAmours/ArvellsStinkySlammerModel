@@ -61,7 +61,38 @@ evidence, revert condition) and a line in the decision register or the rejected 
 this log did not happen. When this file passes about 1,200 lines, move the oldest changelog entries and research
 rounds to the archive, unchanged. The site's Patch log tab is built from both files (`pipeline/patchlog.py`), so
 keep the headings' form: "## Research ...", "### ..." under "## Weekly post-mortems", "### <when> (<what>)" under
-"## Changelog".
+"## The December exploration (plan; credits reset 2026-12-01, access ends 2026-12-10)
+
+Written 2026-11-10 at the owner's request ("Dec 1 can plan for another big exploration"). A scheduled task wakes the
+owner's session on 2026-12-01 at 9 am Edmonton to run it; any session can run it from this section. It measures and
+logs; it changes no rule (the rules are read after week 13, on 2026-12-08, by their own conditions).
+
+Budget: 20,000 credits from 12-01. Keep 1,500 for the live pulls of 12-01 to 12-10 (weeks 13 and 14). Check the count
+first ("Check odds keys" workflow) and after every fetch. A historical snapshot costs 10 credits a market a game
+(nothing when no line is posted). Fetch with the "Fetch past lines for a market" workflow (`run.py history`), one run
+at a time; test with `python tools/season_test.py --season S` in a scratch copy.
+
+In this order, each with what it would change:
+1. **When to bet** (about 10,600): the 2025 season 24 hours and 6 hours before each kickoff, solo and combined, into
+   `data/odds_early` (never into `data/odds`: the closing lines must stay the last snapshot). For the A and B
+   picks of the replay: the price and the line at 24 h, 6 h and 1 h. Does the flagged solo Under pay more early or
+   late, does the line move toward the model, and is a pick made at 24 h still a pick at the close? Decides the
+   pull schedule and when the owner bets. This season's weeks 1 to 6 already say "no difference between 16 h and
+   1 h" on six weeks.
+2. **Alternate lines** (640 for a two-week sample of 2026): `player_solo_tackles_alternate` and
+   `player_tackles_assists_alternate`. Is the same opinion (solo Under on a flagged line) priced better one line up
+   or down than at the main line? If the sample says yes, a season of them (about 5,300) and a rule for which line
+   to take.
+3. **Assists, 2024** (about 2,700): the third season for open issue 21 (the trial market's promotion).
+4. **Assists at the close, 2026 weeks 7 and 8** (about 300): completes this season's scoreboard in three markets.
+5. **2023** (31 to probe, about 5,300 if it is there): a fourth season for the book-share flag with no model (the
+   projection has no season before 2023 to train on, so no replay). Only if credits remain after 1 to 4.
+6. **Anything the live weeks 10 to 12 raise**: read "Rules on trial" and the post-mortems first; a question they
+   open outranks 5.
+By 12-09: spend what is left on the next item down, log the results under the changelog, and remind the owner that
+the key ends on 12-10 (open issue 7).
+
+## Changelog".
 
 Losing picks are not mistakes. Tackle props are high-variance and a good bet loses often. A mistake is a change
 made without evidence, a change not tested, a change not recorded, or a known pitfall repeated. This file exists
@@ -570,11 +601,12 @@ and C9. What remains, and what the rebuild itself turned up:
    The share model does not know which backup takes the snaps; a depth chart read the same morning would.
 6. **Overs.** 6-9 as picks at the closing lines, 15-20 in the replay, 28-40 live before the engine. Same test as
    Unders, never locks. Candidate: Overs as leans only. Re-read at 40 further Over picks.
-7. **Odds credits: 7,482 left of the paid key's 20,000** (2026-11-10, noon), after the day's fetches: this season's
-   weeks 1 to 6 at the close and 16 hours out (about 4,600), the 2025 season at the close in three markets (about
-   7,900). A week of live pulls with the assists market costs 200 to 300, so the live schedule is covered several
-   times over. `config.ODDS_RESET_DAY` still assumes the calendar month: a paid plan renews on its purchase date
-   (owner to confirm; nothing depends on it at this size). 2024 could be fetched for about 5,300 (issue 23).
+7. **Odds credits and the key's end date.** 2,174 of the paid key's 20,000 are left (2026-11-10, 1 pm) after the
+   2024 season; a live week with the assists market costs 200 to 300, so weeks 10 to 12 are covered. The plan
+   resets on 2026-12-01 (owner; `config.ODDS_RESET_DAY = 1` is right) and **the owner's access ends on 2026-12-10**.
+   From 12-01 to 12-10 there are 20,000 more: "The December exploration" below is the plan for them. After 12-10
+   the live pulls need another key in `ODDS_API_KEY` (the free plan's 500 a month pays for the pre-kickoff pulls in
+   two markets and little else; the budget governor handles it): owner's decision before 12-10.
 8. **The standing post-mortem task: working.** Its first run under the instructions of 2026-11-09 (Tuesday
    2026-11-10, 8:24 am) read the plain weekly log, ran the daily in a scratch copy, wrote the close of week 9 in the
    set order and pushed it to this branch itself (commit 6f35256, `MODEL_LOG.md` only), in eight minutes. Nothing
@@ -623,9 +655,7 @@ and C9. What remains, and what the rebuild itself turned up:
     one week out is 0.70 (+0.0021, t +1.2), but weeks 7 to 9 of 2026 point the other way (-0.0010 at 0.5). Not
     changed: E2 is read on weeks 10 to 13, and the flat 0.5 runs in the shadow for exactly this. The centred
     combined gap in the shadow failed on both fetched samples (t -2.5 and -3.1): expect it rejected at the read.
-23. **The 2024 season's lines exist in the feed** (probed: 46 and 39 prices a game) and would cost about 5,300
-    credits for solo and combined. Not fetched: it would leave about 2,200, and the model of 2024 would be trained
-    on one season. Owner's call.
+23. **Closed 2026-11-10: the 2024 season is fetched and tested** (changelog, 12:40 pm). `data/odds/2024`.
 17. **Corners and safeties are too spread out on combined** (candidate): a slope for the two positions and the
     opponent's implied points for safeties, -0.0085 (t -3.1) on regulars 2025-26, worse for part-time backs. Re-test
     as one pre-stated variant, applied to regulars only, before anything is built.
@@ -840,6 +870,42 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 ## Changelog
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
+
+### 2026-11-10, 12:40 pm (the 2024 season: today's rules on lines they never saw; the December plan)
+
+Owner: "Do it" (the Over block: it went in at noon). "Plan resets Dec 1, I will have access until Dec 10. Explore
+accordingly. Maybe Dec 1 can plan for another big exploration?"
+
+**Fetched:** the 2024 season's closing lines, solo and combined, weeks 1 to 18: 8,562 prices (`data/odds/2024`).
+Credits left: 2,174.
+
+**Why 2024.** The grade (H1), the Over block and the stake ladder (S3) were drawn at noon on the 21 replayed weeks
+of 2025 and 2026 and scored on the same weeks. 2024 was not in them. Its limits: the projection of 2024 is trained
+on 2023 and the weeks before each game only (the model alone lost to the book there, 0.6887 against 0.6862), the
+constants were tuned on seasons that include it, one snapshot a week, the final injury report.
+
+**Result** (`python tools/season_test.py --season 2024`, a new tool that replays a season and prints all of this):
+
+| 2024, weeks 4 to 18 | record | a bet | at the stakes |
+|---|---|---|---|
+| every pick | 537-371 (59%) | +14% | +49.0 units on 305 (+16.1%) |
+| A | 12-5 (71%) | +24% | +4.0 on 17 |
+| B | 170-92 (65%) | +21% | +27.3 on 131 |
+| C | 355-274 (56%) | +11% | +17.7 on 157 |
+
+The order holds in both halves of the season (B 66% and 64%, C 56% and 57%), a profit at the stakes in 13 of 15
+weeks, a worst week of -1.6 units, and the ladder beat one size (+16.1% against +14%). DraftKings alone: A 12-5,
+B 170-92, C 148-121. Solo Under picks on a flagged line 182-97 (65%), unflagged 76-60 (56%). The engine against
+the book on 4,543 closing lines: +0.0051 (t +2.2), better in 12 of 17 weeks. The book-share flag with no model:
+1,037-757 (58%, +5.7% a bet) against 239-224 for the rest, ahead in each of the 18 weeks; weaker than in 2025 and
+2026 (63% to 66%) because in 2024 four solo lines in five carried the flag.
+What it does not show: an A is rare there (one a week; 7 a week in 2025-26), so 12-5 says little, and locks were 2-2.
+
+Three seasons of replays under today's rules: 1,474-940 (61%); A 118-40, B 380-198, C 976-702.
+
+**Also:** `tools/season_test.py` is in the repo so this can be repeated by any session. "The December exploration"
+above is the plan for the 20,000 credits of 12-01 to 12-10, and a scheduled task wakes the owner's session for it on
+12-01. Open issue 7: the key ends on 12-10. No rule changed in this entry.
 
 ### 2026-11-10, noon (the grade and the stake rebuilt on what two seasons of lines show; no solo Over on a flagged line)
 
