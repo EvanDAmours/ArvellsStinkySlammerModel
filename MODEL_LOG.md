@@ -519,17 +519,14 @@ and C9. What remains, and what the rebuild itself turned up:
    The share model does not know which backup takes the snaps; a depth chart read the same morning would.
 6. **Overs.** 6-9 as picks at the closing lines, 15-20 in the replay, 28-40 live before the engine. Same test as
    Unders, never locks. Candidate: Overs as leans only. Re-read at 40 further Over picks.
-7. **Odds credits (owner).** `PARLAY_API_KEY` is rejected as invalid: one key, under 200 credits to the end of
-   November. The budget keeps every pre-kickoff pull and the Thursday and Monday looks, runs the first Saturday
-   night look and leaves out later ones, the Sunday 10 am look and the assists market. A working second key or a
-   paid plan restores the full schedule the next pull.
-8. **The standing post-mortem task.** Its instructions were rewritten for this structure on 2026-11-09. Its run of
-   that morning did have the repository (an earlier note here said it had none; the run's transcript shows a
-   checkout). It stopped after a minute because the graded detail it was told to read is sealed on the site.
-   `data/weekly_five.md` now carries that evidence in plain text. Its sessions are set up to push to a branch of
-   their own (`claude/relaxed-heisenberg`), so a push to this branch may be refused: the task is told to push its
-   entry to its own branch then, or to leave a patch, and to say where; the entry then needs merging. Read what its
-   Tuesday and Friday runs produce. Week 9's Monday night game carried no pick (post-mortem of 2026-11-10).
+7. **Odds credits: settled for November.** The owner replaced `ODDS_API_KEY` on 2026-11-09 (500 credits, checked with
+   the "Check odds keys" workflow); `PARLAY_API_KEY` is no longer set. The budget runs every scheduled pull and the
+   two Wednesday early looks on solo and combined; the assists trial market stays out (about 540 credits would be
+   needed). Credits reset on the 1st.
+8. **The standing post-mortem task: working.** Its first run under the instructions of 2026-11-09 (Tuesday
+   2026-11-10, 8:24 am) read the plain weekly log, ran the daily in a scratch copy, wrote the close of week 9 in the
+   set order and pushed it to this branch itself (commit 6f35256, `MODEL_LOG.md` only), in eight minutes. Nothing
+   to merge. Read its Friday entry, the first with engine-era picks in it.
 9. **The repository is public (owner).** Picks, projections, every odds snapshot and this file are readable without
    the site's password. A private repository needs paid Actions minutes for a ticker that runs all day.
 10. **The closing price is an hour old** (the last pull before kickoff): closing-line value and the scoreboard are
