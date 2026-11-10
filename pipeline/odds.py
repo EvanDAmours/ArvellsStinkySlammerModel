@@ -168,22 +168,35 @@ def _parse_books(e, books, keep_books=True):
     return rows
 
 
-def pull_historical(api_key, season, week, markets, hours_before=1.0, event_ids=None):
+def historical_events(api_key, at):
+    """The games the feed listed at a past moment (1 credit): [{id, commence_time, home_team, away_team}]."""
+    r = requests.get(f"{BASE}/historical/sports/{C.ODDS_SPORT}/events", timeout=60, params={"apiKey": api_key, "date": at})
+    r.raise_for_status()
+    body = r.json()
+    return body.get("data", body) or []
+
+
+def pull_historical(api_key, season, week, markets, hours_before=1.0, event_ids=None, games=None, at=None, max_games=None):
     """Lines for a finished week from The Odds API's historical endpoint, one snapshot per game taken `hours_before`
     kickoff (a closing line for grading). Games and their event ids come from the week's own live snapshots, so
     only weeks the live pull covered can be fetched. Cost: 10 credits x markets x regions per game (historical
     requests cost ten times a live one). Returns (rows, credits_left); each row carries the snapshot time as
     `pulled_at`, so closing_lines() reads them like any other pull."""
-    s = load_snapshots(season, week)
-    if s.empty:
-        return [], None
-    games = s.drop_duplicates("event_id")[["event_id", "commence_time", "home_team", "away_team"]]
+    # `games`: a frame of event_id, commence_time, home_team, away_team for a week the live pull never covered (found with
+    # historical_events); `at`: one fixed moment for every game instead of `hours_before` its kickoff; `max_games`: a sample.
+    if games is None:
+        s = load_snapshots(season, week)
+        if s.empty:
+            return [], None
+        games = s.drop_duplicates("event_id")[["event_id", "commence_time", "home_team", "away_team"]]
     if event_ids:
         games = games[games.event_id.isin(set(event_ids))]
-    rows, left = [], None
+    if max_games:
+        games = games.head(int(max_games))
+    rows, left, fixed_at = [], None, at
     for g in games.itertuples():
         start = dt.datetime.fromisoformat(str(g.commence_time).replace("Z", "+00:00"))
-        at = (start - dt.timedelta(hours=hours_before)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        at = fixed_at or (start - dt.timedelta(hours=hours_before)).strftime("%Y-%m-%dT%H:%M:%SZ")
         r = requests.get(f"{BASE}/historical/sports/{C.ODDS_SPORT}/events/{g.event_id}/odds", timeout=60, params={
             "apiKey": api_key, "date": at, "markets": ",".join(markets), "oddsFormat": "american", **_book_params()})
         label = f"{g.away_team} @ {g.home_team} {g.commence_time}"
@@ -237,10 +250,10 @@ def _get_event_odds(event_id, api_key, label, markets=None):
     return None
 
 
-def save_snapshot(rows, season, week):
+def save_snapshot(rows, season, week, root=None):
     if not rows:
         return None
-    d = ODDS_DIR / str(season) / f"wk{week:02d}"
+    d = (Path(root) if root else ODDS_DIR) / str(season) / f"wk{week:02d}"
     d.mkdir(parents=True, exist_ok=True)
     stamp = _utcnow().strftime("%Y%m%dT%H%M%SZ")
     df = pd.DataFrame(rows)

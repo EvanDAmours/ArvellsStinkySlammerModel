@@ -912,19 +912,47 @@ def _budget_to_meta(budget):
     _json(meta_path, meta)
 
 
-def cmd_history(weeks, markets):
-    """Fetch a finished week's lines for extra markets from the historical endpoint (10 credits a game per market)
-    and store them as snapshots, so the replay can price and grade them as if they had been pulled live."""
+def cmd_history(weeks, markets, hours=(1.0,), at=None, max_games=None, root=None):
+    """Fetch finished weeks' lines from the historical endpoint (10 credits a game per market per moment) and store them
+    as snapshots. A week the live pull covered takes its games from its own snapshots; an earlier week finds them in the
+    feed as it stood two days before the week's first kickoff (1 credit). `hours`: how long before each kickoff, one
+    snapshot per value; `at`: one fixed moment instead; `root`: another folder than data/odds, for snapshots that must
+    not enter the replay or the closing lines (early looks used for research)."""
     key = os.environ.get("ODDS_API_KEY")
     if not key:
         sys.exit("ODDS_API_KEY is not set")
     if not weeks:
         sys.exit("history: give --weeks, e.g. --weeks 7,8")
+    sched, spent = None, 0
     for wk in weeks:
-        print(f"history: season {C.SEASON} week {wk}, markets {markets}")
-        rows, left = O.pull_historical(key, C.SEASON, wk, markets)
-        path = O.save_snapshot(rows, C.SEASON, wk)
-        print(f"history: week {wk}: {len(rows)} prices saved to {path}, credits left {left}")
+        games = None
+        if O.load_snapshots(C.SEASON, wk).empty:
+            sched = S.load_schedule([C.SEASON]) if sched is None else sched
+            wg = week_games(sched, C.SEASON, wk)
+            if not wg:
+                print(f"history: week {wk}: no games on the schedule"); continue
+            first = min(dt.datetime.fromisoformat(g["kickoff"]) for g in wg)
+            listed = O.historical_events(key, (first - dt.timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%SZ"))
+            rows_g = []
+            for g in wg:
+                names = (M.TEAM_NAMES.get(g["home"]), M.TEAM_NAMES.get(g["away"]))
+                ev = [e for e in listed if e.get("home_team") == names[0] and e.get("away_team") == names[1]
+                      and abs((dt.datetime.fromisoformat(str(e["commence_time"]).replace("Z", "+00:00")) - dt.datetime.fromisoformat(g["kickoff"])).total_seconds()) < 36 * 3600]
+                if ev:
+                    rows_g.append(dict(event_id=ev[0]["id"], commence_time=ev[0]["commence_time"], home_team=ev[0]["home_team"], away_team=ev[0]["away_team"]))
+                else:
+                    print(f"history: week {wk}: {g['away']} at {g['home']} not found in the feed's list")
+            games = pd.DataFrame(rows_g)
+            print(f"history: week {wk}: {len(games)} of {len(wg)} games found in the feed as of two days before the first kickoff")
+            if games.empty:
+                continue
+        allrows, left = [], None
+        for h in ([None] if at else hours):
+            print(f"history: season {C.SEASON} week {wk}, markets {markets}, " + (f"at {at}" if at else f"{h:g} h before each kickoff"))
+            rows, left = O.pull_historical(key, C.SEASON, wk, markets, hours_before=h or 1.0, games=games, at=at, max_games=max_games)
+            allrows += rows
+        path = O.save_snapshot(allrows, C.SEASON, wk, root=root)
+        print(f"history: week {wk}: {len(allrows)} prices saved to {path}, credits left {left}")
 
 
 WEEK_LINE_COLS = ["player", "player_id", "espn_id", "jersey", "team", "opp", "group", "market", "line", "book", "over_odds", "under_odds", "over_link", "under_link", "side", "pick", "tier", "status", "proj", "proj_model", "model_over", "market_over", "p_claim", "p_low", "p_model", "ev", "edge_low", "grade", "lock", "commence_time", "event_id", "rundown"]
@@ -976,6 +1004,12 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
         meta.setdefault("odds_credits_by_key", prev.get("odds_credits_by_key"))
         meta.setdefault("odds_markets", prev.get("odds_markets"))
     left = prev.get("odds_credits_remaining") if prev else None      # the budget as of the last pull's credits, re-read against today's schedule
+    keys_now = {n: os.environ[n] for n in C.ODDS_KEY_ENV if os.environ.get(n)}
+    if keys_now and not os.environ.get("TACKLE_FAKE_ODDS"):          # a key replaced since the last pull showed the old key's count for days (2026-11-10)
+        live = [v for v in O.credits_left(keys_now).values() if isinstance(v, (int, float))]
+        if live:
+            left = float(sum(live))
+            meta["odds_credits_remaining"] = left
     meta["odds_budget"] = _budget_public(credit_budget(credits=left if isinstance(left, (int, float)) else None, served=load_served()))
     _json(SITE / "meta.json", meta)
     cols = ["player", "team", "opp_team", "group", "status", "n_prev", "season_avg", "last", "base", "proj", "proj_solo",
@@ -1007,12 +1041,17 @@ if __name__ == "__main__":
     ap.add_argument("--auto", action="store_true")
     ap.add_argument("--weeks", default="", help="history: comma-separated finished weeks to fetch, e.g. 7,8")
     ap.add_argument("--markets", default=C.ASSIST_MARKET, help="history: comma-separated market keys")
+    ap.add_argument("--hours-before", default="1", help="history: hours before each kickoff, comma-separated (one snapshot each)")
+    ap.add_argument("--at", default="", help="history: one fixed moment (ISO, UTC) for every game instead of --hours-before")
+    ap.add_argument("--max-games", type=int, default=0, help="history: only the first N games of each week (a sample)")
+    ap.add_argument("--dir", default="", help="history: save under this folder instead of data/odds")
     a = ap.parse_args()
     if a.cmd == "seal":
         SEAL.cmd_seal(SITE)
     else:
         if a.cmd == "history":
-            cmd_history([int(w) for w in a.weeks.split(",") if w.strip()], [m for m in a.markets.split(",") if m.strip()])
+            cmd_history([int(w) for w in a.weeks.split(",") if w.strip()], [m for m in a.markets.split(",") if m.strip()],
+                        hours=tuple(float(h) for h in a.hours_before.split(",") if h.strip()) or (1.0,), at=a.at or None, max_games=a.max_games or None, root=a.dir or None)
         elif a.cmd == "keys":
             cmd_keys()
         elif a.cmd == "tick":
