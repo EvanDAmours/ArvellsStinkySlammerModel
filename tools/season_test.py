@@ -65,6 +65,35 @@ def report(P, season):
         print(f"  at {b}: {rec(x)}")
 
 
+def summary(P, season):
+    """The same replay as a small record for the site (data/replay_seasons.json): the season's picks under the current
+    rules, by grade and by week. P: the counted, decided picks."""
+    P = P.assign(win=P.result == "Win", st=P.units * P.stake)
+    def r(x):
+        n = len(x)
+        return dict(bets=int(n), wins=int(x.win.sum()), losses=int(n - x.win.sum()), hit=float(x.win.mean()) if n else None, units=float(x.units.sum()),
+                    staked=float(x.stake.sum()), units_at_stake=float(x.st.sum()))
+    weeks = sorted(int(w) for w in P.week.unique())
+    by_week = []
+    for w, x in P.groupby("week"):
+        by_week.append(dict(week=int(w), **r(x), by_grade={g: f"{int(y.win.sum())}-{int((~y.win).sum())}" for g, y in x.groupby("grade")}))
+    wk = P.groupby("week").st.sum()
+    return dict(season=int(season), weeks=weeks, plays=r(P), by_grade=[dict(grade=g, **r(x)) for g, x in P.groupby("grade")],
+                locks=r(P[P.five.fillna(False).astype(bool)]), by_week=by_week, weeks_up_at_stakes=int((wk > 0).sum()), worst_week=float(wk.min()), best_week=float(wk.max()))
+
+
+def save_summary(path, entry):
+    """Put a season's record into the site's file, replacing that season's earlier one."""
+    import json
+    path = Path(path)
+    data = json.loads(path.read_text()) if path.exists() else dict(seasons=[])
+    data["seasons"] = sorted([e for e in data.get("seasons", []) if e.get("season") != entry["season"]] + [entry], key=lambda e: e["season"])
+    data["note"] = ("Each season's stored lines replayed under the current rules: the projection rebuilt from the games before each week, the picks made by the "
+                    "live functions and graded on the box scores. One snapshot a week for 2024, 2025 and weeks 4 to 6 of 2026 (an hour before kickoff), the "
+                    "final injury report, and the best price across the books on the feed. The rules were chosen on 2025 and 2026; 2024 was not used.")
+    path.write_text(json.dumps(data, indent=1))
+
+
 def scoreboard(lines, H, season):
     """The engine against the book's fair closing price on the replayed weeks' lines."""
     if lines is None or not len(lines):
@@ -82,7 +111,7 @@ def scoreboard(lines, H, season):
     s = (sb or {}).get("since")
     if not s:
         print("\nscoreboard: too few decided lines")
-        return
+        return None
     print(f"\nthe engine against the book, {s['lines']} decided closing lines: log-loss book {s['log_loss']['market']:.4f}, model alone {s['log_loss']['model']:.4f}, "
           f"engine {s['log_loss']['engine']:.4f}; engine better by {s['engine_minus_market']:+.4f} (t {s['t'] or 0:+.1f}), in "
           f"{sum(b['engine_minus_market'] > 0 for b in sb['by_week'])} of {len(sb['by_week'])} weeks")
@@ -91,6 +120,8 @@ def scoreboard(lines, H, season):
     for r in sb["shadow"]:
         q = r["since"]
         print(f"  in the shadow, {r['name']}: {q['vs_engine']:+.4f} against the engine (t {q['t'] or 0:+.1f})")
+    return dict(lines=int(s["lines"]), engine_minus_market=float(s["engine_minus_market"]), t=None if s["t"] is None else float(s["t"]),
+                weeks=int(len(sb["by_week"])), weeks_better=int(sum(b["engine_minus_market"] > 0 for b in sb["by_week"])))
 
 
 if __name__ == "__main__":
@@ -98,6 +129,7 @@ if __name__ == "__main__":
     ap.add_argument("--season", type=int, default=C.SEASON)
     ap.add_argument("--weeks", type=int, nargs="*")
     ap.add_argument("--out", default="", help="keep the picks and the lines of the replay as CSV in this folder")
+    ap.add_argument("--json", default="", help="write the season's record for the site into this file (data/replay_seasons.json)")
     a = ap.parse_args()
     weeks = a.weeks or sorted(int(p.name[2:]) for p in (O.ODDS_DIR / str(a.season)).glob("wk*") if p.name[2:].isdigit())
     if not weeks:
@@ -127,7 +159,11 @@ if __name__ == "__main__":
         D = P[P.counted.fillna(False).astype(bool) & P.result.isin(["Win", "Loss"])]
         if len(D):
             report(D, a.season)
-    scoreboard(L, loaded[5], a.season)
+    else:
+        D = pd.DataFrame()
+    sb_ = scoreboard(L, loaded[5], a.season)
+    if a.json and len(D):
+        save_summary(a.json, dict(summary(D, a.season), against_the_book=sb_))
     D2 = HO.frame(loaded[5], a.season, weeks)
     if len(D2):
         print(f"\nthe holes, {len(D2)} decided closing lines (tools/holes.py):")

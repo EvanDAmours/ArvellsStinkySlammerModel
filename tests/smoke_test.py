@@ -491,6 +491,12 @@ check(all(k in _evd for k in ("## Against the market", "(out of sample)", "### C
       and "likely range" in _evd and "No graded closing lines yet." in "\n".join(G._evidence_sections({})),
       "the weekly log carries the evidence in plain text: the scoreboard with the weeks since the engine apart, the shadow, the engine's own record, the conditions on trial")
 check(all(k in _html for k in ("rec-trial", "Rules on trial", "Candidates in the shadow", "sb.since", "s.era")), "site shows the out-of-sample verdict, the candidates in the shadow and the rules on trial")
+# the Track record tab: what was bet beside what the new model would have picked, the list of every pick behind a dropdown, the seasons replayed
+_rs = R.replay_seasons() or {}
+_res = json.loads((tmp / "docs" / "data" / "results.json").read_text())
+check(all(k in _html for k in ("rec-history", "function historySection", "rec-picks-list", "function recCards", "function foldOf")) and "replays" in _res
+      and all({"season", "plays", "by_grade", "by_week"} <= set(e) and e["plays"]["wins"] + e["plays"]["losses"] == sum(g["wins"] + g["losses"] for g in e["by_grade"]) for e in _rs.get("seasons", [])),
+      f"the Track record tab carries the then-and-now section, keeps the pick list behind a dropdown and gets the replayed seasons ({[e['season'] for e in _rs.get('seasons', [])]})")
 
 _sg = json.loads((tmp / "data" / "cache" / "segments.json").read_text()) if (tmp / "data" / "cache" / "segments.json").exists() else {}
 check(all("n_eff" in v and v["n_eff"] <= v["n"] + 1e-9 for v in _sg.values()) if _sg else True, f"segment calibration carries the recency-weighted count ({len(_sg)} segments)")

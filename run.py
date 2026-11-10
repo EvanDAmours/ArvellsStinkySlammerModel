@@ -527,6 +527,15 @@ def lined_level_now(H, week):
         return 1.0
 
 
+def replay_seasons():
+    """The seasons replayed under the current rules, for the Track record tab (tools/season_test.py --json writes the file)."""
+    f = Path("data/replay_seasons.json")
+    try:
+        return json.loads(f.read_text()) if f.exists() else None
+    except ValueError:
+        return None
+
+
 def scoreboard(Hg):
     """The engine against the market's fair closing price on every line the model had a number for (pipeline/evaluate.py)."""
     try:
@@ -595,7 +604,7 @@ def cmd_live_grade(force=False):
     G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)
     retro = Path("data/retro_five.json")
     _json(SITE / "results.json", dict(summary=summary, picks=records(graded), parlays=records(parlays) if parlays is not None and len(parlays) else [],
-                                      sleepers=records(sleepers) if len(sleepers) else [], retro=json.loads(retro.read_text()) if retro.exists() else None))
+                                      sleepers=records(sleepers) if len(sleepers) else [], retro=json.loads(retro.read_text()) if retro.exists() else None, replays=replay_seasons()))
     LIVE_DONE.write_text(json.dumps(sorted(done | set(events))))
     print(f"live grade: {summary['live_graded']} pick(s) settled live; {summary.get('pending', 0)} still pending", flush=True)
 
@@ -1032,7 +1041,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
         meta["retro_assists"] = json.loads(retro_ast.read_text())
     _json(SITE / "results.json", dict(summary=summary, picks=records(graded), parlays=records(parlays) if parlays is not None and len(parlays) else [],
                                       sleepers=records(sleepers) if sleepers is not None and len(sleepers) else [],
-                                      retro=json.loads(retro.read_text()) if retro.exists() else None))
+                                      retro=json.loads(retro.read_text()) if retro.exists() else None, replays=replay_seasons()))
 
 
 if __name__ == "__main__":

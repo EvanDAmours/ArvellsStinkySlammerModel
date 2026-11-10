@@ -871,6 +871,41 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-10, 1:45 pm (the Track record tab repackaged; what was bet beside what the new model would have picked)
+
+Owner: "Clean up the way the track record page looks. Add a section at the bottom that clearly shows our historical
+data and picks and outcomes vs new model... every pick open in a scrollable browser, we don't need that... a lot of
+data on the screen that could adjust behind drop-down menus, but I do like having rules on trial... and the against
+the market stuff." A change to the site only (vision: an easier site); no rule, number or pick changes.
+
+**The tab, top to bottom:**
+1. Four cards: the new model live (from week 10; "no result yet" until it has one), the new model replayed on
+   past lines, the record as bet before it, and the margin over the book's own price. The live number and the
+   replayed number are never added together.
+2. Rules on trial, in view: one line a rule (name, state, count), the wording behind a tap.
+3. Against the market, in view: the three scores, the margin, the verdict and the latest weeks; earlier weeks, the
+   tiers, calibration, the candidates in the shadow and how to read it behind dropdowns.
+4. Locks, parlays, sleepers, by grade, by side and the luck tables: one line each with its record, opening to the
+   full section.
+5. Every pick: the totals in view; the filters and the list behind "Open the list".
+6. New, at the bottom, "Then and now": by week, the record as bet beside the new model's replay of the same weeks
+   (units at 1 a bet in both columns, so like is compared with like); what the new model does with the bets of
+   weeks 7 to 9 (bet then and still a pick 67-46, bet then and dropped 133-137, not bet then and a pick now 54-34);
+   every pick and its outcome for each week, the two lists side by side; and the three seasons replayed (2024,
+   2025, 2026) with a week-by-week dropdown each.
+The closed page is half as long as it was (about 4,000 pixels against 7,900); dropdowns stay as the reader left
+them when a filter redraws the tab.
+
+**Data.** `data/replay_seasons.json` holds the replayed seasons (record, grades, stakes, by week, weeks ahead of the
+book); `tools/season_test.py --json data/replay_seasons.json` rewrites a season's entry, and `run.replay_seasons`
+hands the file to the site. It must be re-made when a rule changes (with `data/retro_five.json`), or the tab shows
+the old rules' replay under the new rules' name.
+
+**Checked.** Smoke test 181 of 181 (one new check: the section, the dropdown and the seasons file agree with
+themselves). A real daily in a scratch copy writes the seasons into the site's data. The page rendered at 1,100
+and 390 pixels wide, closed and with every dropdown open: no script error, no sideways scroll of the page. Revert:
+`git revert` of this commit; nothing else depends on it.
+
 ### 2026-11-10, 12:40 pm (the 2024 season: today's rules on lines they never saw; the December plan)
 
 Owner: "Do it" (the Over block: it went in at noon). "Plan resets Dec 1, I will have access until Dec 10. Explore
@@ -1676,3 +1711,6 @@ Never tested; each with what would justify it. Anything tested and dropped is in
   size of every stake for a day and a half on three weeks of closing lines (37-25 against 31-20). On 21 weeks it
   ranked nothing. Before a number sets a grade or a stake, the record by its buckets is read on weeks it was not
   chosen on, and again whenever more weeks arrive.
+- **A replay shown on the site is a file, and a file goes stale.** `data/retro_five.json` and
+  `data/replay_seasons.json` are written by hand-run tools, not by the daily. After any change to a pick rule, a
+  grade or a stake, re-run them before the push, or the Track record tab reports the previous rules' replay.

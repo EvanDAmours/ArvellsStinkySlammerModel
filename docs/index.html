@@ -78,6 +78,30 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 @media (max-width: 640px) { .play { grid-template-columns: 1fr; } .play .ev { grid-row: auto; grid-column: 1; text-align: left; } .play .ev b { display: inline; font-size: 1.3rem; margin-right: 6px; } .play .why-box { grid-column: 1; } .toolbar { position: static; } }
 .section { margin: 26px 0 0; scroll-margin-top: 12px; } .section h3 { margin: 0 0 4px; font: 700 1.15rem/1.3 var(--cond); }
 .jump { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; }
+.rec-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 10px; margin: 8px 0 12px; }
+.rec-card { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.rec-card.rc-live { border-left-color: #1f8a4c; } .rec-card.rc-replay { border-left-color: #2f6fb0; } .rec-card.rc-old { border-left-color: #9aa3ad; }
+details.trial > summary { cursor: pointer; list-style: none; display: flex; flex-wrap: wrap; gap: 3px 10px; align-items: baseline; } details.trial > summary::-webkit-details-marker { display: none; }
+details.trial > summary::before { content: "\25B8"; color: var(--muted); } details.trial[open] > summary::before { content: "\25BE"; }
+details.trial > summary > b { flex: 1 1 12ch; } details.trial > summary .trial-now { color: var(--muted); text-align: right; } details.trial .trial-what { margin: 6px 0 0 1.2em; }
+.rec-card h4 { margin: 0 0 6px; font: 600 0.78rem var(--cond); letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+.rec-card .big { font: 700 1.9rem/1.1 var(--cond); font-variant-numeric: tabular-nums; } .rec-card .big small { font: 600 1rem var(--cond); color: var(--muted); margin-left: 6px; }
+.rec-card .sub { color: var(--muted); font-size: 0.86rem; margin-top: 5px; line-height: 1.4; } .rec-card .sub b { color: var(--ink); }
+#record-body > .section { border-top: 1px solid var(--line); padding-top: 18px; margin-top: 22px; }
+.fold { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin: 8px 0 0; }
+.fold > summary { cursor: pointer; list-style: none; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 2px 14px; align-items: baseline; }
+.fold > summary::-webkit-details-marker { display: none; }
+.fold > summary::before { content: "\25B8"; color: var(--muted); width: 0.9em; } .fold[open] > summary::before { content: "\25BE"; }
+.fold > summary b.t { font: 700 1.02rem var(--cond); } .fold > summary .s { color: var(--muted); font-size: 0.88rem; font-variant-numeric: tabular-nums; } .fold > summary .s b { color: var(--ink); }
+.fold > .fold-body { padding: 4px 14px 14px; border-top: 1px solid var(--line); } .fold > .fold-body > .lead:first-child { margin-top: 8px; }
+.fold .fold { background: var(--bg, #f3f4f6); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; } .two > div { min-width: 0; } .two h5 { margin: 8px 0 4px; font: 700 0.92rem var(--cond); }
+.wrap1 td:first-child, .wrap1 th:first-child { white-space: normal; }
+#record-body .more { max-width: none; } #record-body .more > p { max-width: 80ch; }
+.two .scroll { max-height: 460px; overflow: auto; } .two td, .two th { padding-left: 8px; padding-right: 8px; } .two td:nth-child(2) { white-space: normal; }
+@media (max-width: 900px) { .two { grid-template-columns: 1fr; } }
+table .tot td { font-weight: 700; border-top: 2px solid var(--line); }
+.then { color: #6b7480; } .now { color: #2f6fb0; }
 .jump a { font: 600 0.85rem var(--cond); padding: 4px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); text-decoration: none; }
 .jump a:hover { border-color: var(--ink); }
 .rec-filters { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 6px 0 10px; }
@@ -895,22 +919,111 @@ function more(label, ...kids) {
 const roiCell = (v) => el("b", { class: v == null ? "" : v >= 0 ? "pos" : "neg" }, v == null ? "" : signedPct(v));
 const recCell = (x) => el("span", {}, wl(x.wins, x.losses, x.pushes), x.pending ? el("small", { class: "muted" }, ` ${x.pending} pending`) : "");
 
+// dropdowns on this tab stay as the reader left them when the tab re-renders (a filter reset rebuilds it)
+const REC_OPEN = new Set();
+function keepOpen(d) { if (d.id && REC_OPEN.has(d.id)) d.open = true; d.addEventListener("toggle", () => { if (d.open) REC_OPEN.add(d.id); else REC_OPEN.delete(d.id); }); return d; }
+function foldOf(sec, stat) {
+  // a section turned into a dropdown: its title and one line of numbers show, the rest opens
+  const title = sec.querySelector("h3")?.textContent || "", body = el("div", { class: "fold-body" });
+  for (const k of [...sec.children]) if (k.tagName !== "H3") body.append(k);
+  return keepOpen(el("details", { class: "fold", id: sec.id }, el("summary", {}, el("b", { class: "t" }, title), el("span", { class: "s" }, ...(stat || []))), body));
+}
+const decided = (p) => p.counted !== false && (p.result === "Win" || p.result === "Loss");
+const tally = (ps) => { const w = ps.filter((p) => p.result === "Win").length, l = ps.filter((p) => p.result === "Loss").length; return { n: w + l, wins: w, losses: l, hit: w + l ? w / (w + l) : null, units: ps.reduce((a, p) => a + (p.units || 0), 0) }; };
+function recCards(r, s, lw) {
+  const e = s.era || {}, liveN = (e.wins || 0) + (e.losses || 0), old = tally((r.picks || []).filter((p) => decided(p) && p.week < lw));
+  const seasons = r.replays?.seasons || [], sum = (f) => seasons.reduce((a, x) => a + (f(x) || 0), 0);
+  const rw = sum((x) => x.plays.wins), rl = sum((x) => x.plays.losses), gr = (g) => { const w = sum((x) => x.by_grade.find((y) => y.grade === g)?.wins), l = sum((x) => x.by_grade.find((y) => y.grade === g)?.losses); return w + l ? pct(w / (w + l)) : ""; };
+  const sb = s.scoreboard || {}, sn = sb.since, sg4 = (x) => (x >= 0 ? "+" : "") + num(x, 4);
+  const card = (cls, title, big, ...sub) => el("div", { class: `rec-card ${cls}` }, el("h4", {}, title), el("div", { class: "big" }, ...big), el("div", { class: "sub" }, ...sub));
+  return el("div", { class: "rec-cards" },
+    card("rc-live", `The new model, live (week ${lw} on)`, liveN ? [wl(e.wins, e.losses, e.pushes), el("small", {}, pct(e.hit))] : ["No result yet"],
+      liveN ? [units(e.units_at_stake, 1), `u on ${num(e.staked, 1)} staked`, e.pending ? ` · ${e.pending} pending` : ""] : [`Its first picks are week ${lw}'s. This is the number that counts.`]),
+    seasons.length ? card("rc-replay", "The new model, replayed on past lines", [wl(rw, rl), el("small", {}, rw + rl ? pct(rw / (rw + rl)) : "")],
+      `${seasons.map((x) => x.season).join(", ")}: A `, el("b", {}, gr("A")), " · B ", el("b", {}, gr("B")), " · C ", el("b", {}, gr("C")), ". What it would have done, not what was bet.") : "",
+    card("rc-old", `As bet before it (weeks ${[...new Set((r.picks || []).filter((p) => p.week < lw).map((p) => p.week))].sort((a, b) => a - b).join(", ") || "none"})`, [wl(old.wins, old.losses), el("small", {}, old.hit == null ? "" : pct(old.hit))],
+      units(old.units, 1), "u at 1 a bet, under the rules of the time."),
+    sb.lines ? card(sn ? "rc-live" : "rc-replay", "Against the book's own price", [el("span", { class: (sn ? sn.engine_minus_market : sb.engine_minus_market) > 0 ? "pos" : "neg" }, sg4(sn ? sn.engine_minus_market : sb.engine_minus_market))],
+      sn ? `Since week ${sn.from_week}, on ${sn.lines} closing lines. Above zero: the model's chance beat the book's.` : `On ${sb.lines} closing lines of weeks ${(sb.weeks || [])[0]} to ${(sb.weeks || []).slice(-1)[0]}, which the rules were chosen on. Above zero: the model's chance beat the book's.`) : "");
+}
+function historySection(r, s, lw) {
+  // then and now: what was bet under the rules of the time, beside what today's rules pick on the same weeks' lines
+  const retro = (r.retro?.weeks || []), seasons = r.replays?.seasons || [];
+  if (!retro.length && !seasons.length) return null;
+  const season = retro[0]?.season, bet = (r.picks || []).filter((p) => decided(p) && (season == null || p.season === season));
+  const weeks = [...new Set([...retro.map((w) => w.week), ...bet.map((p) => p.week)])].sort((a, b) => b - a);
+  const byWeek = (w) => tally(bet.filter((p) => p.week === w)), rep = (w) => retro.find((x) => x.week === w);
+  const recOf = (t) => (t && t.n ? el("span", {}, wl(t.wins, t.losses), ` (${pct(t.hit)})`) : el("span", { class: "muted" }, "–"));
+  const grOf = (x, g) => { const y = (x?.by_grade || []).find((z) => z.grade === g); return y ? wl(y.wins, y.losses) : ""; };
+  const rows = weeks.map((w) => { const a = byWeek(w), b = rep(w), live = w >= lw;
+    return [`Week ${w}`, a.n ? el("span", {}, recOf(a), live ? el("small", { class: "muted" }, " live") : "") : el("span", { class: "muted" }, live ? "pending" : "not betting yet"),
+      b ? recOf({ n: b.plays.wins + b.plays.losses, wins: b.plays.wins, losses: b.plays.losses, hit: b.plays.hit }) : el("span", { class: "muted" }, live ? "same as left" : "–"),
+      a.n ? units(a.units, 1) : "", b ? units(b.plays.units, 1) : "", grOf(b, "A"), grOf(b, "B"), grOf(b, "C"), b ? units(b.plays.units_at_stake, 1) : ""]; });
+  // the weeks both exist for, added up
+  const both = weeks.filter((w) => w < lw && byWeek(w).n && rep(w)), ta = tally(bet.filter((p) => both.includes(p.week))), tb = both.map(rep);
+  const tsum = (f) => tb.reduce((a, x) => a + (f(x) || 0), 0), gsum = (g) => wl(tsum((x) => (x.by_grade || []).find((z) => z.grade === g)?.wins), tsum((x) => (x.by_grade || []).find((z) => z.grade === g)?.losses));
+  const tw = tsum((x) => x.plays.wins), tl = tsum((x) => x.plays.losses);
+  const tot = both.length > 1 ? [`Weeks ${Math.min(...both)}-${Math.max(...both)}`, recOf(ta), recOf({ n: tw + tl, wins: tw, losses: tl, hit: tw + tl ? tw / (tw + tl) : null }), units(ta.units, 1), units(tsum((x) => x.plays.units), 1), gsum("A"), gsum("B"), gsum("C"), units(tsum((x) => x.plays.units_at_stake), 1)] : null;
+  const cmp = table([["Week"], ["As bet then"], ["New model"], ["Then, units", "n"], ["New, units", "n"], ["New: A"], ["B"], ["C"], ["New, at its stakes", "n"]], tot ? [...rows, tot] : rows);
+  if (tot) cmp.querySelector("tbody tr:last-child")?.classList.add("tot");
+  // the same bets, sorted by what the new model does with them
+  const key = (p, w) => `${w}|${p.player}|${p.market}|${p.side}`;
+  const nowAll = both.flatMap((w) => (rep(w).all_picks || []).filter((p) => p.result === "Win" || p.result === "Loss").map((p) => ({ ...p, week: w })));
+  const nowKeys = new Set(nowAll.map((p) => key(p, p.week))), thenAll = bet.filter((p) => both.includes(p.week)), thenKeys = new Set(thenAll.map((p) => key(p, p.week)));
+  const kept = tally(thenAll.filter((p) => nowKeys.has(key(p, p.week)))), dropped = tally(thenAll.filter((p) => !nowKeys.has(key(p, p.week)))), added = tally(nowAll.filter((p) => !thenKeys.has(key(p, p.week))));
+  const h2hRow = (label, t) => [label, el("span", {}, wl(t.wins, t.losses), t.hit == null ? "" : ` (${pct(t.hit)})`), units(t.units, 1)];
+  const h2h = both.length && nowAll.length ? el("div", { class: "scroll wrap1" }, table([[`What the new model does with the bets of weeks ${Math.min(...both)}-${Math.max(...both)}`], ["Record"], ["Units, 1 a bet", "n"]], [
+    h2hRow("Bet then, and still a pick now", kept), h2hRow("Bet then, dropped by the new model", dropped), h2hRow("Not bet then, a pick now", added)])) : null;
+  // each week's picks and outcomes, both ways
+  const betLine = (p) => `${p.player} ${p.side} ${num(p.line)} ${(MARKET[p.market] || p.market).toLowerCase()}`;
+  const gOrd = { A: 0, B: 1, C: 2 }, byGrade = (a, b) => (gOrd[a.grade] ?? 3) - (gOrd[b.grade] ?? 3) || (b.lock ?? 0) - (a.lock ?? 0);
+  const list = (ps) => el("div", { class: "scroll" }, table([[""], ["Pick"], ["Result"], ["Had", "n"], ["Price", "n"]],
+    [...ps].sort(byGrade).map((p) => [p.grade ? el("span", { class: `grade ${p.grade}` }, p.grade) : "", el("span", { title: p.book || "" }, betLine(p)), p.result, p.actual == null ? "" : num(p.actual, 0), odds(p.odds)])));
+  const weekFolds = weeks.filter((w) => byWeek(w).n || rep(w)).map((w) => { const a = bet.filter((p) => p.week === w), b = rep(w), bp = (b?.all_picks || []).filter((p) => p.result === "Win" || p.result === "Loss"), ta_ = tally(a), live = w >= lw;
+    return keepOpen(el("details", { class: "fold", id: `rec-hist-wk${w}` }, el("summary", {}, el("b", { class: "t" }, `Week ${w}`),
+      el("span", { class: "s" }, ...(a.length ? [live ? "the new model, live " : "as bet ", wl(ta_.wins, ta_.losses)] : ["not betting yet"]), ...(b ? [" · new model, replayed ", wl(b.plays.wins, b.plays.losses)] : []))),
+      el("div", { class: "fold-body" }, el("div", { class: "two" },
+        el("div", {}, el("h5", { class: "then" }, live ? `The new model, live: ${a.length} picks` : `As bet then: ${a.length} picks`), a.length ? list(a) : el("p", { class: "muted" }, "No pick was logged this week: the site started betting in week 7.")),
+        el("div", {}, el("h5", { class: "now" }, b ? `New model, replayed: ${bp.length} picks` : "New model, replayed"), b ? list(bp) : el("p", { class: "muted" }, live ? "This week is the new model's own: see the left column." : "Not replayed."))))));
+  });
+  // the seasons replayed
+  const seasonRows = seasons.map((x) => { const g = (k) => { const y = x.by_grade.find((z) => z.grade === k); return y ? el("span", {}, wl(y.wins, y.losses), ` (${pct(y.hit)})`) : ""; }, ab = x.against_the_book;
+    return [`${x.season}, weeks ${x.weeks[0]} to ${x.weeks.slice(-1)[0]}`, el("span", {}, wl(x.plays.wins, x.plays.losses), ` (${pct(x.plays.hit)})`), g("A"), g("B"), g("C"), units(x.plays.units_at_stake, 1), roiCell(x.plays.staked ? x.plays.units_at_stake / x.plays.staked : null),
+      `${x.weeks_up_at_stakes} of ${x.by_week.length}`, ab ? `${ab.weeks_better} of ${ab.weeks}` : ""]; });
+  const seasonFolds = seasons.map((x) => keepOpen(el("details", { class: "fold", id: `rec-hist-s${x.season}` }, el("summary", {}, el("b", { class: "t" }, `${x.season} week by week`), el("span", { class: "s" }, wl(x.plays.wins, x.plays.losses), `, worst week ${x.worst_week >= 0 ? "+" : ""}${num(x.worst_week, 1)}u, best ${x.best_week >= 0 ? "+" : ""}${num(x.best_week, 1)}u at the stakes`)),
+    el("div", { class: "fold-body" }, el("div", { class: "scroll" }, table([["Week"], ["Record"], ["Hit rate", "n"], ["A"], ["B"], ["C"], ["Units at the stakes", "n"], ["Staked", "n"]],
+      [...x.by_week].reverse().map((w) => [`Week ${w.week}`, wl(w.wins, w.losses), w.hit == null ? "" : pct(w.hit), w.by_grade?.A || "", w.by_grade?.B || "", w.by_grade?.C || "", units(w.units_at_stake, 1), num(w.staked, 1)])))))));
+  const sec = section("Then and now: what was bet, and what the new model would have picked",
+    `Two different things, side by side. "As bet then" is every pick this site actually made, under the rules it ran on at the time, with its real result. "New model, replayed" is today's rules run over the same weeks' stored lines after the fact: what it would have picked, not what was bet. From week ${lw} the two are the same thing, and the left column is the live record.`,
+    weeks.length ? el("div", { class: "scroll" }, cmp) : null,
+    weeks.length ? el("p", { class: "note" }, "Units: at 1 a bet, so the two columns compare like with like. At its stakes: the new model's own stakes (A 1, B 0.5, C 0.25).") : null,
+    h2h,
+    weekFolds.length ? el("p", { class: "lead" }, "Every pick and its outcome, week by week:") : null, ...weekFolds,
+    seasonRows.length ? el("h4", { style: "margin:18px 0 4px;font:700 1rem var(--cond)" }, "The new model on three seasons of past lines") : null,
+    seasonRows.length ? el("p", { class: "lead" }, "Units and return are at the model's stakes (A 1, B 0.5, C 0.25). Weeks up: weeks with a profit at those stakes. Beat the book: weeks in which the model's chance was a better forecast than the book's closing price.") : null,
+    seasonRows.length ? el("div", { class: "scroll" }, table([["Season"], ["Record"], ["A"], ["B"], ["C"], ["Units", "n"], ["Return", "n"], ["Weeks up", "n"], ["Beat the book", "n"]], seasonRows)) : null,
+    ...seasonFolds,
+    more("How to read the replays", r.replays?.note || r.retro?.note || "", "A replay flatters a model: the rules were chosen with these weeks in view (2024 excepted), it reads the lines an hour before kickoff with the final injury report, and it takes the best price across the books on the feed. Expect less from the live weeks; the cards at the top keep the two apart."));
+  sec.id = "rec-history";
+  return sec;
+}
+
 function renderRecord() {
   const box = $("#record-body"); box.replaceChildren();
   const r = DATA.results;
   if (!r || !r.picks || !r.picks.length) { box.append(el("div", { class: "empty" }, "No picks logged yet. Every pick the board makes is saved with the price at the time and graded against the official box score the next morning.")); return; }
   const s = r.summary || {};
-  box.append(recordsBar(s));
-  const jumps = [["rec-picks", "Every pick"], ["rec-parlays", "Parlay history"], ["rec-locks", "Locks"], ["rec-market", "Against the market"], ["rec-trial", "Rules on trial"], ["rec-sleepers", "Sleepers"], ["rec-grade", "By grade"], ["rec-side", "By side"], ["rec-deeper", "Luck, calibration, replays"]];
-  box.append(el("nav", { class: "jump", "aria-label": "Track record sections" }, ...jumps.map(([id, label]) => { const a = el("a", { href: `#${id}` }, label); a.onclick = (e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); }; return a; })));
+  const parts = {};
+  // every pick: the totals stay in view, the filters and the list open on demand
+  const pickFold = el("details", { class: "fold", id: "rec-picks-list" }, el("summary", {}, el("b", { class: "t" }, "Open the list"), el("span", { class: "s" }, `filter, sort and read every pick (${r.picks.length} rows logged)`)),
+    el("div", { class: "fold-body" }, recFilterBar(r.picks), el("div", { id: "rec-table" })));
+  keepOpen(pickFold);
+  parts.picks = section("Every pick, as it was bet", "The picks the site made at the time, under the rules of the time, graded on the official box score. The totals follow the filters inside the list.", el("div", { id: "rec-sum" }), pickFold);
+  parts.picks.id = "rec-picks";
 
-  // 1. every pick, filtered
-  const pickSec = section("Every pick", "Filter and sort every graded pick. The totals under the filters follow them, so you can read the record of any slice: a week, a grade, Unders on corners, one book.", recFilterBar(r.picks), el("div", { id: "rec-sum" }), el("div", { id: "rec-table" }));
-  pickSec.id = "rec-picks"; box.append(pickSec);
-
-  // 2. parlay history
-  const parSec = parlayHistory(r.parlays || [], s.parlays || {});
-  parSec.id = "rec-parlays"; box.append(parSec);
+  // parlay history
+  parts.parlays = parlayHistory(r.parlays || [], s.parlays || {});
+  parts.parlays.id = "rec-parlays";
 
   // 3. locks
   if (s.five && (s.five.bets || (s.five.weeks && s.five.weeks.length))) {
@@ -926,7 +1039,7 @@ function renderRecord() {
         [...s.five.weeks].reverse().map((w) => [`Week ${w.week}`, w.picks, recCell(w), units(w.units, 2), wl(w.running_wins, w.running_losses)]))) : null,
       fp.length ? more(`Every lock (${fp.length})`, el("div", { class: "scroll" }, table([["Week"], ["Lock"], ["Price", "n"], ["Book"], ["Grade"], ["Score", "n"], ["Actual", "n"], ["Result"]],
         [...fp].reverse().map((p) => [`Week ${p.week}`, `${p.player} ${p.side} ${num(p.line)} ${(MARKET[p.market] || p.market).toLowerCase()}`, odds(p.odds), p.book, p.grade ? el("span", { class: `grade ${p.grade}` }, p.grade) : "", p.lock == null ? "" : Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result])))) : null);
-    sec.id = "rec-locks"; box.append(sec);
+    sec.id = "rec-locks"; parts.locks = sec;
   }
 
   // 3a. against the market: the engine's chance on every closing line, scored beside the book's own
@@ -937,7 +1050,7 @@ function renderRecord() {
     // the verdict is read only on the weeks the engine's rule was not chosen on
     const verdict = sn ? `Since week ${sn.from_week}, the weeks the engine's rule was not chosen on: engine better by ${sg4(sn.engine_minus_market)}${sn.se != null ? ` (give or take ${num(2 * sn.se, 4)})` : ""} on ${sn.lines} lines. Verdict: ${call(sn.t)}.`
       : `No verdict yet. Weeks ${(sb.weeks || []).join(", ")} are the weeks the engine's rule was chosen on, so their margin flatters it. Week ${lw} is the first that tests it.`;
-    const sec = section("Against the market", "The scoreboard that can answer whether the edge is real. A win-loss record cannot this season: a true 5% edge needs about 34 weeks to show. The chance the engine gives a line can be scored against what happened, next to the chance the book's own closing price gave the same line, on every line the model had a number for, picked or not. The score is log-loss: lower is better, and 0.693 is a coin flip. Weeks are the unit, because the lines of one week win and lose together.",
+    const sec = section("Against the market", "Is the model's chance a better forecast than the book's own price? Every closing line the model had a number for is scored, picked or not. Lower is better; 0.693 is a coin flip.",
       el("div", { class: "stat-line" },
         el("div", {}, el("b", {}, num(ll.market, 4)), "The book's fair price"),
         el("div", {}, el("b", {}, num(ll.model, 4)), "The model alone"),
@@ -945,10 +1058,10 @@ function renderRecord() {
         el("div", {}, el("b", { class: d > 0 ? "pos" : d < 0 ? "neg" : "" }, (d >= 0 ? "+" : "") + num(d, 4)), `Engine better by, all weeks${sb.se != null ? ` (give or take ${num(2 * sb.se, 4)})` : ""}`),
         el("div", {}, el("b", {}, String(sb.lines)), `Closing lines, weeks ${(sb.weeks || []).join(", ")}`)),
       el("p", { class: "lead" }, verdict),
-      el("div", { class: "scroll" }, table([["Week"], ["Lines", "n"], ["Book", "n"], ["Model alone", "n"], ["Engine", "n"], ["Engine better by", "n"]],
-        [...(sb.by_week || [])].reverse().map((w) => [`Week ${w.week}${w.week < lw ? " (chosen on)" : ""}`, w.lines, num(w.market, 4), num(w.model, 4), num(w.engine, 4), el("b", { class: w.engine_minus_market > 0 ? "pos" : "neg" }, (w.engine_minus_market >= 0 ? "+" : "") + num(w.engine_minus_market, 4))]))),
-      (sb.tiers || []).length ? el("div", { class: "scroll" }, table([["The engine's side at the close"], ["Lines", "n"], ["Record"], ["Hit", "n"], ["Likely range", "n"], ["Chance it gave", "n"], ["Return per bet", "n"]],
-        sb.tiers.map((x) => [x.tier, x.lines, x.lines ? wl(x.wins, x.losses) : "", x.lines ? pct(x.hit) : "", rangeOf(x), x.lines ? pct(x.chance) : "", x.lines ? roiCell(x.ret) : ""]))) : null,
+      (() => { const H = [["Week"], ["Lines", "n"], ["Book", "n"], ["Model alone", "n"], ["Engine", "n"], ["Engine better by", "n"]], rowOf = (w) => [`Week ${w.week}${w.week < lw ? " (chosen on)" : ""}`, w.lines, num(w.market, 4), num(w.model, 4), num(w.engine, 4), el("b", { class: w.engine_minus_market > 0 ? "pos" : "neg" }, (w.engine_minus_market >= 0 ? "+" : "") + num(w.engine_minus_market, 4))], all = [...(sb.by_week || [])].reverse(), n = Math.max(4, all.filter((w) => w.week >= lw).length);
+        return el("div", {}, el("div", { class: "scroll" }, table(H, all.slice(0, n).map(rowOf))), all.length > n ? more(`Earlier weeks (${all.length - n})`, el("div", { class: "scroll" }, table(H, all.slice(n).map(rowOf)))) : ""); })(),
+      (sb.tiers || []).length ? more("What the engine's side did at the closing price, by strength", el("div", { class: "scroll" }, table([["The engine's side at the close"], ["Lines", "n"], ["Record"], ["Hit", "n"], ["Likely range", "n"], ["Chance it gave", "n"], ["Return per bet", "n"]],
+        sb.tiers.map((x) => [x.tier, x.lines, x.lines ? wl(x.wins, x.losses) : "", x.lines ? pct(x.hit) : "", rangeOf(x), x.lines ? pct(x.chance) : "", x.lines ? roiCell(x.ret) : ""])))) : null,
       (sb.calibration || []).length ? more("Is the win chance honest?", el("p", {}, "Every closing line grouped by the win chance the engine gave its side, against how often that side won."),
         el("div", { class: "scroll" }, table([["Win chance given"], ["Lines", "n"], ["On average", "n"], ["Won", "n"]], sb.calibration.map((c) => [String(c.bucket).replace(/[(\]]/g, "").replace(", ", " to "), c.lines, pct(c.said, 1), pct(c.hit, 1)])))) : null,
       (sb.shadow || []).length ? more("Candidates in the shadow", el("p", {}, `Changes that looked promising on weeks 7 to 9 and were not adopted. Each is scored on the same closing lines with its numbers fixed before week ${lw}, and never touches a pick. One is adopted only if it beats the engine on the weeks from week ${lw} on by more than luck explains. Positive: the candidate was the better forecast.`),
@@ -957,8 +1070,8 @@ function renderRecord() {
           el("div", { class: "trial-now" }, `Since week ${lw}: `, c.since ? el("b", { class: c.since.vs_engine > 0 ? "pos" : "neg" }, sg4(c.since.vs_engine)) : "no graded line yet",
             c.since ? `${c.since.se != null ? ` (give or take ${num(2 * c.since.se, 4)})` : ""} on ${c.since.lines} lines over ${c.since.weeks} week${c.since.weeks === 1 ? "" : "s"}` : ""),
           el("div", { class: "trial-what" }, `All weeks, the ones it was found on included: ${sg4(c.vs_engine)} against the engine (log-loss ${num(c.log_loss, 4)}).`))))) : null,
-      more("How to read this", "Weeks 7 to 9 were priced live by the old rules with the projection of the time; the engine's rule is applied to those logged numbers after the fact, so they are the weeks the rule was chosen on. From week 10 on the lines are scored as they were priced. The closing price is the last pull before kickoff, about an hour out. The tiers use the best closing price among the books on the consensus line, one line a player and market, so they are not the picks as logged (those are the record above). A positive return on the \"No pick\" row means the whole board went the engine's way in those weeks (it sides with the Under on most lines, and Unders won); what choosing added is the gap between the pick rows and that row."));
-    sec.id = "rec-market"; box.append(sec);
+      more("How to read this", "A win-loss record cannot answer this in one season: a true 5% edge needs about 34 weeks to show. The score here is log-loss, and weeks are the unit, because the lines of one week win and lose together. Weeks 7 to 9 were priced live by the old rules with the projection of the time; the engine's rule is applied to those logged numbers after the fact, so they are the weeks the rule was chosen on. From week 10 on the lines are scored as they were priced. The closing price is the last pull before kickoff, about an hour out. The tiers use the best closing price among the books on the consensus line, one line a player and market, so they are not the picks as logged (those are the record above). A positive return on the \"No pick\" row means the whole board went the engine's way in those weeks (it sides with the Under on most lines, and Unders won); what choosing added is the gap between the pick rows and that row."));
+    sec.id = "rec-market"; parts.market = sec;
   }
 
   // 3a2. rules on trial: the record of the weeks the current rules chose, against the conditions written down for each rule
@@ -972,12 +1085,13 @@ function renderRecord() {
         el("div", {}, el("b", {}, e.claimed == null ? "" : pct(e.claimed)), "Win chance said"),
         el("div", {}, units(e.units), "Units, 1 per bet"),
         el("div", {}, units(e.units_at_stake), `Units on ${num(e.staked, 1)} staked`)) : el("p", { class: "lead" }, `No pick from week ${lw} has been graded yet.`),
-      el("div", { class: "trials" }, ...trials.map((w) => el("div", { class: "trial" },
-        el("div", { class: "trial-head" }, el("b", {}, w.name || w.rule), el("span", { class: `pill ${["holds", "met"].includes(w.state) ? "ok" : w.state === "fails" ? "no" : ""}` }, w.state)),
-        el("div", { class: "trial-what" }, w.what),
-        el("div", { class: "trial-now" }, `So far: ${w.n}${w.of ? ` of ${w.of}` : ""} ${w.unit || "picks"}`,
-          ...(w.n && w.wins != null ? [", ", wl(w.wins, w.losses), w.hit == null ? "" : ` (${pct(w.hit)}${rangeOf(w) ? `, likely range ${rangeOf(w)}` : ""})`] : []),
-          w.n && w.model_said != null ? `; the model said ${pct(w.model_said)}` : "", w.note ? `; ${w.note}` : "")))),
+      el("div", { class: "trials" }, ...trials.map((w, i) => keepOpen(el("details", { class: "trial", id: `rec-trial-${i}` },
+        el("summary", {}, el("b", {}, w.name || w.rule), el("span", { class: `pill ${["holds", "met"].includes(w.state) ? "ok" : w.state === "fails" ? "no" : ""}` }, w.state),
+          el("span", { class: "trial-now" }, `${w.n}${w.of ? ` of ${w.of}` : ""} ${w.unit || "picks"}`,
+            ...(w.n && w.wins != null ? [": ", wl(w.wins, w.losses), w.hit == null ? "" : ` (${pct(w.hit)})`] : []))),
+        el("div", { class: "trial-what" }, w.what,
+          w.n && w.wins != null && rangeOf(w) ? ` Likely range of the true hit rate so far: ${rangeOf(w)}.` : "", w.n && w.model_said != null ? ` The model said ${pct(w.model_said)}.` : "", w.note ? ` So far: ${w.note}.` : ""))))),
+      el("p", { class: "note", style: "margin-top:-10px" }, "Tap a rule for what it is and what would undo it."),
       has && (e.by_grade || []).length ? el("div", { class: "scroll" }, table([["Grade"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Likely range", "n"], ["Win chance said", "n"], ["Units, 1 per bet", "n"]],
         e.by_grade.map((g) => [el("span", { class: `grade ${g.grade}` }, g.grade), g.bets, recCell(g), g.hit == null ? "" : pct(g.hit), rangeOf(g), g.claimed == null ? "" : pct(g.claimed), units(g.units, 2)]))) : null,
       has && (e.by_week || []).length ? el("div", { class: "scroll" }, table([["Week"], ["Record"], ["Hit rate", "n"], ["Win chance said", "n"], ["Units, 1 per bet", "n"], ["Staked", "n"], ["Units at the stakes", "n"]],
@@ -986,7 +1100,7 @@ function renderRecord() {
         [...(e.by_side_market || []), ...(e.by_group || [])].map((x) => [x.key, recCell(x), x.hit == null ? "" : pct(x.hit), rangeOf(x), units(x.units, 2)])))) : null,
       has && (e.calibration || []).length ? more("Is the win chance honest, on the picks?", el("div", { class: "scroll" }, table([["Win chance said"], ["Picks", "n"], ["On average", "n"], ["Won", "n"], ["Likely range", "n"]],
         e.calibration.map((c) => [c.bucket, c.bets, pct(c.said, 1), pct(c.hit, 1), rangeOf(c)])))) : null);
-    sec.id = "rec-trial"; box.append(sec);
+    sec.id = "rec-trial"; parts.trial = sec;
   }
 
   // 3b. sleepers: their own record (1 unit each at the logged price), by grade, kind and week, and every one settled
@@ -1008,7 +1122,7 @@ function renderRecord() {
       rows.length ? more(`Every sleeper (${rows.length})`, el("div", { class: "scroll" }, table([["Week"], ["Sleeper"], ["Grade"], ["Price", "n"], ["Book"], ["Model's chance", "n"], ["Actual", "n"], ["Result"]],
         [...rows].sort((a, b) => (b.week - a.week) || ((gOrd[a.sleeper_grade] ?? 3) - (gOrd[b.sleeper_grade] ?? 3))).map((x) => [`Week ${x.week}`, `${x.player} ${x.side} ${num(x.line)} ${(MARKET[x.market] || x.market).toLowerCase()}`,
           x.sleeper_grade ? el("span", { class: `grade ${x.sleeper_grade}` }, x.sleeper_grade) : "", odds(x.odds), x.book || "", x.sleeper_p == null ? "" : pct(x.sleeper_p), x.actual == null ? "" : num(x.actual, 0), x.result])))) : null);
-    sec.id = "rec-sleepers"; box.append(sec); }
+    sec.id = "rec-sleepers"; parts.sleepers = sec; }
 
   // 4. by grade
   if (s.by_grade && s.by_grade.length) {
@@ -1022,7 +1136,7 @@ function renderRecord() {
         s.by_grade.map((g) => [g.grade === "ungraded" ? "No grade yet" : el("span", { class: `grade ${g.grade}` }, g.grade), g.bets, recCell(g), g.hit == null ? "" : pct(g.hit), rangeOf(g), g.claimed == null ? "" : pct(g.claimed), units(g.units, 2), roiCell(g.roi)]))),
       order,
       s.by_grade.some((g) => g.grade === "ungraded") ? more("What \"No grade yet\" means", "The week 7 picks logged before grades existed on 2026-10-26. The replay section grades every one of them under the current rules.") : null);
-    sec.id = "rec-grade"; box.append(sec);
+    sec.id = "rec-grade"; parts.grade = sec;
   }
 
   // 5. by side
@@ -1039,7 +1153,7 @@ function renderRecord() {
         el("div", {}, el("b", { class: clvClass(s.beat_close_share) }, s.beat_close_share == null ? "" : pct(s.beat_close_share)), `Beat the close${s.close_moved ? ` (${s.close_moved} moved lines)` : ""}: "${clvWord(s.beat_close_share)}"`),
         el("div", { title: "Fair closing chance of our side minus the chance implied by the price we took, averaged over every pick with a closing price" }, el("b", { class: clvPctClass(s.avg_clv_novig) }, s.avg_clv_novig == null ? "" : (s.avg_clv_novig >= 0 ? "+" : "") + (s.avg_clv_novig * 100).toFixed(1) + " pts"), `No-vig CLV${s.clv_novig_n ? ` (${s.clv_novig_n} closes, ${s.clv_held ?? 0} held${s.clv_novig_se != null ? `, give or take ${(2 * s.clv_novig_se * 100).toFixed(1)}` : ""})` : ""}: "${clvPctWord(s.avg_clv_novig)}"`),
         s.stat_corrections ? el("div", {}, el("b", {}, String(s.stat_corrections)), "Picks whose official count changed after they settled (the first count stands, as at the book)") : ""));
-    sec.id = "rec-side"; box.append(sec);
+    sec.id = "rec-side"; parts.side = sec;
   }
 
   // 6. deeper analysis, collapsed
@@ -1062,17 +1176,28 @@ function renderRecord() {
       el("div", { class: "scroll" }, table([["Week"], ["Market"], ["Lines", "n"], ["Over hit", "n"], ["Market said", "n"], ["Gap", "n"]],
         [...s.market_watch].reverse().map((m) => [`Week ${m.week}`, m.market, m.lines, pct(m.over_rate), m.market_p_over == null ? "" : pct(m.market_p_over), m.market_p_over == null ? "" : (() => { const gp = Math.round((m.over_rate - m.market_p_over) * 100); return Math.abs(gp) < 1 ? el("span", {}, "even") : el("b", { class: gp < 0 ? "under" : "over" }, `${Math.abs(gp)} pts to the ${gp < 0 ? "under" : "over"}`); })()])))));
   }
-  if (r.retro && r.retro.weeks && r.retro.weeks.length) {
-    const weeks = [...r.retro.weeks].reverse().map((w) => {
-      const gl = (w.by_grade || []).map((g) => `${g.grade} ${g.wins}-${g.losses}`).join(", ");
-      return more(`Week ${w.week}: locks ${w.five.wins}-${w.five.losses} (${w.five.units >= 0 ? "+" : ""}${w.five.units.toFixed(1)}u), all plays ${w.plays.wins}-${w.plays.losses} of ${w.plays.n} (${w.plays.units >= 0 ? "+" : ""}${w.plays.units.toFixed(1)}u)${gl ? `, by grade ${gl}` : ""}`,
-        el("div", { class: "scroll" }, table([["Lock"], ["Price", "n"], ["Book"], ["Grade"], ["Score", "n"], ["Actual", "n"], ["Result"]],
-          w.picks.map((p) => [`${p.player} ${p.side} ${num(p.line)} ${(MARKET[p.market] || p.market).toLowerCase()}`, odds(p.odds), p.book, p.grade ? el("span", { class: `grade ${p.grade}` }, p.grade) : "", Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result]))),
-        ...(w.parlays || []).map((q) => parlayBox({ ...q, placed: true }, true)));
-    });
-    deeper.push(more("Replayed under the current rules", el("p", {}, r.retro.note || "What the current model would have picked, using only what was known at each line pull."), ...weeks));
-  }
-  if (deeper.length) { const sec = section("Luck, calibration and replays", "The checks behind the record: whether a result was the model or the market, how the model's claims have held up, and the replayed weeks.", ...deeper); sec.id = "rec-deeper"; box.append(sec); }
+  if (deeper.length) { const sec = section("Luck, calibration and the market's own level", "The checks behind the record: whether a result was the model or the market, how the model's claims have held up, and the replayed weeks.", ...deeper); sec.id = "rec-deeper"; parts.deeper = sec; }
+
+  const lw = s.era?.since?.week ?? s.scoreboard?.live_week ?? 10;
+  box.append(recCards(r, s, lw));
+  const jumps = [["rec-trial", "Rules on trial"], ["rec-market", "Against the market"], ["rec-more", "Locks, parlays, sleepers and more"], ["rec-picks", "Every pick"], ["rec-history", "Then and now"]];
+  box.append(el("nav", { class: "jump", "aria-label": "Track record sections" }, ...jumps.map(([id, label]) => { const a = el("a", { href: `#${id}` }, label); a.onclick = (e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); }; return a; })));
+  if (parts.trial) box.append(parts.trial);
+  if (parts.market) box.append(parts.market);
+  // the rest of the record, one line each until opened
+  const one = (x) => (x && (x.wins || x.losses) ? [wl(x.wins, x.losses, x.pushes), x.hit == null ? "" : ` (${pct(x.hit)})`, x.units == null ? "" : ", ", x.units == null ? "" : units(x.units, 1), x.units == null ? "" : "u"] : ["nothing graded yet"]);
+  const bg = Object.fromEntries((s.by_grade || []).map((g) => [g.grade, g])), sides = Object.fromEntries((s.by_side || []).map((g) => [g.key, g]));
+  const folds = [
+    [parts.locks, one(s.five)],
+    [parts.parlays, one({ wins: s.parlays?.wins, losses: s.parlays?.losses, units: s.parlays?.units })],
+    [parts.sleepers, one(s.sleepers?.all)],
+    [parts.grade, ["A ", wl(bg.A?.wins, bg.A?.losses), " · B ", wl(bg.B?.wins, bg.B?.losses), " · C ", wl(bg.C?.wins, bg.C?.losses), " as bet"]],
+    [parts.side, ["Overs ", wl(sides.Over?.wins, sides.Over?.losses), " · Unders ", wl(sides.Under?.wins, sides.Under?.losses), s.beat_close_share == null ? "" : ` · beat the close ${pct(s.beat_close_share)}`]],
+    [parts.deeper, ["was it the model or the market"]],
+  ].filter(([sec]) => sec).map(([sec, stat]) => foldOf(sec, stat));
+  if (folds.length) { const sec = section("Locks, parlays, sleepers and more", "Each opens to its full record.", ...folds); sec.id = "rec-more"; box.append(sec); }
+  box.append(parts.picks);
+  const hist = historySection(r, s, lw); if (hist) box.append(hist);
 
   renderRecPicks();
 }
