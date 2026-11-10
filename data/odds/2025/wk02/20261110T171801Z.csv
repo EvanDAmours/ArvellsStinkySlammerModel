@@ -1,0 +1,169 @@
+event_id,commence_time,home_team,away_team,book,book_key,market,player,line,over_odds,under_odds,book_update,over_link,under_link,over_sid,under_sid,market_link,book_link,event_sid,pulled_at
+0c6e5d9821ce0d3e82f3e792879776a6,2025-09-12T00:16:00Z,Green Bay Packers,Washington Commanders,DraftKings,draftkings,player_assists,Edgerrin Cooper,3.5,101,-130,2025-09-11T23:14:50Z,,,,,,,,20250911T231539Z
+0c6e5d9821ce0d3e82f3e792879776a6,2025-09-12T00:16:00Z,Green Bay Packers,Washington Commanders,DraftKings,draftkings,player_assists,Bobby Wagner,3.5,109,-142,2025-09-11T23:14:50Z,,,,,,,,20250911T231539Z
+0c6e5d9821ce0d3e82f3e792879776a6,2025-09-12T00:16:00Z,Green Bay Packers,Washington Commanders,DraftKings,draftkings,player_assists,Frankie Luvu,2.5,-123,-106,2025-09-11T23:14:50Z,,,,,,,,20250911T231539Z
+0c6e5d9821ce0d3e82f3e792879776a6,2025-09-12T00:16:00Z,Green Bay Packers,Washington Commanders,DraftKings,draftkings,player_assists,Xavier McKinney,1.5,-134,104,2025-09-11T23:14:50Z,,,,,,,,20250911T231539Z
+0c6e5d9821ce0d3e82f3e792879776a6,2025-09-12T00:16:00Z,Green Bay Packers,Washington Commanders,DraftKings,draftkings,player_assists,Rashan Gary,1.5,146,-191,2025-09-11T23:14:50Z,,,,,,,,20250911T231539Z
+0c6e5d9821ce0d3e82f3e792879776a6,2025-09-12T00:16:00Z,Green Bay Packers,Washington Commanders,DraftKings,draftkings,player_assists,Mike Sainristil,1.5,147,-192,2025-09-11T23:14:50Z,,,,,,,,20250911T231539Z
+0c6e5d9821ce0d3e82f3e792879776a6,2025-09-12T00:16:00Z,Green Bay Packers,Washington Commanders,DraftKings,draftkings,player_assists,Keisean Nixon,1.5,152,-199,2025-09-11T23:14:50Z,,,,,,,,20250911T231539Z
+0c6e5d9821ce0d3e82f3e792879776a6,2025-09-12T00:16:00Z,Green Bay Packers,Washington Commanders,DraftKings,draftkings,player_assists,Marshon Lattimore,0.5,-219,167,2025-09-11T23:14:50Z,,,,,,,,20250911T231539Z
+0c6e5d9821ce0d3e82f3e792879776a6,2025-09-12T00:16:00Z,Green Bay Packers,Washington Commanders,DraftKings,draftkings,player_assists,Carrington Valentine,0.5,-129,100,2025-09-11T23:14:50Z,,,,,,,,20250911T231539Z
+553edb8bf2452482b37dde58e832a6fb,2025-09-14T17:01:00Z,Baltimore Ravens,Cleveland Browns,DraftKings,draftkings,player_assists,Roquan Smith,3.5,-106,-122,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+553edb8bf2452482b37dde58e832a6fb,2025-09-14T17:01:00Z,Baltimore Ravens,Cleveland Browns,DraftKings,draftkings,player_assists,Devin Bush,2.5,-133,103,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+553edb8bf2452482b37dde58e832a6fb,2025-09-14T17:01:00Z,Baltimore Ravens,Cleveland Browns,DraftKings,draftkings,player_assists,Grant Delpit,2.5,114,-148,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+553edb8bf2452482b37dde58e832a6fb,2025-09-14T17:01:00Z,Baltimore Ravens,Cleveland Browns,DraftKings,draftkings,player_assists,Ronnie Hickman,2.5,120,-156,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+553edb8bf2452482b37dde58e832a6fb,2025-09-14T17:01:00Z,Baltimore Ravens,Cleveland Browns,DraftKings,draftkings,player_assists,Kyle Hamilton,1.5,-157,121,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+553edb8bf2452482b37dde58e832a6fb,2025-09-14T17:01:00Z,Baltimore Ravens,Cleveland Browns,DraftKings,draftkings,player_assists,Malaki Starks,1.5,-102,-128,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+553edb8bf2452482b37dde58e832a6fb,2025-09-14T17:01:00Z,Baltimore Ravens,Cleveland Browns,DraftKings,draftkings,player_assists,Justin Madubuike,1.5,115,-150,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+553edb8bf2452482b37dde58e832a6fb,2025-09-14T17:01:00Z,Baltimore Ravens,Cleveland Browns,DraftKings,draftkings,player_assists,Mason Graham,1.5,128,-166,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+553edb8bf2452482b37dde58e832a6fb,2025-09-14T17:01:00Z,Baltimore Ravens,Cleveland Browns,DraftKings,draftkings,player_assists,Marlon Humphrey,1.5,180,-238,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+553edb8bf2452482b37dde58e832a6fb,2025-09-14T17:01:00Z,Baltimore Ravens,Cleveland Browns,DraftKings,draftkings,player_assists,Myles Garrett,0.5,-248,188,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+553edb8bf2452482b37dde58e832a6fb,2025-09-14T17:01:00Z,Baltimore Ravens,Cleveland Browns,DraftKings,draftkings,player_assists,Kyle Van Noy,0.5,-236,179,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+553edb8bf2452482b37dde58e832a6fb,2025-09-14T17:01:00Z,Baltimore Ravens,Cleveland Browns,DraftKings,draftkings,player_assists,Denzel Ward,0.5,-231,175,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+553edb8bf2452482b37dde58e832a6fb,2025-09-14T17:01:00Z,Baltimore Ravens,Cleveland Browns,DraftKings,draftkings,player_assists,Greg Newsome II,0.5,-187,143,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+553edb8bf2452482b37dde58e832a6fb,2025-09-14T17:01:00Z,Baltimore Ravens,Cleveland Browns,DraftKings,draftkings,player_assists,Nate Wiggins,0.5,-125,-103,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+ec75e45d75691f810f347e0c5ff25d6e,2025-09-14T17:00:00Z,Cincinnati Bengals,Jacksonville Jaguars,DraftKings,draftkings,player_assists,Logan Wilson,3.5,100,-130,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+ec75e45d75691f810f347e0c5ff25d6e,2025-09-14T17:00:00Z,Cincinnati Bengals,Jacksonville Jaguars,DraftKings,draftkings,player_assists,Jordan Battle,2.5,126,-163,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+ec75e45d75691f810f347e0c5ff25d6e,2025-09-14T17:00:00Z,Cincinnati Bengals,Jacksonville Jaguars,DraftKings,draftkings,player_assists,Eric Murray,2.5,130,-169,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+ec75e45d75691f810f347e0c5ff25d6e,2025-09-14T17:00:00Z,Cincinnati Bengals,Jacksonville Jaguars,DraftKings,draftkings,player_assists,Travon Walker,1.5,156,-204,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+05a5b084f4e19535b2d3f91ef5c00169,2025-09-14T17:00:00Z,Dallas Cowboys,New York Giants,DraftKings,draftkings,player_assists,Kenneth Murray Jr.,3.5,112,-146,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+05a5b084f4e19535b2d3f91ef5c00169,2025-09-14T17:00:00Z,Dallas Cowboys,New York Giants,DraftKings,draftkings,player_assists,Bobby Okereke,3.5,116,-150,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+05a5b084f4e19535b2d3f91ef5c00169,2025-09-14T17:00:00Z,Dallas Cowboys,New York Giants,DraftKings,draftkings,player_assists,Tyler Nubin,2.5,127,-165,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+05a5b084f4e19535b2d3f91ef5c00169,2025-09-14T17:00:00Z,Dallas Cowboys,New York Giants,DraftKings,draftkings,player_assists,Malik Hooker,1.5,-161,123,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+05a5b084f4e19535b2d3f91ef5c00169,2025-09-14T17:00:00Z,Dallas Cowboys,New York Giants,DraftKings,draftkings,player_assists,Donovan Wilson,1.5,-139,107,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+05a5b084f4e19535b2d3f91ef5c00169,2025-09-14T17:00:00Z,Dallas Cowboys,New York Giants,DraftKings,draftkings,player_assists,Jevon Holland,1.5,-121,-107,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+05a5b084f4e19535b2d3f91ef5c00169,2025-09-14T17:00:00Z,Dallas Cowboys,New York Giants,DraftKings,draftkings,player_assists,Kaiir Elam,1.5,106,-137,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+05a5b084f4e19535b2d3f91ef5c00169,2025-09-14T17:00:00Z,Dallas Cowboys,New York Giants,DraftKings,draftkings,player_assists,Paulson Adebo,1.5,106,-138,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+05a5b084f4e19535b2d3f91ef5c00169,2025-09-14T17:00:00Z,Dallas Cowboys,New York Giants,DraftKings,draftkings,player_assists,Dexter Lawrence II,1.5,120,-156,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+1ee9ea2c8256bc6be5dd92e60f6c17de,2025-09-14T17:00:00Z,Detroit Lions,Chicago Bears,DraftKings,draftkings,player_assists,Jack Campbell,3.5,-105,-123,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+1ee9ea2c8256bc6be5dd92e60f6c17de,2025-09-14T17:00:00Z,Detroit Lions,Chicago Bears,DraftKings,draftkings,player_assists,Tremaine Edmunds,3.5,114,-148,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+1ee9ea2c8256bc6be5dd92e60f6c17de,2025-09-14T17:00:00Z,Detroit Lions,Chicago Bears,DraftKings,draftkings,player_assists,T.J. Edwards,2.5,-161,124,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+1ee9ea2c8256bc6be5dd92e60f6c17de,2025-09-14T17:00:00Z,Detroit Lions,Chicago Bears,DraftKings,draftkings,player_assists,Alex Anzalone,2.5,-159,123,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+1ee9ea2c8256bc6be5dd92e60f6c17de,2025-09-14T17:00:00Z,Detroit Lions,Chicago Bears,DraftKings,draftkings,player_assists,Jaquan Brisker,2.5,-113,-114,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+1ee9ea2c8256bc6be5dd92e60f6c17de,2025-09-14T17:00:00Z,Detroit Lions,Chicago Bears,DraftKings,draftkings,player_assists,Kevin Byard,2.5,108,-140,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+1ee9ea2c8256bc6be5dd92e60f6c17de,2025-09-14T17:00:00Z,Detroit Lions,Chicago Bears,DraftKings,draftkings,player_assists,Brian Branch,2.5,112,-145,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+1ee9ea2c8256bc6be5dd92e60f6c17de,2025-09-14T17:00:00Z,Detroit Lions,Chicago Bears,DraftKings,draftkings,player_assists,Tyrique Stevenson,1.5,124,-161,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+1ee9ea2c8256bc6be5dd92e60f6c17de,2025-09-14T17:00:00Z,Detroit Lions,Chicago Bears,DraftKings,draftkings,player_assists,Terrion Arnold,1.5,140,-183,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+1ee9ea2c8256bc6be5dd92e60f6c17de,2025-09-14T17:00:00Z,Detroit Lions,Chicago Bears,DraftKings,draftkings,player_assists,D.J. Reed,1.5,151,-198,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+1ee9ea2c8256bc6be5dd92e60f6c17de,2025-09-14T17:00:00Z,Detroit Lions,Chicago Bears,DraftKings,draftkings,player_assists,Gervon Dexter Sr.,1.5,153,-200,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+1ee9ea2c8256bc6be5dd92e60f6c17de,2025-09-14T17:00:00Z,Detroit Lions,Chicago Bears,DraftKings,draftkings,player_assists,Aidan Hutchinson,1.5,162,-212,2025-09-14T15:56:01Z,,,,,,,,20250914T155538Z
+575c1b169aab675ec72372ccb0f4c55f,2025-09-14T17:00:00Z,Miami Dolphins,New England Patriots,DraftKings,draftkings,player_assists,Jordyn Brooks,3.5,130,-169,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+575c1b169aab675ec72372ccb0f4c55f,2025-09-14T17:00:00Z,Miami Dolphins,New England Patriots,DraftKings,draftkings,player_assists,Tyrel Dodson,2.5,-157,121,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+575c1b169aab675ec72372ccb0f4c55f,2025-09-14T17:00:00Z,Miami Dolphins,New England Patriots,DraftKings,draftkings,player_assists,Christian Elliss,2.5,113,-146,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+575c1b169aab675ec72372ccb0f4c55f,2025-09-14T17:00:00Z,Miami Dolphins,New England Patriots,DraftKings,draftkings,player_assists,Minkah Fitzpatrick,1.5,-164,126,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+575c1b169aab675ec72372ccb0f4c55f,2025-09-14T17:00:00Z,Miami Dolphins,New England Patriots,DraftKings,draftkings,player_assists,Craig Woodson,1.5,-126,-102,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+575c1b169aab675ec72372ccb0f4c55f,2025-09-14T17:00:00Z,Miami Dolphins,New England Patriots,DraftKings,draftkings,player_assists,Zach Sieler,1.5,-124,-104,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+575c1b169aab675ec72372ccb0f4c55f,2025-09-14T17:00:00Z,Miami Dolphins,New England Patriots,DraftKings,draftkings,player_assists,Jaylinn Hawkins,1.5,100,-129,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+575c1b169aab675ec72372ccb0f4c55f,2025-09-14T17:00:00Z,Miami Dolphins,New England Patriots,DraftKings,draftkings,player_assists,Harold Landry III,1.5,127,-165,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+575c1b169aab675ec72372ccb0f4c55f,2025-09-14T17:00:00Z,Miami Dolphins,New England Patriots,DraftKings,draftkings,player_assists,Christian Barmore,1.5,142,-185,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+575c1b169aab675ec72372ccb0f4c55f,2025-09-14T17:00:00Z,Miami Dolphins,New England Patriots,DraftKings,draftkings,player_assists,Jack Jones,1.5,150,-196,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+575c1b169aab675ec72372ccb0f4c55f,2025-09-14T17:00:00Z,Miami Dolphins,New England Patriots,DraftKings,draftkings,player_assists,Bradley Chubb,1.5,178,-235,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+575c1b169aab675ec72372ccb0f4c55f,2025-09-14T17:00:00Z,Miami Dolphins,New England Patriots,DraftKings,draftkings,player_assists,Milton Williams,0.5,-208,159,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+575c1b169aab675ec72372ccb0f4c55f,2025-09-14T17:00:00Z,Miami Dolphins,New England Patriots,DraftKings,draftkings,player_assists,Carlton Davis III,0.5,-197,151,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+575c1b169aab675ec72372ccb0f4c55f,2025-09-14T17:00:00Z,Miami Dolphins,New England Patriots,DraftKings,draftkings,player_assists,Jaelan Phillips,0.5,-163,125,2025-09-14T15:56:02Z,,,,,,,,20250914T155538Z
+866d7405986fb4d14897cdb6c0aa5926,2025-09-14T17:01:00Z,New Orleans Saints,San Francisco 49ers,DraftKings,draftkings,player_assists,Demario Davis,3.5,-126,-103,2025-09-14T16:01:13Z,,,,,,,,20250914T160038Z
+866d7405986fb4d14897cdb6c0aa5926,2025-09-14T17:01:00Z,New Orleans Saints,San Francisco 49ers,DraftKings,draftkings,player_assists,Pete Werner,3.5,111,-144,2025-09-14T16:01:13Z,,,,,,,,20250914T160038Z
+866d7405986fb4d14897cdb6c0aa5926,2025-09-14T17:01:00Z,New Orleans Saints,San Francisco 49ers,DraftKings,draftkings,player_assists,Fred Warner,2.5,-137,105,2025-09-14T16:01:13Z,,,,,,,,20250914T160038Z
+866d7405986fb4d14897cdb6c0aa5926,2025-09-14T17:01:00Z,New Orleans Saints,San Francisco 49ers,DraftKings,draftkings,player_assists,Justin Reid,1.5,-198,151,2025-09-14T16:01:13Z,,,,,,,,20250914T160038Z
+866d7405986fb4d14897cdb6c0aa5926,2025-09-14T17:01:00Z,New Orleans Saints,San Francisco 49ers,DraftKings,draftkings,player_assists,Renardo Green,1.5,133,-173,2025-09-14T16:01:13Z,,,,,,,,20250914T160038Z
+866d7405986fb4d14897cdb6c0aa5926,2025-09-14T17:01:00Z,New Orleans Saints,San Francisco 49ers,DraftKings,draftkings,player_assists,Kool-Aid McKinstry,0.5,-237,180,2025-09-14T16:01:13Z,,,,,,,,20250914T160038Z
+cd0fd9335b5182d3bfed35ab8d5ab6fb,2025-09-14T17:01:00Z,New York Jets,Buffalo Bills,DraftKings,draftkings,player_assists,Terrel Bernard,3.5,-108,-120,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+cd0fd9335b5182d3bfed35ab8d5ab6fb,2025-09-14T17:01:00Z,New York Jets,Buffalo Bills,DraftKings,draftkings,player_assists,Jamien Sherwood,3.5,-107,-122,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+cd0fd9335b5182d3bfed35ab8d5ab6fb,2025-09-14T17:01:00Z,New York Jets,Buffalo Bills,DraftKings,draftkings,player_assists,Quincy Williams,3.5,135,-176,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+cd0fd9335b5182d3bfed35ab8d5ab6fb,2025-09-14T17:01:00Z,New York Jets,Buffalo Bills,DraftKings,draftkings,player_assists,Matt Milano,2.5,-115,-112,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+cd0fd9335b5182d3bfed35ab8d5ab6fb,2025-09-14T17:01:00Z,New York Jets,Buffalo Bills,DraftKings,draftkings,player_assists,Tony Adams,2.5,136,-177,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+cd0fd9335b5182d3bfed35ab8d5ab6fb,2025-09-14T17:01:00Z,New York Jets,Buffalo Bills,DraftKings,draftkings,player_assists,Cole Bishop,2.5,143,-187,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+cd0fd9335b5182d3bfed35ab8d5ab6fb,2025-09-14T17:01:00Z,New York Jets,Buffalo Bills,DraftKings,draftkings,player_assists,Taylor Rapp,2.5,143,-186,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+cd0fd9335b5182d3bfed35ab8d5ab6fb,2025-09-14T17:01:00Z,New York Jets,Buffalo Bills,DraftKings,draftkings,player_assists,Andre Cisco,1.5,-150,115,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+cd0fd9335b5182d3bfed35ab8d5ab6fb,2025-09-14T17:01:00Z,New York Jets,Buffalo Bills,DraftKings,draftkings,player_assists,Christian Benford,1.5,-105,-123,2025-09-14T16:01:12Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,Ernest Jones,3.5,-119,-109,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,Payton Wilson,3.5,116,-151,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,Patrick Queen,3.5,121,-158,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,Juan Thornhill,2.5,140,-183,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,Julian Love,2.5,150,-196,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,Coby Bryant,1.5,-147,113,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,Alex Highsmith,1.5,-139,107,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,Byron Murphy II,1.5,-126,-103,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,DeMarcus Lawrence,1.5,-119,-109,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,Cameron Heyward,1.5,-108,-120,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,Leonard Williams,1.5,-105,-123,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,T.J. Watt,1.5,100,-130,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,Keeanu Benton,1.5,106,-138,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,Jalen Ramsey,1.5,181,-239,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,Josh Jobe,0.5,-213,162,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,Riq Woolen,0.5,-170,130,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+82f9fd7001598d5cf9c1bdd57c66cae4,2025-09-14T17:01:00Z,Pittsburgh Steelers,Seattle Seahawks,DraftKings,draftkings,player_assists,Darius Slay,0.5,-167,128,2025-09-14T16:01:15Z,,,,,,,,20250914T160038Z
+0e6f68b30237afc04d1517a193213a65,2025-09-14T17:01:00Z,Tennessee Titans,Los Angeles Rams,DraftKings,draftkings,player_assists,Nate Landman,2.5,-172,132,2025-09-14T16:01:14Z,,,,,,,,20250914T160038Z
+0e6f68b30237afc04d1517a193213a65,2025-09-14T17:01:00Z,Tennessee Titans,Los Angeles Rams,DraftKings,draftkings,player_assists,Cedric Gray,2.5,117,-152,2025-09-14T16:01:14Z,,,,,,,,20250914T160038Z
+0e6f68b30237afc04d1517a193213a65,2025-09-14T17:01:00Z,Tennessee Titans,Los Angeles Rams,DraftKings,draftkings,player_assists,Omar Speights,2.5,133,-173,2025-09-14T16:01:14Z,,,,,,,,20250914T160038Z
+0e6f68b30237afc04d1517a193213a65,2025-09-14T17:01:00Z,Tennessee Titans,Los Angeles Rams,DraftKings,draftkings,player_assists,Xavier Woods,1.5,-191,146,2025-09-14T16:01:14Z,,,,,,,,20250914T160038Z
+0e6f68b30237afc04d1517a193213a65,2025-09-14T17:01:00Z,Tennessee Titans,Los Angeles Rams,DraftKings,draftkings,player_assists,Jeffery Simmons,1.5,-152,117,2025-09-14T16:01:14Z,,,,,,,,20250914T160038Z
+0e6f68b30237afc04d1517a193213a65,2025-09-14T17:01:00Z,Tennessee Titans,Los Angeles Rams,DraftKings,draftkings,player_assists,Jared Verse,1.5,-148,114,2025-09-14T16:01:14Z,,,,,,,,20250914T160038Z
+0e6f68b30237afc04d1517a193213a65,2025-09-14T17:01:00Z,Tennessee Titans,Los Angeles Rams,DraftKings,draftkings,player_assists,Amani Hooker,1.5,-137,105,2025-09-14T16:01:14Z,,,,,,,,20250914T160038Z
+0e6f68b30237afc04d1517a193213a65,2025-09-14T17:01:00Z,Tennessee Titans,Los Angeles Rams,DraftKings,draftkings,player_assists,Kamren Kinchens,1.5,-116,-111,2025-09-14T16:01:14Z,,,,,,,,20250914T160038Z
+0e6f68b30237afc04d1517a193213a65,2025-09-14T17:01:00Z,Tennessee Titans,Los Angeles Rams,DraftKings,draftkings,player_assists,Quentin Lake,1.5,-116,-112,2025-09-14T16:01:14Z,,,,,,,,20250914T160038Z
+0e6f68b30237afc04d1517a193213a65,2025-09-14T17:01:00Z,Tennessee Titans,Los Angeles Rams,DraftKings,draftkings,player_assists,Kamren Curl,1.5,-114,-113,2025-09-14T16:01:14Z,,,,,,,,20250914T160038Z
+0e6f68b30237afc04d1517a193213a65,2025-09-14T17:01:00Z,Tennessee Titans,Los Angeles Rams,DraftKings,draftkings,player_assists,Jarvis Brownlee,1.5,-109,-119,2025-09-14T16:01:14Z,,,,,,,,20250914T160038Z
+0e6f68b30237afc04d1517a193213a65,2025-09-14T17:01:00Z,Tennessee Titans,Los Angeles Rams,DraftKings,draftkings,player_assists,Kobie Turner,1.5,107,-139,2025-09-14T16:01:14Z,,,,,,,,20250914T160038Z
+0e6f68b30237afc04d1517a193213a65,2025-09-14T17:01:00Z,Tennessee Titans,Los Angeles Rams,DraftKings,draftkings,player_assists,Byron Young,1.5,117,-152,2025-09-14T16:01:14Z,,,,,,,,20250914T160038Z
+0e6f68b30237afc04d1517a193213a65,2025-09-14T17:01:00Z,Tennessee Titans,Los Angeles Rams,DraftKings,draftkings,player_assists,Braden Fiske,0.5,-190,145,2025-09-14T16:01:14Z,,,,,,,,20250914T160038Z
+0e6f68b30237afc04d1517a193213a65,2025-09-14T17:01:00Z,Tennessee Titans,Los Angeles Rams,DraftKings,draftkings,player_assists,Ahkello Witherspoon,0.5,-119,-109,2025-09-14T16:01:14Z,,,,,,,,20250914T160038Z
+7e2ad5ef04493526707e0868f7b70c47,2025-09-14T20:05:00Z,Arizona Cardinals,Carolina Panthers,DraftKings,draftkings,player_assists,Christian Rozeboom,3.5,121,-157,2025-09-14T19:00:12Z,,,,,,,,20250914T190038Z
+7e2ad5ef04493526707e0868f7b70c47,2025-09-14T20:05:00Z,Arizona Cardinals,Carolina Panthers,DraftKings,draftkings,player_assists,Budda Baker,2.5,-124,-105,2025-09-14T19:00:12Z,,,,,,,,20250914T190038Z
+7e2ad5ef04493526707e0868f7b70c47,2025-09-14T20:05:00Z,Arizona Cardinals,Carolina Panthers,DraftKings,draftkings,player_assists,Trevin Wallace,2.5,-113,-115,2025-09-14T19:00:12Z,,,,,,,,20250914T190038Z
+7e2ad5ef04493526707e0868f7b70c47,2025-09-14T20:05:00Z,Arizona Cardinals,Carolina Panthers,DraftKings,draftkings,player_assists,Mack Wilson Sr.,2.5,-106,-123,2025-09-14T19:00:12Z,,,,,,,,20250914T190038Z
+7e2ad5ef04493526707e0868f7b70c47,2025-09-14T20:05:00Z,Arizona Cardinals,Carolina Panthers,DraftKings,draftkings,player_assists,Tre'von Moehrig,2.5,102,-132,2025-09-14T19:00:12Z,,,,,,,,20250914T190038Z
+7e2ad5ef04493526707e0868f7b70c47,2025-09-14T20:05:00Z,Arizona Cardinals,Carolina Panthers,DraftKings,draftkings,player_assists,Derrick Brown,2.5,117,-152,2025-09-14T19:00:12Z,,,,,,,,20250914T190038Z
+7e2ad5ef04493526707e0868f7b70c47,2025-09-14T20:05:00Z,Arizona Cardinals,Carolina Panthers,DraftKings,draftkings,player_assists,Jalen Thompson,2.5,142,-185,2025-09-14T19:00:12Z,,,,,,,,20250914T190038Z
+7e2ad5ef04493526707e0868f7b70c47,2025-09-14T20:05:00Z,Arizona Cardinals,Carolina Panthers,DraftKings,draftkings,player_assists,A'Shawn Robinson,1.5,-144,111,2025-09-14T19:00:12Z,,,,,,,,20250914T190038Z
+7e2ad5ef04493526707e0868f7b70c47,2025-09-14T20:05:00Z,Arizona Cardinals,Carolina Panthers,DraftKings,draftkings,player_assists,Jaycee Horn,1.5,133,-173,2025-09-14T19:00:12Z,,,,,,,,20250914T190038Z
+7e2ad5ef04493526707e0868f7b70c47,2025-09-14T20:05:00Z,Arizona Cardinals,Carolina Panthers,DraftKings,draftkings,player_assists,Garrett Williams,1.5,148,-194,2025-09-14T19:00:12Z,,,,,,,,20250914T190038Z
+7e2ad5ef04493526707e0868f7b70c47,2025-09-14T20:05:00Z,Arizona Cardinals,Carolina Panthers,DraftKings,draftkings,player_assists,Max Melton,1.5,165,-217,2025-09-14T19:00:12Z,,,,,,,,20250914T190038Z
+e217b38ef8bc6e98d3512cb42b90782e,2025-09-14T20:06:00Z,Indianapolis Colts,Denver Broncos,DraftKings,draftkings,player_assists,Alex Singleton,4.5,118,-153,2025-09-14T19:04:44Z,,,,,,,,20250914T190538Z
+e217b38ef8bc6e98d3512cb42b90782e,2025-09-14T20:06:00Z,Indianapolis Colts,Denver Broncos,DraftKings,draftkings,player_assists,Nick Cross,2.5,113,-147,2025-09-14T19:04:44Z,,,,,,,,20250914T190538Z
+e217b38ef8bc6e98d3512cb42b90782e,2025-09-14T20:06:00Z,Indianapolis Colts,Denver Broncos,DraftKings,draftkings,player_assists,Talanoa Hufanga,2.5,121,-157,2025-09-14T19:04:44Z,,,,,,,,20250914T190538Z
+e217b38ef8bc6e98d3512cb42b90782e,2025-09-14T20:06:00Z,Indianapolis Colts,Denver Broncos,DraftKings,draftkings,player_assists,Brandon Jones,2.5,133,-173,2025-09-14T19:04:44Z,,,,,,,,20250914T190538Z
+e217b38ef8bc6e98d3512cb42b90782e,2025-09-14T20:06:00Z,Indianapolis Colts,Denver Broncos,DraftKings,draftkings,player_assists,Cam Bynum,1.5,-141,109,2025-09-14T19:04:44Z,,,,,,,,20250914T190538Z
+e217b38ef8bc6e98d3512cb42b90782e,2025-09-14T20:06:00Z,Indianapolis Colts,Denver Broncos,DraftKings,draftkings,player_assists,DeForest Buckner,1.5,-119,-109,2025-09-14T19:04:44Z,,,,,,,,20250914T190538Z
+e217b38ef8bc6e98d3512cb42b90782e,2025-09-14T20:06:00Z,Indianapolis Colts,Denver Broncos,DraftKings,draftkings,player_assists,Zach Allen,1.5,-107,-121,2025-09-14T19:04:44Z,,,,,,,,20250914T190538Z
+e217b38ef8bc6e98d3512cb42b90782e,2025-09-14T20:06:00Z,Indianapolis Colts,Denver Broncos,DraftKings,draftkings,player_assists,Kenny Moore II,1.5,139,-181,2025-09-14T19:04:44Z,,,,,,,,20250914T190538Z
+e217b38ef8bc6e98d3512cb42b90782e,2025-09-14T20:06:00Z,Indianapolis Colts,Denver Broncos,DraftKings,draftkings,player_assists,Pat Surtain II,0.5,-212,161,2025-09-14T19:04:44Z,,,,,,,,20250914T190538Z
+e217b38ef8bc6e98d3512cb42b90782e,2025-09-14T20:06:00Z,Indianapolis Colts,Denver Broncos,DraftKings,draftkings,player_assists,Kwity Paye,0.5,-173,133,2025-09-14T19:04:44Z,,,,,,,,20250914T190538Z
+bbec8d71145954cff67915c9b006bb6e,2025-09-14T20:25:00Z,Kansas City Chiefs,Philadelphia Eagles,DraftKings,draftkings,player_assists,Nick Bolton,3.5,116,-151,2025-09-14T19:19:45Z,,,,,,,,20250914T192038Z
+bbec8d71145954cff67915c9b006bb6e,2025-09-14T20:25:00Z,Kansas City Chiefs,Philadelphia Eagles,DraftKings,draftkings,player_assists,Zack Baun,3.5,120,-155,2025-09-14T19:19:45Z,,,,,,,,20250914T192038Z
+bbec8d71145954cff67915c9b006bb6e,2025-09-14T20:25:00Z,Kansas City Chiefs,Philadelphia Eagles,DraftKings,draftkings,player_assists,Drue Tranquill,2.5,-158,122,2025-09-14T19:19:45Z,,,,,,,,20250914T192038Z
+bbec8d71145954cff67915c9b006bb6e,2025-09-14T20:25:00Z,Kansas City Chiefs,Philadelphia Eagles,DraftKings,draftkings,player_assists,Jihaad Campbell,2.5,-107,-122,2025-09-14T19:19:45Z,,,,,,,,20250914T192038Z
+bbec8d71145954cff67915c9b006bb6e,2025-09-14T20:25:00Z,Kansas City Chiefs,Philadelphia Eagles,DraftKings,draftkings,player_assists,Chamarri Conner,2.5,148,-194,2025-09-14T19:19:45Z,,,,,,,,20250914T192038Z
+bbec8d71145954cff67915c9b006bb6e,2025-09-14T20:25:00Z,Kansas City Chiefs,Philadelphia Eagles,DraftKings,draftkings,player_assists,Reed Blankenship,1.5,-149,115,2025-09-14T19:19:45Z,,,,,,,,20250914T192038Z
+bbec8d71145954cff67915c9b006bb6e,2025-09-14T20:25:00Z,Kansas City Chiefs,Philadelphia Eagles,DraftKings,draftkings,player_assists,Nolan Smith,1.5,-111,-117,2025-09-14T19:19:45Z,,,,,,,,20250914T192038Z
+bbec8d71145954cff67915c9b006bb6e,2025-09-14T20:25:00Z,Kansas City Chiefs,Philadelphia Eagles,DraftKings,draftkings,player_assists,Cooper DeJean,1.5,137,-179,2025-09-14T19:19:45Z,,,,,,,,20250914T192038Z
+bbec8d71145954cff67915c9b006bb6e,2025-09-14T20:25:00Z,Kansas City Chiefs,Philadelphia Eagles,DraftKings,draftkings,player_assists,Trent McDuffie,1.5,150,-196,2025-09-14T19:19:45Z,,,,,,,,20250914T192038Z
+bbec8d71145954cff67915c9b006bb6e,2025-09-14T20:25:00Z,Kansas City Chiefs,Philadelphia Eagles,DraftKings,draftkings,player_assists,Jalen Carter,0.5,-243,184,2025-09-14T19:19:45Z,,,,,,,,20250914T192038Z
+bbec8d71145954cff67915c9b006bb6e,2025-09-14T20:25:00Z,Kansas City Chiefs,Philadelphia Eagles,DraftKings,draftkings,player_assists,Quinyon Mitchell,0.5,-168,129,2025-09-14T19:19:45Z,,,,,,,,20250914T192038Z
+37d09ce5d357536d0e58dd4ba0ab4106,2025-09-15T00:20:00Z,Minnesota Vikings,Atlanta Falcons,DraftKings,draftkings,player_assists,Kaden Elliss,3.5,-156,120,2025-09-14T23:14:57Z,,,,,,,,20250914T231538Z
+37d09ce5d357536d0e58dd4ba0ab4106,2025-09-15T00:20:00Z,Minnesota Vikings,Atlanta Falcons,DraftKings,draftkings,player_assists,Ivan Pace Jr.,3.5,-112,-116,2025-09-14T23:14:57Z,,,,,,,,20250914T231538Z
+37d09ce5d357536d0e58dd4ba0ab4106,2025-09-15T00:20:00Z,Minnesota Vikings,Atlanta Falcons,DraftKings,draftkings,player_assists,Divine Deablo,2.5,-143,110,2025-09-14T23:14:57Z,,,,,,,,20250914T231538Z
+37d09ce5d357536d0e58dd4ba0ab4106,2025-09-15T00:20:00Z,Minnesota Vikings,Atlanta Falcons,DraftKings,draftkings,player_assists,Jessie Bates III,2.5,-103,-126,2025-09-14T23:14:57Z,,,,,,,,20250914T231538Z
+37d09ce5d357536d0e58dd4ba0ab4106,2025-09-15T00:20:00Z,Minnesota Vikings,Atlanta Falcons,DraftKings,draftkings,player_assists,Josh Metellus,2.5,121,-157,2025-09-14T23:14:57Z,,,,,,,,20250914T231538Z
+37d09ce5d357536d0e58dd4ba0ab4106,2025-09-15T00:20:00Z,Minnesota Vikings,Atlanta Falcons,DraftKings,draftkings,player_assists,Javon Hargrave,1.5,-103,-126,2025-09-14T23:14:57Z,,,,,,,,20250914T231538Z
+37d09ce5d357536d0e58dd4ba0ab4106,2025-09-15T00:20:00Z,Minnesota Vikings,Atlanta Falcons,DraftKings,draftkings,player_assists,Jonathan Greenard,1.5,115,-149,2025-09-14T23:14:57Z,,,,,,,,20250914T231538Z
+37d09ce5d357536d0e58dd4ba0ab4106,2025-09-15T00:20:00Z,Minnesota Vikings,Atlanta Falcons,DraftKings,draftkings,player_assists,Byron Murphy Jr.,1.5,145,-190,2025-09-14T23:14:57Z,,,,,,,,20250914T231538Z
+7d9a04f411031528d9c1d2df7b9a0453,2025-09-15T23:01:00Z,Houston Texans,Tampa Bay Buccaneers,DraftKings,draftkings,player_assists,Azeez Al-Shaair,2.5,-177,136,2025-09-15T21:58:58Z,,,,,,,,20250915T220039Z
+7d9a04f411031528d9c1d2df7b9a0453,2025-09-15T23:01:00Z,Houston Texans,Tampa Bay Buccaneers,DraftKings,draftkings,player_assists,Lavonte David,2.5,-166,127,2025-09-15T21:58:58Z,,,,,,,,20250915T220039Z
+7d9a04f411031528d9c1d2df7b9a0453,2025-09-15T23:01:00Z,Houston Texans,Tampa Bay Buccaneers,DraftKings,draftkings,player_assists,Henry To'oTo'o,2.5,-162,124,2025-09-15T21:58:58Z,,,,,,,,20250915T220039Z
+7d9a04f411031528d9c1d2df7b9a0453,2025-09-15T23:01:00Z,Houston Texans,Tampa Bay Buccaneers,DraftKings,draftkings,player_assists,Antoine Winfield Jr.,1.5,-161,124,2025-09-15T21:58:58Z,,,,,,,,20250915T220039Z
+7d9a04f411031528d9c1d2df7b9a0453,2025-09-15T23:01:00Z,Houston Texans,Tampa Bay Buccaneers,DraftKings,draftkings,player_assists,Tykee Smith,1.5,-151,117,2025-09-15T21:58:58Z,,,,,,,,20250915T220039Z
+7d9a04f411031528d9c1d2df7b9a0453,2025-09-15T23:01:00Z,Houston Texans,Tampa Bay Buccaneers,DraftKings,draftkings,player_assists,C.J. Gardner-Johnson,1.5,-126,-103,2025-09-15T21:58:58Z,,,,,,,,20250915T220039Z
+7d9a04f411031528d9c1d2df7b9a0453,2025-09-15T23:01:00Z,Houston Texans,Tampa Bay Buccaneers,DraftKings,draftkings,player_assists,Kamari Lassiter,1.5,103,-133,2025-09-15T21:58:58Z,,,,,,,,20250915T220039Z
+7d9a04f411031528d9c1d2df7b9a0453,2025-09-15T23:01:00Z,Houston Texans,Tampa Bay Buccaneers,DraftKings,draftkings,player_assists,Derek Stingley Jr.,0.5,-229,174,2025-09-15T21:58:58Z,,,,,,,,20250915T220039Z
+bebae12f59f19bd877df7ac3cab05263,2025-09-16T02:00:00Z,Las Vegas Raiders,Los Angeles Chargers,DraftKings,draftkings,player_assists,Germaine Pratt,2.5,-114,-113,2025-09-16T00:55:20Z,,,,,,,,20250916T005539Z
+bebae12f59f19bd877df7ac3cab05263,2025-09-16T02:00:00Z,Las Vegas Raiders,Los Angeles Chargers,DraftKings,draftkings,player_assists,Devin White,2.5,-107,-121,2025-09-16T00:55:20Z,,,,,,,,20250916T005539Z
+bebae12f59f19bd877df7ac3cab05263,2025-09-16T02:00:00Z,Las Vegas Raiders,Los Angeles Chargers,DraftKings,draftkings,player_assists,Derwin James Jr.,1.5,-196,150,2025-09-16T00:55:20Z,,,,,,,,20250916T005539Z
+bebae12f59f19bd877df7ac3cab05263,2025-09-16T02:00:00Z,Las Vegas Raiders,Los Angeles Chargers,DraftKings,draftkings,player_assists,Isaiah Pola-Mao,1.5,-186,142,2025-09-16T00:55:20Z,,,,,,,,20250916T005539Z
+bebae12f59f19bd877df7ac3cab05263,2025-09-16T02:00:00Z,Las Vegas Raiders,Los Angeles Chargers,DraftKings,draftkings,player_assists,Alohi Gilman,1.5,-180,138,2025-09-16T00:55:20Z,,,,,,,,20250916T005539Z
+bebae12f59f19bd877df7ac3cab05263,2025-09-16T02:00:00Z,Las Vegas Raiders,Los Angeles Chargers,DraftKings,draftkings,player_assists,Jeremy Chinn,1.5,-179,137,2025-09-16T00:55:20Z,,,,,,,,20250916T005539Z
+bebae12f59f19bd877df7ac3cab05263,2025-09-16T02:00:00Z,Las Vegas Raiders,Los Angeles Chargers,DraftKings,draftkings,player_assists,Maxx Crosby,1.5,117,-152,2025-09-16T00:55:20Z,,,,,,,,20250916T005539Z
+bebae12f59f19bd877df7ac3cab05263,2025-09-16T02:00:00Z,Las Vegas Raiders,Los Angeles Chargers,DraftKings,draftkings,player_assists,Tarheeb Still,1.5,125,-163,2025-09-16T00:55:20Z,,,,,,,,20250916T005539Z
+bebae12f59f19bd877df7ac3cab05263,2025-09-16T02:00:00Z,Las Vegas Raiders,Los Angeles Chargers,DraftKings,draftkings,player_assists,Kyu Blu Kelly,1.5,148,-194,2025-09-16T00:55:20Z,,,,,,,,20250916T005539Z
+bebae12f59f19bd877df7ac3cab05263,2025-09-16T02:00:00Z,Las Vegas Raiders,Los Angeles Chargers,DraftKings,draftkings,player_assists,Eric Stokes,0.5,-186,142,2025-09-16T00:55:20Z,,,,,,,,20250916T005539Z
+bebae12f59f19bd877df7ac3cab05263,2025-09-16T02:00:00Z,Las Vegas Raiders,Los Angeles Chargers,DraftKings,draftkings,player_assists,Donte Jackson,0.5,-131,101,2025-09-16T00:55:20Z,,,,,,,,20250916T005539Z

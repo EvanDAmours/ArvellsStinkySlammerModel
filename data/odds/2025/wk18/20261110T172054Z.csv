@@ -1,0 +1,47 @@
+event_id,commence_time,home_team,away_team,book,book_key,market,player,line,over_odds,under_odds,book_update,over_link,under_link,over_sid,under_sid,market_link,book_link,event_sid,pulled_at
+4fd1173e2f647cbbebf6713d39693089,2026-01-03T21:30:00Z,Tampa Bay Buccaneers,Carolina Panthers,DraftKings,draftkings,player_assists,Christian Rozeboom,4.5,126,-163,2026-01-03T20:24:57Z,,,,,,,,20260103T202537Z
+4fd1173e2f647cbbebf6713d39693089,2026-01-03T21:30:00Z,Tampa Bay Buccaneers,Carolina Panthers,DraftKings,draftkings,player_assists,Lavonte David,3.5,113,-147,2026-01-03T20:24:57Z,,,,,,,,20260103T202537Z
+4fd1173e2f647cbbebf6713d39693089,2026-01-03T21:30:00Z,Tampa Bay Buccaneers,Carolina Panthers,DraftKings,draftkings,player_assists,Nick Scott,3.5,130,-169,2026-01-03T20:24:57Z,,,,,,,,20260103T202537Z
+4fd1173e2f647cbbebf6713d39693089,2026-01-03T21:30:00Z,Tampa Bay Buccaneers,Carolina Panthers,DraftKings,draftkings,player_assists,SirVocea Dennis,3.5,144,-188,2026-01-03T20:24:57Z,,,,,,,,20260103T202537Z
+4fd1173e2f647cbbebf6713d39693089,2026-01-03T21:30:00Z,Tampa Bay Buccaneers,Carolina Panthers,DraftKings,draftkings,player_assists,Tre'von Moehrig,2.5,-113,-115,2026-01-03T20:24:57Z,,,,,,,,20260103T202537Z
+4fd1173e2f647cbbebf6713d39693089,2026-01-03T21:30:00Z,Tampa Bay Buccaneers,Carolina Panthers,DraftKings,draftkings,player_assists,Antoine Winfield Jr.,2.5,102,-132,2026-01-03T20:24:57Z,,,,,,,,20260103T202537Z
+4fd1173e2f647cbbebf6713d39693089,2026-01-03T21:30:00Z,Tampa Bay Buccaneers,Carolina Panthers,DraftKings,draftkings,player_assists,Tykee Smith,2.5,120,-156,2026-01-03T20:24:57Z,,,,,,,,20260103T202537Z
+4fd1173e2f647cbbebf6713d39693089,2026-01-03T21:30:00Z,Tampa Bay Buccaneers,Carolina Panthers,DraftKings,draftkings,player_assists,Derrick Brown,2.5,149,-195,2026-01-03T20:24:57Z,,,,,,,,20260103T202537Z
+4fd1173e2f647cbbebf6713d39693089,2026-01-03T21:30:00Z,Tampa Bay Buccaneers,Carolina Panthers,DraftKings,draftkings,player_assists,Jacob Parrish,1.5,-141,108,2026-01-03T20:24:57Z,,,,,,,,20260103T202537Z
+4fd1173e2f647cbbebf6713d39693089,2026-01-03T21:30:00Z,Tampa Bay Buccaneers,Carolina Panthers,DraftKings,draftkings,player_assists,Benjamin Morrison,1.5,110,-143,2026-01-03T20:24:57Z,,,,,,,,20260103T202537Z
+4fd1173e2f647cbbebf6713d39693089,2026-01-03T21:30:00Z,Tampa Bay Buccaneers,Carolina Panthers,DraftKings,draftkings,player_assists,Yaya Diaby,1.5,110,-142,2026-01-03T20:24:57Z,,,,,,,,20260103T202537Z
+4fd1173e2f647cbbebf6713d39693089,2026-01-03T21:30:00Z,Tampa Bay Buccaneers,Carolina Panthers,DraftKings,draftkings,player_assists,Nic Scourton,1.5,118,-153,2026-01-03T20:24:57Z,,,,,,,,20260103T202537Z
+4fd1173e2f647cbbebf6713d39693089,2026-01-03T21:30:00Z,Tampa Bay Buccaneers,Carolina Panthers,DraftKings,draftkings,player_assists,Vita Vea,1.5,146,-191,2026-01-03T20:24:57Z,,,,,,,,20260103T202537Z
+4fd1173e2f647cbbebf6713d39693089,2026-01-03T21:30:00Z,Tampa Bay Buccaneers,Carolina Panthers,DraftKings,draftkings,player_assists,Michael Jackson,1.5,158,-207,2026-01-03T20:24:57Z,,,,,,,,20260103T202537Z
+4fd1173e2f647cbbebf6713d39693089,2026-01-03T21:30:00Z,Tampa Bay Buccaneers,Carolina Panthers,DraftKings,draftkings,player_assists,Jaycee Horn,0.5,-191,146,2026-01-03T20:24:57Z,,,,,,,,20260103T202537Z
+c624c615075899bb7be6a39e5eea3b2b,2026-01-04T01:00:00Z,San Francisco 49ers,Seattle Seahawks,DraftKings,draftkings,player_assists,Tatum Bethune,4.5,-150,115,2026-01-03T23:55:01Z,,,,,,,,20260103T235537Z
+c624c615075899bb7be6a39e5eea3b2b,2026-01-04T01:00:00Z,San Francisco 49ers,Seattle Seahawks,DraftKings,draftkings,player_assists,Ernest Jones,4.5,107,-139,2026-01-03T23:55:01Z,,,,,,,,20260103T235537Z
+c624c615075899bb7be6a39e5eea3b2b,2026-01-04T01:00:00Z,San Francisco 49ers,Seattle Seahawks,DraftKings,draftkings,player_assists,Malik Mustapha,2.5,-169,130,2026-01-03T23:55:01Z,,,,,,,,20260103T235537Z
+c624c615075899bb7be6a39e5eea3b2b,2026-01-04T01:00:00Z,San Francisco 49ers,Seattle Seahawks,DraftKings,draftkings,player_assists,Drake Thomas,2.5,-141,108,2026-01-03T23:55:01Z,,,,,,,,20260103T235537Z
+c624c615075899bb7be6a39e5eea3b2b,2026-01-04T01:00:00Z,San Francisco 49ers,Seattle Seahawks,DraftKings,draftkings,player_assists,Dee Winters,2.5,-138,106,2026-01-03T23:55:01Z,,,,,,,,20260103T235537Z
+c624c615075899bb7be6a39e5eea3b2b,2026-01-04T01:00:00Z,San Francisco 49ers,Seattle Seahawks,DraftKings,draftkings,player_assists,Ty Okada,2.5,-110,-118,2026-01-03T23:55:01Z,,,,,,,,20260103T235537Z
+c624c615075899bb7be6a39e5eea3b2b,2026-01-04T01:00:00Z,San Francisco 49ers,Seattle Seahawks,DraftKings,draftkings,player_assists,Julian Love,2.5,-106,-122,2026-01-03T23:55:01Z,,,,,,,,20260103T235537Z
+c624c615075899bb7be6a39e5eea3b2b,2026-01-04T01:00:00Z,San Francisco 49ers,Seattle Seahawks,DraftKings,draftkings,player_assists,Nick Emmanwori,2.5,-101,-129,2026-01-03T23:55:01Z,,,,,,,,20260103T235537Z
+c624c615075899bb7be6a39e5eea3b2b,2026-01-04T01:00:00Z,San Francisco 49ers,Seattle Seahawks,DraftKings,draftkings,player_assists,Devon Witherspoon,2.5,122,-158,2026-01-03T23:55:01Z,,,,,,,,20260103T235537Z
+c624c615075899bb7be6a39e5eea3b2b,2026-01-04T01:00:00Z,San Francisco 49ers,Seattle Seahawks,DraftKings,draftkings,player_assists,Ji'Ayir Brown,2.5,122,-159,2026-01-03T23:55:01Z,,,,,,,,20260103T235537Z
+c624c615075899bb7be6a39e5eea3b2b,2026-01-04T01:00:00Z,San Francisco 49ers,Seattle Seahawks,DraftKings,draftkings,player_assists,Leonard Williams,1.5,-153,118,2026-01-03T23:55:01Z,,,,,,,,20260103T235537Z
+c624c615075899bb7be6a39e5eea3b2b,2026-01-04T01:00:00Z,San Francisco 49ers,Seattle Seahawks,DraftKings,draftkings,player_assists,DeMarcus Lawrence,1.5,-108,-120,2026-01-03T23:55:01Z,,,,,,,,20260103T235537Z
+7906052ca20e6daddf755c7fe3932887,2026-01-04T18:00:00Z,Atlanta Falcons,New Orleans Saints,DraftKings,draftkings,player_assists,Jessie Bates III,2.5,-122,-106,2026-01-04T16:55:43Z,,,,,,,,20260104T165537Z
+7906052ca20e6daddf755c7fe3932887,2026-01-04T18:00:00Z,Atlanta Falcons,New Orleans Saints,DraftKings,draftkings,player_assists,Jonas Sanker,2.5,-113,-114,2026-01-04T16:55:43Z,,,,,,,,20260104T165537Z
+7906052ca20e6daddf755c7fe3932887,2026-01-04T18:00:00Z,Atlanta Falcons,New Orleans Saints,DraftKings,draftkings,player_assists,Xavier Watts,2.5,115,-150,2026-01-04T16:55:43Z,,,,,,,,20260104T165537Z
+7906052ca20e6daddf755c7fe3932887,2026-01-04T18:00:00Z,Atlanta Falcons,New Orleans Saints,DraftKings,draftkings,player_assists,Alontae Taylor,1.5,-166,127,2026-01-04T16:55:43Z,,,,,,,,20260104T165537Z
+623e9172767ca231241e2313bbee095e,2026-01-04T18:00:00Z,Jacksonville Jaguars,Tennessee Titans,DraftKings,draftkings,player_assists,Andrew Wingard,2.5,128,-167,2026-01-04T16:55:03Z,,,,,,,,20260104T165537Z
+623e9172767ca231241e2313bbee095e,2026-01-04T18:00:00Z,Jacksonville Jaguars,Tennessee Titans,DraftKings,draftkings,player_assists,Eric Murray,1.5,-169,129,2026-01-04T16:55:03Z,,,,,,,,20260104T165537Z
+623e9172767ca231241e2313bbee095e,2026-01-04T18:00:00Z,Jacksonville Jaguars,Tennessee Titans,DraftKings,draftkings,player_assists,Travon Walker,1.5,109,-141,2026-01-04T16:55:03Z,,,,,,,,20260104T165537Z
+623e9172767ca231241e2313bbee095e,2026-01-04T18:00:00Z,Jacksonville Jaguars,Tennessee Titans,DraftKings,draftkings,player_assists,Montaric Brown,1.5,141,-185,2026-01-04T16:55:03Z,,,,,,,,20260104T165537Z
+623e9172767ca231241e2313bbee095e,2026-01-04T18:00:00Z,Jacksonville Jaguars,Tennessee Titans,DraftKings,draftkings,player_assists,Greg Newsome II,1.5,164,-215,2026-01-04T16:55:03Z,,,,,,,,20260104T165537Z
+f609b38fe2bf0687644ad8603e28220b,2026-01-05T01:20:00Z,Pittsburgh Steelers,Baltimore Ravens,DraftKings,draftkings,player_assists,Roquan Smith,4.5,-106,-122,2026-01-05T00:15:18Z,,,,,,,,20260105T001537Z
+f609b38fe2bf0687644ad8603e28220b,2026-01-05T01:20:00Z,Pittsburgh Steelers,Baltimore Ravens,DraftKings,draftkings,player_assists,Patrick Queen,3.5,-164,126,2026-01-05T00:15:18Z,,,,,,,,20260105T001537Z
+f609b38fe2bf0687644ad8603e28220b,2026-01-05T01:20:00Z,Pittsburgh Steelers,Baltimore Ravens,DraftKings,draftkings,player_assists,Kyle Dugger,2.5,-135,104,2026-01-05T00:15:18Z,,,,,,,,20260105T001537Z
+f609b38fe2bf0687644ad8603e28220b,2026-01-05T01:20:00Z,Pittsburgh Steelers,Baltimore Ravens,DraftKings,draftkings,player_assists,Alohi Gilman,2.5,-132,102,2026-01-05T00:15:18Z,,,,,,,,20260105T001537Z
+f609b38fe2bf0687644ad8603e28220b,2026-01-05T01:20:00Z,Pittsburgh Steelers,Baltimore Ravens,DraftKings,draftkings,player_assists,Kyle Hamilton,2.5,-126,-103,2026-01-05T00:15:18Z,,,,,,,,20260105T001537Z
+f609b38fe2bf0687644ad8603e28220b,2026-01-05T01:20:00Z,Pittsburgh Steelers,Baltimore Ravens,DraftKings,draftkings,player_assists,Jalen Ramsey,2.5,133,-173,2026-01-05T00:15:18Z,,,,,,,,20260105T001537Z
+f609b38fe2bf0687644ad8603e28220b,2026-01-05T01:20:00Z,Pittsburgh Steelers,Baltimore Ravens,DraftKings,draftkings,player_assists,Malaki Starks,1.5,-155,119,2026-01-05T00:15:18Z,,,,,,,,20260105T001537Z
+f609b38fe2bf0687644ad8603e28220b,2026-01-05T01:20:00Z,Pittsburgh Steelers,Baltimore Ravens,DraftKings,draftkings,player_assists,Alex Highsmith,1.5,100,-130,2026-01-05T00:15:18Z,,,,,,,,20260105T001537Z
+f609b38fe2bf0687644ad8603e28220b,2026-01-05T01:20:00Z,Pittsburgh Steelers,Baltimore Ravens,DraftKings,draftkings,player_assists,Joey Porter Jr.,1.5,128,-166,2026-01-05T00:15:18Z,,,,,,,,20260105T001537Z
+f609b38fe2bf0687644ad8603e28220b,2026-01-05T01:20:00Z,Pittsburgh Steelers,Baltimore Ravens,DraftKings,draftkings,player_assists,Nate Wiggins,1.5,183,-241,2026-01-05T00:15:18Z,,,,,,,,20260105T001537Z
