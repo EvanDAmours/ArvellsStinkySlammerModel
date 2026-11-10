@@ -65,10 +65,10 @@ ODDS_BOOKMAKERS = [
 # book's own share was known (gap without a high book share 44-42), so the card's flag reads the book's share (HOLES) instead.
 SHARE_GAP = dict(k=25.0, flag=-0.04)
 # Candidates from the sweep of 2026-11-10 (tools/holes.py), in no rule. book_share: the book's solo line as a share of its own
-# combined line; at 58% or more the solo Under went 117-49 on weeks 7 to 9 and 176-103 on weeks 1 to 6, which it was not found
-# on (flagged on the card). part_time: under 85% of the snaps this season, solo Under 82-40 then 66-47 (flagged on the card).
-# hot: last three games half a tackle over his season average, combined Over 75-47 then 36-45: failed, no longer on the card,
-# still scored by the tool.
+# combined line; at 58% or more the solo Under went 117-49 on weeks 7 to 9 of 2026 where it was found, then 176-103 on weeks
+# 1 to 6 and 609-363 on the 2025 season (16 of 18 weeks up), fetched afterwards: flagged on the card. part_time (under 85% of
+# the snaps, solo Under) and hot (last three games half a tackle over his average, combined Over) failed on those weeks
+# (188-142 against 59% for the rest of the board; 201-241) and are off the card; the tool still scores them.
 HOLES = dict(part_time=0.85, hot=0.5, book_share=0.58)
 OPENER_DATES = ("2026-11-11", "2026-11-18")          # Wednesdays with an early look at the whole week's lines (weeks 10 and 11): a trial, see MODEL_LOG
 ODDS_KEY_ENV = ["ODDS_API_KEY", "PARLAY_API_KEY"]   # GitHub secrets holding Odds API keys, used in this order

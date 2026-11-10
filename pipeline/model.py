@@ -865,7 +865,7 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
     out_ids = set(inj_w[inj_w.status.str.lower().isin(["out", "doubtful"])].player_id.astype(str)) - {"", "nan", "None"} if len(inj_w) and "player_id" in inj_w else set()
     F["opp_qb_out"], F["opp_rb_out"] = False, False
     if pbp_starters is not None and len(pbp_starters):
-        latest = pbp_starters[pbp_starters.season == season].sort_values("week").groupby("team").last()
+        latest = pbp_starters[(pbp_starters.season == season) & (pbp_starters.week < week)].sort_values("week").groupby("team").last()   # as of this week: a replay of a past week must not read later starters
         F["opp_qb_out"] = [str(latest.qb1.get(o, "")) in out_ids for o in F.opp_team]
         F["opp_rb_out"] = [str(latest.rb1.get(o, "")) in out_ids for o in F.opp_team]
     # injuries for this week: own status, and role signal when a regular at his position group is out
@@ -1610,13 +1610,10 @@ def price_lines(lines, P, segments=None, blend=None):
                 why += f"; a sleeper on this side too, which would make it an A, shown as a {grade}: " + ("the lock checklist is not clear" if block else "this market cannot carry an A yet")
         if sleeper:
             why += f"; sleeper ({sleeper}, grade {s_grade}): the model's own number is {mu_model:.1f} against a line of {line:g}"
-        # two measurements on trial (config.HOLES, tools/holes.py), named on the card and used by no rule
-        lp_all = _log(p, "log_pct")
-        if solo and lp_all and float(np.mean(lp_all)) < C.HOLES["part_time"]:
-            why += f"; part-time: he has played {float(np.mean(lp_all)):.0%} of the snaps this season, and part-time players' solo Unders have run well (a measurement on trial, in no grade)"
+        # the measurement on trial (config.HOLES, tools/holes.py; open issue 15), named on the card and used by no rule
         if book_share is not None and book_share >= C.HOLES["book_share"]:
             why += (f"; solo share: the book's solo line is {book_share:.0%} of its own combined line for him (he has made {own_share:.0%} of his tackles solo), and solo Unders on lines "
-                    f"at {C.HOLES['book_share']:.0%} or more have won about two in three this season (a measurement on trial, in no grade)")
+                    f"at {C.HOLES['book_share']:.0%} or more have won about two in three over the last two seasons (a measurement on trial, in no grade)")
         lg_steps, lg_text = logic_steps(p, kind)
         mu_eng = implied_mean(po, phi_use, line)                       # the engine's win chance read back as a number of tackles
         mkt_mean = implied_mean(fair, phi_use, line)                   # the book's fair price read back the same way

@@ -710,9 +710,9 @@ def engine_era(Pc):
         watch("E6", "Over picks", "Re-read at 40. The candidate is to show Overs as leans only.", E[side == "Over"], of=40),
         watch("E5", "Locks", "The target is 70% over the season.", E[five], bar=0.70),
         # the book-share flag (config.HOLES, open issue 15): the card's "solo share:" clause, in no grade until it is read here
-        watch("H1", "Solo Under picks on a flagged line", f"The book's solo line is {C.HOLES['book_share']:.0%} or more of its own combined line. Replayed on weeks 4 to 9 these went 63-25 and the unflagged ones 48-54. Read after week 13: at 58% or better here and ahead of the unflagged, the flag becomes an input to the A grade.", E[solo_under & flagged], of=30, bar=0.58),
+        watch("H1", "Solo Under picks on a flagged line", f"The book's solo line is {C.HOLES['book_share']:.0%} or more of its own combined line. Replayed on 21 weeks (2025 weeks 4 to 18, 2026 weeks 4 to 9) these went 316-141 and the unflagged ones 207-165. Read after week 13: at 58% or better here and ahead of the unflagged, the flag becomes an input to the A grade.", E[solo_under & flagged], of=30, bar=0.58),
         watch("H1", "Solo Under picks on an unflagged line", "The other half of the same test.", E[solo_under & ~flagged], of=30),
-        watch("H1", "Solo Over picks on a flagged line", "Replayed on weeks 4 to 9: 3-10. Read at 15: under 45%, the Over is no pick on a flagged line.", E[(kind == "solo") & (side == "Over") & flagged], of=15),
+        watch("H1", "Solo Over picks on a flagged line", "Replayed on 21 weeks: 8-19, losing in each of four stretches. Read at 15: under 45%, the Over is no pick on a flagged line.", E[(kind == "solo") & (side == "Over") & flagged], of=15),
     ]
     return out
 

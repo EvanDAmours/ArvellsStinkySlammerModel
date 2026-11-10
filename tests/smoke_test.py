@@ -451,7 +451,7 @@ _no = R.auto_plan(now=dt.datetime.combine(_od + dt.timedelta(days=14), dt.time(1
 check(_op is not None and len(_op["days"]) == 5 and _op["days"][0] == str(_od + dt.timedelta(days=1)) and _no is None and R.OPENER_SLOT in R.slots_on(_od) and R.OPENER_SLOT not in R.slots_on(_od + dt.timedelta(days=14)),
       "the early look at the whole week is pulled on its trial Wednesdays and on no other")
 _whys = " ".join(str(b.get("why", "")) for b in _ba)
-check(("part-time:" in _whys or "solo share:" in _whys) and "in no grade" in _whys and "hot:" not in _whys, "the card names the measurements on trial (the book's solo share, part-time) where they apply, says they are in no grade, and no longer names the hot flag that failed on weeks 1 to 6")
+check("solo share:" in _whys and "in no grade" in _whys and "hot:" not in _whys and "part-time:" not in _whys, "the card names the measurement on trial (the book's solo share) where it applies, says it is in no grade, and no longer names the two flags that failed out of sample")
 _ll = pd.read_csv(tmp / "data" / "lines_log.csv")
 check("share_gap" in _ll.columns and "level" in _ll.columns and (_ll[_ll.market == "player_solo_tackles"].share_gap.notna().any() if (_ll.market == "player_solo_tackles").any() else True),
       "the line log carries the solo-share gap and the lined-player level for every line")
