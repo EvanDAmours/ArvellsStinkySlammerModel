@@ -23,6 +23,31 @@ from pipeline.model import american_to_decimal as dec  # noqa: E402
 from pipeline.sources import norm_name  # noqa: E402
 
 PART_TIME, HOT = C.HOLES["part_time"], C.HOLES["hot"]      # the same numbers the card's flags use
+ROTOWIRE_LEVEL, ROTOWIRE_UNDER = 1.075, 0.75                 # Rotowire's solo number ran 0.93 of the box score in weeks 7 to 9; "under" is this far below the line
+
+
+def rotowire(season, weeks):
+    """Rotowire's weekly solo projection per player (through Sleeper's public feed): {(week, name_key): solo}. An outside
+    opinion used only to confirm a candidate. Empty when the feed cannot be reached. Past weeks are served as they stood
+    at the end of the week; whether a number moved after kickoff cannot be told from the feed."""
+    import json
+    import urllib.request
+    out = {}
+    for w in weeks:
+        try:
+            url = f"https://api.sleeper.app/projections/nfl/{season}/{int(w)}?season_type=regular&position[]=LB&position[]=DB&position[]=DL"
+            with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "tackle-model"}), timeout=40) as r:
+                data = json.loads(r.read())
+        except Exception as e:  # noqa: BLE001
+            print(f"rotowire: week {w} not fetched ({type(e).__name__})")
+            continue
+        for d in data:
+            st, pl = d.get("stats") or {}, d.get("player") or {}
+            if st.get("idp_tkl_solo") is None:
+                continue
+            k = (int(w), norm_name(f"{pl.get('first_name') or ''} {pl.get('last_name') or ''}"))
+            out[k] = max(out.get(k, 0.0), float(st["idp_tkl_solo"]))
+    return out
 
 
 def frame(H, season, weeks=None):
@@ -55,6 +80,8 @@ def frame(H, season, weeks=None):
     if not out:
         return pd.DataFrame()
     D = pd.concat(out, ignore_index=True)
+    rw = rotowire(season, sorted(D.week.unique()))
+    D["rw_solo"] = [rw.get((int(w), n), np.nan) for w, n in zip(D.week, D.name_key)]
     D["actual"] = np.where(D.kind == "solo", D.solo, D.comb)
     D = D[D.actual != D.line].copy()
     D["under"] = D.actual < D.line
@@ -67,10 +94,12 @@ def candidates(D):
     s, c = D[D.kind == "solo"], D[D.kind == "combined"]
     gap, part = s.share_gap <= C.SHARE_GAP["flag"], s.pct < PART_TIME
     hot = (c.l3_c - c.avg_c) >= HOT
+    agrees = (s.rw_solo * ROTOWIRE_LEVEL) <= (s.line - ROTOWIRE_UNDER)
     return [("Solo Under, the book's solo share too high for him (share gap)", "Under", s[gap], s[~gap]),
             ("Solo Under, a part-time player (under 85% of the snaps)", "Under", s[part], s[~part]),
             ("Solo Under, neither of the two (the rest of the solo board)", "Under", s[~gap & ~part], s[gap | part]),
-            ("Combined Over, his last three games half a tackle over his season average", "Over", c[hot], c[~hot])]
+            ("Combined Over, his last three games half a tackle over his season average", "Over", c[hot], c[~hot]),
+            ("Solo Under, share gap or part-time, and Rotowire's solo number well under the line too", "Under", s[(gap | part) & agrees], s[(gap | part) & ~agrees & s.rw_solo.notna()])]
 
 
 def report(D):
@@ -79,7 +108,7 @@ def report(D):
     for name, side, bet, rest in candidates(D):
         w, l, r = rec(bet, side); w2, l2, r2 = rec(rest, side)
         by = " ".join(f"wk{wk} {rec(x, side)[0]}-{rec(x, side)[1]}" for wk, x in bet.groupby("week"))
-        lines.append(f"{name}: {w}-{l} ({w / max(1, w + l):.0%}, {r:+.1%} a bet) against {w2}-{l2} ({w2 / max(1, w2 + l2):.0%}) for the other lines of the market | {by}")
+        lines.append(f"{name}: {w}-{l} ({w / max(1, w + l):.0%}, {r:+.1%} a bet) against {w2}-{l2} ({w2 / max(1, w2 + l2):.0%}) for the lines it is compared with | {by}")
     return lines
 
 

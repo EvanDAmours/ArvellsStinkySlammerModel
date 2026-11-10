@@ -384,6 +384,9 @@ record where they concern picks.
 - **The game total and the opponent's implied points as corrector inputs** (2026-11-10; changelog): final projection, corrector retrained per fold. Regulars 2025-26 +0.0002 (t +0.3), all folds +0.0032 (t +1.4): no gain, worse in 2024. The spread and the opponent's volume already carry it. Re-open if: a play-count projection from another source.
 - **A backup quarterback for the opponent** (2026-11-10; changelog): the opponent's starter is not the one who started most of its earlier games (21% of games). Regulars 2025-26 -0.0002 (t -0.3); on the games it touches -0.0065 (t -1.7, 1,247 rows). Raw: linebackers 3.9% over their projection against a backup, corners and safeties 1.5% under. The right direction, short of the bar (t -2 on the rows it moves). Re-open if: a full extra season, or as a factor by position.
 - **Wind and cold as corrector inputs** (2026-11-10; changelog): regulars 2025-26 -0.0010 (t -1.7), 2026 alone -0.0029 (t -2.1), all folds +0.0007, and worse on the windy games themselves (+0.014, 346 rows). Raw, wind 15 mph+: linebackers +6%, corners -7% (about 100 rows each). The schedule feed has no forecast before the game, so it could not run live anyway. Re-open if: a forecast feed, with a season more of windy games.
+- **Recent form (last three games against the season average) as a corrector input** (2026-11-10; validation pass): regulars 2025-26 +0.0005 (t +0.5), all folds -0.0013 (t -0.7). Over 2024 and 2025 the final projection is level on hot players (actual over projected 0.99 to 1.01); only 2026 shows them 5 to 7% over, as it shows cold players 5% over: that is the season's level, not a lag. The books' lag on hot players (tools/holes.py) is theirs, not the model's.
+- **Rotowire's weekly projection as a corrector input or a blend** (2026-11-10; validation pass): through Sleeper's public feed, 2024 to 2026, 5,575 regular games. Its deviance is 1.81 level-matched against 1.31 for the final projection (t +10.8), it runs 16 to 22% under the box score, and any blend is worse. As a corrector input: regulars 2025-26 -0.0026 (t -1.5), everyone -0.0061 (t -4.0): it helps on the players no book prices. Past weeks are served as they stood at the week's end, so even that may flatter it. Re-open if: its number captured at each pull for a season.
+- **Stadium stat crews, again** (2026-11-10; validation pass): a stadium's lean toward solo or assisted credit carried from 2023 to 2024 (correlation 0.46) and 2024 to 2025 (0.31), and is gone in 2026: 2025 to 2026 -0.02, the first half of 2026 against the second 0.04. Nothing to price this season.
 
 ### Projection: structure and shrinkage
 - **Per-snap rate as the whole base** (2026-10-26, round 1; 2026-10-30, round 4): rate per snap x expected snaps alone was worse (+1.7% MAE); with no per-game blend 1.7306 train / 1.7258 test. Adopted only as 40% of a blend in round 4.
@@ -536,6 +539,8 @@ and C9. What remains, and what the rebuild itself turned up:
     Two more candidates found the same day run beside it (`tools/holes.py`): part-time players' solo Unders (82-40)
     and hot players' combined Overs (75-47). The second cuts against the model's own damping of hot streaks: if it
     holds, the projection's treatment of recent form on combined is the thing to re-test, not just a pick rule.
+    (Re-tested the same day on four seasons: the model does not lag hot players; the lag is the books'. And a fifth
+    line: either solo pattern with Rotowire's solo number well under the line too, 47-16.)
 12. **Closing-line value and the prices disagree.** On the replay's picks the price logged beat the closing price
     of the same line (+29.9 units against +25.0 on 186 picks), yet the no-vig closing-line value of the same picks
     is -2 points. One of the two is measured wrong (the vig widening near kickoff, or the conversion through the
@@ -747,6 +752,32 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 ## Changelog
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
+
+### 2026-11-10, noon (a validation pass against outside sources: the formula stands, nothing changes)
+
+Owner: "creative liberty to re-dive into the formula and the things we source... anything to validate it:
+injury reports, team sources, online pundits." Six checks, each against something the model did not build.
+Numbers for the three tested as inputs are in the rejected register.
+1. **An outside projection.** Rotowire's weekly tackle projections (Sleeper's public feed, 2024 to 2026): the final
+   projection is far closer to the box score on the same 5,575 regular games (deviance 1.31 against 1.81), and no
+   blend helps. The model is not behind what a pundit publishes.
+2. **Recent form.** The sweep suggested the model lags hot players. Over four seasons it does not (level within
+   1%); no input for it helps. The books' lag on hot players is theirs.
+3. **The snap forecast.** Regulars are expected at 92% of the snaps and play 90.5%; the typical miss is 10 points;
+   4% play under half of what was expected. Knowing the true snaps in advance would remove 10% of the tackle miss
+   for regulars and 14% for players expected at 50 to 80%. So "faster on role changes" is worth a tenth of the
+   miss at the very most: real, and smaller than it was pitched on 2026-11-09.
+4. **The injury report.** Players listed questionable and expected at half the snaps or more play 3 points fewer
+   snaps than expected and make 98.6% of their projected tackles; 1% do not play. The status handling is sound.
+5. **Stat crews.** The stadium effect on solo against assisted credit was real through 2025 and is gone in 2026.
+   Leaving it out of the solo share stands.
+6. **A third box score.** Sleeper's stats feed against the official count we settle on, weeks 7 to 9 (1,361
+   player-games): solo equal in 93.4%, combined in 89.1%; 5 of 374 solo lines would settle differently. The count a
+   book settles on can flip about one solo bet in 75: open issue 11 stays open until a settled slip is seen.
+One new candidate: on solo lines with the share gap or part-time, Rotowire's solo number well under the line too
+(times 1.075, at least 0.75 under) went 47-16 (75%) against 104-58 without that agreement; alone, with neither
+pattern, it calls nothing (17-14). An outside opinion as a confirmer, never a selector. In `tools/holes.py` as a
+fifth line. Scripts: scratchpad `res/n6_outside.py`, `n7_snaps_crew.py`, `n8_pundit_lines.py`, `ext/`.
 
 ### 2026-11-10, 11 am (the part-time and hot flags on the card)
 
