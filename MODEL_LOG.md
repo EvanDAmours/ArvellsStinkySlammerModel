@@ -871,6 +871,33 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-10, 3:01 pm (the calculator: locks only, and the sleepers' own list)
+
+Owner: "How about sleepers? And locks? Can you add those into the filter too." The site only.
+
+"What would it have paid?" has a "Show" choice: every pick, locks only, or sleepers. Sleepers are their own list
+(a line where the model's number sits clear of the book's, one unit each whether or not the board picked it, with
+the sleeper's own grade), so choosing them swaps the grades for sleeper grades and drops the stake choice. Every
+other filter works on all three. The week range now follows the first and last week on offer until the reader
+narrows it: while testing, switching from locks (which end in week 17 of 2025) to sleepers silently left week 18
+out, and that is fixed.
+
+Data: `tools/season_test.py` keeps the replay's graded sleepers and marks which picks were locks, and writes both
+into `data/replay_seasons.json` (pick cells carry a lock flag; `sleeper_cells` by week, sleeper grade, market, side
+and position). The three seasons were re-run for it and reproduce the published records exactly (216-156, 721-413,
+537-371). What the re-runs add, replayed under today's rules, one unit each:
+
+| | locks | sleepers, their own list | A sleepers |
+|---|---|---|---|
+| 2026, weeks 4 to 9 | 7-2 | 129-61, +30.9u | 34-9 |
+| 2025, weeks 4 to 18 | 31-10 | 268-153, +48.9u | 75-33 |
+| 2024, weeks 4 to 18 | 2-2 | 203-134, +20.9u | 14-10 |
+
+Sleepers are frozen rules of their own and nothing here changes them; the numbers are the same kind of replay as the
+picks' (open issue 1 for what that is worth). Checked in a browser against sums made from the re-runs' own files,
+twelve selections over four sources; the earlier filter checks still give the same answers. Smoke test 184 of 184
+(one new check). Revert: `git revert` of this commit.
+
 ### 2026-11-10, 2:26 pm (the calculator filters by market, side and position, and lists the picks)
 
 Owner: "I want to be able to sort too. Like with the new model last week if I wanted to bet solo under A graded CB

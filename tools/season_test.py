@@ -65,9 +65,10 @@ def report(P, season):
         print(f"  at {b}: {rec(x)}")
 
 
-def summary(P, season):
+def summary(P, season, sleepers=None):
     """The same replay as a small record for the site (data/replay_seasons.json): the season's picks under the current
-    rules, by grade and by week. P: the counted, decided picks."""
+    rules, by grade and by week. P: the counted, decided picks. sleepers: the replay's graded sleepers (their own list,
+    one unit each), kept as cells for the site's calculator."""
     P = P.assign(win=P.result == "Win", st=P.units * P.stake)
     def r(x):
         n = len(x)
@@ -79,9 +80,16 @@ def summary(P, season):
         by_week.append(dict(week=int(w), **r(x), by_grade={g: dict(wins=int(y.win.sum()), losses=int((~y.win).sum()), units=float(y.units.sum())) for g, y in x.groupby("grade")}))
     wk = P.groupby("week").st.sum()
     # the same picks cut fine enough for the site's calculator: week, grade, market, side, position -> wins, losses, units at 1 a pick
-    cells = [[int(w), str(g), KIND.get(m, m), str(sd), str(gp), int(x.win.sum()), int((~x.win).sum()), round(float(x.units.sum()), 4)]
-             for (w, g, m, sd, gp), x in P.assign(group=P["group"].fillna("")).groupby(["week", "grade", "market", "side", "group"])]
-    return dict(season=int(season), weeks=weeks, plays=r(P), cells=cells, by_grade=[dict(grade=g, **r(x)) for g, x in P.groupby("grade")],
+    # the last number says whether the cell's picks were locks (1) or not (0)
+    cells = [[int(w), str(g), KIND.get(m, m), str(sd), str(gp), int(x.win.sum()), int((~x.win).sum()), round(float(x.units.sum()), 4), int(bool(lk))]
+             for (w, g, m, sd, gp, lk), x in P.assign(group=P["group"].fillna(""), _lock=P.five.fillna(False).astype(bool)).groupby(["week", "grade", "market", "side", "group", "_lock"])]
+    sleeper_cells = []
+    if sleepers is not None and len(sleepers):
+        S_ = sleepers[sleepers.result.isin(["Win", "Loss"])]
+        S_ = S_.assign(win=S_.result == "Win", group=S_["group"].fillna("") if "group" in S_.columns else "", sleeper_grade=S_["sleeper_grade"].fillna("none") if "sleeper_grade" in S_.columns else "none")
+        sleeper_cells = [[int(w), str(g), KIND.get(m, m), str(sd), str(gp), int(x.win.sum()), int((~x.win).sum()), round(float(x.units.sum()), 4)]
+                         for (w, g, m, sd, gp), x in S_.groupby(["week", "sleeper_grade", "market", "side", "group"])]
+    return dict(season=int(season), weeks=weeks, plays=r(P), cells=cells, sleeper_cells=sleeper_cells, by_grade=[dict(grade=g, **r(x)) for g, x in P.groupby("grade")],
                 locks=r(P[P.five.fillna(False).astype(bool)]), by_week=by_week, weeks_up_at_stakes=int((wk > 0).sum()), worst_week=float(wk.min()), best_week=float(wk.max()))
 
 
@@ -140,11 +148,11 @@ if __name__ == "__main__":
     if a.season != C.SEASON:
         R.lined_level_now = lambda H, week: 1.0          # the line log holds this season only
     loaded = R.load_all()
-    picks, lines = [], []
+    picks, lines, sleeps = [], [], []
     scratch = Path(tempfile.mkdtemp()) / "retro.json"
     for wk in weeks:
         try:
-            _, graded, _, ll_ = RF.replay(a.season, wk, loaded=loaded, out=scratch, keep_all=True)
+            _, graded, sl_, ll_ = RF.replay(a.season, wk, loaded=loaded, out=scratch, keep_all=True)
         except SystemExit as e:
             print(f"week {wk}: {e}")
             continue
@@ -152,12 +160,16 @@ if __name__ == "__main__":
             picks.append(graded)
         if ll_ is not None and len(ll_):
             lines.append(ll_)
+        if sl_ is not None and len(sl_):
+            sleeps.append(sl_)
     P = pd.concat(picks, ignore_index=True) if picks else pd.DataFrame()
     L = pd.concat(lines, ignore_index=True) if lines else pd.DataFrame()
+    SL = pd.concat(sleeps, ignore_index=True) if sleeps else pd.DataFrame()
     if a.out:
         Path(a.out).mkdir(parents=True, exist_ok=True)
         P.to_csv(Path(a.out) / f"picks_{a.season}.csv", index=False)
         L.to_csv(Path(a.out) / f"lines_{a.season}.csv", index=False)
+        SL.to_csv(Path(a.out) / f"sleepers_{a.season}.csv", index=False)
     if len(P) and "counted" in P.columns:
         D = P[P.counted.fillna(False).astype(bool) & P.result.isin(["Win", "Loss"])]
         if len(D):
@@ -166,7 +178,11 @@ if __name__ == "__main__":
         D = pd.DataFrame()
     sb_ = scoreboard(L, loaded[5], a.season)
     if a.json and len(D):
-        save_summary(a.json, dict(summary(D, a.season), against_the_book=sb_))
+        save_summary(a.json, dict(summary(D, a.season, SL), against_the_book=sb_))
+    if len(SL) and "result" in SL.columns:
+        d_ = SL[SL.result.isin(["Win", "Loss"])]
+        print(f"\nthe sleepers' own list, one unit each: {int((d_.result == 'Win').sum())}-{int((d_.result == 'Loss').sum())}, {d_.units.sum():+.1f}u"
+              + "".join(f" | {g} {int((x.result == 'Win').sum())}-{int((x.result == 'Loss').sum())}" for g, x in d_.groupby("sleeper_grade")))
     D2 = HO.frame(loaded[5], a.season, weeks)
     if len(D2):
         print(f"\nthe holes, {len(D2)} decided closing lines (tools/holes.py):")

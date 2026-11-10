@@ -503,6 +503,9 @@ check(all(k in _html for k in ("rec-whatif", "function whatIfSection", "unit-val
 check(all(k in _html for k in ('aria-label": `${aria} ${g}`', "rec-whatif-cuts", "rec-whatif-picks")) and all(e.get("cells") and sum(c[5] for c in e["cells"]) == e["plays"]["wins"]
       and sum(c[6] for c in e["cells"]) == e["plays"]["losses"] and abs(sum(c[7] for c in e["cells"]) - e["plays"]["units"]) < 0.05 and {c[2] for c in e["cells"]} <= {"solo", "combined", "assists"} for e in _rs.get("seasons", [])),
       "the calculator filters by market, side and position, and each replayed season's cells (week, grade, market, side, position) add up to its record")
+check(all(k in _html for k in ('"Locks only"', "Sleepers (their own list)", "srows", "WI.toMax")) and all(sum(c[5] for c in e["cells"] if c[8]) == e["locks"]["wins"] and sum(c[6] for c in e["cells"] if c[8]) == e["locks"]["losses"]
+      and e.get("sleeper_cells") and all(len(c) == 8 and c[1] in ("A", "B", "C", "none") for c in e["sleeper_cells"]) for e in _rs.get("seasons", [])),
+      "the calculator can show locks only or the sleepers' own list: each season's lock cells add up to its locks, and its sleepers are there by week, grade, market, side and position")
 
 _sg = json.loads((tmp / "data" / "cache" / "segments.json").read_text()) if (tmp / "data" / "cache" / "segments.json").exists() else {}
 check(all("n_eff" in v and v["n_eff"] <= v["n"] + 1e-9 for v in _sg.values()) if _sg else True, f"segment calibration carries the recency-weighted count ({len(_sg)} segments)")
