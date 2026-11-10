@@ -700,6 +700,11 @@ Weeks 7 to 9 (in-sample, 880 lines): book 0.6913, model 0.6876, engine 0.6845; t
 Smoke test 174 of 174 (five new checks: the split, each candidate on lines with a known answer, the record since
 the engine, the weekly log's sections, the site).
 
+**Rehearsed before it runs live.** The forced live grade and the daily, each on real data in a scratch clone with
+this code: both clean; the first writes `data/settled.csv` (617 bets settled on the official count). No pick was
+logged for Monday night's game of week 9, so the first live run of the new grader is Tuesday's daily. The ticker
+run in progress predated the hand-over step, so the next run was started by hand (see the pitfalls).
+
 **Revert.** Remove `ENGINE_LIVE` and `SHADOW` and the blocks that read them; no pick is affected either way.
 
 ### 2026-11-09, 7 pm (the test on GitHub had been failing for a week, unread)
@@ -826,6 +831,10 @@ Never tested; each with what would justify it. Anything tested and dropped is in
 - **Why another session failed is in its transcript, not in its task's record.** This file said for a day that the
   standing post-mortem had no repository attached; its run shows a checkout and a different cause (the evidence it
   was sent to read is sealed on the site). Read the run before writing the reason down.
+- **A run in progress keeps the workflow file it started with.** The hand-over step ("a run that ends starts the
+  next") was pushed at 5:05 pm on 2026-11-09 while a ticker run that began at 2:38 pm was beating: that run could
+  not hand over, and its successor was started by hand at 7:31 pm. A change to a workflow is live only from the
+  next run that starts; after one, check that a run started since.
 - **Site tables do not wrap** (cells are `nowrap`): a column of sentences pushes the rest off the screen. Rows of
   prose go in the stacked list (`.trials`), not in a table.
 - **A test that passes by hand is not the gate; the run on the clean machine is.** The Test workflow failed on every
