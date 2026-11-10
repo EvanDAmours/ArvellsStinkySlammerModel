@@ -16,7 +16,7 @@ def _ignore_live_data(d, names):
     rel = os.path.relpath(d, ROOT)
     skip = {".git", "__pycache__"}
     if rel == "data":
-        skip |= {"cache", "picks.csv", "parlays.csv", "retro_five.json", "weekly_five.md", "lines_log.csv", "retro_assists.json", "sleepers.csv"}
+        skip |= {"cache", "picks.csv", "parlays.csv", "retro_five.json", "weekly_five.md", "lines_log.csv", "retro_assists.json", "sleepers.csv", "settled.csv"}
     if rel == os.path.join("data", "odds"):
         skip |= {n for n in names if n.isdigit()}
     if rel == os.path.join("docs", "data"):
@@ -48,11 +48,20 @@ check(len(proj) > 300, f"projections built ({len(proj)})")
 
 P = {r["predictor"]: r for r in bt["predictors"]}
 check(P["Season average"]["mae"] < P["Last game"]["mae"], "season average beats last game")
-check(P["Full model"]["mae"] < P["Full model without stat crew"]["mae"], "stat-crew factor improves accuracy")
-check(P["Full model"]["mae"] < P["Full model without role bump"]["mae"], "role bump improves accuracy")
-check(P["Full model"]["mae"] <= P["Season average"]["mae"], "full model at least matches season average")
+FT = {t["key"]: t for t in bt.get("factor_tests", [])}
+check(set(FT) >= {"crew", "role", "volume", "pfr", "persnap", "vacancy", "snap"} and all({"in_model", "rows", "helps", "t", "verdict"} <= set(t) for t in FT.values())
+      and all(FT[k]["in_model"] == bool(v) for k, v in __import__("json").loads(__import__("json").dumps(bt["design"]["factors"])).items() if k in FT),
+      f"the protocol's daily test covers every factor, in the model or out ({sum(t['in_model'] for t in FT.values())} in, {sum(not t['in_model'] for t in FT.values())} out)")
+check(FT["crew"]["helps"] is not None and FT["crew"]["helps"] < 0 and not FT["crew"]["in_model"], f"the daily test sees the planted stat crews although the factor is out of the model (deviance {FT['crew']['helps']:+.4f}, t {FT['crew']['t']:+.1f})")
+check(FT["role"]["in_model"] and FT["role"]["t"] is not None and FT["role"]["t"] < -1 and P["Factor model"]["mae"] < P["Factor model without next man up"]["mae"], f"next man up earns its place on the rows it moves (t {FT['role']['t']:+.1f})")
+check(P["Factor model"]["mae"] <= P["Season average"]["mae"], "factor model at least matches season average")
+_fin = bt.get("final", {})
+check(len(_fin.get("folds", [])) >= 2 and all(f["final"]["deviance"] > 0 and f["factor"]["deviance"] > 0 for f in _fin["folds"]) and "final_minus_factor" in _fin and isinstance(bt.get("flags"), list)
+      and any(r["predictor"].startswith("Final projection") and "deviance" in r for r in bt["predictors"]),
+      f"the final projection is scored out of sample, a fold a season, in Poisson deviance ({[(f['season'], round(f['final']['deviance'], 3)) for f in _fin.get('folds', [])]}; flags {bt.get('flags')})")
 lb = next((d for d in bt["dispersion"] if d["group"] == "LB"), None)
-check(lb is not None and 0.6 <= lb["corrected"] <= 1.0, f"linebacker spread recovered near planted 0.75 ({lb and round(lb['corrected'], 2)})")
+_s = next((d for d in bt["dispersion"] if d["group"] == "S"), None)
+check(lb is not None and _s is not None and 0.6 <= lb["corrected"] <= 1.05 and lb["corrected"] < _s["corrected"], f"linebacker spread fitted tighter than the safeties', as planted (0.75 before the projection's own error: {lb and round(lb['corrected'], 2)} vs {_s and round(_s['corrected'], 2)})")
 cal = bt["calibration"]
 worst = max(abs(c["predicted"] - c["observed"]) for c in cal if c["n"] > 200)
 check(worst < 0.06, f"over-probabilities calibrated (worst bucket off by {worst:.3f})")
@@ -107,13 +116,14 @@ check((tmp / "data" / "picks.csv").exists() and "stake" in pd.read_csv(tmp / "da
 bets = json.loads((tmp / "docs/data/bets.json").read_text())
 check(len(bets) > 50 and all(b["model_over"] is None or 0 <= b["model_over"] <= 1 for b in bets), f"lines priced ({len(bets)})")
 priced = [b for b in bets if b.get("proj") is not None]
-check(all(b.get("grade") in ("A", "B", "C") and 0 <= b.get("lock", -1) <= 100 for b in priced), "every priced line has a confidence grade and lock score")
+check(all(0 <= b.get("lock", -1) <= 100 and b.get("tier") in ("pick", "lean", "pass") for b in priced) and all(b.get("grade") in ("A", "B", "C") for b in priced if b.get("pick") in ("Over", "Under"))
+      and all(b.get("grade") is None for b in priced if b.get("pick") not in ("Over", "Under")), "every priced line has a lock score and a tier; a pick has a grade, a line that is not a pick has none")
 check(all("lock_block" in b and "lock_eligible" in b and "in_role_games" in b for b in priced) and not any(b.get("lock_block") and b.get("five") for b in priced),
       f"priced lines carry the lock-eligibility checklist and no blocked line is a lock ({sum(1 for b in priced if b.get('lock_block'))} blocked of {len(priced)})")
 check(all(not (b.get("lock_block") and "Over" == b.get("side") and "fading" in str(b.get("why"))) for b in priced) and not any("Over" == b.get("side") and "fading an outlier" in str(b.get("why")) for b in priced),
       "no Over is sold as fading an outlier")
 check(any("role-shift" in r["predictor"] for r in bt["predictors"]) and isinstance(bt.get("weak_spots"), list), "backtest reports the role-shift factors and the weak-spot table")
-check(all(any(k in r["predictor"] for r in bt["predictors"]) for k in ("per-snap base", "vacancy rule", "dome corners", "outlier damping")), "backtest reports the per-snap, vacancy, dome and outlier-damping pieces")
+check(all(any(k in r["predictor"] for r in bt["predictors"]) for k in ("per-snap base", "vacancy rule", "indoors (corners)", "outlier damping")), "backtest reports the per-snap, vacancy, dome and outlier-damping pieces")
 check(any(p.get("group") == "DL" and p.get("press_pg") is not None for p in proj) and all(p.get("press_pg") is None for p in proj if p.get("group") != "DL")
       and not any("pressure" in r["predictor"] for r in bt["predictors"]), "lineman pressure profile carried for the card, DL only, with no model row (rejected in round 5)")
 _ac = json.loads((tmp / "docs/data/actuals.json").read_text())
@@ -139,15 +149,34 @@ check(len(_fp) == 2 and abs(float(_fp.fp_comb.iloc[0]) - 11.4) < 1e-9 and _fp.te
 check(any(p.get("share_pred") is not None and p.get("tsnaps_exp") for p in proj) and all(0 <= (p.get("share_pred") or 0) <= 1 for p in proj), "projections carry an expected snap share and team snaps")
 check(any(":low" in k or "under 60%" in str(d.get("group", "")) for d in bt["dispersion"] for k in [d.get("group", "")]), "dispersion estimated separately for low expected snap share")
 check(meta.get("freshness", {}).get("stats_through_week") is not None, "data freshness (stats and snaps through week) reported")
-check(any(r["predictor"].startswith("Solo tackles: full model") for r in bt["predictors"]) and any("solo" in d["group"] for d in bt["dispersion"]) and 0.9 <= bt.get("scale_solo", 0) <= 1.1,
+check(any(r["predictor"].startswith("Solo tackles: final projection") for r in bt["predictors"]) and any("solo" in d["group"] for d in bt["dispersion"]) and 0.9 <= bt.get("scale_solo", 0) <= 1.1,
       "solo tackles scored in the backtest with their own dispersion and level")
 check(any("without league solo drift" in r["predictor"] for r in bt["predictors"]) and all(0.85 <= (p.get("solo_drift") or 1.0) <= 1.15 for p in proj), "league solo drift applied and reported")
-check(all("far_from_line" in b and "p_claim" in b and "segment_adj" in b for b in priced), "priced lines carry the far-from-line flag, the claimed chance and the segment correction")
+check(all("far_from_line" in b and all(0 < b.get(k, -1) < 1 for k in ("p_claim", "p_low", "p_model", "market_over")) and "edge_low" in b and "mkt_mean" in b for b in priced),
+      "priced lines carry the far-from-line flag, the book's fair chance, the model's own chance, the win chance and the cautious chance")
+check(all("next man up" in str(b.get("lock_block")) for b in priced if b.get("signal_role")) and not any(b["pick"] == "Under" and "next man up" in str(b.get("lock_block")) and (b.get("share_pred") or 0) < C.PHI_SHARE_SPLIT for b in priced),
+      f"the next man up is never lock-eligible, and his Under is not a pick when the model expects him under 60% of the snaps ({sum('next man up' in str(b.get('lock_block')) for b in priced)} lines on such players)")
 check(not any(b.get("five") and b.get("side") == "Over" for b in priced) and all("Over side" in str(b.get("lock_block")) for b in priced if b.get("side") == "Over"), "no Over is a lock while Overs are ineligible")
-check(all(b.get("ev", 0) >= 0.10 - 1e-9 or "fading" in str(b.get("why")) or "role" in str(b.get("why")) for b in priced if b.get("pick") == "Over"), "an Over pick clears the higher Over bar unless a signal backs it")
-check(all(b.get("mkt_line") is not None and abs(b["proj"] - b["proj_model"]) <= abs(b["mkt_line"] - b["proj_model"]) + 1e-9 for b in priced), "pricing mean sits between the model and the market line")
+_E = C.ENGINE
+_guard = lambda b: b["side"] == "Under" and "next man up" in str(b.get("lock_block"))       # his Under is never a pick when he is expected under 60% of the snaps
+check(all((b["edge_low"] >= _E["pick_edge_low"] - 1e-9) == (b["tier"] == "pick") or b.get("status") or b["n_prev"] < C.MIN_GAMES_FOR_PICK or _guard(b) for b in priced)
+      and all(b["ev"] >= _E["lean_edge"] - 1e-9 and b["edge_low"] < _E["pick_edge_low"] for b in priced if b["tier"] == "lean")
+      and all(b["pick"] in ("Over", "Under") for b in priced if b["tier"] == "pick") and all(b["pick"] == "Pass" for b in priced if b["tier"] != "pick"),
+      f"a pick breaks even at the cautious chance; a lean has an edge only at the win chance and is not a pick ({sum(b['tier'] == 'pick' for b in priced)} picks, {sum(b['tier'] == 'lean' for b in priced)} leans)")
+# a board where nothing can be priced (one-sided prices only, a player the model does not carry) still yields every column
+_Pm = pd.read_csv(tmp / "data" / "cache" / "projections.csv")
+_bare = M.price_lines(pd.DataFrame([dict(player=_Pm.player.iloc[0], book="Bally Bet", market="player_tackles_assists", line=5.5, over_odds=-110, under_odds=np.nan, event_id="Z1", commence_time="2099-01-01T18:00:00Z"),
+                                    dict(player="Nobody Atall", book="DraftKings", market="player_solo_tackles", line=2.5, over_odds=-110, under_odds=-110, event_id="Z1", commence_time="2099-01-01T18:00:00Z")]), _Pm)
+check(len(_bare) == 2 and {"ev", "best_price", "tier", "stake", "lock", "grade", "sleeper"} <= set(_bare.columns) and not _bare.best_price.any() and set(_bare.pick) == {"Pass", "No projection"}
+      and G.size_stakes(_bare) is not None and "one-sided" in " ".join(_bare.why.astype(str)).lower(),
+      "a board with nothing to price (a one-sided price with no two-way book on the line, an unknown player) is passed without a pick and without breaking the log")
+_od = lambda b: b["over_odds"] if b["side"] == "Over" else b["under_odds"]
+_tol = 4e-4                                               # the site's JSON keeps four decimals
+check(all(abs(b["ev"] - (b["p_claim"] * M.american_to_decimal(_od(b)) - 1)) < _tol and abs(b["edge_low"] - (b["p_low"] * M.american_to_decimal(_od(b)) - 1)) < _tol
+          and min(b["p_model"], b["mkt_side"]) - _tol <= b["p_low"] <= max(b["p_model"], b["mkt_side"]) + _tol and (b["p_low"] - b["mkt_side"]) * (b["p_claim"] - b["p_low"]) >= -_tol for b in priced),
+      "the win chance sits between the book's fair chance and the model's own, the cautious chance nearer the book; both returns follow from the price")
+check(all(b.get("mkt_mean") is not None and min(b["proj_model"], b["mkt_mean"]) - 0.06 <= b["proj"] <= max(b["proj_model"], b["mkt_mean"]) + 0.06 for b in priced), "the priced number sits between the model's number and the one the book's price implies")
 check(any(b.get("cons_n", 0) > 0 for b in priced), "consistency (games cleared) computed from game logs")
-check(all((b.get("p_claim") or 0) >= 0.55 - 1e-9 and (b.get("ev") or 0) >= 0.06 - 1e-9 for b in priced if b.get("pick") in ("Over", "Under")), "every pick clears the claimed-chance floor and the full return bar")
 check(all(str(b.get("over_link", "")).startswith("https://") and str(b.get("under_link", "")).startswith("https://") for b in priced), "priced lines carry the book's bet-slip links for both sides")
 picks = pd.read_csv(tmp / "data/picks.csv") if (tmp / "data/picks.csv").exists() else pd.DataFrame()
 check(len(picks) >= 1, f"picks logged ({len(picks)})")
@@ -155,23 +184,40 @@ check(picks.drop_duplicates(["player", "market", "side", "line"]).shape[0] == le
 check({"lock", "grade", "consistency", "payout"} <= set(picks.columns) and picks.grade.isin(["A", "B", "C"]).all(), "logged picks carry their grade, lock score, consistency and payout")
 five = picks[picks.five.fillna(False).astype(bool)] if "five" in picks.columns else pd.DataFrame()
 flagged = G.lock_blocked(picks)               # never locks, whatever their score
-others = picks[~picks.player.isin(five.player) & ~flagged & picks.market.isin(C.LOCK_MARKETS)] if len(five) else picks[~flagged & picks.market.isin(C.LOCK_MARKETS)]   # assists are never locks
+_isA = picks.grade.astype(str) == "A"                                                         # only an A can be a lock: the cautious edge, the model's own chance, the checklist
+others = picks[~picks.player.isin(five.player) & ~flagged & _isA & picks.market.isin(C.LOCK_MARKETS)] if len(five) else picks[~flagged & _isA & picks.market.isin(C.LOCK_MARKETS)]   # assists are never locks
 _segs = G.segment_key(five) if len(five) else pd.Series([], dtype=str)
 _full = {k for k, v in _segs.value_counts().items() if v >= C.LOCKS_PER_SEGMENT}
 _better = others[(others.lock > five.lock.min() + 1e-9) & ~G.segment_key(others).isin(_full)] if len(five) and len(others) else others.iloc[0:0]
 _strong = others[(others.lock >= C.LOCK_MIN_SCORE) & ~G.segment_key(others).isin(_full)] if len(others) else others.iloc[0:0]
 check(len(five) <= 5 and five.player.nunique() == len(five) and _better.empty and (_segs.value_counts() <= C.LOCKS_PER_SEGMENT).all()
       and (five.lock >= C.LOCK_MIN_SCORE).all() and (len(five) > 0 or _strong.empty),
-      f"locks: only A-grade picks (score {C.LOCK_MIN_SCORE}+), top scores, one per player, at most {C.LOCKS_PER_SEGMENT} of a kind, none when no pick is strong ({len(five)}; kinds {dict(_segs.value_counts())})")
+      f"locks: only A-grade picks (the model's own chance {C.LOCK_MIN_SCORE:.0f}+), highest first, one per player, at most {C.LOCKS_PER_SEGMENT} of a kind, none when no pick is strong ({len(five)}; kinds {dict(_segs.value_counts())})")
 check(sum(1 for b in bets if b.get("five")) == len(five), "locks marked on the board")
 parlays = pd.read_csv(tmp / "data/parlays.csv") if (tmp / "data/parlays.csv").exists() else pd.DataFrame()
 check(len(parlays) >= 2 and parlays.parlay_id.nunique() >= 1 and parlays.groupby("parlay_id").size().between(2, 4).all(), f"recommended parlay built ({parlays.parlay_id.nunique() if len(parlays) else 0} parlay, {len(parlays)} legs)")
 check(len(parlays) and parlays.player.nunique() == len(parlays) and parlays.units.between(0.1, 1.0).all(), "parlay legs are distinct players with a stake between 0.1 and 1 unit")
-check(all((b.get("claim_ev") or -1) >= C.PICK_MIN_CLAIM_EV - 1e-9 for b in priced if b.get("pick") in ("Over", "Under"))
-      and all((b.get("claim_ev") or -1) >= C.A_MIN_CLAIM_EV - 1e-9 for b in priced if b.get("grade") == "A"),
-      "every pick beats its price by 2% at its claimed chance, every A by 4%")
-check(not any(b.get("grade") == "A" and b.get("market") not in C.A_GRADE_MARKETS for b in priced) and five.market.isin(C.A_GRADE_MARKETS).all() if len(five) else True,
-      "A grades and locks are solo tackles only (combined picks that score 72+ show as a B)")
+check(all(b["edge_low"] >= _E["b_edge_low"] - 1e-9 and b["p_model"] >= _E["a_model"] - 1e-9 and not b.get("lock_block") and b["market"] in C.A_GRADE_MARKETS for b in priced if b.get("grade") == "A")
+      and all(b["edge_low"] >= _E["b_edge_low"] - 1e-9 for b in priced if b.get("grade") == "B") and all(b["edge_low"] < _E["b_edge_low"] for b in priced if b.get("grade") == "C")
+      and (five.market.isin(C.A_GRADE_MARKETS).all() if len(five) else True),
+      f"an A has a cautious edge of 2%+, a model chance of 70%+, a clear checklist and a market that can carry one; a B the edge; a C is a pick short of it ({dict(pd.Series([b.get('grade') for b in priced if b.get('grade')]).value_counts())})")
+# Rule 0 (CLAUDE.md): a pick is never graded, ranked or chosen by whether the book agrees with it. At a fixed model chance and a
+# fixed margin, moving the book's fair chance toward the model's must never raise the cautious edge (what chooses a pick) or the
+# grade; the lock score (what ranks) is the model's own chance and does not see the book at all. (The stake is not part of the
+# rule: sized by Kelly, it can rise a hair as an absurd long shot's price shortens, because the bet gets less volatile.)
+_rank = {None: 0, "C": 1, "B": 2, "A": 3}; _viol = 0
+for _pm100 in range(51, 99):
+    _pm, _prev = _pm100 / 100, None
+    for _pk100 in range(5, _pm100 + 1):
+        _pk = _pk100 / 100; _dec = 1 / (_pk * 1.0476)
+        _pl = M.engine_chance(_pm, _pk, _E["beta_low"]); _el = _pl * _dec - 1
+        _cur = (_el, _rank[M.engine_grade(_el, _pm, False, "player_solo_tackles")])
+        _viol += _prev is not None and (_cur[0] > _prev[0] + 1e-12 or _cur[1] > _prev[1])
+        _prev = _cur
+check(_viol == 0 and abs(M.engine_chance(0.7, 0.5, 0.0) - 0.5) < 1e-12 and abs(M.engine_chance(0.7, 0.5, 1.0) - 0.7) < 1e-9 and abs(M.fair_over(-110, -110) - 0.5) < 1e-12
+      and abs(M.fair_over(-130, 110) - (130 / 230) / (130 / 230 + 100 / 210)) < 1e-12 and np.isnan(M.fair_over(-110, None))
+      and M.engine_grade(-0.001, 0.9, False) is None and M.engine_grade(0.03, 0.9, True) == "B" and M.engine_grade(0.03, 0.9, False, "player_assists") == "B",
+      "more agreement from the book never improves a pick's cautious edge or its grade; zero disagreement is the book's fair chance; a blocked or trial-market pick tops out at B")
 # trades: a regular who played his team's last game shows on another team in the weekly roster before week 7
 _done = H[(H.season == 2026) & (H.week < 7)]
 _tlast = _done.groupby("team").week.max().to_dict()
@@ -240,6 +286,7 @@ for i, r in enumerate(week6.itertuples()):
                      player=r.player, line=r.comb + 0.5, over_odds=-110, under_odds=-110, pulled_at="20261018T165500Z"))
 rows[0].update(five=True, lock=80.0, grade="A"); rows[1].update(five=True, lock=75.0, grade="A"); rows[2].update(five=False)
 pd.DataFrame(rows).to_csv("data/picks.csv", index=False)
+G.SETTLED.unlink(missing_ok=True)
 (Path("data/odds/2026/wk06")).mkdir(parents=True, exist_ok=True)
 pd.DataFrame(snap).to_csv("data/odds/2026/wk06/20261018T165500Z.csv", index=False)
 graded, summary = G.grade(pw)
@@ -258,11 +305,19 @@ check(_gb.result.iloc[3] == "Win" and float(_gb.actual.iloc[3]) == float(_r0.com
 # a game the official stats have not reached is settled from ESPN's final box score, and marked live
 from pipeline.sources import norm_name as _nn
 pd.DataFrame(rows).to_csv("data/picks.csv", index=False)
+G.SETTLED.unlink(missing_ok=True)                 # a fresh settlement store: this scenario grades the same picks from another source
 _r1 = week6.iloc[1]
 _pw_wo = pw[~((pw.season == 2026) & (pw.week == 6) & (pw.team == _r1.team))]
 _live = pd.DataFrame([dict(season=2026, week=6, team=_r1.team, name_key=_nn(_r1.player), player=_r1.player, comb=int(_r1.comb), solo_t=int(_r1.solo_t))])
 _gl, _sl = G.grade(_pw_wo, live=_live)
-check(_gl.result.iloc[1] == "Loss" and _gl.graded_by.iloc[1] == "live" and _gl.graded_by.iloc[0] == "official", f"a finished game's pick settles from the live box score until the official stats arrive ({_gl.result.iloc[1]}, {_gl.graded_by.iloc[1]})")
+check(_gl.result.iloc[1] == "Loss" and _gl.graded_by.iloc[1] == "live" and _gl.graded_by.iloc[0] == "official", f"a finished game's pick settles from the live box score when the game ends ({_gl.result.iloc[1]}, {_gl.graded_by.iloc[1]})")
+# a bet settles once: the official stats arrive later with a different count for that player; the record does not move
+_pw_fix = pw.copy(); _mrow = (_pw_fix.season == 2026) & (_pw_fix.week == 6) & (_pw_fix.team == _r1.team) & (_pw_fix.player == _r1.player)
+_pw_fix.loc[_mrow, "comb"] = _pw_fix.loc[_mrow, "comb"] + 2
+_gf, _sf = G.grade(_pw_fix)
+check(_gf.result.iloc[1] == "Loss" and float(_gf.actual.iloc[1]) == float(_r1.comb) and _gf.graded_by.iloc[1] == "live" and bool(_gf.corrected.iloc[1]) and _sf["stat_corrections"] == 1 and G.SETTLED.exists(),
+      f"a bet settles once: a later stat correction is counted and shown, never applied ({_gf.result.iloc[1]}, kept {float(_gf.actual.iloc[1]):g} against a corrected {float(_r1.comb) + 2:g})")
+G.SETTLED.unlink(missing_ok=True)
 _pa.to_csv("data/picks.csv", index=False)
 _ga, _ = G.grade(pw)
 check(list(_ga.result) == ["Win", "Loss", "Win", "Win"] and float(_ga.actual.iloc[3]) == float(_r0.comb - _r0.solo_t) and _ga.side_market.iloc[3] == "Over assists",
@@ -275,8 +330,9 @@ check("Void" in set(_gv.result) and int((_gv.result == "Void").sum()) == 1, f"a 
 check(summary.get("by_side") and {x["key"] for x in summary["by_side"]} <= {"Over", "Under"} and all({"hit", "units", "pending"} <= set(x) for x in summary["by_side"]) and len(summary.get("by_side_market", [])) >= 1,
       f"record by side and by side-market carried ({[(x['key'], x['wins'], x['losses']) for x in summary['by_side']]})")
 check(isinstance(summary.get("segments"), list) and isinstance(summary.get("market_watch"), list) and G.SEGMENTS.exists(), f"segment calibration and market watch computed ({len(summary.get('segments', []))} segments, {len(summary.get('market_watch', []))} watch rows)")
-check(summary["by_grade"] and summary["by_grade"][0]["grade"] == "A" and all({"hit", "pushes", "pending", "staked", "stake"} <= set(g) for g in summary["by_grade"]),
-      f"record by grade carries hit rate, pushes, pending and staked units ({[(g['grade'], g['wins'], g['losses']) for g in summary['by_grade']]})")
+check(summary["by_grade"] and summary["by_grade"][0]["grade"] == "A" and all({"hit", "hit_lo", "hit_hi", "pushes", "pending", "staked", "stake"} <= set(g) for g in summary["by_grade"])
+      and summary["five"]["hit_lo"] is not None and summary["five"]["hit_lo"] < summary["five"]["hit"] < summary["five"]["hit_hi"] and "hit_lo" in summary["by_side"][0],
+      f"records carry hit rate, its likely range, pushes, pending and staked units ({[(g['grade'], g['wins'], g['losses']) for g in summary['by_grade']]})")
 check(abs(summary["units"] - (2 * (100 / 110) - 1)) < 1e-6, f"units computed ({summary['units']:.3f})")
 check(list(graded.clv_line) == [1.0, -1.0, 1.0], f"closing line value computed ({list(graded.clv_line)})")
 check(summary["close_moved"] == 3 and abs(summary["beat_close_share"] - 2 / 3) < 1e-9, f"beat-the-close share counts only moved lines ({summary['beat_close_share']:.3f} of {summary['close_moved']})")
@@ -302,7 +358,8 @@ check(all(b.get("player_id") for b in _ba) and all("espn_id" in b for b in _ba),
 _mt = json.loads((tmp / "docs" / "data" / "meta.json").read_text())
 check(_mt.get("season_over") is False, "meta says the season is not over while games remain")
 # the blend
-check("blend" in _mt.get("grading", {}), "meta carries the per-market blend (empty until a week is graded with logged numbers)")
+check({"engine", "stake", "factors", "frozen_until", "corrector_weight"} <= set(_mt.get("grading", {})) and _mt["grading"]["engine"]["beta"] == C.ENGINE["beta"] and "odds_budget" in _mt and isinstance(_mt.get("protocol_flags"), list),
+      "meta carries the engine's settings, the factor set, the freeze date, the odds-credit budget and the protocol's flags")
 check(bt.get("prob_scores", {}).get("pit") and 0 < bt["prob_scores"]["pit"]["below_5"] < 0.2 and abs(sum(bt["prob_scores"]["pit"]["deciles"]) - 1) < 0.01 and bt["prob_scores"].get("own_lines", {}).get("brier", 1) < 0.3,
       f"backtest scores the distribution's shape (PIT tails {bt['prob_scores'].get('pit', {}).get('below_5')}/{bt['prob_scores'].get('pit', {}).get('above_95')}, Brier at own lines {bt['prob_scores'].get('own_lines', {}).get('brier')})")
 # parlay correlation: two Unders on one defence rise together, an Under and an Over pull apart, different games are independent
@@ -313,30 +370,60 @@ check(all("corr_ratio" in q for q in pj) if pj else True, "parlays carry the cor
 # stakes: quarter Kelly per pick within the clip, capped per game, logged with the pick
 _pk = [b for b in _ba if b["pick"] in ("Over", "Under") and b.get("best_price") is not False]
 check(_pk and all(b.get("stake") is not None and C.STAKE["min"] - 1e-9 <= b["stake"] <= C.STAKE["max"] + 1e-9 for b in _pk), f"every pick carries a stake inside the clip ({len(_pk)} picks)")
-_byg = {}
-for b in _pk: _byg[b["event_id"]] = _byg.get(b["event_id"], 0) + b["stake"]
-check(_byg and max(_byg.values()) <= C.STAKE["game_cap"] + 1e-3, f"no game carries more than the cap (max {max(_byg.values()) if _byg else 0:.4f}u)")
-check(abs(M.kelly_stake(0.58, 1.909) - min(C.STAKE["max"], max(C.STAKE["min"], 0.25 * ((0.58 * 0.909 - 0.42) / 0.909) * 100))) < 1e-9 and M.kelly_stake(0.45, 1.909) is None, "the Kelly stake follows the claimed chance and the price, none without an edge")
-from pipeline import blend as BL
-check(abs(M.blend_mean(4.0, 6.0, "solo", {"solo": {"w": 0.5, "bias_model": -0.3, "bias_line": -0.5}}) - (0.5 * 3.7 + 0.5 * 5.5)) < 1e-9 and abs(M.blend_mean(4.0, 6.0, "solo", None) - ((1 - C.LINE_WEIGHT) * 4 + C.LINE_WEIGHT * 6)) < 1e-9,
-      "the pricing mean applies the market's blend weight and both level corrections, else the default weight")
+_bets_once = {}                                             # one bet per player, market and side: the caps hold for his largest stake among his lines and books
+for b in _pk:
+    _k3 = (b["player"], b["market"], b["side"])
+    if _k3 not in _bets_once or b["stake"] > _bets_once[_k3]["stake"]: _bets_once[_k3] = b
+_byg, _bys, _byk = {}, {}, {}
+for b in _bets_once.values():
+    _sl8 = G.slate_of(b["commence_time"]); _kd = b["side"] + " " + C.market_kind(b["market"])
+    _byg[b["event_id"]] = _byg.get(b["event_id"], 0) + b["stake"]; _bys[_sl8] = _bys.get(_sl8, 0) + b["stake"]; _byk[(_sl8, _kd)] = _byk.get((_sl8, _kd), 0) + b["stake"]
+_slack = C.STAKE["min"] * len(_bets_once)                   # the floor of 0.1u a pick can lift a capped total a little
+check(_byg and max(_byg.values()) <= C.STAKE["game_cap"] + _slack and max(_bys.values()) <= C.STAKE["slate_cap"] + _slack and max(_byk.values()) <= C.STAKE["kind_cap"] + _slack
+      and all(b.get("stake_raw") is not None and b["stake"] <= b["stake_raw"] + 1e-9 and (b.get("slate_n") or 0) >= 1 for b in _pk),
+      f"the slate is sized as one book: caps per game, per kind and per slate day (most on a game {max(_byg.values()) if _byg else 0:.2f}u, a kind {max(_byk.values()) if _byk else 0:.2f}u, a day {max(_bys.values()) if _bys else 0:.2f}u over {len(_bets_once)} bets)")
+_one = pd.DataFrame([dict(player=f"P{i}", market="player_solo_tackles", side="Under", pick="Under", stake=2.0, edge_low=0.03, event_id=f"G{i // 2}", commence_time="2099-01-03T18:00:00Z", best_price=True) for i in range(12)])
+_sz = G.size_stakes(_one)
+check(abs(_sz.stake.sum() - C.STAKE["kind_cap"]) < 1e-6 and _sz.groupby("event_id").stake.sum().max() <= C.STAKE["game_cap"] + 1e-9 and (_sz.slate_n == 12).all() and (_sz.stake_raw == 2.0).all()
+      and abs(G.size_stakes(_one.head(1)).stake.iloc[0] - 2.0) < 1e-9,
+      f"twelve like picks on one slate are divided for their number and held to the cap for one kind ({_sz.stake.sum():.2f}u in all); a lone pick keeps its stake")
+check(abs(M.kelly_stake(0.553, 1.909) - min(C.STAKE["max"], max(C.STAKE["min"], C.STAKE["kelly_fraction"] * ((0.553 * 0.909 - 0.447) / 0.909) * 100))) < 1e-9 and M.kelly_stake(0.45, 1.909) is None
+      and abs(M.kelly_stake(1 / 1.909, 1.909) - C.STAKE["min"]) < 1e-9, "the stake is a quarter of Kelly at the cautious chance: the minimum when it only breaks even there, none below")
+_lo, _hi = G.hit_interval(10, 4, 3); _lo2, _hi2 = G.hit_interval(100, 40, 3); _lo3, _hi3 = G.hit_interval(100, 40, 140)
+check(_lo < 10 / 14 < _hi and _hi - _lo > 0.35 and (_hi2 - _lo2) > (_hi3 - _lo3) and G.hit_interval(0, 0) == (None, None),
+      f"a record's likely range is wide on few bets and wider when the bets share weeks (10-4: {_lo:.0%} to {_hi:.0%})")
+from pipeline import backtest as _BT
+_rng = np.random.default_rng(5); _mu = _rng.uniform(2, 9, 6000)
+_nb = _rng.negative_binomial(_mu / 0.4, 1 / 1.4); _po = _rng.poisson(_mu)
+check(abs(_BT.fit_phi(_nb, _mu) - 1.4) < 0.08 and abs(_BT.fit_phi(_po, _mu) - 1.0) < 0.08, f"the spread is recovered by maximum likelihood ({_BT.fit_phi(_nb, _mu):.2f} for a planted 1.40, {_BT.fit_phi(_po, _mu):.2f} for a Poisson)")
+_dv = _BT.deviance(np.array([0, 3, 5]), np.array([1.0, 3.0, 4.0]))
+check(abs(_dv[0] - 2.0) < 1e-9 and abs(_dv[1]) < 1e-12 and _dv[2] > 0 and _BT.paired(np.array([-1.0, -1.0, -1.0, -1.0]), np.array([1, 2, 3, 4]))[0] == -1.0, "Poisson deviance and the week-clustered paired test compute")
 check((tmp / "data" / "lines_log.csv").exists() and len(pd.read_csv(tmp / "data" / "lines_log.csv")) >= 10 and "proj_model" in pd.read_csv(tmp / "data" / "lines_log.csv").columns, "the model's number for every line is logged at each pull")
-# blend estimation on a synthetic graded week: the model 1 high, the line 1 low -> both corrected, line weight ~0.5
-import pipeline.blend as _BL
-_wk = pw[(pw.season == 2026) & (pw.week == 6)].drop_duplicates("name_key").head(60)
-_lg = pd.DataFrame(dict(season=2026, week=6, player=_wk.player.values, player_id=_wk.player_id.astype(str).values, team=_wk.team.values, market="player_tackles_assists", proj_model=_wk.comb.values + 1.0, phi=1.0, exp_opps=50.0, share_pred=0.8, pulled_at="t"))
-_snap = pd.DataFrame(dict(event_id="B1", commence_time="2026-10-18T17:00:00Z", book="DraftKings", market="player_tackles_assists", player=_wk.player.values, line=_wk.comb.values - 1.0, over_odds=-110, under_odds=-110, pulled_at="20261018T165500Z"))
-_old_log = _BL.LOG; _BL.LOG = tmp / "data" / "lines_log_test.csv"; _lg.to_csv(_BL.LOG, index=False)
+_pcsv = pd.read_csv(tmp / "data" / "cache" / "projections.csv")
+_fx = [c for c in _pcsv.columns if c.startswith("fx_")]
+check(len(_fx) >= 12 and {"fx_role", "fx_volume", "fx_snaps", "fx_tilt"} <= set(_fx) and _pcsv[_fx].abs().max().max() < 1.0 and (_pcsv.fx_volume.abs() > 0.005).any()
+      and (_pcsv[_pcsv.role_signal.astype(str) == "True"].fx_role > 0.01).mean() > 0.8 and (_pcsv[_pcsv.role_signal.astype(str) != "True"].fx_role.abs() < 1e-9).all(),
+      f"every signal's effect on the final projection is measured by rebuilding it without the signal; next man up lifts the backups it fires for and no one else ({len(_fx)} signals)")
+# the scoreboard on a synthetic graded week: a model that knows the answer must beat a book that prices every line a coin flip
+from pipeline import linelog as _LL, evaluate as _EV
+_wk = pw[(pw.season == 2026) & (pw.week == 6)].drop_duplicates("name_key").head(60).reset_index(drop=True)
+_half = np.arange(len(_wk)) % 2 == 0
+_lg = pd.DataFrame(dict(season=2026, week=6, player=_wk.player.values, player_id=_wk.player_id.astype(str).values, team=_wk.team.values, market="player_tackles_assists", proj_model=_wk.comb.values.astype(float) + 0.2, phi=1.0, exp_opps=50.0, share_pred=0.8, pulled_at="t"))
+_snap = pd.DataFrame(dict(event_id="B1", commence_time="2026-10-18T17:00:00Z", book="DraftKings", market="player_tackles_assists", player=_wk.player.values, line=np.where(_half, _wk.comb.values - 1.5, _wk.comb.values + 1.5), over_odds=-110, under_odds=-110, pulled_at="20261018T165500Z"))
+_old_log = _LL.LOG; _LL.LOG = tmp / "data" / "lines_log_test.csv"; _lg.to_csv(_LL.LOG, index=False)
 _snapdir = Path("data/odds/2026/wk06"); _snapdir.mkdir(parents=True, exist_ok=True); _snap.to_csv(_snapdir / "20261018T165500Z.csv", index=False)
-_bl = _BL.estimate(pw, 2026, weeks=[6]); _BL.LOG = _old_log
-check(_bl.get("combined") and 0.35 < _bl["combined"]["w"] < 0.65 and _bl["combined"]["bias_model"] < -0.2 and _bl["combined"]["bias_line"] > 0.2 and _bl["combined"]["n"] >= 30,
-      f"blend estimated from a graded week's closing lines ({_bl.get('combined')})")
-check(_bl["combined"].get("scores", {}).get("n", 0) >= 20 and all(k in _bl["combined"]["scores"] for k in ("market", "model", "blend")), "blend estimate scores the chance at the posted lines against the market")
+_cf = _EV.closing_frame(pw, 2026, weeks=[6]); _sb = _EV.scoreboard(_cf); _LL.LOG = _old_log
+check(len(_cf) >= 30 and _sb and _sb["lines"] >= 30 and _sb["log_loss"]["engine"] < _sb["log_loss"]["market"] and abs(_sb["log_loss"]["market"] - np.log(2)) < 1e-6 and _sb["engine_minus_market"] > 0
+      and _sb["se"] is None and _sb["t"] is None and len(_sb["by_week"]) == 1 and len(_sb["tiers"]) == 4 and _sb["tiers"][0]["lines"] > 0 and _sb["tiers"][0]["hit"] > 0.9 and _sb["calibration"],
+      f"the scoreboard scores the engine against the book's fair close on every line, and says nothing about sureness from a single week (market {_sb.get('log_loss', {}).get('market')}, engine {_sb.get('log_loss', {}).get('engine')})")
+check({"p_low", "p_model", "edge_low", "tier", "market_over"} <= set(pd.read_csv(tmp / "data" / "lines_log.csv").columns), "the line log keeps the engine's read of every line, picked or not, so a rule can be scored later without having been live")
 
 _sg = json.loads((tmp / "data" / "cache" / "segments.json").read_text()) if (tmp / "data" / "cache" / "segments.json").exists() else {}
 check(all("n_eff" in v and v["n_eff"] <= v["n"] + 1e-9 for v in _sg.values()) if _sg else True, f"segment calibration carries the recency-weighted count ({len(_sg)} segments)")
 
 check('data-tab="gloss"' in _html and "function renderGloss" in _html and "No-vig CLV" in _html and "clv_pct" in _html, "site has the glossary tab and the no-vig CLV tile")
+check(all(k in _html for k in ("Against the market", "Cautious edge", "Likely range", "s.scoreboard", "b.factor_tests", "odds_budget", "function whyBox", "ENGINE()")),
+      "site explains the engine: the win chance and the cautious edge on every card, the scoreboard against the market, likely ranges, the daily factor tests, the credit budget")
 from pipeline.grade import no_vig_clv
 check(abs(no_vig_clv(-110, "Under", 5.5, 5.5, -110, -110) - (0.5 - 110 / 210)) < 1e-9 and no_vig_clv(-110, "Under", 5.5, 4.5, -110, -110) > 0.03 and no_vig_clv(-110, "Under", 5.5, 6.5, -110, -110) < -0.03
       and no_vig_clv(-110, "Over", 5.5, 5.5, -130, +110) > 0, "no-vig CLV: the vig on a held line, a move our way positive, against negative, a price move our way positive")
@@ -455,6 +542,28 @@ _steps = _tk["jobs"]["tick"]["steps"]
 check("workflow_dispatch" in (_tk.get(True) or _tk.get("on")) and "gh workflow run ticker.yml" in str(_steps[-1].get("run")) and _steps[-1].get("if") == "always()"
       and _tk["permissions"].get("actions") == "write" and "GH_TOKEN" in _tk["jobs"]["tick"]["env"],
       "a ticker run that ends starts the next one itself (the scheduler dropped 11 hours of runs on 2026-11-09)")
+# the odds-credit budget: what is worth most per credit is kept longest
+_U = dt.timezone.utc
+def _week_of(thu):
+    t0 = dt.datetime(thu.year, thu.month, thu.day, tzinfo=_U); iso = lambda d, h, m: (t0 + dt.timedelta(days=d, hours=h, minutes=m)).isoformat()
+    return [iso(1, 1, 15)] + [iso(3, 18, 0)] * 9 + [iso(3, 21, 5)] * 2 + [iso(3, 21, 25)] * 2 + [iso(4, 1, 20), iso(5, 1, 15)]
+_ks = _week_of(dt.date(2026, 11, 12)) + _week_of(dt.date(2026, 11, 19)) + _week_of(dt.date(2026, 11, 26))
+_t0 = dt.datetime(2026, 11, 10, 6, 0, tzinfo=_U)
+_rich, _poor, _broke = R.credit_budget(now=_t0, credits=2000, kickoffs=_ks), R.credit_budget(now=_t0, credits=185, kickoffs=_ks), R.credit_budget(now=_t0, credits=60, kickoffs=_ks)
+_kinds = {p_[4]: p_[1] for p_ in _rich["pulls"]}
+check(_rich["level"] == 3 and _poor["level"] in (0, 1) and _broke["level"] == -1 and _broke["short"] > 0 and _poor["short"] == 0 and R.credit_reset(_t0) == dt.datetime(2026, 12, 1, tzinfo=_U)
+      and _kinds["2026-11-12 09:00"] == "early" and _kinds["2026-11-14 20:00"] == "sat" and _kinds["2026-11-15 10:00"] == "look" and _kinds["2026-11-15 prekick-11:00"] == "prekick"
+      and R.credit_budget(now=_t0, credits=None, kickoffs=_ks)["level"] == 3,
+      f"the credit budget prices the rest of the month at each service level (2000 credits: level {_rich['level']}; 185: {_poor['level']}; 60: {_broke['level']}, short by {_broke['short']})")
+_cr, _srv, _ran, _spent = 185.0, set(), {}, {}
+for _at_, _kind, _nd, _nc, _key in _poor["pulls"]:
+    _g = R.govern(_key, R.credit_budget(now=_at_, credits=_cr, kickoffs=_ks, served=_srv, current=_key))
+    _cost = len(_g["markets"]) * (_nc if _g["cluster"] else _nd) if _g["run"] else 0
+    _cr -= _cost; _srv.add(_key); _ran.setdefault(_kind, []).append(_g["run"]); _spent[_kind] = _spent.get(_kind, 0) + _cost
+_gr = R.govern("2026-11-15 prekick-11:00", _rich)
+check(all(_ran["prekick"]) and all(_ran["early"]) and _ran["sat"][0] and not all(_ran["sat"]) and not any(_ran["look"][:2]) and _cr >= C.MIN_CREDITS_LEFT - 1e-9
+      and _gr["run"] and not _gr["cluster"] and len(_gr["markets"]) == len(C.ODDS_MARKETS) and R.govern("x 12h", _rich)["run"],
+      f"on 185 credits every game keeps its pre-kickoff pull and the Thursday and Monday looks, the first Saturday look runs and later ones wait, and the month ends above the floor ({_cr:.0f} left; spent {_spent})")
 intl = [dict(game_id="2026_07_NO_PIT", home="PIT", away="NO", kickoff=_at(2026, 10, 25, 7, 30).isoformat(), international=True)]
 p12 = R.auto_plan(now=_at(2026, 10, 24, 19, 50), games=intl)   # Saturday 7:50 pm, before the 8 pm slot
 check(p12 and p12.get("teams") == ("PIT", "NO") and p12["key"].endswith("12h"), "international game pulled in the 12 h window even when the run is late")

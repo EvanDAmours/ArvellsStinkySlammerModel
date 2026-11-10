@@ -58,9 +58,25 @@ def _book_params():
     return {"regions": C.ODDS_REGIONS}
 
 
-def pull(api_keys, hours_ahead=None, days=None, event_ids=None):
+def credits_left(api_keys):
+    """Credits left on every key (a free call each): {name: credits, or 0.0 for a rejected key, or None when unknown}."""
+    if os.environ.get("TACKLE_FAKE_ODDS"):
+        return {name: None for name in api_keys}
+    out = {}
+    for name, key in api_keys.items():
+        try:
+            out[name] = _credits(key)[0]
+        except requests.HTTPError:
+            out[name] = 0.0
+        except requests.RequestException:
+            out[name] = None
+    return out
+
+
+def pull(api_keys, hours_ahead=None, days=None, event_ids=None, markets=None):
     """Return (rows, credits_by_key). api_keys: {name: key}. Only games that haven't started; optionally only those
-    within hours_ahead, or kicking off on the given Edmonton dates (days), or with the given event ids."""
+    within hours_ahead, or kicking off on the given Edmonton dates (days), or with the given event ids. `markets`: the
+    market keys to ask for (each costs a credit a game); config.ODDS_MARKETS when not given."""
     if os.environ.get("TACKLE_FAKE_ODDS"):
         from tests.fake_data import fake_odds_rows
         return fake_odds_rows(), {name: "synthetic" for name in api_keys}
@@ -93,7 +109,7 @@ def pull(api_keys, hours_ahead=None, days=None, event_ids=None):
             print(f"Stopping: every key is below {C.MIN_CREDITS_LEFT} credits for this month.")
             break
         label = f"{e['away_team']} @ {e['home_team']} {e['commence_time']}"
-        r = _get_event_odds(e["id"], api_keys[name], label)
+        r = _get_event_odds(e["id"], api_keys[name], label, markets)
         if r is None:
             failed.append(label)
             continue          # this game failed after retries: the other games still pull, and the next pull retries it
@@ -197,11 +213,11 @@ def pull_historical(api_key, season, week, markets, hours_before=1.0, event_ids=
 RETRY_WAITS = (3, 10, 30)      # seconds between attempts at one game after a server error or a dropped connection
 
 
-def _get_event_odds(event_id, api_key, label):
+def _get_event_odds(event_id, api_key, label, markets=None):
     """One game's odds. A server error (5xx, 429) or a dropped connection is retried with waits of RETRY_WAITS; a game
     that still fails returns None so the rest of the slate pulls (2026-11-07: one game's 502 at 8 pm threw away the
     whole Saturday pull). A client error other than 404/422 (a bad key) still raises."""
-    params = {"apiKey": api_key, "markets": ",".join(C.ODDS_MARKETS), "oddsFormat": "american", "includeLinks": "true", "includeSids": "true", **_book_params()}
+    params = {"apiKey": api_key, "markets": ",".join(markets or C.ODDS_MARKETS), "oddsFormat": "american", "includeLinks": "true", "includeSids": "true", **_book_params()}
     import time
     for attempt, wait in enumerate((0,) + RETRY_WAITS):
         if wait:

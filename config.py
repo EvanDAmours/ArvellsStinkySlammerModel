@@ -6,9 +6,12 @@ HISTORY_SEASONS = [2023, 2024, 2025]   # used for priors, stat crews and the bac
 ODDS_SPORT = "americanfootball_nfl"
 ODDS_MARKETS = ["player_tackles_assists", "player_solo_tackles", "player_assists"]   # assists added 2026-11-03 (scoping, research round 8): +1 credit per game
 ASSIST_MARKET = "player_assists"
-LOCK_MARKETS = ("player_solo_tackles",)   # assists are tracked as theoretical picks: never a lock or a parlay leg until their record earns it.
-# Combined tackles left the locks 2026-11-08 night: its picks claimed 57% and hit 48% over weeks 7-9 (177 picks, 2.4 SE), its A picks went 1-3
-A_GRADE_MARKETS = ("player_solo_tackles",)  # an A grade only in these markets; a combined pick that scores 72+ shows as a B until 40 further combined picks hit their claim
+LOCK_MARKETS = ("player_solo_tackles", "player_tackles_assists")   # assists are a trial market: never a lock, an A or a parlay leg until their record earns it
+A_GRADE_MARKETS = LOCK_MARKETS
+# Until 2026-11-09 A grades and locks were solo tackles only: combined picks claimed 57% and hit 48% over weeks 7-9. The cause was the pricer
+# (it read the line and ignored the price on it, which lifted every plus-money combined Under); the engine of 2026-11-09 prices from the
+# book's fair chance, and on the closing lines of weeks 7-9 its combined Unders with a cautious edge of 2%+ went 14-6. Revert to solo only
+# if combined A picks hit under 55% over their first 20.
 # Sleepers (2026-11-08 night): lines where the model's own number, before any blend with the line, disagrees with the book by a margin that
 # held in every live week. Blind board at the close, weeks 7-9: combined Overs with the model 0.5 to 1.5 above the line 48-25 (66%, +18%,
 # 14-11 / 23-8 / 11-6); solo Unders with the model 0.5+ below the line 60-22 (73%, +23%, 21-8 / 25-3 / 14-11). The pick bars hide most of the
@@ -58,6 +61,13 @@ ODDS_BOOKMAKERS = [
 ]
 ODDS_KEY_ENV = ["ODDS_API_KEY", "PARLAY_API_KEY"]   # GitHub secrets holding Odds API keys, used in this order
 MIN_CREDITS_LEFT = 25              # a key with fewer credits left this month is skipped; pulling stops when every key is below it
+# The credit budget (2026-11-09; run.credit_budget). A pull costs one credit per market per game. Before every scheduled pull the
+# month's remaining schedule is priced at each service level and the richest one the credits can pay for is run:
+#   3 every scheduled pull, three markets | 2 the same without the assists trial market | 1 two markets, each pre-kickoff pull only for
+#   the games about to kick off, every earlier look kept | 0 the same with Saturday night's look only | -1 pre-kickoff pulls only.
+# So the last thing to go is the pull an hour before a game's kickoff, with the inactives known.
+ODDS_BASE_MARKETS = ["player_tackles_assists", "player_solo_tackles"]
+ODDS_RESET_DAY = 1                 # day of the month the key's credits reset (assumed: the free plan follows the calendar month, UTC)
 
 # --- model ---
 SHRINK_GAMES = 1                   # weight (in games) of the prior when averaging; the backtest reports the best single value
@@ -95,7 +105,12 @@ NEW_ROLE = dict(max_prev_share=0.6, min_last_share=0.6, min_ratio=1.5, power=0.0
 ROLE_SHIFT = dict(contraction_ratio=0.7, contraction_power=0.1, absence_weeks=3, absence_factor=0.95, missed_game_factor=0.92, new_team_factor=0.90)
 # Lock eligibility, market-free: a lock must come from where the model is reliable. Never a lock or a parlay leg: new role,
 # reduced role, back from absence, new team, fewer than 3 games in his current role (unless every game he has was), questionable.
-LOCK_RULES = dict(min_in_role_games=3, overs_eligible=False)   # Overs: 28-40 live (41%) and 32-46% on all lines where the model sat above the market; never a lock or a parlay leg until 40 further Over picks hit 55%+
+LOCK_RULES = dict(min_in_role_games=3, overs_eligible=False, next_man_up_under=False)   # Overs: 28-40 live (41%) and 32-46% on all lines where the model sat above the market; never a lock or a parlay leg until 40 further Over picks hit 55%+
+# next_man_up_under (2026-11-09): the final projection, out of sample, runs 12% under the actual count on next-man-up backups (918 games; 9% and +0.29 tackles,
+# t +2.3, at a corrector weight of 0.8; 14%, 2% and 16% by season), all of it on the ones the share model expects under 60% of the snaps (710 games: 16% low, +0.43,
+# t +3.3; the 208 expected at 60%+ are level). No correction holds: a level fitted on earlier seasons over-corrects the next (deviance +0.010, t +0.3).
+# So a next-man-up player is never a lock or an A, and an Under on one expected under 60% is not a pick at all: when a book posts a line on a backup it
+# knows he is playing, and the model does not. His Over stays a pick (the model is the cautious side of it).
 # ---- Research round 4 (2026-10-30, after the McDuffie post-mortem). Per-snap projection and what hangs off it. Evidence in MODEL_LOG.
 # Per-snap base = tackles per defensive snap (games with 10+ defensive snaps only, shrunk toward last season's rate or the
 # position rate over 150 pseudo-snaps) x expected snap share x expected team defensive snaps, calibrated; blended with
@@ -114,10 +129,23 @@ MATCHUP = dict(pseudo_games=3)
 DOME_CB = 1.05            # corners in domes / closed roofs: +4.6% (2023-24) and +7.1% (2025-26) over the model
 SOLO_DRIFT = dict(weeks=3, cap=(0.85, 1.15))   # league solo share, last 3 weeks / season to date: solo crediting drifts down through a season (2025: 0.55 -> 0.51)
 PHI_SHARE_SPLIT = 0.6     # dispersion estimated separately for players expected below this snap share (var/mean 1.6-1.7 vs 1.2-1.4)
+# ---- The factor set (rebuild of 2026-11-09; evidence in MODEL_LOG "Decision register"). Which hand-built factors move the factor
+# model's mean. Judged on the FINAL projection (factor model + corrector), walk-forward by season, Poisson deviance, paired, season-weeks
+# as the unit, and on the regulars who get lines (REGULAR_SHARE). Out: stat crew, snap trend, run/pass mix, bye, injury report, role shift
+# and the vacancy rule (none distinguishable from zero or each worsening the mean; together, with the corrector's next-man-up input:
+# deviance -0.0089 a game for regulars (t -2.8) and -0.0077 for every player (t -3.2), folds 2025-26). Each stays a corrector input, so a
+# real effect is still learned; the code stays so the daily test (backtest.json "factor_tests") can show one earning its way back.
+FACTORS = dict(tilt=True, role=True, volume=True, depth=True, pfr=True, dome=True, outlier_damp=True, persnap=True, new_role=True, solo_drift=True,
+               crew=False, snap=False, mix=False, rest=False, injury=False, role_shift=False, vacancy=False)
 # Second model (research round 3): a gradient-boosted corrector on the same features, Poisson loss, trained fresh each
 # morning on every finished game, blended with the factor model. Out of sample it cut error 1.1% (2025-26) and 1.5%
 # (2026 trained through 2025). The backtest reports it walk-forward: trained on earlier seasons, scored on the latest.
+# weight 0.6, kept on 2026-11-09 after testing 0.8: for every defender the fold results say the more seasons the corrector has learned
+# from the more of the number it deserves (best weight by fold 0.5, 0.9, 1.0), but that gain is all on part-timers who never get a line.
+# For the regulars who do (expected at 80%+ of the snaps) the best weight by fold is 0.4, 0.6, 0.7 and 0.8 is no better than 0.6 on the
+# 2025-26 folds (deviance -0.0085 vs -0.0089 against the old design) and worse on the 2024 fold (+0.024, t +2.3). Judge on who is priced.
 GBM = dict(weight=0.6, max_iter=800, learning_rate=0.02, max_leaf_nodes=31, min_samples_leaf=40, l2=0.5, seeds=(0, 1, 2))
+REGULAR_SHARE = 0.8                 # "regulars": expected at this share of the snaps or more. They are the players the books post lines on, so they are who a change is judged on
 POS_PRIOR = {"LB": 6.0, "S": 4.5, "CB": 3.5, "DL": 2.5}       # tackles per game, used only with no history
 POS_SOLO_SHARE = {"LB": 0.52, "S": 0.62, "CB": 0.72, "DL": 0.45}
 SOLO_SHARE_PSEUDO = 25             # tackles of position prior mixed into a player's solo share (was 8): solo error -1.0% on 2025-26, -0.7% on 2023-24
@@ -136,54 +164,44 @@ CREW_PSEUDO_TACKLES = 250          # how hard each stadium's crew rate is pulled
 ROLE_BUMP = 1.10                   # boost for a backup when a regular at his position group is inactive
 DEFAULT_PHI = {"LB": 0.75, "S": 1.0, "CB": 1.0, "DL": 1.0}  # variance / mean; replaced by backtest estimates
 
-# --- pricing: how much to trust the market ---
-# The posted line is itself a forecast, and in week 7 of 2026 it predicted tackles better than the raw projection
-# (actual = 0.44 x projection + 0.60 x line). The mean used for pricing is a blend of the two.
-LINE_WEIGHT = 0.5                  # default weight on the consensus line (0 = pure model, 1 = pure market); the live weight per market is
-                                   # estimated from closing-line errors (BLEND below) and shrunk toward this
-# Per-market blend, estimated from graded weeks' closing lines (pipeline/blend.py): the line's weight is the
-# inverse-variance weight mse_model / (mse_model + mse_line), and both the line and the model get a level correction
-# (their average error against the box score), each shrunk by n / (n + k) lines. Weeks 7-8 of 2026: the solo line
-# ran 0.3-0.5 high and the model 0.2-0.4 high; correcting both cut the solo error 3% on each held-out week.
-BLEND = dict(k=100, max_bias=1.0, min_lines=30)
-PROB_SHRINK = 1.0                  # 1 = use the blended model probability as is; <1 pulls it further toward the market's no-vig probability
+# --- pricing: one probability per line (the engine of 2026-11-09, live from week 10; evidence and the decision in MODEL_LOG) ---
+# For every posted line the book's own two-way price gives a fair chance (its price with the vig taken out). The model's count
+# distribution gives its own chance at the same line. The win chance moves the book's fair chance by a fraction `beta` of the model's
+# disagreement, in log-odds:  logit(p) = logit(p_book) + beta x [logit(p_model) - logit(p_book)].
+# Nothing but disagreement can make a pick: at zero disagreement p is the fair chance and every price loses its vig.
+#   beta 0.5: on the 745 closing lines of weeks 7-9 the fitted weight was +0.53 (se 0.20; +0.48 combined, +0.57 solo); at 0.5 the log-loss
+#   was 0.6823 against the market's 0.6898, the model's own 0.6865 and the old raw-line blend's 0.6827, better than the market in every
+#   week (+0.004, +0.013, +0.005). A ceiling on large disagreements made it worse; a different weight per side did not help.
+#   beta_low 0.25: the cautious chance, about 1.4 standard errors under the fitted weight. A PICK is a bet that still breaks even there.
+# Grades are built only from numbers that cannot improve when the book agrees more (checked in the smoke test): the cautious edge
+# (cautious chance x decimal odds - 1) and the model's own chance. Provisional: the bars are round numbers, not fitted, but weeks 7-9
+# is where they were looked at (closing lines: cautious edge 0 to 2%: 37-25; 2%+: 31-20; 2%+ with a model chance of 70%+: 13-6).
+ENGINE = dict(beta=0.5, beta_low=0.25,
+              pick_edge_low=0.0,     # a pick: cautious edge at or above this
+              lean_edge=0.02,        # a lean: this much at the win chance but under water at the cautious one. Shown and logged, never staked (72-68 at the close)
+              b_edge_low=0.02,       # B: cautious edge of 2%+
+              a_model=0.70,          # A: a B whose model's own chance is 70%+ and whose lock checklist is clear
+              rho=0.02)              # how alike two picks of one kind on one slate are: the weekly shock (6.5 points of hit rate on solo Unders) as a correlation
+FROZEN_UNTIL = "2026-12-08"          # evidence rule: no bar, weight or cap in ENGINE, STAKE, FACTORS or GBM changes before this date (four graded weeks)
+                                     # unless a defect is found; candidates are tested in the shadow on data/lines_log.csv and reported, not adopted
+CLAIM_SHRINK = 0.6                   # legacy: only to read the claimed chance of picks logged before the engine (through week 9) that carry none
 
 # --- betting rules ---
-PICK_BAR = 0.06                    # minimum expected return without a supporting signal
-PICK_BAR_OVER = 0.10               # an Over needs more: the model's Over leans hit 32-46% on weeks 7-8 lines where it was above the market (audit 2026-10-30)
-SIGNAL_BAR = 0.06                  # a signal no longer lowers the bar: the 12 live picks taken at 4-6% went 3-9 (-6.5 u) on weeks 7-8
-# A pick also needs a claimed chance (shrunk, segment-corrected) of at least this. Live weeks 7-8: the 108 picks claimed
-# under 55% went 44-64 (-6.1 u) in both weeks; the rest 57% and +33 u. A plus-money side with a 50% claim is a coin flip.
-PICK_MIN_CLAIM = 0.55
-# Claimed edge (2026-11-09 post-mortem): the return at our own claimed chance, claim x decimal odds - 1. The return bars above use the
-# pricer's probability, which shrinks less than the claim, so a pick could clear 6% there while its claimed chance did not beat the price:
-# weeks 8-9, claimed edge under 0: 12-20 (-34%/bet), 0-4%: 14-11 (-2%), 4-15%: 57-36 (+11%). A picks at 4%+ went 13-2, under 4% 6-6
-# (week 9: six of its eight A losses had a claimed chance at or below the price's). Thresholds from 2% to 6% all give A 83-90%.
-PICK_MIN_CLAIM_EV = 0.02           # a pick must beat its price by 2% at the claimed chance
-A_MIN_CLAIM_EV = 0.04              # an A (and so a lock) by 4%; a 72+ score below that shows as a B
-# Selected picks claim more than they hit (weeks 7-8 replay: claimed 55.8%, hit 50.9% on 163 picks; the winner's curse of
-# picking the biggest disagreements). The claimed chance of a pick is shrunk toward even by this factor for the lock score,
-# the card and parlays. Market-free: it shrinks toward 50%, not toward the book.
-CLAIM_SHRINK = 0.6
-FADE_GAP = 3.0                     # last game this many tackles from his average counts as an outlier
+FADE_GAP = 3.0                     # last game this many tackles from his average counts as an outlier (the damping factor and the card's wording)
 MIN_GAMES_FOR_PICK = 3
 
-# --- confidence grade for every pick (0-100 "lock score", then a letter) ---
-# Built only from the model's own evidence, never from the book's opinion (see the vision in MODEL_LOG.md):
-# the expected return at the posted price, the model's own probability for the side, how often the player cleared
-# this line in his games this season, how many games of data he has, and whether a role-change or outlier-fade
-# signal is behind the pick. Owner's decision 2026-10-26, replacing a version that rewarded market agreement.
-LOCK_WEIGHTS = dict(ev=0.35, model=0.25, consistency=0.20, sample=0.10, signal=0.10)
-LOCK_EV_FULL = 0.10                # an expected return this high scores full marks on the EV component (was 0.15)
-LOCK_EV_FADE = (0.20, 0.40)        # above 20% the EV component falls off, to zero at 40%: picks with 25%+ claimed return hit 33% (n=15), 15-25% hit 50%, 6-10% hit 57%
-LOCK_MODEL_FULL = 0.75             # a model probability this high for our side scores full marks (50% scores zero)
-GRADE_BARS = dict(A=72, B=55)      # lock score at or above these is an A or a B; the rest are C
+# --- the lock score and the grade ---
+# The lock score is the model's own chance of the pick's side, out of 100: the model's evidence and nothing else. It ranks the locks.
+LOCK_MIN_SCORE = 100 * ENGINE["a_model"]
+GRADE_BARS = dict(A=LOCK_MIN_SCORE, B=None)      # kept for the site's legend: an A needs this score (and the cautious edge and the checklist)
 GRADE_UNITS = dict(A=1.0, B=0.5, C=0.25)   # the grade ladder, kept for the record's "units at grade stake"; the stake on a pick is STAKE below
-# Stake per pick: a quarter of the Kelly fraction of a 100-unit bankroll from the pick's claimed chance and price,
-# clipped, with at most game_cap units on one game (stakes in that game scaled down together). Research round 9,
-# weeks 7-8 at the same total staked: +21.2 u against +18.1 for the grade ladder and +10.8 flat, better in both
-# weeks, and the most on one game 5.4 u against 10.8.
-STAKE = dict(bankroll=100.0, kelly_fraction=0.25, min=0.25, max=3.0, game_cap=4.0)
+# Stake per pick: a quarter of the Kelly fraction of a 100-unit bankroll AT THE CAUTIOUS CHANCE, so a pick that only just survives the
+# cautious test gets the minimum. Then the slate is sized as one book, because its picks are not independent (week 9: 59.9 of 100 units
+# were out on one Sunday, 86% of them on solo Unders, each sized as if alone): every stake is divided by 1 + (N - 1) x rho for the N picks
+# of its kind (side x market) on its slate day, and capped per game, per kind per slate and per slate (scaled down together).
+# Revert / raise: move to the win chance (not the cautious one) once the engine has beaten the market's fair close by two standard
+# errors with weeks as the unit (Track record, "Against the market").
+STAKE = dict(bankroll=100.0, kelly_fraction=0.25, min=0.1, max=3.0, game_cap=4.0, kind_cap=10.0, slate_cap=15.0)
 # Closing-line value: among picks whose closing number differed from ours, the share that moved our way. Below
 # ~52% is indistinguishable from noise over a few hundred bets (standard error ~3% at 300); sharp bettors sustain
 # 55-60% and 60%+ is rare. Shown in the site legend.
@@ -195,9 +213,8 @@ CLV_PCT_BARS = dict(good=0.01, excellent=0.03, elite=0.05)
 
 # --- locks per slate day (Edmonton time) and the recommended parlay ---
 LOCKS_PER_SLATE = dict(single=3, multi=5)   # at most this many locks: 3 on a one-game day, 5 on a multi-game day
-# A lock is a pick the model strongly believes in, never "the best of a thin board" (owner, 2026-11-02). It needs an
-# A-grade score; a slate with no A has no lock. Live: locks at 72+ went 5-1, locks at 55-72 went 2-1 on three picks.
-LOCK_MIN_SCORE = GRADE_BARS["A"]
+# A lock is a pick the model strongly believes in, never "the best of a thin board" (owner, 2026-11-02). It needs an A grade;
+# a slate with no A has no lock. Among the A picks the locks are the highest lock scores (the model's own chance).
 PARLAY_LEGS = (2, 3)                        # fewest and most legs in the recommended parlay (fewer legs = better chance of hitting)
 # Legs on one defence share the plays it faces (sd 7.6 around expectation): two Unders rise or fall together, an
 # Under and an Over pull apart. The parlay's chance is the product of the legs' claimed chances times the ratio a
@@ -205,8 +222,8 @@ PARLAY_LEGS = (2, 3)                        # fewest and most legs in the recomm
 # Under and an Over, 1.10 for three Unders). Research round 9.
 PARLAY_CORR = dict(sd_plays=7.6, sims=20000, phi_floor=0.55, clip=(0.8, 1.3))
 PARLAY_MARKETS = ("player_tackles_assists",)  # combined tackles only: the books refuse solo-tackle legs in a same-game parlay (owner, 2026-11-02)
-PARLAY_MIN_PROB = 0.56                      # a leg needs at least this claimed (shrunk) chance of hitting: 0.60 before the claim shrink
-PARLAY_FALLBACK_PROB = 0.53                 # if too few legs clear that, legs down to this chance are allowed; below it, no parlay
+PARLAY_MIN_PROB = 0.60                      # a leg must be a pick (cautious edge at or above zero) whose model's own chance is at least this
+PARLAY_FALLBACK_PROB = 0.56                 # if too few legs clear that, picks down to this model chance are allowed; below it, no parlay
 PARLAY_KELLY_FRACTION = 0.25                # stake = this fraction of the Kelly stake for the parlay
 PARLAY_UNITS = (0.1, 1.0)                   # stake bounds, in units
 

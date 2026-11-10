@@ -8,6 +8,7 @@
 import argparse
 import datetime as dt
 import json
+import math
 import os
 import sys
 from pathlib import Path
@@ -19,7 +20,8 @@ import pandas as pd
 
 import config as C
 from pipeline import backtest as B
-from pipeline import blend as BL
+from pipeline import evaluate as EV
+from pipeline import linelog as LL
 from pipeline import live_grade as LG
 from pipeline import seal as SEAL
 from pipeline import patchlog as PATCH
@@ -178,16 +180,16 @@ def load_served():
 PULL_LOG = CACHE / "pull_log.json"    # slot key -> what happened: {"pulled": UTC stamp, "games": n} or {"skipped": UTC stamp}
 
 
-def log_pull(key, pulled=None, skipped=(), games=None):
-    """Record what each slot did, for the site's pull ticker: the slot pulled (with its time) or was folded into a
-    later one (a stale slot when a run came late)."""
+def log_pull(key, pulled=None, skipped=(), games=None, saved=False):
+    """Record what each slot did, for the site's pull ticker: the slot pulled (with its time), was folded into a
+    later one (a stale slot when a run came late), or was left out to save odds credits (`saved`)."""
     try:
         logd = json.loads(PULL_LOG.read_text())
     except (OSError, ValueError):
         logd = {}
     now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
     if key:
-        logd[key] = dict(pulled=pulled or now, games=games)
+        logd[key] = dict(saved=now) if saved else dict(pulled=pulled or now, games=games)
     for k in skipped:
         logd.setdefault(k, dict(skipped=now))
     cutoff = str(dt.date.today() - dt.timedelta(days=10))
@@ -217,6 +219,8 @@ def pull_schedule(now=None, games=None, days=7):
             rec = logd.get(key, {})
             if "pulled" in rec:
                 status = "pulled"
+            elif "saved" in rec:
+                status = "saved"                       # left out to keep credits for the pre-kickoff pulls
             elif "skipped" in rec or key in served:
                 status = "skipped"
             elif at <= now:
@@ -242,6 +246,111 @@ def mark_served(keys):
     served = {k for k in served if k[:10] >= cutoff or not k[:4].isdigit()}   # keep slot keys for ten days; game keys stay
     SERVED.parent.mkdir(parents=True, exist_ok=True)
     SERVED.write_text(json.dumps(sorted(served), indent=1))
+
+
+# ---------------------------------------------------------------- the odds-credit budget (config.ODDS_BASE_MARKETS, ODDS_RESET_DAY)
+# A pull costs one credit per market per game. What is worth most per credit is kept longest:
+#   prekick  the pull an hour before a game's kickoff (inactives known; it is also the closing price everything is scored against)
+#   early    the 9 am and 1 pm looks on a Thursday or Monday (a game or two each, a couple of credits)
+#   sat      Saturday night's look at the whole Sunday slate
+#   look     any other look (Sunday 10 am, an hour before the pre-kickoff pull; an international game's 12-hour look)
+# then pulling the whole day again at each pre-kickoff pull rather than only the games about to kick off, then the assists market.
+KICKOFFS = CACHE / "kickoffs.json"      # kickoff (UTC) of every game left this season, written by the daily
+PULL_CLASS = {"prekick": 0, "early": 1, "sat": 2, "look": 3}
+BUDGET_LEVELS = {3: "every scheduled pull, all three markets", 2: "every scheduled pull, without the assists trial market",
+                 1: "two markets; one pre-kickoff pull a game, the Thursday and Monday looks and Saturday night's look",
+                 0: "two markets; one pre-kickoff pull a game and the Thursday and Monday looks", -1: "two markets; one pre-kickoff pull a game and nothing else"}
+
+
+def credit_reset(now):
+    """The next time the key's credits reset (UTC)."""
+    d = C.ODDS_RESET_DAY
+    this = dt.datetime(now.year, now.month, d, tzinfo=dt.timezone.utc)
+    if this > now:
+        return this
+    y, m = (now.year + 1, 1) if now.month == 12 else (now.year, now.month + 1)
+    return dt.datetime(y, m, d, tzinfo=dt.timezone.utc)
+
+
+def scheduled_pulls(now, kickoffs, until):
+    """Every scheduled pull on the days from now to `until`: (at UTC, kind, games it covers pulling the whole day, games
+    about to kick off, key). kind: a key of PULL_CLASS."""
+    ks = sorted(dt.datetime.fromisoformat(k) for k in kickoffs or [])
+    games = [dict(kickoff=k.isoformat()) for k in ks]
+    out, day, end = [], now.astimezone(EDMONTON).date(), until.astimezone(EDMONTON).date()
+    win = dt.timedelta(minutes=PRE_KICK_MIN + PRE_KICK_CLUSTER_MIN + 5)
+    while day <= end:
+        at_of = lambda m: dt.datetime.combine(day, dt.time(max(m, 0) // 60, max(m, 0) % 60), tzinfo=EDMONTON).astimezone(dt.timezone.utc)
+        on = lambda dates, after: sum(1 for k in ks if k.astimezone(EDMONTON).date() in dates and k > after)
+        d = lambda n: day + dt.timedelta(days=n)
+        seen = set()
+        for m, key in kickoff_slots(games, day):
+            at = at_of(m); seen.add(m)
+            out.append((at, "prekick", on({day}, at), sum(1 for k in ks if at < k <= at + win), key))
+        for m, what in PULL_SLOTS.get(day.weekday(), []):
+            if m in seen:
+                continue                                  # the same minute as a pre-kickoff pull: one pull
+            at = at_of(m)
+            dates = {"thu_fri": {d(0), d(1)}, "sat": {d(1)}, "sat_sun": {d(0), d(1)}, "fri_weekend": {d(1), d(2)}, "sun": {d(1)}, "mon": {d(0)}, "today": {d(0)}}[what]
+            n = on(dates, at)
+            out.append((at, "sat" if what == "sat_sun" else "early" if what in ("thu_fri", "mon") else "look", n, n, f"{day} {m // 60:02d}:{m % 60:02d}"))
+        day += dt.timedelta(days=1)
+    return sorted(p_ for p_ in out if p_[0] < until)
+
+
+def level_cost(pulls, level):
+    """Credits the listed pulls cost at a service level, every game assumed to have lines up (an empty response is free)."""
+    nm = len(C.ODDS_MARKETS) if level == 3 else len(C.ODDS_BASE_MARKETS)
+    keep = {3: 3, 2: 3, 1: 2, 0: 1, -1: 0}[level]         # the least protected class of pull this level still runs
+    return sum(nm * ((n_day if level >= 2 else n_cluster) if kind == "prekick" else n_day) for _, kind, n_day, n_cluster, _ in pulls if PULL_CLASS[kind] <= keep)
+
+
+def credit_budget(now=None, credits=None, kickoffs=None, served=(), current=None):
+    """What the credits left can pay for until they reset. credits: the total left across keys (None: unknown, nothing is
+    held back). Returns dict(level, label, spare, reset, costs, pulls, short): `level` is the richest schedule the whole
+    remaining month can afford (BUDGET_LEVELS); `short` is how many credits the barest schedule (one pre-kickoff pull a
+    game) lacks, 0 when it is covered. `govern` decides each pull from the same list."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    reset = credit_reset(now)
+    if kickoffs is None:
+        try:
+            kickoffs = json.loads(KICKOFFS.read_text())
+        except (OSError, ValueError):
+            kickoffs = None
+    if credits is None or kickoffs is None:
+        return dict(level=3, label=BUDGET_LEVELS[3], spare=None, reset=reset.isoformat(timespec="minutes"), costs={}, pulls=[], short=0, known=False)
+    served = set(served or ())
+    pulls = [p_ for p_ in scheduled_pulls(now, kickoffs, reset) if (p_[0] > now or p_[4] == current) and (p_[4] not in served or p_[4] == current)]
+    spare = float(credits) - C.MIN_CREDITS_LEFT
+    costs = {lv: level_cost(pulls, lv) for lv in (3, 2, 1, 0, -1)}
+    level = next((lv for lv in (3, 2, 1, 0, -1) if costs[lv] <= spare), -1)
+    return dict(level=level, label=BUDGET_LEVELS[level], spare=spare, reset=reset.isoformat(timespec="minutes"), costs={str(k): v for k, v in costs.items()},
+                pulls=pulls, short=max(0, int(math.ceil(costs[-1] - spare))), known=True)
+
+
+def govern(plan_key, budget):
+    """What this pull may do: dict(run, markets, cluster, kind, why). A pre-kickoff pull always runs. A look runs when,
+    after paying for it, the credits still cover every later pull of a more protected class in its barest form (so this
+    Saturday's look can run even when the month cannot afford every Saturday's). The whole day is pulled again at a
+    pre-kickoff pull, and the assists market is asked for, only when the whole remaining schedule is affordable that way.
+    A pull not on the schedule (an international game's 12-hour look) counts as a look."""
+    base, full = list(C.ODDS_BASE_MARKETS), list(C.ODDS_MARKETS)
+    if not budget.get("known"):
+        return dict(run=True, markets=full, cluster=False, kind="prekick" if plan_key and "prekick" in str(plan_key) else "look", why="")
+    pulls, spare = budget.get("pulls", []), budget["spare"]
+    me = next((p_ for p_ in pulls if p_[4] == plan_key), None)
+    kind = me[1] if me else ("prekick" if plan_key and "prekick" in str(plan_key) else "look")
+    later = [p_ for p_ in pulls if p_[4] != plan_key]
+    n_day, n_cluster = (me[2], me[3]) if me else (1, 1)
+    barest = lambda cls: sum(len(base) * (p_[3] if p_[1] == "prekick" else p_[2]) for p_ in later if PULL_CLASS[p_[1]] < cls)
+    everything = lambda nm: sum(nm * p_[2] for p_ in later)
+    all_day = spare - len(base) * n_day >= everything(len(base))
+    all_full = spare - len(full) * n_day >= everything(len(full))
+    if kind == "prekick":
+        return dict(run=True, markets=full if all_full else base, cluster=not all_day, kind=kind, why="")
+    run_it = spare - len(base) * n_day >= barest(PULL_CLASS[kind])
+    why = "" if run_it else f"left out to keep odds credits for the pulls that matter more ({spare:.0f} to spend before {budget['reset'][:10]}; this look would cost about {len(base) * n_day})"
+    return dict(run=run_it, markets=full if all_full else base, cluster=False, kind=kind, why=why)
 
 
 def upcoming_week(sched, season):
@@ -395,6 +504,15 @@ def official_solo(H):
     return Hg
 
 
+def scoreboard(Hg):
+    """The engine against the market's fair closing price on every line the model had a number for (pipeline/evaluate.py)."""
+    try:
+        return EV.scoreboard(EV.closing_frame(Hg[["season", "week", "team", "name_key", "comb", "solo_t"]], C.SEASON))
+    except Exception as e:  # noqa: BLE001    (a report must never stop the grading)
+        print(f"scoreboard skipped ({type(e).__name__}: {e})")
+        return {}
+
+
 def _live_rows(week=None):
     """ESPN final box-score rows for this week's finished games (empty on synthetic data or failure)."""
     if os.environ.get("TACKLE_FAKE_DATA") or not G.PICKS.exists():
@@ -450,6 +568,7 @@ def cmd_live_grade(force=False):
     parlays, psum = G.grade_parlays(Hg[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)   # H: zero-tackle games too, so a leg can settle
     summary["parlays"] = psum
     sleepers, summary["sleepers"] = G.grade_sleepers(Hg[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
+    summary["scoreboard"] = scoreboard(Hg)
     G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)
     retro = Path("data/retro_five.json")
     _json(SITE / "results.json", dict(summary=summary, picks=records(graded), parlays=records(parlays) if parlays is not None and len(parlays) else [],
@@ -518,6 +637,15 @@ def cmd_daily(auto=False):
         phi["__solo_official__"] = float(1 + cur.with_ast.sum() / cur.solo.sum())     # this season's rate of tackles made with an assist
         status["solo_official_factor"] = phi["__solo_official__"]
     games = week_games(sched, C.SEASON, week)
+    status["protocol_flags"] = bt.get("flags", [])       # a factor that fails its daily test, or one that is out and passes: a prompt to run the full test
+    if status["protocol_flags"]:
+        print("daily: PROTOCOL FLAGS: " + "; ".join(status["protocol_flags"]))
+    try:                                                 # every kickoff left this season, for the odds-credit budget
+        left = [g_["kickoff"] for w_ in sorted(set(sched[sched.season == C.SEASON].week)) if w_ >= week for g_ in week_games(sched, C.SEASON, int(w_))]
+        CACHE.mkdir(parents=True, exist_ok=True)
+        KICKOFFS.write_text(json.dumps(sorted(left)))
+    except Exception as e:  # noqa: BLE001
+        print(f"daily: kickoff list not written ({type(e).__name__}: {e})")
     status["season_over"] = not games           # every game of the season (playoffs included) is in the books: grade, keep the record, project nothing
     if games:
         F = M.upcoming_rows(H, sched, inj, C.SEASON, week, vol=src["vol"], dc=src["dc"], pbp_starters=src["pbp"]["starters"],
@@ -541,11 +669,10 @@ def cmd_daily(auto=False):
     live = _live_rows()
     graded, summary = G.grade(Hg[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
     summary["live_graded"] = int((graded.get("graded_by") == "live").sum()) if len(graded) else 0
-    blend = BL.estimate(Hg[["season", "week", "team", "name_key", "comb", "solo_t"]], C.SEASON)   # lines are set on the official count
-    BL.save(blend)
-    status["blend"] = blend
-    if blend:
-        print("daily: blend per market " + "; ".join(f"{k}: {v['w']:.2f} line, line {v['bias_line']:+.2f}, model {v['bias_model']:+.2f} ({v['n']} lines)" for k, v in blend.items()))
+    summary["scoreboard"] = sb = scoreboard(Hg)          # the engine against the market's fair close, on the official count
+    if sb:
+        print(f"daily: against the market on {sb['lines']} closing lines: log-loss market {sb['log_loss']['market']:.4f}, model {sb['log_loss']['model']:.4f}, engine {sb['log_loss']['engine']:.4f}"
+              + (f" (engine better by {sb['engine_minus_market']:+.4f}, t {sb['t']:+.1f} over {len(sb['weeks'])} weeks)" if sb.get("t") is not None else ""))
     # the official box score for every defender-game this season, so the owner's own board can grade any bet (not only the model's picks)
     hs = Hg[(Hg.season == C.SEASON) & Hg.comb.notna()]
     actuals = {}
@@ -557,10 +684,10 @@ def cmd_daily(auto=False):
     summary["parlays"] = psum
     G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)
     lines = O.upcoming_only(O.latest_lines(C.SEASON, week))
-    bets = G.cap_stakes(M.price_lines(lines, P, segments=load_segments(), blend=blend)) if len(lines) else pd.DataFrame()
+    bets = G.size_stakes(M.price_lines(lines, P)) if len(lines) else pd.DataFrame()
     if len(bets):
         _stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        BL.log_model_numbers(bets, C.SEASON, week, _stamp)
+        LL.log_model_numbers(bets, C.SEASON, week, _stamp)
         # the morning re-price is what the board shows until the next pull: log new picks and refresh open ones with
         # it, so a grade seen on the site is the grade the record keeps (2026-11-05: an A shown all morning was never logged)
         G.log_picks(bets, C.SEASON, week, _stamp)
@@ -571,14 +698,6 @@ def cmd_daily(auto=False):
     write_week_lines(P, C.SEASON, week)
     write_parlays(C.SEASON, week)
     print(f"daily: week {week}, {len(P)} projections, {len(bets)} priced lines, backtest on {bt.get('games', 0)} games")
-
-
-def load_segments():
-    """Segment calibration written by the grader (how claims resolved for picks like each other)."""
-    try:
-        return json.load(open(CACHE / "segments.json"))
-    except (OSError, ValueError):
-        return None
 
 
 def refresh_injury_status(P, week):
@@ -631,6 +750,23 @@ def cmd_odds(hours=None, auto=False):
             print("odds: no pull slot due and no international game in a pull window; nothing to do")
             return
         print(f"odds: {plan.pop('reason')}")
+    # the credit budget: the richest schedule the credits left this month can pay for decides what this pull asks for
+    left = O.credits_left(keys)
+    known = [c for c in left.values() if isinstance(c, (int, float))]
+    budget = credit_budget(credits=sum(known) if known and all(c is not None for c in left.values()) else None, served=load_served(), current=plan.get("key") if auto else None)
+    rule = govern(plan.get("key") if auto else None, budget)
+    if not auto:
+        rule.update(run=True, cluster=False)            # a pull by hand always runs, whole window; only the markets follow the budget
+    if budget.get("known"):
+        print(f"odds: credit budget level {budget['level']} ({budget['label']}): {budget['spare']:.0f} credits to spend before {budget['reset'][:10]}, "
+              f"the full schedule would cost {budget['costs'].get('3')}, the barest {budget['costs'].get('-1')}" + (f"; SHORT by {budget['short']}" if budget["short"] else ""))
+    if auto and not rule["run"]:
+        pulled_key, skipped_keys = plan.pop("key"), plan.pop("also_served", [])
+        mark_served([pulled_key] + skipped_keys)
+        log_pull(pulled_key, skipped=skipped_keys, saved=True)
+        print(f"odds: {pulled_key} {rule['why']}")
+        _budget_to_meta(budget)
+        return
     P = refresh_injury_status(P, week)   # only when a pull is happening: the report as it stands now
     if auto:
         pulled_key, skipped_keys = plan.pop("key"), plan.pop("also_served", [])
@@ -641,16 +777,18 @@ def cmd_odds(hours=None, auto=False):
             ev = O.list_events(next(iter(keys.values())))
             plan["event_ids"] = [e["id"] for e in ev if e.get("home_team") in names or e.get("away_team") in names]
         pull_kw = plan
-    rows, credits = O.pull(keys, **pull_kw)
+        if rule["cluster"] and "days" in pull_kw:       # a tight budget: only the games about to kick off, not the whole day again
+            pull_kw = dict(hours_ahead=(PRE_KICK_MIN + PRE_KICK_CLUSTER_MIN + 10) / 60)
+    rows, credits = O.pull(keys, markets=rule["markets"], **pull_kw)
     numeric = [c for c in credits.values() if isinstance(c, (int, float))]
     remaining = int(sum(numeric)) if numeric else next(iter(credits.values()), None)
     O.save_snapshot(rows, C.SEASON, week)
     if auto:
         log_pull(pulled_key, skipped=skipped_keys, games=len({r.get("event_id") for r in rows}) if rows else 0)
     lines = O.upcoming_only(O.latest_lines(C.SEASON, week))
-    bets = G.cap_stakes(M.price_lines(lines, P, segments=load_segments(), blend=BL.load()))
+    bets = G.size_stakes(M.price_lines(lines, P))
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    BL.log_model_numbers(bets, C.SEASON, week, stamp)
+    LL.log_model_numbers(bets, C.SEASON, week, stamp)
     n_new = G.log_picks(bets, C.SEASON, week, stamp)
     G.log_sleepers(bets, C.SEASON, week, stamp)
     G.build_parlays(bets, C.SEASON, week, stamp)
@@ -659,12 +797,27 @@ def cmd_odds(hours=None, auto=False):
     meta_path = SITE / "meta.json"
     meta = SEAL.read_json(meta_path) or {}          # the previous meta may be sealed (SITE_PASSWORD) or plain
     games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
+    after = credit_budget(credits=remaining if isinstance(remaining, (int, float)) else None, served=load_served())
     meta.update(odds_credits_remaining=remaining, odds_credits_by_key=credits, lines_pulled=stamp, lines_count=int(len(lines)), next_pull=next_pull(games=games),
-                pull_schedule=pull_schedule(games=games))
+                pull_schedule=pull_schedule(games=games), odds_budget=_budget_public(after), odds_markets=rule["markets"])
     _json(meta_path, meta)
     _json(SITE / "bets.json", records(bets))
     write_week_lines(P, C.SEASON, week)
     print(f"odds: {len(rows)} prices pulled, {len(lines)} current lines, {n_new} new picks logged, credits left {remaining}")
+
+
+def _budget_public(budget):
+    """The budget as the site shows it (no pull list)."""
+    return {k: v for k, v in budget.items() if k != "pulls"} | dict(pulls_left=len(budget.get("pulls", [])))
+
+
+def _budget_to_meta(budget):
+    """Refresh the budget and the pull schedule on the site after a look was left out to save credits."""
+    meta_path = SITE / "meta.json"
+    meta = SEAL.read_json(meta_path) or {}
+    games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
+    meta.update(odds_budget=_budget_public(budget), next_pull=next_pull(games=games), pull_schedule=pull_schedule(games=games))
+    _json(meta_path, meta)
 
 
 def cmd_history(weeks, markets):
@@ -682,7 +835,7 @@ def cmd_history(weeks, markets):
         print(f"history: week {wk}: {len(rows)} prices saved to {path}, credits left {left}")
 
 
-WEEK_LINE_COLS = ["player", "player_id", "espn_id", "jersey", "team", "opp", "group", "market", "line", "book", "over_odds", "under_odds", "over_link", "under_link", "side", "pick", "status", "proj", "model_over", "grade", "lock", "commence_time", "event_id", "rundown"]
+WEEK_LINE_COLS = ["player", "player_id", "espn_id", "jersey", "team", "opp", "group", "market", "line", "book", "over_odds", "under_odds", "over_link", "under_link", "side", "pick", "tier", "status", "proj", "proj_model", "model_over", "market_over", "p_claim", "p_low", "p_model", "ev", "edge_low", "grade", "lock", "commence_time", "event_id", "rundown"]
 
 
 def write_week_lines(P, season, week):
@@ -692,7 +845,7 @@ def write_week_lines(P, season, week):
     if lines is None or len(lines) == 0 or P is None or len(P) == 0:
         _json(SITE / "lines_week.json", [])
         return
-    bets = G.cap_stakes(M.price_lines(lines, P, segments=load_segments(), blend=BL.load()))
+    bets = G.size_stakes(M.price_lines(lines, P))
     _json(SITE / "lines_week.json", records(bets[[c for c in WEEK_LINE_COLS if c in bets.columns]]) if len(bets) else [])
 
 
@@ -706,7 +859,10 @@ def write_parlays(season, week):
         for pid, legs in L.groupby("parlay_id", sort=False):
             first = legs.iloc[0]
             start = pd.to_datetime(legs.commence_time, utc=True, errors="coerce")
+            sg = getattr(first, "same_game", np.nan)
             out.append(dict(parlay_id=pid, slate=first.slate, n_legs=int(len(legs)), combined_decimal=float(first.combined_decimal),
+                            same_game=bool(sg) if pd.notna(sg) else bool(legs.event_id.astype(str).duplicated().any()),
+                            product_decimal=None if pd.isna(getattr(first, "product_decimal", np.nan)) else float(first.product_decimal),
                             combined_american=G.american(float(first.combined_decimal)), combined_prob=float(first.combined_prob), corr_ratio=None if pd.isna(getattr(first, "corr_ratio", np.nan)) else float(first.corr_ratio),
                             units=float(first.units), chosen_at=first.chosen_at, placed=bool((start <= now).any()),
                             finished=bool(start.notna().all() and (start + dt.timedelta(hours=4, minutes=30) <= now).all()),   # every leg's game is over: it belongs to the Track record tab, not the board
@@ -719,15 +875,16 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
     now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes")
     games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
     meta = dict(generated_at=now, season=C.SEASON, week=week, lines_pulled=lines_pulled, next_pull=next_pull(games=games), pull_schedule=pull_schedule(games=games), **status,
-                bars=dict(pick=C.PICK_BAR, signal=C.SIGNAL_BAR),
-                grading=dict(bars=C.GRADE_BARS, units=C.GRADE_UNITS, weights=C.LOCK_WEIGHTS, ev_full=C.LOCK_EV_FULL, ev_fade=list(C.LOCK_EV_FADE),
-                             model_full=C.LOCK_MODEL_FULL, locks=C.LOCKS_PER_SLATE, lock_min=C.LOCK_MIN_SCORE, line_weight=C.LINE_WEIGHT, clv=C.CLV_BARS, clv_pct=C.CLV_PCT_BARS,
-                             pick_bar=C.PICK_BAR, pick_bar_over=C.PICK_BAR_OVER, pick_min_claim=C.PICK_MIN_CLAIM, claim_shrink=C.CLAIM_SHRINK, segment_k=C.SEGMENT_CAL["k"], segment_min_n=C.SEGMENT_CAL["min_n"],
-                             blend=status.get("blend") or BL.load() or {}, stake=C.STAKE))
+                grading=dict(engine=C.ENGINE, bars=C.GRADE_BARS, units=C.GRADE_UNITS, locks=C.LOCKS_PER_SLATE, lock_min=C.LOCK_MIN_SCORE, clv=C.CLV_BARS, clv_pct=C.CLV_PCT_BARS,
+                             stake=C.STAKE, frozen_until=C.FROZEN_UNTIL, corrector_weight=C.GBM["weight"], factors=C.FACTORS,
+                             parlay=dict(min_model=C.PARLAY_MIN_PROB, fallback=C.PARLAY_FALLBACK_PROB, legs=list(C.PARLAY_LEGS))))
     prev = SEAL.read_json(SITE / "meta.json")
     if prev:
         meta.setdefault("odds_credits_remaining", prev.get("odds_credits_remaining"))
         meta.setdefault("odds_credits_by_key", prev.get("odds_credits_by_key"))
+        meta.setdefault("odds_markets", prev.get("odds_markets"))
+    left = prev.get("odds_credits_remaining") if prev else None      # the budget as of the last pull's credits, re-read against today's schedule
+    meta["odds_budget"] = _budget_public(credit_budget(credits=left if isinstance(left, (int, float)) else None, served=load_served()))
     _json(SITE / "meta.json", meta)
     cols = ["player", "team", "opp_team", "group", "status", "n_prev", "season_avg", "last", "base", "proj", "proj_solo",
             "fair_line", "fair_line_solo", "crew_comb", "crew_solo", "spread_dog", "role_signal", "venue", "gameday", "gametime", "phi", "phi_solo",

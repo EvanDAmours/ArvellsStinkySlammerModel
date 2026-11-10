@@ -7,38 +7,86 @@ import pandas as pd
 
 import config as C
 from pipeline import odds as O
-from pipeline.model import american_to_decimal, p_over
+from pipeline.model import american_to_decimal, implied_mean, p_over
 from pipeline.sources import norm_name
 
 PICKS = Path("data/picks.csv")
 KEY = ["season", "week", "player", "market", "side", "line", "book"]
 
 
-def cap_stakes(bets):
-    """At most config.STAKE['game_cap'] units on one game: when the picks on a game (best price each) add up to more,
-    every stake on that game is scaled down together. Returns the frame with `stake` capped."""
+def size_stakes(bets):
+    """Size the slate as one book (config.STAKE, config.ENGINE['rho']). Every pick arrives with its own stake: a quarter of
+    Kelly at the cautious chance. Here, per bet (one per player, market and side, taken at the line and book where its own
+    stake is largest, so the caps hold whichever of his lines is bet): (1) the picks of one kind (side x market) on one
+    slate day rise and fall together, so each stake is divided by 1 + (N - 1) x rho for the N of them; (2) at most
+    game_cap units on one game, kind_cap on one kind a slate day and slate_cap on a slate day, the stakes concerned scaled
+    down together; (3) nothing falls under the minimum. Every other row of the same bet (another book, another line) is
+    scaled by the same factor. `stake_raw` keeps each row's stake before sizing and `slate_n` the N."""
     if bets is None or len(bets) == 0 or "stake" not in bets.columns or "event_id" not in bets.columns:
         return bets
     b = bets.copy()
-    cap = C.STAKE["game_cap"]
-    live = b.pick.isin(["Over", "Under"]) & b.stake.notna() & b.get("best_price", pd.Series(True, index=b.index)).fillna(True).astype(bool)
-    tot = b[live].groupby("event_id").stake.sum()
-    scale = (cap / tot).clip(upper=1.0)
-    b.loc[live, "stake"] = b.loc[live, "stake"] * b.loc[live, "event_id"].map(scale).fillna(1.0)
+    c, rho = C.STAKE, C.ENGINE["rho"]
+    live = b.pick.isin(["Over", "Under"]) & b.stake.notna()
+    b["stake_raw"] = b.stake
+    b["slate_n"] = np.nan
+    if not live.any():
+        return b
+    d = b[live].copy()
+    d["_e"] = pd.to_numeric(d["edge_low"], errors="coerce").fillna(0.0) if "edge_low" in d.columns else 0.0
+    main = d.sort_values(["stake", "_e"], ascending=False).drop_duplicates(["player", "market", "side"])
+    slate = slate_of(main.commence_time) if "commence_time" in main.columns else pd.Series("", index=main.index)
+    kind = main.side.astype(str) + " " + main.market.map(C.market_kind).astype(str)
+    n_kind = main.groupby([slate, kind]).player.transform("size").astype(float)
+    st = main.stake.astype(float) / (1 + (n_kind - 1) * rho)
+    for keys, cap in ((main.event_id.astype(str), c["game_cap"]), ([slate, kind], c["kind_cap"]), (slate, c["slate_cap"])):
+        tot = st.groupby(keys).transform("sum")
+        st = st * (cap / tot).clip(upper=1.0)
+    st = st.clip(lower=c["min"])
+    factor = dict(zip(zip(main.player, main.market, main.side), (st / main.stake.astype(float)).clip(upper=1.0)))
+    by_n = dict(zip(zip(main.player, main.market, main.side), n_kind))
+    keys_live = [k_ for k_, l_ in zip(zip(b.player, b.market, b.side), live) if l_]
+    b.loc[live, "stake"] = np.maximum(c["min"], b.loc[live, "stake_raw"].astype(float).values * np.array([factor.get(k_, 1.0) for k_ in keys_live]))
+    b.loc[live, "slate_n"] = [by_n.get(k_) for k_ in keys_live]
     return b
+
+
+cap_stakes = size_stakes      # old name
+
+
+def hit_interval(wins, losses, weeks=1):
+    """A 95% interval for a hit rate with the week as the unit (MODEL_LOG A3: the picks of one week share a shock, so a
+    record is worth fewer bets than it counts): a Wilson interval on the effective count n / (1 + (n / weeks - 1) x rho).
+    Returns (low, high), or (None, None) with no decided bet."""
+    n = int(wins) + int(losses)
+    if n <= 0:
+        return None, None
+    per_week = n / max(1, int(weeks))
+    n_eff = n / (1 + max(0.0, per_week - 1) * C.ENGINE["rho"])
+    ph, z = wins / n, 1.96
+    den = 1 + z * z / n_eff
+    mid, half = (ph + z * z / (2 * n_eff)) / den, z * np.sqrt(ph * (1 - ph) / n_eff + z * z / (4 * n_eff * n_eff)) / den
+    return float(max(0.0, mid - half)), float(min(1.0, mid + half))
+
+
+def _weeks_of(part):
+    """Distinct season-weeks among a frame's decided picks."""
+    if part is None or len(part) == 0 or "week" not in part.columns:
+        return 1
+    return max(1, int(part[["season", "week"]].drop_duplicates().shape[0]) if "season" in part.columns else int(part.week.nunique()))
 
 
 def log_picks(bets, season, week, pulled_at):
     if bets is None or bets.empty or "pick" not in bets:
         return 0
-    new = bets[bets.pick.isin(["Over", "Under"]) & bets.best_price.fillna(False)].copy()
+    best = bets.best_price.fillna(False).astype(bool) if "best_price" in bets.columns else pd.Series(True, index=bets.index)
+    new = bets[bets.pick.isin(["Over", "Under"]) & best].copy()
     if "commence_time" in new.columns:            # never log a pick on a game that has kicked off (31 week-7 rows were)
         new = new[pd.to_datetime(new.commence_time, utc=True, errors="coerce") > O._utcnow()]
     if new.empty:
         return 0
     new = new.assign(season=season, week=week, pulled_at=pulled_at, side=new.pick,
                      odds=np.where(new.pick == "Over", new.over_odds, new.under_odds))
-    cols = KEY + ["player_id", "team", "opp", "group", "odds", "proj", "proj_model", "mkt_line", "model_over", "market_over", "ev", "why", "p_claim", "claim_ev", "segment", "segment_adj", "stake",
+    cols = KEY + ["player_id", "team", "opp", "group", "odds", "proj", "proj_model", "mkt_line", "mkt_mean", "model_over", "model_over_own", "market_over", "ev", "why", "p_claim", "p_low", "p_model", "claim_ev", "edge_low", "tier", "segment", "segment_adj", "stake", "stake_raw", "slate_n",
                   "lock", "grade", "consistency", "cons_hits", "cons_n", "payout", "uncertain", "new_role", "reduced_role", "absence", "new_team",
                   "in_role_games", "lock_block", "lock_eligible", "press_pg", "fp_comb", "fp_solo", "fp_rel", "phi", "event_id", "commence_time", "pulled_at"]
     new = new[[c for c in cols if c in new.columns]]
@@ -53,8 +101,8 @@ def log_picks(bets, season, week, pulled_at):
         k = tuple(both.loc[i, KEY])
         if k in fresh.index:
             # market_over is NOT refreshed: it is the no-vig price when we bet, which closing-line value measures from
-            for c in ["lock", "grade", "consistency", "cons_hits", "cons_n", "ev", "proj", "proj_model", "mkt_line", "model_over", "why",
-                      "p_claim", "claim_ev", "segment", "segment_adj", "stake", "lock_block", "lock_eligible", "payout", "phi"]:
+            for c in ["lock", "grade", "consistency", "cons_hits", "cons_n", "ev", "proj", "proj_model", "mkt_line", "mkt_mean", "model_over", "model_over_own", "why",
+                      "p_claim", "p_low", "p_model", "claim_ev", "edge_low", "tier", "segment", "stake", "stake_raw", "slate_n", "lock_block", "lock_eligible", "payout", "phi"]:
                 if c in fresh.columns:
                     both.loc[i, c] = fresh.loc[k, c]
     # a logged pick the current board no longer makes (any book, any line) keeps its old grade but can no longer be a
@@ -186,7 +234,7 @@ mark_weekly_five = mark_locks   # old name
 # ---------------------------------------------------------------- parlays
 PARLAYS = Path("data/parlays.csv")
 LEG_COLS = ["season", "week", "slate", "parlay_id", "leg", "player", "jersey", "team", "opp", "market", "side", "line", "book", "odds", "link", "sid",
-            "p_side", "mkt_side", "lock", "grade", "event_id", "commence_time", "n_legs", "combined_decimal", "combined_prob", "corr_ratio", "units", "chosen_at"]
+            "p_side", "mkt_side", "lock", "grade", "event_id", "commence_time", "n_legs", "combined_decimal", "combined_prob", "corr_ratio", "same_game", "product_decimal", "units", "chosen_at"]
 
 
 def american(dec):
@@ -194,19 +242,19 @@ def american(dec):
 
 
 def choose_parlay(bets, slate):
-    """The parlay with the best chance of hitting on one slate day: the highest blended probabilities on the board,
-    one per player, never a side the model dislikes. Returns leg rows with parlay-level fields, or None."""
+    """The recommended parlay for one slate day: legs that are picks in their own right (the cautious edge at or above
+    zero), lock-eligible, one per player, the model's own chance highest first. Returns leg rows with parlay-level
+    fields, or None: a slate without two such legs gets no parlay rather than a thin one."""
     if bets is None or len(bets) == 0 or "ev" not in bets:
         return None
-    b = bets[(bets.slate == slate) & bets.proj.notna() & bets.ev.notna() & (bets.ev >= 0) & bets.market.isin(C.PARLAY_MARKETS)].copy()
+    b = bets[(bets.slate == slate) & bets.proj.notna() & bets.pick.isin(["Over", "Under"]) & bets.market.isin(C.PARLAY_MARKETS)].copy()
     b = b[~lock_blocked(b)]
     if b.empty:
         return None
-    from pipeline.model import claimed_prob
-    raw = pd.Series(np.where(b.side == "Over", b.model_over, 1 - b.model_over), index=b.index)
-    b["p_side"] = pd.to_numeric(b["p_claim"], errors="coerce").fillna(raw.map(claimed_prob)) if "p_claim" in b.columns else raw.map(claimed_prob)   # the claimed chance, segment-corrected
+    b["p_side"] = pd.to_numeric(b["p_claim"], errors="coerce")           # the engine's win chance of the leg
+    b["_own"] = pd.to_numeric(b["p_model"], errors="coerce") if "p_model" in b.columns else b["p_side"]   # the model's own chance: what ranks a leg
     b["dec"] = b.payout + 1
-    b = b.sort_values(["p_side", "ev"], ascending=False).drop_duplicates("player")
+    b = b[b.p_side.notna() & b.dec.notna()].sort_values(["_own", "ev"], ascending=False).drop_duplicates("player")
     b["_seg"] = segment_key(b)
     lo, hi = C.PARLAY_LEGS
 
@@ -219,20 +267,25 @@ def choose_parlay(bets, slate):
                 continue
             cnt[k_] = cnt.get(k_, 0) + 1; out.append(i)
         return pool.loc[out]
-    legs = take(b[b.p_side >= C.PARLAY_MIN_PROB], hi)
+    legs = take(b[b._own >= C.PARLAY_MIN_PROB], hi)
     if len(legs) < lo:
-        legs = take(b[b.p_side >= C.PARLAY_FALLBACK_PROB], lo)
+        legs = take(b[b._own >= C.PARLAY_FALLBACK_PROB], lo)
     if len(legs) < lo:
-        return None   # not enough confident legs on this slate yet: no parlay rather than a bad one
-    dec, prob = float(legs.dec.prod()), float(legs.p_side.prod())
+        return None   # not enough legs that are picks on this slate yet: no parlay rather than a bad one
+    product, prob = float(legs.dec.prod()), float(legs.p_side.prod())
     # legs on one defence share the plays it faces: the joint chance is not the product (model.parlay_corr_ratio)
     from pipeline.model import parlay_corr_ratio
     corr = parlay_corr_ratio([dict(mu=r.proj, phi=getattr(r, "phi", None), exp_opps=getattr(r, "exp_opps", None), line=r.line, side=r.side, event_id=getattr(r, "event_id", None), team=getattr(r, "team", None)) for r in legs.itertuples()])
     prob = float(min(0.99, prob * corr))
+    # two legs in one game: the book prices a same-game parlay itself, under the product of the legs when they rise and
+    # fall together. The price recorded is the product divided by our own correlation ratio: an estimate, flagged as one
+    # (until 2026-11-09 the product itself was logged, a price no book pays)
+    same_game = bool(legs.event_id.astype(str).duplicated().any()) if "event_id" in legs.columns else False
+    dec = product / max(1.0, corr) if same_game else product
     edge = dec - 1
     kelly = (prob * edge - (1 - prob)) / edge if edge > 0 else 0.0
     units = float(np.clip(round(C.PARLAY_KELLY_FRACTION * kelly, 1), *C.PARLAY_UNITS)) if kelly > 0 else C.PARLAY_UNITS[0]
-    out = legs.drop(columns=["_seg"]).assign(leg=range(1, len(legs) + 1), n_legs=len(legs), combined_decimal=dec, combined_prob=prob, corr_ratio=corr, units=units)
+    out = legs.drop(columns=["_seg", "_own"]).assign(leg=range(1, len(legs) + 1), n_legs=len(legs), combined_decimal=dec, product_decimal=product, combined_prob=prob, corr_ratio=corr, same_game=same_game, units=units)
     return out
 
 
@@ -290,7 +343,9 @@ def grade_parlay_legs(L, stats):
         first = legs.iloc[0]
         rows.append(dict(parlay_id=pid, season=int(first.season), week=int(first.week), slate=first.slate, n_legs=int(len(legs)),
                          combined_decimal=float(first.combined_decimal), combined_american=american(float(first.combined_decimal)),
-                         combined_prob=float(first.combined_prob), corr_ratio=None if pd.isna(getattr(first, "corr_ratio", np.nan)) else float(first.corr_ratio), units=units, chosen_at=first.chosen_at, result=result, units_won=won,
+                         combined_prob=float(first.combined_prob), corr_ratio=None if pd.isna(getattr(first, "corr_ratio", np.nan)) else float(first.corr_ratio),
+                         same_game=bool(getattr(first, "same_game", False)) if pd.notna(getattr(first, "same_game", np.nan)) else bool(legs.event_id.astype(str).duplicated().any()),
+                         units=units, chosen_at=first.chosen_at, result=result, units_won=won,
                          legs=[dict(player=r.player, team=r.team, opp=r.opp, market=r.market, side=r.side, line=float(r.line), book=r.book,
                                     odds=None if pd.isna(r.odds) else float(r.odds), p_side=float(r.p_side),
                                     mkt_side=None if pd.isna(getattr(r, "mkt_side", np.nan)) else float(r.mkt_side), lock=None if pd.isna(r.lock) else float(r.lock),
@@ -351,17 +406,9 @@ def _no_vig_side(over, under, side):
 
 
 def _market_mean(p_over_close, line, phi):
-    """The mean of a count with dispersion phi whose chance of clearing `line` is the closing no-vig over price:
-    the market's own expectation, read off its closing number. Bisection; the chance of clearing a line falls as
-    the mean falls."""
-    lo, hi = 0.05, 40.0
-    for _ in range(60):
-        mid = (lo + hi) / 2
-        if p_over(mid, phi, line) < p_over_close:
-            lo = mid
-        else:
-            hi = mid
-    return (lo + hi) / 2
+    """The mean of a count with dispersion phi whose chance of clearing `line` is the closing no-vig over price: the
+    market's own expectation, read off its closing number (model.implied_mean)."""
+    return implied_mean(p_over_close, phi, line)
 
 
 def no_vig_clv(odds, side, line, close_line, close_over, close_under, phi=1.0):
@@ -556,10 +603,11 @@ def record_by(P, col, order=None):
             continue
         part = allp[allp.result.isin(["Win", "Loss", "Push"])]
         decided = int((part.result != "Push").sum())
+        lo, hi = hit_interval(int((part.result == "Win").sum()), int((part.result == "Loss").sum()), _weeks_of(part[part.result != "Push"]))
         out.append(dict(key=v, bets=int(len(part)), wins=int((part.result == "Win").sum()), losses=int((part.result == "Loss").sum()),
                         pushes=int((part.result == "Push").sum()), pending=int((allp.result == "Pending").sum()),
                         units=float(part.units.sum()) if len(part) else 0.0, roi=float(part.units.mean()) if len(part) else None,
-                        hit=float((part.result == "Win").sum() / decided) if decided else None))
+                        hit=float((part.result == "Win").sum() / decided) if decided else None, hit_lo=lo, hit_hi=hi))
     return out
 
 
@@ -577,10 +625,13 @@ def record_by_grade(P):
         part = allp[allp.result.isin(["Win", "Loss", "Push"])]
         stake = float(C.GRADE_UNITS.get(gr, 0.0))
         decided = int((part.result != "Push").sum())
+        lo, hi = hit_interval(int((part.result == "Win").sum()), int((part.result == "Loss").sum()), _weeks_of(part[part.result != "Push"]))
+        cl = pd.to_numeric(part[part.result != "Push"].p_claim, errors="coerce").dropna() if "p_claim" in part.columns else pd.Series(dtype=float)
         out.append(dict(grade=gr, bets=int(len(part)), wins=int((part.result == "Win").sum()), losses=int((part.result == "Loss").sum()),
                         pushes=int((part.result == "Push").sum()), pending=int((allp.result == "Pending").sum()),
                         units=float(part.units.sum()) if len(part) else 0.0, roi=float(part.units.mean()) if len(part) else None,
-                        hit=float((part.result == "Win").sum() / decided) if decided else None,
+                        hit=float((part.result == "Win").sum() / decided) if decided else None, hit_lo=lo, hit_hi=hi,
+                        claimed=float(cl.mean()) if len(cl) else None,
                         stake=stake, staked=float(part.units.sum() * stake) if len(part) else 0.0))
     return out
 
@@ -604,6 +655,49 @@ def _phantom(P):
                 continue                                  # no snapshot to judge by: leave it
             out[P.index.get_loc(i)] = (ev, prior[-1], r.book, r.market, r.player, float(r.line)) not in have
     return out
+
+
+SETTLED = Path("data/settled.csv")
+SETTLED_COLS = KEY + ["actual", "graded_by", "settled_at"]
+
+
+def _freeze_settlement(P):
+    """A bet settles once. The first box score that grades a pick (ESPN's final when the game ends, else the official
+    stats) is written to data/settled.csv and used from then on: a book pays on the count at the final whistle and does
+    not reopen a bet for a later stat correction, so the record must not move either. A later official number that
+    differs is counted (`corrected`), never applied; the model itself always trains on the official stats. To undo a
+    wrong settlement, delete its row from the file. Returns the frame with `actual` and `graded_by` as settled."""
+    import datetime as dt
+    norm = lambda r: (int(r[0]), int(r[1]), str(r[2]), str(r[3]), str(r[4]), round(float(r[5]), 2), str(r[6]))
+    try:
+        old = pd.read_csv(SETTLED) if SETTLED.exists() else pd.DataFrame(columns=SETTLED_COLS)
+    except (OSError, ValueError):
+        old = pd.DataFrame(columns=SETTLED_COLS)
+    store = {norm(r[:7]): (float(r[7]), r[8]) for r in old[SETTLED_COLS[:9]].itertuples(index=False)} if len(old) else {}
+    P = P.copy()
+    P["corrected"] = False
+    new, stamp = [], dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    for i, r in zip(P.index, P[KEY].itertuples(index=False)):
+        try:
+            k_ = norm(r)
+        except (TypeError, ValueError):
+            continue
+        a = P.at[i, "actual"]
+        if k_ in store:
+            kept, by = store[k_]
+            if pd.notna(a) and float(a) != kept:
+                P.at[i, "corrected"] = True
+            P.at[i, "actual"], P.at[i, "graded_by"] = kept, by
+        elif pd.notna(a):
+            store[k_] = (float(a), P.at[i, "graded_by"])
+            new.append(dict(zip(KEY, r), actual=float(a), graded_by=P.at[i, "graded_by"], settled_at=stamp))
+    if new:
+        try:
+            SETTLED.parent.mkdir(parents=True, exist_ok=True)
+            pd.concat([old, pd.DataFrame(new)], ignore_index=True)[SETTLED_COLS].to_csv(SETTLED, index=False)
+        except OSError:
+            pass
+    return P
 
 
 def _merge_stats(P, pw, suffix=""):
@@ -657,6 +751,7 @@ def grade(pw_comb, live=None):
         P.loc[fill, "actual"] = _actual_for(P[fill])
         P.loc[fill, "graded_by"] = "live"
         P = P.drop(columns=["comb_l", "solo_l", "ast_l"])
+    P = _freeze_settlement(P)          # a bet settles once, on the first box score that grades it
     # a game that is in the books (the team has stat rows) but the player has none: he did not play, the bet is void
     if "team" in pw_comb.columns and "team" in P.columns:
         teams_done = set(zip(pw_comb.season, pw_comb.week, pw_comb.team))
@@ -750,7 +845,13 @@ def grade(pw_comb, live=None):
     summary = dict(by_grade=by_grade, by_side=record_by(Pc, "side", ["Over", "Under"]), segments=seg_rows, market_watch=watch, luck=luck,
                    by_side_market=record_by(Pc, "side_market", ["Over combined", "Over solo", "Over assists", "Under combined", "Under solo", "Under assists"]),
                    rows_logged=int(len(P)), bets_counted=int(P.counted.sum()), late_voided=int(P.late.sum()),
+                   stat_corrections=int(P.corrected.sum()) if "corrected" in P.columns else 0,
+                   hit_lo=hit_interval(int((g.result == "Win").sum()), int((g.result == "Loss").sum()), _weeks_of(g[g.result != "Push"]))[0],
+                   hit_hi=hit_interval(int((g.result == "Win").sum()), int((g.result == "Loss").sum()), _weeks_of(g[g.result != "Push"]))[1],
+                   clv_novig_se=_cluster_se(Pc[Pc.clv_novig.notna()], "clv_novig"),
                    five=dict(bets=int(len(five)), wins=int((five.result == "Win").sum()), losses=int((five.result == "Loss").sum()),
+                             hit_lo=hit_interval(int((five.result == "Win").sum()), int((five.result == "Loss").sum()), _weeks_of(five[five.result != "Push"]))[0],
+                             hit_hi=hit_interval(int((five.result == "Win").sum()), int((five.result == "Loss").sum()), _weeks_of(five[five.result != "Push"]))[1],
                              pushes=int((five.result == "Push").sum()), units=float(five.units.sum()) if len(five) else 0.0,
                              hit=float((five.result == "Win").sum() / max(1, (five.result != "Push").sum())) if len(five) else None,
                              pending=int((five_all.result == "Pending").sum()), weeks=weeks),bets=int(len(g)), wins=int((g.result == "Win").sum()), losses=int((g.result == "Loss").sum()),
@@ -764,6 +865,17 @@ def grade(pw_comb, live=None):
                    close_moved=int(mvc.sum()), close_known=int(Pc.clv_line.notna().sum()),
                    pending=int((Pc.result == "Pending").sum()))
     return P.drop(columns=["name_key"]), summary
+
+
+def _cluster_se(d, col):
+    """Standard error of a mean with season-weeks as the unit (None with fewer than two weeks)."""
+    if d is None or len(d) == 0 or col not in d.columns:
+        return None
+    grp = d.groupby(["season", "week"])[col].agg(["sum", "size"])
+    if len(grp) < 2:
+        return None
+    m = grp["sum"].sum() / grp["size"].sum()
+    return float(np.sqrt(((grp["sum"] - m * grp["size"]) ** 2).sum()) / grp["size"].sum() * np.sqrt(len(grp) / (len(grp) - 1)))
 
 
 def write_five_log(P, summary, path, parlays=None):
@@ -895,8 +1007,9 @@ def grade_sleepers(pw_comb, live=None):
         g = d[d.result.isin(["Win", "Loss"])]
         w = int((g.result == "Win").sum())
         cl = pd.to_numeric(g.sleeper_p, errors="coerce").dropna() if "sleeper_p" in g.columns else pd.Series(dtype=float)
+        lo, hi = hit_interval(w, int(len(g) - w), _weeks_of(g))
         return dict(bets=int(len(d)), wins=w, losses=int(len(g) - w), pushes=int((d.result == "Push").sum()), pending=int((d.result == "Pending").sum()),
-                    units=float(d.units.sum()), hit=float(w / len(g)) if len(g) else None, model_chance=float(cl.mean()) if len(cl) else None)
+                    units=float(d.units.sum()), hit=float(w / len(g)) if len(g) else None, hit_lo=lo, hit_hi=hi, model_chance=float(cl.mean()) if len(cl) else None)
     sg = S.sleeper_grade.fillna("ungraded").astype(str) if "sleeper_grade" in S.columns else pd.Series("ungraded", index=S.index)
     summary = dict(all=rec(S), by_kind={k: rec(d) for k, d in S.groupby("kind")}, by_grade={g: rec(d) for g, d in S.groupby(sg)},
                    by_week=[dict(season=int(s), week=int(w), **rec(d)) for (s, w), d in S.groupby(["season", "week"])],

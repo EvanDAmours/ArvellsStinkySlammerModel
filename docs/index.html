@@ -312,12 +312,12 @@ function recordsBar(s) {
   // Locks and plays records side by side, plus the replayed record under the current rules
   const r = DATA.results || {}, f = (s || {}).five || {}, bar = el("div", { class: "records" });
   const hit = f.hit == null ? "" : ` (${pct(f.hit)})`;
-  bar.append(el("div", { class: "rec" }, wl(f.wins, f.losses, f.pushes), el("span", { class: "label" }, `Locks${hit}${f.pending ? `, ${f.pending} pending` : ""}`)));
+  bar.append(el("div", { class: "rec", title: rangeOf(f) ? `Likely range of the true hit rate: ${rangeOf(f)}` : "" }, wl(f.wins, f.losses, f.pushes), el("span", { class: "label" }, `Locks${hit}${f.pending ? `, ${f.pending} pending` : ""}`)));
   bar.append(el("div", { class: "rec" }, wl(s?.wins, s?.losses, s?.pushes), el("span", { class: "label" }, `All plays${s?.pending ? `, ${s.pending} pending` : ""}${s?.live_graded ? ` (${s.live_graded} settled from the live box score; official stats confirm overnight)` : ""}`)));
   const bg = Object.fromEntries(((s || {}).by_grade || []).map((g) => [g.grade, g]));
   for (const gr of ["A", "B", "C"]) {
     const g = bg[gr] || {};
-    bar.append(el("div", { class: "rec" }, el("span", { class: `grade ${gr}`, title: "Confidence grade" }, gr), wl(g.wins, g.losses, g.pushes),
+    bar.append(el("div", { class: "rec", title: rangeOf(g) ? `Likely range of the true hit rate: ${rangeOf(g)}` : "" }, el("span", { class: `grade ${gr}`, title: "Grade" }, gr), wl(g.wins, g.losses, g.pushes),
       el("span", { class: "label" }, `${gr} grade${g.hit == null ? "" : ` (${pct(g.hit)})`}${g.pending ? `, ${g.pending} pending` : ""}`)));
   }
   for (const sd of ((s || {}).by_side || [])) {
@@ -468,6 +468,7 @@ function renderPulls(m) {
       let cls = "", label = fmtT(s.at), title = s.kind === "prekick" ? "An hour before kickoff" : "Scheduled look";
       if (s.status === "pulled") { cls = "pulled"; label += " ✓"; title += ` · pulled ${fmtT(s.pulled_at)}${s.games != null ? `, ${s.games} game${s.games === 1 ? "" : "s"}` : ""}`; }
       else if (s.status === "skipped") { cls = "skipped"; title += " · folded into a later pull (the run came late)"; }
+      else if (s.status === "saved") { cls = "skipped"; label += " saved"; title += " · left out to keep odds credits for the pulls an hour before kickoff (credits are short this month)"; }
       else if (now - t > 45 * 60000) { cls = "late"; label += " late"; title += " · not pulled yet: the next ticker beat serves it"; }
       else if (t === nextAt) { cls = "next"; label += " next"; }
       box.append(el("span", { class: `chip ${cls}`.trim(), title }, label));
@@ -487,6 +488,8 @@ function renderMeta() {
                     GATE.pw ? (() => { const b = el("button", { type: "button", class: "lock-site", title: "Forget the password on this device" }, "Lock this device"); b.onclick = lockSite; return b; })() : "",
                     el("span", {}, m.odds_credits_remaining != null ? `${m.odds_credits_remaining} odds credits left this month` : ""));
   renderPulls(m);
+  const ob = m.odds_budget;
+  if (ob && ob.known && ob.level < 2) $("#warnings").append(el("div", { class: "warn" }, `Odds credits are short this month: ${Math.round(ob.spare)} to spend before they reset on ${String(ob.reset).slice(0, 10)}; every scheduled pull would cost about ${ob.costs?.["2"]}. What the credits still cover: ${ob.label}.${ob.short ? ` Even that is ${ob.short} credits short: the last games of the month will have no lines.` : ""} A look left out is marked "saved" in the pull strip. The fix is a second working Odds API key (the PARLAY_API_KEY secret is being rejected) or a paid plan.`));
   if (m.formula_check_ok === false)
     $("#warnings").append(el("div", { class: "warn" }, "Tackle totals didn’t match the official numbers this run. Picks may be off until the data source is fixed; check the Actions log."));
   // a pull that should have happened and has not: GitHub's scheduler stalls now and then; say so instead of showing stale lines as current
@@ -521,7 +524,7 @@ function aGradeSlip(all) {
   const wrap = el("div", { class: "parlay-box" }, el("h3", {}, `Every A pick at DraftKings · ${legs.length} legs · ${amer}`));
   wrap.append(el("p", { class: "note" }, `${legs.map((l) => `${l.player}${l.jersey != null ? ` #${l.jersey}` : ""} ${l.side} ${num(l.line)} ${(MARKET[l.market] || "").toLowerCase()} (${odds(l.side === "Under" ? l.under_odds : l.over_odds)})`).join(" · ")}.`));
   wrap.append(el("div", { class: "tail" }, el("a", { class: "bet-link", href: slip.href, target: "_blank", rel: "noopener noreferrer" }, `Open all ${legs.length} at DraftKings in one slip ↗`)));
-  wrap.append(el("p", { class: "note" }, `The model's chance that every leg hits: ${pct(chance)} (the claimed chances multiplied; ${games} game${games === 1 ? "" : "s"}). A parlay of picks the model likes is still mostly a long shot: each A is a good bet on its own, and the slip opens as a parlay, so split it into singles there if you would rather. DraftKings may refuse two solo-tackle legs from one game in a parlay; drop one of them on the slip if it does. Re-built at every line pull until kickoff.`));
+  wrap.append(el("p", { class: "note" }, `The model's chance that every leg hits: ${pct(chance)} (the win chances multiplied; ${games} game${games === 1 ? "" : "s"}). A parlay of picks the model likes is still mostly a long shot: each A is a good bet on its own, and the slip opens as a parlay, so split it into singles there if you would rather. DraftKings may refuse two solo-tackle legs from one game in a parlay; drop one of them on the slip if it does. Re-built at every line pull until kickoff.`));
   return wrap;
 }
 
@@ -546,7 +549,7 @@ function sleeperBox(all) {
     el("summary", {}, el("strong", {}, `Sleepers · ${rows.length} open`), counts.length ? ` (${counts.map(([g, n]) => `${n} ${g}`).join(", ")})` : "", sum && sum.all && sum.all.bets ? ` · record ${rec(sum.all)}` : ""));
   const byG = sum && sum.by_grade ? ["A", "B", "C"].filter((g) => sum.by_grade[g]).map((g) => el("span", { class: "gchip" }, el("span", { class: `grade ${g}` }, g), rec(sum.by_grade[g]))) : [];
   if (byG.length) wrap.append(el("div", { class: "grade-chips note" }, "Record by grade: ", ...byG));
-  wrap.append(el("p", { class: "note" }, "Lines where the model's own number, before it is blended with the book's line, disagrees with the book by a margin that held in every week tracked: solo tackles with the model half a tackle or more under the line (and his own season within a tackle of it), and combined tackles with the model half a tackle to a tackle over. Each is graded from the model's own evidence; the price never enters. Never a lock; tracked at 1 unit each. In weeks 7 to 9 at the close: A 21-3, B 35-12, C 33-17 (chosen on those same weeks, so expect less)."));
+  wrap.append(el("p", { class: "note" }, "A second, simpler test kept on its own record: lines where the model's own number disagrees with the book's line by a margin that held in every week tracked (solo tackles with the model half a tackle or more under the line and his own season within a tackle of it; combined tackles with the model half a tackle to a tackle over). The sleeper grade comes from the model's own evidence and never looks at the price, so a sleeper can be a likely hit at a price that is not worth betting: each one says what the pricing engine makes of it at its price. The rules are frozen so the record can judge them. Never a lock; tracked at 1 unit each. In weeks 7 to 9 at the close: A 21-3, B 35-12, C 33-17 (chosen on those same weeks, so expect less)."));
   wrap.append(sleeperMath());
   // this week's settled sleepers, graded: what each grade actually did
   const wk = DATA.meta?.week, settled = (DATA.results?.sleepers || []).filter((r) => r.week === wk && ["Win", "Loss", "Push"].includes(r.result));
@@ -567,7 +570,7 @@ function sleeperBox(all) {
         const be = toDec(o) ? 1 / toDec(o) : null, short = be != null && b.sleeper_p != null && b.sleeper_p < be;
         return el("div", { class: "note" }, `${b.sleeper_p != null ? `Model's own chance ${pct(b.sleeper_p)}` : ""}${be != null ? ` vs ${pct(be)} to break even at ${odds(o)}` : ""}`,
           short ? el("strong", { class: "no" }, " · the price is too short for this chance: a likely hit, a losing bet") : "",
-          `${isPick ? ` · also a ${b.grade || ""} pick` : " · not a pick on the board"}${betKick(b) ? ` · ${when(b.commence_time)}` : ""}`);
+          `${isPick ? ` · also a ${b.grade || ""} pick on the board` : b.tier === "lean" && b.side === side ? " · a lean on the board (not staked)" : " · not a pick on the board"}${betKick(b) ? ` · ${when(b.commence_time)}` : ""}`);
       })(),
       el("div", { class: "tail" }, betLink(b, side), addButton(b))));
   }
@@ -579,7 +582,7 @@ function sleeperMath() {
   const P = (t) => el("p", {}, t), L = (...items) => el("ul", {}, ...items.map((t) => el("li", {}, t)));
   return el("details", { class: "legend sleeper-math" }, el("summary", {}, "How sleepers work: the math, the evidence, the grades"),
     el("h4", {}, "1. The model's own number"),
-    P("For every defender the model projects tackles from his own data: 60% from his tackles per game this season (shrunk toward last season or his position), 40% from his tackles per defensive snap times the share of snaps he is expected to play times the snaps his defence is expected to be on the field. Then game factors: the opponent's expected volume, the stat crew at the venue, depth chart, injury report, run/pass mix. A second model (gradient boosting, trained every morning on every defender-game since 2023) takes 60% of the final number. Solo tackles: that number times his solo share (his solo tackles over his total, shrunk toward his position's share). The result is μ, the model's own number, before any blend with the book's line. The pricer blends μ with the line for its picks; sleepers do not."),
+    P("For every defender the model projects tackles from his own data: 60% from his tackles per game this season (shrunk toward last season or his position), 40% from his tackles per defensive snap times the share of snaps he is expected to play times the snaps his defence is expected to be on the field. Then the game factors that pass their test each morning (the opponent's expected volume, the spread, the depth chart, coverage targets, indoors for corners, a regular out at his position). A second model (gradient boosting, trained every morning on every defender-game since 2023) takes 60% of the final number. Solo tackles: that number times his solo share (his solo tackles over his total, shrunk toward his position's share). The result is μ, the model's own number. The pricing engine weighs the chance μ gives against the book's fair price to make the board's picks; the sleeper rule looks at μ against the line alone."),
     el("h4", {}, "2. From a number to a chance"),
     P("Tackles are counts, so the model treats them as a negative binomial with mean μ and variance φ·μ, where φ (the spread, measured per position on 28,000+ games) is about 1.2 for solo tackles; φ = 1 would be Poisson. The model's own chance of a side is a sum over that distribution: for an Under at a line L, P(X ≤ ⌊L⌋) = P(X=0) + P(X=1) + … + P(X=⌊L⌋); for an Over, 1 minus that. Worked example: μ = 2.5 solo tackles, φ = 1.2, line 3.5: P(3 or fewer) = 75%. At μ = 3.6 against 4.5 it is 70%. A combined Over at μ = 6.3, φ = 1.3, line 5.5: P(6 or more) = 58%. On the sleepers of weeks 7 to 9 this chance ran conservative: solo Unders averaged a 69% model chance and hit 82%; combined Overs averaged 56% and hit 67%. The grades lean on it as an ordering (A sleepers averaged 71%, B 63%, C 57%), not as a promise."),
     el("h4", {}, "3. What makes a sleeper"),
@@ -625,12 +628,12 @@ function renderPlays() {
       const f = DATA.results?.summary?.five, g = DATA.meta?.grading?.locks || { single: 3, multi: 5 };
       const tally = f && f.bets ? ` · season ${f.wins}-${f.losses}${f.pushes ? "-" + f.pushes : ""}${f.hit == null ? "" : ` (${pct(f.hit)})`}` : "";
       const days = [...new Set(five.map((b) => slateName(slateDate(b))))].join(", ");
-      const fb = el("div", { class: "five-box" }, el("h3", {}, `Locks${days ? ` · ${days}` : ""}${tally}`), el("p", { class: "note" }, `Picks the model strongly believes in: an A-grade score (${DATA.meta?.grading?.lock_min ?? 72} or better) on its own evidence, at most ${g.single} on a one-game day and ${g.multi} on a multi-game day, at most two of a kind. A thin board gets no lock rather than its best pick. Re-chosen at every line pull until kickoff. Open "Why this is a lock" on each.`));
+      const fb = el("div", { class: "five-box" }, el("h3", {}, `Locks${days ? ` · ${days}` : ""}${tally}`), el("p", { class: "note" }, `A picks only: the model's own chance at ${DATA.meta?.grading?.lock_min ?? 70}% or better, a price that still pays with the model's view cut to a quarter (a cautious edge of 2% or more), and a clear checklist. The highest model chances first, at most ${g.single} on a one-game day and ${g.multi} on a multi-game day, at most two of a kind. A thin board gets no lock rather than its best pick. Re-chosen at every line pull until kickoff. Open "Why this is a lock" on each.`));
       five.sort((a, b) => (b.lock ?? 0) - (a.lock ?? 0)).forEach((b) => fb.append(card(b, true)));
       box.append(fb);
     } else if (all.some((b) => b.pick === "Over" || b.pick === "Under")) {
-      const lm = DATA.meta?.grading?.lock_min ?? 72;
-      box.append(el("div", { class: "five-box" }, el("h3", {}, "Locks · none"), el("p", { class: "note" }, `No lock-eligible pick scores ${lm} (an A) yet, so there is no lock: a lock is a pick the model strongly believes in, not the best of a thin board. Re-chosen at every line pull until kickoff.`)));
+      const lm = DATA.meta?.grading?.lock_min ?? 70;
+      box.append(el("div", { class: "five-box" }, el("h3", {}, "Locks · none"), el("p", { class: "note" }, `No pick is an A yet (the model's own chance at ${lm}% or better, a cautious edge of 2% or more, a clear checklist), so there is no lock: a lock is a pick the model strongly believes in, not the best of a thin board. Re-chosen at every line pull until kickoff.`)));
     }
     // only open parlays belong on the board; a settled one lives on the Track record tab
     const over = (q) => q.finished || (q.first_kickoff && Date.now() > new Date(q.first_kickoff).getTime() + 4.5 * 3600 * 1000);
@@ -639,7 +642,7 @@ function renderPlays() {
     const sl = sleeperBox(all); if (sl) box.append(sl);
     if (!open.length && all.length) {
       const m = DATA.meta || {}, nxt = m.next_pull ? when(m.next_pull) : "";
-      box.append(el("div", { class: "parlay-box" }, el("h3", {}, "Parlay"), el("p", { class: "note" }, `No open parlay yet. ${all.length} line${all.length === 1 ? "" : "s"} on the board${all.length < 40 ? " (the books post most Sunday tackle lines Saturday evening and Sunday morning)" : ""}; a parlay needs two lock-eligible combined-tackle picks with a 53%+ claimed chance on one slate day (solo-tackle legs are not allowed in a same-game parlay), chosen at every line pull until that day's first kickoff.${nxt ? ` Next pull ${nxt}.` : ""}`)));
+      box.append(el("div", { class: "parlay-box" }, el("h3", {}, "Parlay"), el("p", { class: "note" }, `No open parlay yet. ${all.length} line${all.length === 1 ? "" : "s"} on the board${all.length < 40 ? " (the books post most Sunday tackle lines Saturday evening and Sunday morning)" : ""}; a parlay needs two combined-tackle legs on one slate day that are picks in their own right, lock-eligible, with the model's own chance at ${pct(DATA.meta?.grading?.parlay?.fallback ?? 0.56)} or better (solo-tackle legs are not allowed in a same-game parlay), chosen at every line pull until that day's first kickoff. A slate without two such legs gets no parlay rather than a thin one.${nxt ? ` Next pull ${nxt}.` : ""}`)));
     }
   }
   const anyPick = all.some((b) => b.pick === "Over" || b.pick === "Under"), showAll = picksOnly && !anyPick;   // nothing clears the bar: show every live line with the model's read rather than an empty board
@@ -647,38 +650,46 @@ function renderPlays() {
   const key = { lock: (b) => -(b.lock ?? -1), ev: (b) => -(b.ev ?? -9), kick: (b) => +(betKick(b) || 0), player: (b) => b.player, line: (b) => +(b.line ?? 0) }[sortBy] || ((b) => -(b.lock ?? -1));
   rows.sort((x, y) => { const a = key(x), c = key(y); return typeof a === "string" ? a.localeCompare(c) : a - c; });
   const nPicks = all.filter((b) => b.pick === "Over" || b.pick === "Under").length;
-  box.append(el("div", { class: "count" }, `${rows.length} shown of ${nPicks} picks on ${all.length} priced lines` + (unfiltered ? "" : " (filtered)") + `. Sorted by ${$("#sort").selectedOptions[0].textContent.toLowerCase()}.`));
-  if (showAll) box.append(el("div", { class: "count" }, "No line clears the bar yet, so every live line is shown with the model's read of both sides."));
+  const nLeans = all.filter((b) => b.tier === "lean").length;
+  box.append(el("div", { class: "count" }, `${rows.length} shown of ${nPicks} picks${nLeans ? ` and ${nLeans} leans` : ""} on ${all.length} priced lines` + (unfiltered ? "" : " (filtered)") + `. Sorted by ${$("#sort").selectedOptions[0].textContent.toLowerCase()}.`));
+  if (showAll) box.append(el("div", { class: "count" }, "No line is a pick yet, so every live line is shown with both opinions on it: the model's and the book's."));
   if (!rows.length) { box.append(el("div", { class: "empty" }, picksOnly ? "No line matches these filters." : "Nothing matches these filters.")); return; }
   for (const b of rows) box.append(card(b, false));
 }
 
 const slateDate = (b) => { const d = betKick(b); return !d || isNaN(d) ? "" : new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d); };
+const signedPct1 = (x) => (x == null ? "" : (x >= 0 ? "+" : "") + (x * 100).toFixed(1) + "%");
+const rangeOf = (x) => (x && x.hit_lo != null && x.hit_hi != null ? `${pct(x.hit_lo)} to ${pct(x.hit_hi)}` : "");
+const ENGINE = () => DATA.meta?.grading?.engine || { beta: 0.5, beta_low: 0.25, pick_edge_low: 0, lean_edge: 0.02, b_edge_low: 0.02, a_model: 0.7, rho: 0.02 };
 function legend() {
-  const g = DATA.meta?.grading || {};
-  const bars = g.bars || { A: 72, B: 55 }, u = g.units || { A: 1, B: 0.5, C: 0.25 }, w = g.weights || { ev: 0.35, model: 0.25, consistency: 0.2, sample: 0.1, signal: 0.1 }, cl = g.clv || { decent: 0.52, good: 0.56, great: 0.6 }, cp = g.clv_pct || { good: 0.01, excellent: 0.03, elite: 0.05 };
-  const row = (grade, cut, stake, what) => el("tr", {}, el("td", {}, el("span", { class: `grade ${grade}` }, grade)), el("td", {}, cut), el("td", {}, stake), el("td", {}, what));
+  const g = DATA.meta?.grading || {}, e = ENGINE();
+  const st = g.stake || { kelly_fraction: 0.25, bankroll: 100, min: 0.1, max: 3, game_cap: 4, kind_cap: 10, slate_cap: 15 }, cl = g.clv || { decent: 0.52, good: 0.56, great: 0.6 }, cp = g.clv_pct || { good: 0.01, excellent: 0.03, elite: 0.05 };
+  const row = (grade, cut, what) => el("tr", {}, el("td", {}, el("span", { class: `grade ${grade}` }, grade)), el("td", {}, cut), el("td", {}, what));
   return el("details", { class: "legend" },
-    el("summary", {}, "How to read this board: grades, stakes, what can be a lock, beating the close"),
-    el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Grade"), el("th", {}, "Lock score"), el("th", {}, "Suggested stake"), el("th", {}, "Read it as"))),
+    el("summary", {}, "How to read this board: the win chance, the cautious edge, grades, stakes, what can be a lock"),
+    el("h4", {}, "One chance per line, from two opinions"),
+    el("p", {}, `The book's opinion is its price: both sides of the line with the book's margin taken out give its fair chance. The model's opinion is its own projection and how spread out his tackle counts run: the model's own chance. The win chance starts at the book's fair chance and moves ${pct(e.beta)} of the way to the model's (measured in odds). When the two agree, the win chance is the fair chance and every price loses its margin, so nothing becomes a pick because the book agrees with it. Only the model's disagreement makes an edge, and it is counted at half its size because that is what it has been worth: on every closing line of weeks 7 to 9, the chance built this way out-predicted the book's own price in all three weeks, and the model's chance taken whole did not.`),
+    el("p", {}, `The cautious chance counts the disagreement at ${pct(e.beta_low)} instead of ${pct(e.beta)}. A line is a pick only if the bet still breaks even there: its cautious edge (cautious chance x what the price pays, minus 1) is zero or better. A lean has an edge at the win chance but not at the cautious one; it is shown and logged, never staked. Everything else is no pick.`),
+    el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Grade"), el("th", {}, "What it takes"), el("th", {}, "Read it as"))),
       el("tbody", {},
-        row("A", `${bars.A} and up`, `${u.A} unit`, "The model is confident and the price is wrong by a lot, backed by his game log. Solo tackles only, and the pick must beat its price by 4% at its claimed chance (its claimed edge); a pick that scores this high without both shows as a B. The locks come from here."),
-        row("B", `${bars.B} to ${bars.A - 1}`, `${u.B} unit`, "A real edge with one weak spot: a thinner game log, a smaller gap, or no signal behind it."),
-        row("C", `below ${bars.B}`, `${u.C} unit or pass`, "Clears the bar on price alone. Play only if you like the matchup."))),
-    el("p", {}, `The lock score is out of 100 and uses the model's own evidence only, never the book's opinion: ${pct(w.ev)} expected return at the posted price (full marks at ${signedPct(g.ev_full ?? 0.10)}; above ${signedPct((g.ev_fade ?? [0.2, 0.4])[0])} it falls away again, because the biggest disagreements with the market are mostly model error), ${pct(w.model)} the model's claimed chance for the side (full marks at ${pct(g.model_full ?? 0.75)}; a pick's claimed chance is shrunk ${pct(1 - (g.claim_shrink ?? 0.6))} of the way toward even first, since selected picks overclaim), ${pct(w.consistency)} how often he cleared this line in his games this season, read at the snap share he is expected to play, ${pct(w.sample)} games of data in his current role, and ${pct(w.signal)} for a role-change or outlier-fade signal behind the pick. A pick needs ${signedPct(g.pick_bar ?? 0.06)} expected return (${signedPct(g.pick_bar_over ?? 0.10)} for an Over, which the model gets wrong more often) and a claimed chance of at least ${pct(g.pick_min_claim ?? 0.55)}: a plus-money side with a coin-flip claim is not a play, whatever its return. The claimed chance is then corrected by how claims for picks of the same kind (side, market, position) have actually resolved, shrunk by n/(n+${g.segment_k ?? 30}); the Track record tab shows those corrections. The projection it prices from is ${pct(1 - (g.line_weight ?? 0.6))} model and ${pct(g.line_weight ?? 0.6)} the posted line, which keeps the model's claimed edges honest.`),
-    el("p", {}, "Never a lock or a parlay leg, whatever the score (the lock-eligibility checklist, added after the week 8 Thursday post-mortem): a player in a new role (a part-timer who just played a starter's snaps), in a reduced role (his last game's snaps fell well below his season share), back from absence (a missed game that was not a bye), in his first game for a new team, with fewer than three games in his current role, listed questionable, without snap counts for his last game, or an Over (the model's Over picks have hit 41%; Overs stay plays, never locks, until forty more of them say otherwise). In every one of these the model is on ground where it is biased or blind. Each is tagged on the card, with the reason, and the pick can still be played at its grade."),
-    el("p", {}, "Tags on a card say what the model sees behind the number (hover one for the rule): a role change (New role, Reduced role, Promoted, Demoted, Back from absence, New team), the injury report (Questionable, Opp QB out), the lineman's pressure profile (Run-stuffer, Interior, Pass rusher), and Model far from line. The 'Why' box under each pick shows the lock score piece by piece, the checklist, how picks of its kind have resolved, his game log, and an outside expert consensus (FantasyPros, the top players at each position) read relative to its usual relation to this model, for comparison only: it never prices, grades or chooses a pick."),
-    el("p", {}, "Assists lines are priced the same way on their own tab (the Assists tab): a trial market, logged and graded like every pick here but never a lock or a parlay leg until its record earns it."),
-    el("p", {}, `The stake on each pick is ${g.stake ? `${Math.round((g.stake.kelly_fraction || 0.25) * 100)}% of the Kelly fraction of a ${g.stake.bankroll || 100}-unit bankroll` : "a quarter of the Kelly fraction of a 100-unit bankroll"}, from its claimed chance and its price (${g.stake?.min ?? 0.25} to ${g.stake?.max ?? 3} units), with at most ${g.stake?.game_cap ?? 4} units on one game: stakes on a game are scaled down together when the picks add up to more. The grade is how sure the model is; the stake is how much the price is wrong. Weeks 7-8 at the same total staked: +21 units this way against +18 on the grade ladder and +11 flat, in both weeks.`),
-    el("p", {}, "Stakes are a guide, not a promise: the grades are being tested on the Track record tab, and if A does not beat B and C over time the formula changes."),
+        row("A", `Cautious edge ${signedPct(e.b_edge_low)} or more, the model's own chance ${pct(e.a_model)} or more, the lock checklist clear`, "The model is sure on its own evidence and the price still pays after the model's view is cut to a quarter. The locks come from here."),
+        row("B", `Cautious edge ${signedPct(e.b_edge_low)} or more`, "A pick that survives the cautious test with room to spare, without the conviction or the clean checklist of an A."),
+        row("C", `Cautious edge 0 to ${signedPct(e.b_edge_low)}`, "A pick, barely: it breaks even at the cautious chance. The smallest stakes."))),
+    el("p", {}, `The grade is built from two numbers only, the cautious edge and the model's own chance, because neither can improve when the book moves toward us: a shorter price cuts the edge, and the model's own chance does not look at the book at all. The lock score is the model's own chance out of 100; it ranks the locks. In weeks 7 to 9, on the closing lines: picks with a cautious edge under 2% went 37-25, 2% or more 31-20, and 13-6 with a model chance of 70% or more. Those are the weeks the bars were looked at on, so expect less; the Track record tab keeps the live count with its range.`),
+    el("p", {}, "Never a lock, an A or a parlay leg, whatever the numbers (the lock checklist): a player in a new role (a part-timer who just played a starter's snaps), a backup stepping in for a regular who is out (the next man up), a player in a reduced role (his last game's snaps fell well below his season share), back from absence (a missed game that was not a bye), in his first game for a new team, with fewer than three games in his current role, listed questionable, without snap counts for his last game, or an Over (the model's Over picks have run under 45%; Overs stay picks, never locks, until forty more of them say otherwise). In every one of these the model is on ground where it is biased or blind. Each is tagged on the card, with the reason. One goes further: an Under on a next-man-up backup the model does not expect to play much is not a pick at all, because its projection has run 16% low on exactly those players (a book that posts a line on a backup knows he is playing)."),
+    el("p", {}, "Tags on a card say what the model sees behind the number (hover one for the rule): a role change (New role, Reduced role, Promoted, Demoted, Back from absence, New team, Teammate gone), the injury report (Questionable, Opp QB out), the lineman's pressure profile (Run-stuffer, Interior, Pass rusher), Lean, and Model far from line. The Game logic row lists what moved his number by 3% or more, each measured by rebuilding the projection without it. The 'Why' box under each line shows every number behind it, the checklist, his game log, and an outside expert consensus (FantasyPros) for comparison only: it never prices, grades or chooses a pick."),
+    el("p", {}, "Assists lines are priced the same way on their own tab: a trial market, logged and graded like every pick here but never an A, a lock or a parlay leg until its record earns it."),
+    el("h4", {}, "Stakes: the slate is one book"),
+    el("p", {}, `Each pick starts at ${Math.round((st.kelly_fraction || 0.25) * 100)}% of the Kelly fraction of a ${st.bankroll || 100}-unit bankroll at its cautious chance, so a pick that only just survives the cautious test gets the minimum (${st.min ?? 0.1} units) and nothing gets more than ${st.max ?? 3}. Then the slate is sized together, because its picks are not independent bets: the solo Unders of one Sunday rise and fall as a group (in week 9 nearly 60 of 100 units were out on one Sunday, almost all on solo Unders). Each stake is divided by 1 + (N - 1) x ${e.rho} for the N picks of its kind (side and market) that day, and stakes are scaled down together to stay within ${st.game_cap ?? 4} units on one game, ${st.kind_cap ?? 10} on one kind a day and ${st.slate_cap ?? 15} on a day.`),
+    el("p", {}, `Stakes are a guide, not a promise: no edge has been proven yet. The rules above are frozen until ${g.frozen_until || "four weeks are graded"} so they can be measured; changes are tested on the logged lines first and reported, not adopted mid-stream. The stake moves up to the win chance once the engine has beaten the book's closing price by two standard errors (Track record, "Against the market").`),
     el("h4", {}, "Beating the closing line"),
     el("p", {}, "A line moves between the time we bet it and kickoff as money comes in and the book sharpens its number. The last number before kickoff, the closing line, is the market's best estimate with everything priced in. If we took Under 3.5 and it closed at Under 2.5, we got a number a point better than the market's considered view: we beat the close. If it closed at 4.5, the market moved against us. One bet's result is mostly luck, but the direction the line moves is the whole market's judgement on whether we were right, and over a few hundred bets the share of picks that beat the close predicts profit better than the win-loss record does."),
-    el("p", {}, `How it is measured here: every pick is logged with the line and price at the time, and the morning after it is compared with the last pull before kickoff at the same book. A pick beats the close if the line moved our way, or the line held and the no-vig price moved our way. Picks whose number did not change at all are left out of the share, because tackle lines only move in half points and most never move between our pulls.`),
+    el("p", {}, `How it is measured here: every pick is logged with the line and price at the time, and the morning after it is compared with the last pull before kickoff at the same book (about an hour out, not the true close). A pick beats the close if the line moved our way, or the line held and the no-vig price moved our way. Picks whose number did not change at all are left out of the share, because tackle lines only move in half points and most never move between our pulls.`),
     el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Share that beat the close"), el("th", {}, "Read it as"))),
       el("tbody", {},
         el("tr", {}, el("td", {}, `below ${pct(cl.decent)}`), el("td", {}, "No edge the market can see. Over a few hundred bets this is indistinguishable from flipping a coin.")),
         el("tr", {}, el("td", {}, `${pct(cl.decent)} to ${pct(cl.good)}`), el("td", {}, "Decent: a real but small edge, the kind that survives the vig only at good prices.")),
-        el("tr", {}, el("td", {}, `${pct(cl.good)} to ${pct(cl.great)}`), el("td", {}, "Good: what sharp bettors sustain. Profitable over a season if stakes follow the grades.")),
+        el("tr", {}, el("td", {}, `${pct(cl.good)} to ${pct(cl.great)}`), el("td", {}, "Good: what sharp bettors sustain.")),
         el("tr", {}, el("td", {}, `${pct(cl.great)} and up`), el("td", {}, "Great: rare, and usually means the books have not caught up to something the model sees. Enjoy it while it lasts, because they will.")))),
     el("p", {}, "Judge it on a few hundred moved lines, not a weekend: with 100 picks the share swings 10 points on luck alone, with 300 about 6."),
     el("h4", {}, "No-vig closing-line value, in points"),
@@ -707,7 +718,7 @@ function parlayBox(q, graded) {
   const legs = el("ol", {}, ...q.legs.map((l) => {
     const book = l.mkt_side ?? (decimalOf(l.odds) ? 1 / decimalOf(l.odds) : null);
     const edge = book == null ? null : l.p_side - book;
-    return el("li", {}, `${l.player}${jerseyOf(l) != null ? ` #${jerseyOf(l)}` : ""} ${l.side} ${num(l.line)} ${(MARKET[l.market] || l.market).toLowerCase()} (${odds(l.odds)} at ${l.book}) · model ${pct(l.p_side)} vs book ${pct(book)} `,
+    return el("li", {}, `${l.player}${jerseyOf(l) != null ? ` #${jerseyOf(l)}` : ""} ${l.side} ${num(l.line)} ${(MARKET[l.market] || l.market).toLowerCase()} (${odds(l.odds)} at ${l.book}) · win chance ${pct(l.p_side)} vs book ${pct(book)} `,
       el("span", { class: edge == null ? "" : edge >= 0 ? "pos" : "neg" }, edge == null ? "" : `(${pts(edge)})`),
       l.result ? el("span", { class: l.result === "Win" ? "w" : l.result === "Loss" ? "l" : "" }, ` · ${l.result}${l.actual == null ? "" : ` (${num(l.actual, 0)})`}`) : "");
   }));
@@ -717,7 +728,7 @@ function parlayBox(q, graded) {
     el("h3", {}, `${slateName(q.slate)} parlay · ${q.n_legs} legs`, q.result ? el("span", { class: q.result === "Win" ? "w" : q.result === "Loss" ? "l" : "" }, ` · ${q.result}`) : ""),
     el("div", { class: "terms" },
       el("div", {}, el("b", {}, (am > 0 ? "+" : "") + am), el("span", {}, "combined odds")),
-      el("div", {}, el("b", {}, pct(q.combined_prob)), el("span", {}, "model chance all legs hit")),
+      el("div", {}, el("b", {}, pct(q.combined_prob)), el("span", {}, "chance all legs hit")),
       el("div", {}, el("b", {}, pct(bookProb)), el("span", {}, "book's implied chance")),
       el("div", {}, el("b", { class: edge >= 0 ? "pos" : "neg" }, pts(edge)), el("span", {}, `edge (${signedPct(ret)} expected return)`)),
       el("div", {}, el("b", {}, `${q.units.toFixed(1)}u`), el("span", {}, "suggested stake")),
@@ -728,78 +739,90 @@ function parlayBox(q, graded) {
       const one = ls.length === (q.legs || []).length ? tailLink(ls.map((l) => l.link)) : null;
       if (one) return el("div", { class: "tail" }, el("a", { class: "bet-link", href: one.href, target: "_blank", rel: "noopener noreferrer" }, `Tail this parlay at ${one.book}: all ${ls.length} legs in one slip ↗`), " Check every leg loaded and the prices before you confirm.");
       return el("div", { class: "tail" }, `Tail it at ${ls[0].book}: `, ...ls.map((l, i) => el("a", { class: "bet-link", href: l.link, target: "_blank", rel: "noopener noreferrer" }, `leg ${i + 1} ↗`)), ls.length < (q.legs || []).length ? " (a leg without a link must be added by hand)" : ""); })(),
+    q.same_game ? el("div", { class: "note" }, `Two legs share a game: the book prices a same-game parlay itself, under the product of the legs when they move together.${q.product_decimal ? ` The legs multiply to ${(q.product_decimal).toFixed(2)};` : ""} the odds shown are our estimate after that haircut. Check the price on the slip.`) : "",
     q.placed ? el("div", { class: "placed" }, "First game has kicked off: this is the parlay as placed before kickoff.") : el("div", { class: "placed" }, "Re-chosen at every line pull until the first game of the day kicks off."));
 }
 
-const SIGNAL_TEXT = { fade: "fading an outlier last game", role: "backed by a role change" };
 function whyBox(b, isLock) {
-  // the lock score, piece by piece, from the same numbers the pricer used; plus the checklist and the segment record
-  const g = DATA.meta?.grading || {}, w = g.weights || { ev: 0.35, model: 0.25, consistency: 0.2, sample: 0.1, signal: 0.1 };
-  const evFull = g.ev_full ?? 0.10, [fadeLo, fadeHi] = g.ev_fade || [0.2, 0.4], modelFull = g.model_full ?? 0.75;
-  let evPart = Math.max(0, Math.min(1, (b.ev ?? 0) / evFull)); if ((b.ev ?? 0) > fadeLo) evPart = Math.max(0, Math.min(1, (fadeHi - b.ev) / (fadeHi - fadeLo)));
-  const claim = b.p_claim ?? null, modelPart = claim == null ? 0 : Math.max(0, Math.min(1, (claim - 0.5) / (modelFull - 0.5)));
-  const consPart = b.consistency == null ? 0.5 : b.consistency, nPart = Math.max(0, Math.min(1, (b.in_role_games ?? b.n_prev ?? 0) / 6));
-  const signal = b.signal_fade || b.signal_role;
-  const rows = [
-    ["Expected return at this price", `${signedPct(b.ev)}${(b.ev ?? 0) > fadeLo ? " (so high it counts against: big gaps with the market are usually model error)" : ""}`, Math.round(100 * w.ev * evPart)],
-    ["Claimed chance for this side", claim == null ? "" : `${pct(claim)} after shrinking toward even${b.segment_adj ? ` and ${b.segment_adj >= 0 ? "+" : ""}${(b.segment_adj * 100).toFixed(1)} pts from the ${b.segment} record` : ""}`, Math.round(100 * w.model * modelPart)],
-    ["Cleared this line in his games", b.cons_n ? `${b.cons_hits} of ${b.cons_n}, read at the snap share he is expected to play` : "no usable game log", Math.round(100 * w.consistency * consPart)],
-    ["Games in his current role", `${b.in_role_games ?? b.n_prev ?? 0} (full marks at 6)`, Math.round(100 * w.sample * nPart)],
-    ["Signal behind the pick", signal ? (b.signal_fade ? "an outlier last game to fade" : "a role change") : "none", signal ? Math.round(100 * w.signal) : 0],
-  ];
-  const seg = (DATA.results?.summary?.segments || []).find((x) => x.segment === b.segment);
-  const proj = (DATA.proj || []).find((p) => p.player === b.player && p.team === b.team) || {};
+  // every number behind the line, from the same fields the pricer wrote; then the checklist, his log and the outside cross-check
+  const g = DATA.meta?.grading || {}, e = ENGINE();
+  const side = b.side || "", price = side === "Under" ? b.under_odds : b.over_odds, dec = toDec(price);
+  const sd = (x) => (x == null ? null : side === "Over" ? x : 1 - x);
+  const own = b.p_model ?? sd(b.model_over_own), fair = b.mkt_side ?? sd(b.market_over), p = b.p_claim ?? sd(b.model_over), pl = b.p_low ?? null, be = dec ? 1 / dec : null;
+  const engine = b.p_low != null;      // a line priced by the engine (a board written before the engine carries the old score instead)
+  const rows = engine ? [
+    ["The model's own chance", pct(own), `from its own number (${num(b.proj_model)}) and how spread out his counts run`],
+    ["The book's fair chance", pct(fair), `its price on both sides with the margin taken out${b.mkt_mean != null ? `; read as a number of tackles, ${num(b.mkt_mean)}` : ""}${(b.books_n || 0) > 1 ? ` (${b.books_n} books on this line, averaged)` : ""}`],
+    ["Win chance", pct(p), `the book's fair chance moved ${pct(e.beta)} of the way to the model's`],
+    ["Break-even at this price", be == null ? "" : pct(be), `${odds(price)} at ${b.book}`],
+    ["Return at the win chance", signedPct1(b.ev), "win chance x what the price pays, minus 1"],
+    ["Cautious chance", pct(pl), `the model's disagreement counted at ${pct(e.beta_low)} instead of ${pct(e.beta)}`],
+    ["Cautious edge", signedPct1(b.edge_low), b.tier === "pick" ? "zero or better, so it is a pick" : b.tier === "lean" ? "under zero: a lean, shown and logged, not staked" : "under zero: no pick"],
+  ] : [];
+  if (engine && b.stake != null) rows.push(["Stake", `${(+b.stake).toFixed(2)}u`, `a quarter of Kelly at the cautious chance${b.stake_raw != null ? ` (${(+b.stake_raw).toFixed(2)}u on its own)` : ""}${(b.slate_n || 0) > 1 ? `, then sized with the ${b.slate_n} picks of its kind on this slate and the game, kind and slate caps` : ""}`]);
+  const gradeWhy = !engine || !b.grade ? "" : b.grade === "A" ? `Grade A: a cautious edge of ${signedPct(e.b_edge_low)} or more, the model's own chance at ${pct(e.a_model)} or more, and a clear checklist.`
+    : b.grade === "B" ? `Grade B: a cautious edge of ${signedPct(e.b_edge_low)} or more${own != null && own >= e.a_model ? "; the model's own chance is high enough for an A, but the checklist or the market rules it out" : `; an A also needs the model's own chance at ${pct(e.a_model)} (it is ${pct(own)})`}.`
+    : `Grade C: a pick, with a cautious edge under ${signedPct(e.b_edge_low)}.`;
+  const proj = (DATA.proj || []).find((x) => x.player === b.player && x.team === b.team) || {};
   const log = { solo: proj.log_solo, assists: proj.log_ast }[kindOf(b.market)] ?? proj.log_comb;
   const checklist = b.lock_block ? `Not lock-eligible: ${b.lock_block}.` : "Lock checklist clear: settled role, played last game, same team, snap counts in, not on the injury report, an Under.";
   const fpVal = (b.market || "").includes("solo") ? b.fp_solo : b.fp_comb;
-  return el("details", { class: "why-box" }, el("summary", {}, isLock ? "Why this is a lock" : "Why this pick"),
-    b.logic ? el("div", { class: "rundown" }, el("b", {}, "The game logic, in numbers. "), b.logic, " Every factor is measured on 30,000+ past defender-games and kept only while the backtest says it earns its place.") : "",
+  return el("details", { class: "why-box" }, el("summary", {}, isLock ? "Why this is a lock" : b.tier === "pick" || (b.pick === "Over" || b.pick === "Under") ? "Why this pick" : "The numbers on this line"),
+    b.logic ? el("div", { class: "rundown" }, el("b", {}, "The game logic, in numbers. "), b.logic) : "",
     b.rundown ? el("div", { class: "rundown" }, el("b", {}, "The rundown. "), b.rundown) : "",
-    el("p", {}, `The model projects ${num(b.proj_model)} ${(MARKET[b.market] || b.market).toLowerCase()}; blended 40/60 with the posted line it prices from ${num(b.proj)}, against a line of ${num(b.line)}. The model gives the ${(b.side || "").toLowerCase()} ${pct(b.side === "Over" ? b.model_over : 1 - b.model_over)} and the book's price implies ${pct(b.side === "Over" ? b.market_over : 1 - b.market_over)}.`),
-    el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Piece of the score"), el("th", {}, "What the model sees"), el("th", { class: "n" }, "Points"))), el("tbody", {}, ...rows.map((r) => el("tr", {}, el("td", {}, r[0]), el("td", {}, r[1]), el("td", { class: "n" }, String(r[2])))), el("tr", {}, el("td", {}, el("b", {}, "Lock score")), el("td", {}, ""), el("td", { class: "n" }, el("b", {}, String(Math.round(b.lock ?? 0))))))),
+    rows.length ? el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, `${side} ${num(b.line)}`), el("th", { class: "n" }, ""), el("th", {}, "Where it comes from"))),
+      el("tbody", {}, ...rows.map((r) => el("tr", {}, el("td", {}, r[0]), el("td", { class: "n" }, el("b", {}, r[1])), el("td", {}, r[2]))))) : "",
     el("ul", {},
+      gradeWhy ? el("li", {}, gradeWhy) : "",
       el("li", {}, checklist),
-      seg ? el("li", {}, `Picks of this kind (${b.segment}) have gone ${seg.wins}-${seg.losses} against a claimed ${pct(seg.claimed)}; that record feeds the correction above.`) : "",
+      b.cons_n ? el("li", {}, `He landed on the ${side.toLowerCase()} of this line in ${b.cons_hits} of ${b.cons_n} games, read at the snap share he is expected to play. Shown for the eye: it adds nothing to the chance once the projection is known, and it is in no score.`) : "",
       log ? el("li", { class: "log" }, `His games this season (${kindLabel(b.market)}): ${String(log).split("|").join(", ")}.`) : "",
       b.fp_rel != null ? el("li", {}, `Outside cross-check: the FantasyPros expert consensus sits ${Math.abs(b.fp_rel) < 0.03 ? "where it usually does" : `${signedPct(b.fp_rel)} from where it usually sits`} against this model for him${Math.abs(b.fp_rel) >= 0.03 ? ((b.fp_rel > 0) === (b.side === "Over") ? ", leaning the same way as this pick" : ", leaning the other way from this pick") : ""}. Their raw figure (${num(fpVal)}) is not a box-score number (their tackles run about a quarter above season averages across the board), so only the relative reading means anything. It is shown to compare, never used to price or choose.`) : "",
-      b.why ? el("li", {}, b.why) : ""));
+      !engine && b.why ? el("li", {}, b.why) : ""));
 }
 function card(b, isLock) {
   const isPick = b.pick === "Over" || b.pick === "Under";
   const side = b.side || b.pick;
   const price = side === "Under" ? b.under_odds : b.over_odds;
-  // the chance the pricer used for the best side, read back from its return and price, so both sides agree with the card
+  // the win chance of the best side, read back from its return and price, so both sides agree with the card
   const pBest = b.ev != null && toDec(price) ? (1 + b.ev) / toDec(price) : null, pOver = pBest == null ? null : side === "Under" ? 1 - pBest : pBest;
+  const sd = (x) => (x == null ? null : side === "Over" ? x : 1 - x);
+  const own = b.p_model ?? sd(b.model_over_own), fair = b.mkt_side ?? sd(b.market_over), engine = b.p_low != null;
   const tag = (cls, title, text) => el("span", { class: cls, title }, text);
   const tags = [
+    b.tier === "lean" ? tag("tag", "An edge at the win chance but not at the cautious one (the model's disagreement counted at a quarter): shown and logged, never staked", "Lean: not staked") : "",
     b.international ? tag("intl", "Neutral-site game overseas: stat crew unknown, lines pulled 12 h and 1 h before kickoff", "International") : "",
     b.depth === "promoted" ? tag("tag ok", "Listed as a starter on the latest depth chart; was not before his last game", "Promoted") : b.depth === "demoted" ? tag("tag warn", "No longer listed as a starter on the latest depth chart", "Demoted") : "",
     b.opp_qb_out ? tag("tag", "The opponent's starting quarterback is listed out or doubtful", "Opp QB out") : "", b.opp_rb_out ? tag("tag", "The opponent's lead rusher is listed out or doubtful", "Opp RB out") : "",
     b.rest != null && b.rest >= 10 ? tag("tag", "Defence coming off a bye week", "Off a bye") : b.rest != null && b.rest <= 4 ? tag("tag", "Short week", "Short week") : "",
     OUT_STATUSES.has(String(b.status || "").toLowerCase()) ? tag("tag warn", `Ruled ${b.status} since the last report: never a pick, and the book voids a bet already placed`, "Ruled out") : "",
-    b.uncertain ? tag("tag warn", "Listed questionable: priced 8% under his average; never a lock or parlay leg; the bet voids if he sits", "Questionable") : "",
-    b.new_role ? tag("tag warn", `New role: a part-timer who just played a starter's snaps${b.snap_jump ? ` (${b.snap_jump.toFixed(1)}x his season share)` : ""}. Priced at that role with a wider range; never a lock until his history catches up.`, "New role") : "",
-    b.reduced_role ? tag("tag warn", "Reduced role: his last game's snap share was well below his season share. Priced down; never a lock or parlay leg.", "Reduced role") : "",
-    b.absence ? tag("tag warn", "Back from absence: he missed at least one game that was not a bye. Priced down; never a lock or parlay leg.", "Back from absence") : "",
-    b.new_team ? tag("tag warn", "First game for a new team after a mid-season move (a trade or a release). Priced down; never a lock or parlay leg.", "New team") : "",
-    b.gone_regulars ? tag("tag", `Gone at his position: ${b.gone_regulars}. The vacancy and next-man-up effects are in his number (Game logic).`, "Teammate gone") : "",
-    b.lock_block && !b.five ? tag("tag", "Why this pick can never be a lock or a parlay leg, whatever its score", `Not lock-eligible: ${b.lock_block}`) : "",
+    b.uncertain ? tag("tag warn", "Listed questionable: never a lock or parlay leg; the bet voids if he sits", "Questionable") : "",
+    b.new_role ? tag("tag warn", `New role: a part-timer who just played a starter's snaps${b.snap_jump ? ` (${b.snap_jump.toFixed(1)}x his season share)` : ""}. Projected at that role with a wider range; never a lock until his history catches up.`, "New role") : "",
+    b.reduced_role ? tag("tag warn", "Reduced role: his last game's snap share was well below his season share. Never a lock or parlay leg.", "Reduced role") : "",
+    b.absence ? tag("tag warn", "Back from absence: he missed at least one game that was not a bye. Never a lock or parlay leg.", "Back from absence") : "",
+    b.new_team ? tag("tag warn", "First game for a new team after a mid-season move (a trade or a release). Never a lock or parlay leg.", "New team") : "",
+    b.gone_regulars ? tag("tag", `Gone at his position: ${b.gone_regulars}. The Teammate out and Next man up effects are in his number (Game logic).`, "Teammate gone") : "",
+    b.lock_block && !b.five && isPick ? tag("tag", "Why this pick can never be a lock, an A or a parlay leg, whatever its numbers", `Not lock-eligible: ${b.lock_block}`) : "",
     b.far_from_line ? tag("tag", "The model's own number and the consensus line are 25%+ apart. It changes nothing in the grade; one of them knows something, so check the news before betting.", "Model far from line") : "",
     b.group === "DL" && b.press_pg != null ? tag("tag", `${b.press_pg.toFixed(1)} pressures a game over his prior games (Pro Football Reference). A profile to read the line by, not a model adjustment: linemen of each profile land on the model's number.`, b.press_pg <= 1 ? "Run-stuffer" : b.press_pg <= 2 ? "Interior" : "Pass rusher") : "",
   ].filter(Boolean);
+  const head = !engine ? (b.lock == null ? "" : `Lock score ${Math.round(b.lock)}/100${b.stake != null ? ` · stake ${(+b.stake).toFixed(2)}u` : ""}`)
+    : isPick ? `Win chance ${pct(b.p_claim)} · cautious edge ${signedPct1(b.edge_low)}${b.stake != null ? ` · stake ${(+b.stake).toFixed(2)}u` : ""}`
+    : b.tier === "lean" ? `Lean · win chance ${pct(b.p_claim)}, cautious edge ${signedPct1(b.edge_low)}` : `No pick · win chance ${pct(b.p_claim)}`;
   const card = el("div", { class: "play" + (isPick ? " pick" : "") + (b.five ? " five" : "") },
-    el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}`, title: "Confidence grade" }, b.grade) : "", b.five ? el("span", { class: "star", title: "Lock" }, "★") : "", b.player, " ", jersey(b),
+    el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}`, title: "Grade: the cautious edge and the model's own chance" }, b.grade) : "", b.five ? el("span", { class: "star", title: "Lock" }, "★") : "", b.player, " ", jersey(b),
       el("small", {}, [b.group, b.team, b.opp ? `vs ${b.opp}` : "", kickoffLocal(betKick(b)) ? `· ${kickoffLocal(betKick(b))}` : ""].filter(Boolean).join(" ")),
-      b.lock == null ? "" : el("div", { class: "lock" }, `Lock score ${Math.round(b.lock)}/100${b.stake != null ? ` · stake ${(+b.stake).toFixed(2)}u` : ""}`)),
-    el("div", { class: "ev" }, el("b", {}, b.ev == null ? "" : signedPct(b.ev)), el("span", {}, "expected return")),
+      head ? el("div", { class: "lock" }, head) : ""),
+    el("div", { class: "ev" }, el("b", {}, b.ev == null ? "" : signedPct(b.ev)), el("span", {}, "return at the win chance")),
     el("div", { class: "actions" }, addButton(b), betLink(b, side)),
     el("div", { class: "bet" }, el("span", { class: side === "Under" ? "under" : "over" }, `${side || ""} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market).toLowerCase()}`, el("small", {}, ` · ${odds(price)} at ${b.book}`, b.payout == null ? "" : ` · pays ${num(b.payout, 2)} per unit`)),
     tags.length ? el("div", { class: "tags" }, ...tags) : "",
-    b.logic_chips && b.logic_chips.length ? el("div", { class: "tags logic", title: "What moved his number, each a measured factor in the model (full build under Why this pick)" },
+    b.logic_chips && b.logic_chips.length ? el("div", { class: "tags logic", title: "What moved his number: each signal's effect on the final projection, measured by rebuilding it without that signal (full build under Why this pick)" },
       el("span", { class: "logic-lab" }, "Game logic:"), ...b.logic_chips.map(([lab, e]) => el("span", { class: `tag ${e > 0 ? "up" : "down"}` }, `${lab} ${e > 0 ? "+" : ""}${Math.round(e * 100)}%`))) : "",
-    el("div", { class: "nums" }, ...(b.proj == null ? [] : [el("span", {}, `Projection ${num(b.proj)}`), b.proj_model == null ? "" : el("span", {}, `Model alone ${num(b.proj_model)}`), el("span", {}, `Model ${(side || "over").toLowerCase()} ${pct(side === "Under" ? 1 - b.model_over : b.model_over)}`), el("span", {}, `Book ${pct(side === "Under" ? 1 - b.market_over : b.market_over)}`),
-      b.cons_n ? el("span", {}, `Cleared this line in ${b.cons_hits} of ${b.cons_n} games`) : ""])),
-    pOver == null ? "" : el("div", { class: "nums sides" }, el("span", { title: "Expected return of each side at this book's price, from the chance the pricer used (segment correction included)" }, `Over ${b.over_odds == null ? "not offered" : `${signedPct(pOver * toDec(b.over_odds) - 1)} at ${odds(b.over_odds)}`} · Under ${b.under_odds == null ? "not offered" : `${signedPct((1 - pOver) * toDec(b.under_odds) - 1)} at ${odds(b.under_odds)}`}`)));
+    el("div", { class: "nums" }, ...(b.proj == null ? [] : [el("span", {}, `Model ${num(b.proj_model ?? b.proj)}`), b.mkt_mean != null ? el("span", { title: "The book's fair price read back as a number of tackles" }, `Book's price implies ${num(b.mkt_mean)}`) : "",
+      el("span", {}, `Model ${(side || "over").toLowerCase()} ${pct(own)}`), el("span", {}, `Book ${pct(fair)}`),
+      b.cons_n ? el("span", {}, `${side === "Under" ? "Under" : "Over"} this line in ${b.cons_hits} of ${b.cons_n} games`) : ""])),
+    pOver == null ? "" : el("div", { class: "nums sides" }, el("span", { title: "Return of each side at this book's price, at the win chance" }, `Over ${b.over_odds == null ? "not offered" : `${signedPct(pOver * toDec(b.over_odds) - 1)} at ${odds(b.over_odds)}`} · Under ${b.under_odds == null ? "not offered" : `${signedPct((1 - pOver) * toDec(b.under_odds) - 1)} at ${odds(b.under_odds)}`}`)));
   if (b.proj != null) card.append(whyBox(b, !!isLock));
   else card.append(el("div", { class: "why" }, b.why || ""));
   return card;
@@ -859,7 +882,7 @@ function renderRecord() {
   if (!r || !r.picks || !r.picks.length) { box.append(el("div", { class: "empty" }, "No picks logged yet. Every pick the board makes is saved with the price at the time and graded against the official box score the next morning.")); return; }
   const s = r.summary || {};
   box.append(recordsBar(s));
-  const jumps = [["rec-picks", "Every pick"], ["rec-parlays", "Parlay history"], ["rec-locks", "Locks"], ["rec-sleepers", "Sleepers"], ["rec-grade", "By grade"], ["rec-side", "By side"], ["rec-deeper", "Luck, calibration, replays"]];
+  const jumps = [["rec-picks", "Every pick"], ["rec-parlays", "Parlay history"], ["rec-locks", "Locks"], ["rec-market", "Against the market"], ["rec-sleepers", "Sleepers"], ["rec-grade", "By grade"], ["rec-side", "By side"], ["rec-deeper", "Luck, calibration, replays"]];
   box.append(el("nav", { class: "jump", "aria-label": "Track record sections" }, ...jumps.map(([id, label]) => { const a = el("a", { href: `#${id}` }, label); a.onclick = (e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); }; return a; })));
 
   // 1. every pick, filtered
@@ -873,10 +896,11 @@ function renderRecord() {
   // 3. locks
   if (s.five && (s.five.bets || (s.five.weeks && s.five.weeks.length))) {
     const fp = r.picks.filter((p) => p.five);
-    const sec = section("Locks", "A-grade picks only (lock score 72 or better), at most three on a one-game day and five on a multi-game day; a thin slate gets none. Target: 70% over the season.",
+    const sec = section("Locks", "A-grade picks only, the highest model chances first, at most three on a one-game day and five on a multi-game day; a thin slate gets none. Target: 70% over the season. The range is where the true hit rate plausibly sits given how few locks there are and that a week's picks win and lose together: until it clears the break-even of the prices taken (about 58%), the record has not shown the locks beat the book.",
       el("div", { class: "stat-line" },
         el("div", {}, wl(s.five.wins, s.five.losses, s.five.pushes), "Record"),
         el("div", {}, el("b", { class: s.five.hit == null ? "" : s.five.hit >= 0.7 ? "pos" : "neg" }, s.five.hit == null ? "" : pct(s.five.hit)), "Hit rate"),
+        rangeOf(s.five) ? el("div", {}, el("b", {}, rangeOf(s.five)), "Likely range") : "",
         el("div", {}, units(s.five.units), "Units"),
         el("div", {}, el("b", {}, String(s.five.pending ?? 0)), "Pending")),
       s.five.weeks && s.five.weeks.length ? el("div", { class: "scroll" }, table([["Week"], ["Locks", "n"], ["Record"], ["Units", "n"], ["Running record"]],
@@ -886,18 +910,40 @@ function renderRecord() {
     sec.id = "rec-locks"; box.append(sec);
   }
 
+  // 3a. against the market: the engine's chance on every closing line, scored beside the book's own
+  if (s.scoreboard && s.scoreboard.lines) {
+    const sb = s.scoreboard, d = sb.engine_minus_market, t = sb.t, ll = sb.log_loss || {};
+    const verdict = t == null ? "one week so far: too early to say anything" : t >= 2 ? "the engine's chances have been better than the book's own price by more than luck explains" : t <= -2 ? "the book's price has been the better forecast: the engine is adding nothing" : "no difference that luck does not explain yet";
+    const sec = section("Against the market", "The scoreboard that can answer whether the edge is real. A win-loss record cannot this season: a true 5% edge needs about 34 weeks to show. The chance the engine gives a line can be scored against what happened, next to the chance the book's own closing price gave the same line, on every line the model had a number for, picked or not. The score is log-loss: lower is better, and 0.693 is a coin flip. Weeks are the unit, because the lines of one week win and lose together.",
+      el("div", { class: "stat-line" },
+        el("div", {}, el("b", {}, num(ll.market, 4)), "The book's fair price"),
+        el("div", {}, el("b", {}, num(ll.model, 4)), "The model alone"),
+        el("div", {}, el("b", {}, num(ll.engine, 4)), "The engine (the win chance)"),
+        el("div", {}, el("b", { class: d > 0 ? "pos" : d < 0 ? "neg" : "" }, (d >= 0 ? "+" : "") + num(d, 4)), `Engine better by${sb.se != null ? ` (give or take ${num(2 * sb.se, 4)})` : ""}`),
+        el("div", {}, el("b", {}, String(sb.lines)), `Closing lines, weeks ${(sb.weeks || []).join(", ")}`)),
+      el("p", { class: "lead" }, `Verdict: ${verdict}.`),
+      el("div", { class: "scroll" }, table([["Week"], ["Lines", "n"], ["Book", "n"], ["Model alone", "n"], ["Engine", "n"], ["Engine better by", "n"]],
+        [...(sb.by_week || [])].reverse().map((w) => [`Week ${w.week}`, w.lines, num(w.market, 4), num(w.model, 4), num(w.engine, 4), el("b", { class: w.engine_minus_market > 0 ? "pos" : "neg" }, (w.engine_minus_market >= 0 ? "+" : "") + num(w.engine_minus_market, 4))]))),
+      (sb.tiers || []).length ? el("div", { class: "scroll" }, table([["The engine's side at the close"], ["Lines", "n"], ["Record"], ["Hit", "n"], ["Likely range", "n"], ["Chance it gave", "n"], ["Return per bet", "n"]],
+        sb.tiers.map((x) => [x.tier, x.lines, x.lines ? wl(x.wins, x.losses) : "", x.lines ? pct(x.hit) : "", rangeOf(x), x.lines ? pct(x.chance) : "", x.lines ? roiCell(x.ret) : ""]))) : null,
+      (sb.calibration || []).length ? more("Is the win chance honest?", el("p", {}, "Every closing line grouped by the win chance the engine gave its side, against how often that side won."),
+        el("div", { class: "scroll" }, table([["Win chance given"], ["Lines", "n"], ["On average", "n"], ["Won", "n"]], sb.calibration.map((c) => [String(c.bucket).replace(/[(\]]/g, "").replace(", ", " to "), c.lines, pct(c.said, 1), pct(c.hit, 1)])))) : null,
+      more("How to read this", "Weeks 7 to 9 were priced live by the old rules with the projection of the time; the engine's rule is applied to those logged numbers after the fact, so they are the weeks the rule was chosen on. From week 10 on the lines are scored as they were priced. The closing price is the last pull before kickoff, about an hour out. The tiers use the best closing price among the books on the consensus line, one line a player and market, so they are not the picks as logged (those are the record above)."));
+    sec.id = "rec-market"; box.append(sec);
+  }
+
   // 3b. sleepers: their own record (1 unit each at the logged price), by grade, kind and week, and every one settled
   { const ss = s.sleepers || {}, rows = (r.sleepers || []).filter((x) => ["Win", "Loss", "Push", "Pending"].includes(x.result));
     const all = ss.all || {}, gOrd = { A: 0, B: 1, C: 2 };
     const gradeRows = Object.entries(ss.by_grade || {}).sort((a, b) => (gOrd[a[0]] ?? 3) - (gOrd[b[0]] ?? 3));
-    const sec = section("Sleepers", "Lines where the model's own number disagrees with the book by a margin that held every week (see the Sleepers box on the Plays tab for the rules and the math). Tracked at 1 unit each at the price logged before kickoff; never a lock. The grade comes from the model's own evidence; the model's chance is shown against the hit rate so the grade itself is tested.",
+    const sec = section("Sleepers", "Lines where the model's own number disagrees with the book's line by a margin that held every week (see the Sleepers box on the Plays tab for the rules and the math). A frozen rule set, kept apart from the board's picks: tracked at 1 unit each at the price logged before kickoff; never a lock. The grade comes from the model's own evidence and never the price; the model's chance is shown against the hit rate so the grade itself is tested.",
       all.bets ? el("div", { class: "stat-line" },
         el("div", {}, wl(all.wins, all.losses, all.pushes), "Record"),
         el("div", {}, el("b", { class: all.hit == null ? "" : all.hit >= 0.6 ? "pos" : "neg" }, all.hit == null ? "" : pct(all.hit)), "Hit rate"),
         el("div", {}, units(all.units), "Units at 1 each"),
         el("div", {}, el("b", {}, String(all.pending ?? 0)), "Pending")) : el("p", { class: "lead" }, "No sleeper has been graded yet: the first ones were logged for Monday night of week 9."),
-      gradeRows.length ? el("div", { class: "scroll" }, table([["Grade"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Model's chance", "n"], ["Units", "n"]],
-        gradeRows.map(([g, x]) => [g === "ungraded" ? "Before grades" : el("span", { class: `grade ${g}` }, g), x.bets, recCell(x), x.hit == null ? "" : pct(x.hit), x.model_chance == null ? "" : pct(x.model_chance), units(x.units, 2)]))) : null,
+      gradeRows.length ? el("div", { class: "scroll" }, table([["Grade"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Likely range", "n"], ["Model's chance", "n"], ["Units", "n"]],
+        gradeRows.map(([g, x]) => [g === "ungraded" ? "Before grades" : el("span", { class: `grade ${g}` }, g), x.bets, recCell(x), x.hit == null ? "" : pct(x.hit), rangeOf(x), x.model_chance == null ? "" : pct(x.model_chance), units(x.units, 2)]))) : null,
       Object.keys(ss.by_kind || {}).length ? el("div", { class: "scroll" }, table([["Kind"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Units", "n"]],
         Object.entries(ss.by_kind).map(([k, x]) => [k, x.bets, recCell(x), x.hit == null ? "" : pct(x.hit), units(x.units, 2)]))) : null,
       (ss.by_week || []).length ? el("div", { class: "scroll" }, table([["Week"], ["Bets", "n"], ["Record"], ["Units", "n"]],
@@ -913,10 +959,10 @@ function renderRecord() {
     const nA = (A.wins || 0) + (A.losses || 0), nB = (Bg.wins || 0) + (Bg.losses || 0);
     const bad = nA && nB && A.hit != null && Bg.hit != null && A.hit < Bg.hit;
     const order = nA && nB ? el("p", { class: "lead", style: bad ? "color:#c0392b;font-weight:600" : "" },
-      `Grade order check: A ${pct(A.hit)} on ${nA} graded picks, B ${pct(Bg.hit)} on ${nB}. ${bad ? "A is below B. Watched after every slate; the weights are re-fitted if it holds at 30 graded A picks." : "In order. Judged again at 30 graded A picks."}`) : null;
-    const sec = section("By grade", "A should beat B and B should beat C over time; if not, the grading formula changes. Suggested stakes: A 1 unit, B 0.5, C 0.25.",
-      el("div", { class: "scroll" }, table([["Grade"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Units, 1 per bet", "n"], ["Return per bet", "n"], ["Units at suggested stake", "n"]],
-        s.by_grade.map((g) => [g.grade === "ungraded" ? "No grade yet" : el("span", { class: `grade ${g.grade}` }, g.grade), g.bets, recCell(g), g.hit == null ? "" : pct(g.hit), units(g.units, 2), roiCell(g.roi), g.stake ? el("span", {}, units(g.staked, 2), ` at ${g.stake}u`) : ""]))),
+      `Grade order check: A ${pct(A.hit)} on ${nA} graded picks, B ${pct(Bg.hit)} on ${nB}. ${bad ? "A is below B; with ranges this wide that is not yet a finding. Judged at 30 graded A picks under the current rules." : "In order. Judged again at 30 graded A picks under the current rules."}`) : null;
+    const sec = section("By grade", "A should beat B and B should beat C over time. The likely range is where each grade's true hit rate plausibly sits (a week's picks win and lose together, so a record is worth fewer bets than it counts); two grades whose ranges overlap have not been told apart yet. Picks through week 9 were graded by the old lock score; from week 10 a grade is the cautious edge and the model's own chance.",
+      el("div", { class: "scroll" }, table([["Grade"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Likely range", "n"], ["Chance claimed", "n"], ["Units, 1 per bet", "n"], ["Return per bet", "n"]],
+        s.by_grade.map((g) => [g.grade === "ungraded" ? "No grade yet" : el("span", { class: `grade ${g.grade}` }, g.grade), g.bets, recCell(g), g.hit == null ? "" : pct(g.hit), rangeOf(g), g.claimed == null ? "" : pct(g.claimed), units(g.units, 2), roiCell(g.roi)]))),
       order,
       s.by_grade.some((g) => g.grade === "ungraded") ? more("What \"No grade yet\" means", "The week 7 picks logged before grades existed on 2026-10-26. The replay section grades every one of them under the current rules.") : null);
     sec.id = "rec-grade"; box.append(sec);
@@ -926,15 +972,16 @@ function renderRecord() {
   if (s.by_side && s.by_side.length) {
     const rows = [];
     for (const sd of s.by_side) {
-      rows.push([el("b", { class: sd.key === "Under" ? "under" : "over" }, sd.key + "s, all"), sd.bets, recCell(sd), sd.hit == null ? "" : pct(sd.hit), units(sd.units, 2), roiCell(sd.roi)]);
-      for (const m of (s.by_side_market || []).filter((m) => m.key.startsWith(sd.key))) rows.push([el("span", { class: "indent" }, m.key.replace(sd.key + " ", "")), m.bets, recCell(m), m.hit == null ? "" : pct(m.hit), units(m.units, 2), roiCell(m.roi)]);
+      rows.push([el("b", { class: sd.key === "Under" ? "under" : "over" }, sd.key + "s, all"), sd.bets, recCell(sd), sd.hit == null ? "" : pct(sd.hit), rangeOf(sd), units(sd.units, 2), roiCell(sd.roi)]);
+      for (const m of (s.by_side_market || []).filter((m) => m.key.startsWith(sd.key))) rows.push([el("span", { class: "indent" }, m.key.replace(sd.key + " ", "")), m.bets, recCell(m), m.hit == null ? "" : pct(m.hit), rangeOf(m), units(m.units, 2), roiCell(m.roi)]);
     }
-    const sec = section("By side", "Overs are plays at a higher bar and never locks until forty more of them hit 55%; this is where that gets judged.",
-      el("div", { class: "scroll" }, table([["Side"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Units, 1 per bet", "n"], ["Return per bet", "n"]], rows)),
+    const sec = section("By side", "Overs are picks under the same test as Unders and never locks until forty more of them hit 55%; this is where that gets judged.",
+      el("div", { class: "scroll" }, table([["Side"], ["Bets", "n"], ["Record"], ["Hit rate", "n"], ["Likely range", "n"], ["Units, 1 per bet", "n"], ["Return per bet", "n"]], rows)),
       el("div", { class: "stat-line" },
         el("div", {}, roiCell(s.roi), "Return per bet, all plays"),
         el("div", {}, el("b", { class: clvClass(s.beat_close_share) }, s.beat_close_share == null ? "" : pct(s.beat_close_share)), `Beat the close${s.close_moved ? ` (${s.close_moved} moved lines)` : ""}: "${clvWord(s.beat_close_share)}"`),
-        el("div", { title: "Fair closing chance of our side minus the chance implied by the price we took, averaged over every pick with a closing price" }, el("b", { class: clvPctClass(s.avg_clv_novig) }, s.avg_clv_novig == null ? "" : (s.avg_clv_novig >= 0 ? "+" : "") + (s.avg_clv_novig * 100).toFixed(1) + " pts"), `No-vig CLV${s.clv_novig_n ? ` (${s.clv_novig_n} closes, ${s.clv_held ?? 0} held)` : ""}: "${clvPctWord(s.avg_clv_novig)}"`)));
+        el("div", { title: "Fair closing chance of our side minus the chance implied by the price we took, averaged over every pick with a closing price" }, el("b", { class: clvPctClass(s.avg_clv_novig) }, s.avg_clv_novig == null ? "" : (s.avg_clv_novig >= 0 ? "+" : "") + (s.avg_clv_novig * 100).toFixed(1) + " pts"), `No-vig CLV${s.clv_novig_n ? ` (${s.clv_novig_n} closes, ${s.clv_held ?? 0} held${s.clv_novig_se != null ? `, give or take ${(2 * s.clv_novig_se * 100).toFixed(1)}` : ""})` : ""}: "${clvPctWord(s.avg_clv_novig)}"`),
+        s.stat_corrections ? el("div", {}, el("b", {}, String(s.stat_corrections)), "Picks whose official count changed after they settled (the first count stands, as at the book)") : ""));
     sec.id = "rec-side"; box.append(sec);
   }
 
@@ -948,10 +995,10 @@ function renderRecord() {
       el("div", { class: "scroll" }, table(H, L.filter((x) => x.level <= 2).map(row))), more("By position as well", el("div", { class: "scroll" }, table(H, L.filter((x) => x.level === 3).map(row))))));
   }
   if (s.segments && s.segments.length) {
-    const fine = s.segments.filter((x) => x.level === 3 && x.n >= (DATA.meta?.grading?.segment_min_n ?? 10)).sort((a, b) => b.delta - a.delta);
-    if (fine.length) deeper.push(more("Where the model's claims have been right", el("p", {}, "Each kind of pick against what the model claimed for it. The gap feeds back into the next pick of that kind, shrunk by how many picks it rests on."),
-      el("div", { class: "scroll" }, table([["Kind of pick"], ["Picks", "n"], ["Record"], ["Hit rate", "n"], ["Claimed", "n"], ["Gap", "n"], ["Correction now applied", "n"]],
-        fine.map((x) => [x.segment, x.n, wl(x.wins, x.losses), pct(x.hit), pct(x.claimed), el("b", { class: x.delta >= 0 ? "pos" : "neg" }, (x.delta >= 0 ? "+" : "") + (x.delta * 100).toFixed(0) + " pts"), (x.adj >= 0 ? "+" : "") + (x.adj * 100).toFixed(1) + " pts"])))));
+    const fine = s.segments.filter((x) => x.level === 3 && x.n >= 10).sort((a, b) => b.delta - a.delta);
+    if (fine.length) deeper.push(more("Where the claims have been right, by kind of pick", el("p", {}, "Each kind of pick against the chance claimed for it. A report only since week 10: until then the gap was fed back into the next pick of its kind, and it flipped sign from week to week (it was fitting each week's luck), so the correction was retired."),
+      el("div", { class: "scroll" }, table([["Kind of pick"], ["Picks", "n"], ["Record"], ["Hit rate", "n"], ["Claimed", "n"], ["Gap", "n"]],
+        fine.map((x) => [x.segment, x.n, wl(x.wins, x.losses), pct(x.hit), pct(x.claimed), el("b", { class: x.delta >= 0 ? "pos" : "neg" }, (x.delta >= 0 ? "+" : "") + (x.delta * 100).toFixed(0) + " pts")])))));
   }
   if (s.market_watch && s.market_watch.length) {
     deeper.push(more("Market watch: how the whole board resolved", el("p", {}, "Every closing line on the board, not just our picks: how often the over hit against what the market's own price implied."),
@@ -966,7 +1013,7 @@ function renderRecord() {
           w.picks.map((p) => [`${p.player} ${p.side} ${num(p.line)} ${(MARKET[p.market] || p.market).toLowerCase()}`, odds(p.odds), p.book, p.grade ? el("span", { class: `grade ${p.grade}` }, p.grade) : "", Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result]))),
         ...(w.parlays || []).map((q) => parlayBox({ ...q, placed: true }, true)));
     });
-    deeper.push(more("Replayed under the current rules", el("p", {}, "What the current model would have picked, using only what was known at each line pull. Weeks before 7 cannot be replayed: no lines were collected."), ...weeks));
+    deeper.push(more("Replayed under the current rules", el("p", {}, r.retro.note || "What the current model would have picked, using only what was known at each line pull. Weeks before 7 cannot be replayed: no lines were collected."), ...weeks));
   }
   if (deeper.length) { const sec = section("Luck, calibration and replays", "The checks behind the record: whether a result was the model or the market, how the model's claims have held up, and the replayed weeks.", ...deeper); sec.id = "rec-deeper"; box.append(sec); }
 
@@ -1135,38 +1182,46 @@ function renderCheck() {
   const b = DATA.backtest;
   if (!b || b.error || !b.predictors) { box.append(el("div", { class: "empty" }, b?.error || "The backtest runs with the daily job.")); return; }
   const P = b.predictors, m = (r) => r.mae_cal ?? r.mae;
-  const full = P.find((r) => r.predictor === "Full model"), avg = P.find((r) => r.predictor === "Season average");
-  const foldF = P.find((r) => r.predictor.startsWith("Full model, ") && r.predictor.includes("fold")), foldG = P.find((r) => r.predictor.includes("corrector blend"));
-  const soloF = P.find((r) => r.predictor.startsWith("Solo tackles: full model (")), soloA = P.find((r) => r.predictor === "Solo tackles: season average");
-  box.append(el("p", { class: "lead" }, `Every game since ${Math.min(...b.seasons)} predicted using only what was known before it: ${b.games.toLocaleString()} defender-games. "Miss" is the average error in tackles after each predictor is scaled to zero bias, so a piece is judged on what it knows about who makes tackles, not on the overall level (the daily calibration handles that).`));
+  const full = P.find((r) => r.predictor === "Factor model") || P.find((r) => r.predictor === "Full model"), avg = P.find((r) => r.predictor === "Season average");
+  const fin = P.find((r) => r.predictor.startsWith("Final projection"));
+  const soloF = P.find((r) => r.predictor.startsWith("Solo tackles: final projection") || r.predictor.startsWith("Solo tackles: full model (")), soloA = P.find((r) => r.predictor === "Solo tackles: season average");
+  const dv = (r) => (r && r.deviance != null ? num(r.deviance, 4) : "");
+  box.append(el("p", { class: "lead" }, `Every game since ${Math.min(...b.seasons)} predicted using only what was known before it: ${b.games.toLocaleString()} defender-games. Two scores. "Miss" is the average error in tackles after each predictor is scaled to zero bias. "Deviance" is the proper score for an average (the miss rewards the middle of the range instead): lower is better, and it is the one a piece is judged on, with weeks as the unit.`));
+  if ((b.flags || []).length) box.append(el("div", { class: "warn" }, `The daily test flags ${b.flags.length === 1 ? "one thing" : `${b.flags.length} things`} to look at: ${b.flags.join("; ")}. A flag is a prompt to run the full test, never an automatic change.`));
   box.append(el("div", { class: "stat-line" },
-    full ? el("div", {}, el("b", {}, num(m(full), 3)), "Full model miss") : "",
+    fin ? el("div", {}, el("b", {}, num(m(fin), 3)), "Final projection miss") : "",
+    full ? el("div", {}, el("b", {}, num(m(full), 3)), "Factor model miss") : "",
     avg ? el("div", {}, el("b", {}, num(m(avg), 3)), "Season average miss") : "",
-    foldF ? el("div", {}, el("b", {}, num(m(foldF), 3)), `Held-out ${foldF.predictor.match(/\d{4}/)?.[0] ?? ""} miss`) : "",
-    foldG ? el("div", {}, el("b", {}, num(m(foldG), 3)), "Same, with the second model") : "",
+    fin && fin.deviance != null ? el("div", {}, el("b", {}, dv(fin)), `Final projection deviance${avg && avg.deviance != null ? ` (season average ${dv(avg)})` : ""}`) : "",
     soloF ? el("div", {}, el("b", {}, num(m(soloF), 3)), "Solo tackles miss") : ""));
 
-  // pieces
-  const pieces = P.filter((r) => r.predictor.startsWith("Full model without") || r.predictor.startsWith("Full model with one"));
-  if (full && pieces.length) {
-    const rows = pieces.map((r) => { const d = m(r) - m(full); const v = d > 0.0005 ? ["Keeps its place", "ok"] : d < -0.0005 ? ["Hurts: under review", "bad"] : ["No measurable gain", "no"];
-      const name = r.predictor === "Full model with one shrink for every position" ? "Position-specific shrinkage" : r.predictor.replace("Full model without ", "").replace(/^./, (c) => c.toUpperCase());
-      return { name, d, v }; }).sort((x, y) => y.d - x.d);
-    box.append(section("Does each piece earn its place?", "The miss when a piece is removed, against the full model. A piece stays while the model is worse without it.",
-      el("div", { class: "scroll" }, table([["Piece"], ["Miss without it, vs full model", "n"], ["Verdict"]],
-        rows.map((x) => [x.name, (x.d >= 0 ? "+" : "") + num(x.d, 4), el("span", { class: `verdict ${x.v[1]}` }, x.v[0])])))));
+  // the number the board prices with, season by season, out of sample
+  const F = b.final || {};
+  if ((F.folds || []).length) {
+    const tt = (x) => (x == null ? "" : ` (t ${x >= 0 ? "+" : ""}${num(x, 1)})`);
+    box.append(section("The honest number: the final projection, out of sample", `The board prices from the factor model (${pct(1 - (F.weight ?? 0.6))}) and a boosted second model (${pct(F.weight ?? 0.6)}). Here the second model is trained on the seasons before each season and scored on that season only: nothing was tuned on the games it is scored on.${F.final_minus_factor != null ? ` Against the factor model alone the final projection's deviance is ${F.final_minus_factor >= 0 ? "+" : ""}${num(F.final_minus_factor, 4)} a game${tt(F.t)}; on the regulars (expected at ${pct(F.regular_share ?? 0.8)}+ of the snaps), the players who get lines, ${F.starters_final_minus_factor >= 0 ? "+" : ""}${num(F.starters_final_minus_factor, 4)}${tt(F.starters_t)}. Negative is better; a t beyond 2 either way is more than luck.` : ""}`,
+      el("div", { class: "scroll" }, table([["Season"], ["Games", "n"], ["Factor model deviance", "n"], ["Final deviance", "n"], ["Final miss", "n"], ["Final bias", "n"]],
+        F.folds.map((f) => [String(f.season), f.n.toLocaleString(), dv(f.factor), dv(f.final), num(m(f.final), 3), (f.final.bias >= 0 ? "+" : "") + num(f.final.bias, 2)])))));
   }
-  // held out
-  const folds = P.filter((r) => r.predictor.includes("fold"));
-  if (folds.length) {
-    box.append(section("The honest number: held-out season", "Trained on the seasons before it, scored on the latest season only. Nothing here was tuned on the games it is scored on.",
-      el("div", { class: "scroll" }, table([["Predictor"], ["Games", "n"], ["Miss", "n"], ["Bias", "n"]], folds.map((r) => [r.predictor, r.n.toLocaleString(), num(m(r), 3), (r.bias >= 0 ? "+" : "") + num(r.bias, 2)])))));
+  // pieces: the protocol's test of every factor, each morning
+  if ((b.factor_tests || []).length) {
+    const cls = { "earns its place": "ok", "neutral": "no", "hurts": "bad", "candidate": "ok", "out": "no" };
+    const rows = [...b.factor_tests].sort((x, y) => (y.in_model - x.in_model) || ((x.t ?? 9) - (y.t ?? 9)));
+    box.append(section("Does each piece earn its place?", "Each factor of the factor model, tested every morning on the games it moves: the deviance with it minus without it (both at the same overall level), and how sure that is with weeks as the unit (t), for every player it moves and for the regulars among them (the players who get lines; the verdict follows them when there are enough). In the model, a factor must not hurt; out of the model, one can earn its way back. The final call is always the full test on the final projection, with the second model retrained, judged on regulars, and it is recorded in the model log: this table only says when to run it.",
+      el("div", { class: "scroll" }, table([["Factor"], ["In the model"], ["Games it moves", "n"], ["Deviance with it", "n"], ["t", "n"], ["Regulars it moves", "n"], ["Their t", "n"], ["Bias with / without", "n"], ["Daily verdict"]],
+        rows.map((x) => [x.factor.replace(/^./, (c) => c.toUpperCase()), x.in_model ? "yes" : "no", (x.rows ?? 0).toLocaleString(), x.helps == null ? "" : (x.helps >= 0 ? "+" : "") + num(x.helps, 4), x.t == null ? "" : (x.t >= 0 ? "+" : "") + num(x.t, 1),
+          (x.rows_regulars ?? 0).toLocaleString(), x.t_regulars == null ? "" : (x.t_regulars >= 0 ? "+" : "") + num(x.t_regulars, 1),
+          x.bias_with == null ? "" : `${x.bias_with >= 0 ? "+" : ""}${num(x.bias_with, 2)} / ${x.bias_without >= 0 ? "+" : ""}${num(x.bias_without, 2)}`, el("span", { class: `verdict ${cls[x.verdict] || "no"}` }, x.verdict.replace(/^./, (c) => c.toUpperCase()))])))));
+  } else {
+    const pieces = P.filter((r) => /^(Full|Factor) model with/.test(r.predictor));
+    if (full && pieces.length) box.append(section("Does each piece earn its place?", "The miss when a piece is flipped, against the factor model.",
+      el("div", { class: "scroll" }, table([["Piece"], ["Miss, vs the factor model", "n"]], pieces.map((r) => [r.predictor, (m(r) - m(full) >= 0 ? "+" : "") + num(m(r) - m(full), 4)])))));
   }
   // benchmarks
-  const bench = P.filter((r) => !r.predictor.startsWith("Full model") && !r.predictor.includes("fold") && !r.predictor.startsWith("Solo") && !r.predictor.startsWith("Assists"));
+  const bench = P.filter((r) => !/^(Full|Factor) model/.test(r.predictor) && !r.predictor.startsWith("Final projection") && !r.predictor.includes("fold") && !r.predictor.startsWith("Solo") && !r.predictor.startsWith("Assists"));
   if (bench.length) {
-    box.append(section("Simple benchmarks", "What a bettor without a model would use. The full model has to beat all of them.",
-      el("div", { class: "scroll" }, table([["Predictor"], ["Miss", "n"], ["Bias", "n"]], [...(full ? [full] : []), ...bench].sort((x, y) => m(x) - m(y)).map((r) => [r.predictor === "Full model" ? el("b", {}, "Full model") : r.predictor, num(m(r), 3), (r.bias >= 0 ? "+" : "") + num(r.bias, 2)])))));
+    box.append(section("Simple benchmarks", "What a bettor without a model would use. The projection has to beat all of them.",
+      el("div", { class: "scroll" }, table([["Predictor"], ["Miss", "n"], ["Deviance", "n"], ["Bias", "n"]], [...(fin ? [fin] : []), ...(full ? [full] : []), ...bench].sort((x, y) => m(x) - m(y)).map((r) => [r === fin || r === full ? el("b", {}, r === fin ? "Final projection" : "Factor model") : r.predictor, num(m(r), 3), dv(r), (r.bias >= 0 ? "+" : "") + num(r.bias, 2)])))));
   }
   // solo
   const solo = P.filter((r) => r.predictor.startsWith("Solo"));
@@ -1175,13 +1230,12 @@ function renderCheck() {
       el("div", { class: "scroll" }, table([["Predictor"], ["Miss", "n"], ["Bias", "n"]], solo.sort((x, y) => m(x) - m(y)).map((r) => [r.predictor.replace("Solo tackles: ", "").replace(/^./, (c) => c.toUpperCase()), num(m(r), 3), (r.bias >= 0 ? "+" : "") + num(r.bias, 2)])))));
   }
   // probability scores: the bet is a chance at a line, so the shape is judged too
-  const ps = b.prob_scores || {}, bl = DATA.meta?.grading?.blend || {};
-  if (ps.pit || Object.values(bl).some((x) => x.scores)) {
+  const ps = b.prob_scores || {};
+  if (ps.pit) {
     const rows = [];
-    if (ps.pit) rows.push(["Model's own distribution, all games", ps.pit.n.toLocaleString(), `${pct(ps.pit.below_5)} below its 5th percentile, ${pct(ps.pit.above_95)} above its 95th (5% each if the shape is right)`, ""]);
+    if (ps.pit) rows.push(["The model's own distribution around the final projection, players who get lines", ps.pit.n.toLocaleString(), `${pct(ps.pit.below_5, 1)} below its 5th percentile, ${pct(ps.pit.above_95, 1)} above its 95th (5% each if the shape is right)`, ""]);
     if (ps.own_lines) rows.push(["Lines around each projection", ps.own_lines.n.toLocaleString(), `Brier ${ps.own_lines.brier.toFixed(4)} (a coin is 0.2500)`, `log-loss ${ps.own_lines.log_loss.toFixed(4)}`]);
-    for (const [k, v] of Object.entries(bl)) if (v.scores?.n) rows.push([`Posted closing lines, ${k} (weeks ${(v.weeks || []).join(", ")})`, v.scores.n, `Brier: market ${v.scores.market.brier.toFixed(4)}, model ${v.scores.model.brier.toFixed(4)}, blend ${v.scores.blend.brier.toFixed(4)}`, `log-loss: market ${v.scores.market.log_loss.toFixed(3)}, model ${v.scores.model.log_loss.toFixed(3)}, blend ${v.scores.blend.log_loss.toFixed(3)}`]);
-    box.append(section("Does the chance at the line hold up?", "The miss above scores the mean; a bet is a chance at a line, so the shape of the distribution is scored too. Lower Brier and log-loss are better; the market's own no-vig price is the benchmark at posted lines.",
+    box.append(section("Does the chance at the line hold up?", "The scores above judge the average; a bet is a chance at a line, so the shape of the distribution is judged too, around the same out-of-sample projection the board prices with. At the book's posted lines the test is the Track record tab's \"Against the market\".",
       el("div", { class: "scroll" }, table([["What is scored"], ["Games or lines", "n"], ["Calibration or Brier"], ["Log-loss"]], rows))));
   }
   // assists
@@ -1192,8 +1246,8 @@ function renderCheck() {
   }
   // weak spots
   if (b.weak_spots?.length) {
-    box.append(section("Where the model is weakest", "Situations where a player's season log stops describing him. Each has its own factor and is never a lock; this checks the factor keeps the bias near zero. Positive means the player beat the model.",
-      el("div", { class: "scroll" }, table([["Situation"], ["Games", "n"], ["Actual vs model", "n"], ["Without its factor", "n"], ["Miss", "n"]],
+    box.append(section("Where the model is weakest", "Situations where a player's season log stops describing him, and the two ends of the depth chart. None of the role situations can be a lock. Positive means the players beat the projection: the final projection (out of sample), then the factor model alone.",
+      el("div", { class: "scroll" }, table([["Situation"], ["Games", "n"], ["Actual vs final projection", "n"], ["Vs the factor model alone", "n"], ["Miss", "n"]],
         b.weak_spots.map((w) => [w.situation, w.n.toLocaleString(), signedPct(w.actual_vs_model), signedPct(w.actual_vs_model_without), num(w.mae, 2)])))));
   }
   // dispersion, compact
@@ -1204,14 +1258,14 @@ function renderCheck() {
       (byPos[pos] = byPos[pos] || {})[(solo ? "solo" : "comb") + (low ? "_low" : "")] = d;
     }
     const f = (d) => d ? num(d.used, 2) : "";
-    box.append(section("How spread out tackle counts are", "Variance divided by mean, used to price each line. 1 is a Poisson count; higher means more games far from the average, so long-shot overs and unders are likelier than standard pricing assumes. Part-timers are far more spread than starters; solo counts less than combined.",
+    box.append(section("How spread out tackle counts are", "Variance divided by mean, used to turn the projection into a chance at a line. 1 is a Poisson count; higher means more games far from the average. Fitted as the spread that makes the actual counts most likely around the out-of-sample final projection, so the projection's own error is in it, as it must be. Part-timers are more spread than starters; solo counts less than combined.",
       el("div", { class: "scroll" }, table([["Position"], ["Starters", "n"], ["Expected share under 60%", "n"], ["Starters, solo", "n"], ["Under 60%, solo", "n"]],
         Object.entries(byPos).map(([pos, v]) => [pos, f(v.comb), f(v.comb_low), f(v.solo), f(v.solo_low)])))));
   }
   // calibration
   if (b.calibration?.length) {
     const lab = (s) => { const mm = String(s).match(/([\d.]+),\s*([\d.]+)/); return mm ? `${Math.round(Math.max(0, +mm[1]) * 100)} to ${Math.round(+mm[2] * 100)}%` : s; };
-    box.append(section("Are the probabilities honest?", "When the model gives an over a certain chance, how often it went over, at lines near each projection.",
+    box.append(section("Are the probabilities honest?", "When the model's own distribution gives an over a certain chance, how often it went over, at lines near each projection (the final projection, out of sample, players who get lines).",
       el("div", { class: "scroll" }, table([["Model chance"], ["Cases", "n"], ["Predicted", "n"], ["Actual", "n"]], b.calibration.map((c) => [lab(c.bucket), c.n.toLocaleString(), pct(c.predicted, 1), pct(c.observed, 1)])))));
   }
   // outliers and backups
@@ -1757,7 +1811,7 @@ function renderPatch() {
 function renderAssists() {
   const top = $("#ast-top"), box = $("#ast-list"); if (!top || !box) return; top.replaceChildren(); box.replaceChildren();
   const all = (DATA.bets || []).filter((b) => b.market === ASSIST);
-  top.append(el("p", { class: "note" }, "Assists, priced like the tackle board: the combined projection less the solo one against the book's assists line, same bars, grades, checklist, rundown and slip links. A trial market: every pick is logged and graded like a tackle pick, but none can be a lock or a parlay leg until the record earns it. Why assists (research round 8, Patch log): the thinnest defensive market, the one the home scorekeeper decides most, and a projection the model already makes."));
+  top.append(el("p", { class: "note" }, "Assists, priced like the tackle board: the combined projection less the solo one against the book's assists line, the same win chance, cautious test, checklist, rundown and slip links (an assists pick tops out at a B). A trial market: every pick is logged and graded like a tackle pick, but none can be a lock or a parlay leg until the record earns it. Why assists (research round 8, Patch log): the thinnest defensive market, the one the home scorekeeper decides most, and a projection the model already makes."));
   // record so far, and the replayed weeks
   const picks = (DATA.results?.picks || []).filter((p) => p.market === ASSIST);
   const g = picks.filter((p) => p.result === "Win" || p.result === "Loss" || p.result === "Push");
@@ -1794,7 +1848,7 @@ function renderAssists() {
   const key = { lock: (b) => -(b.lock ?? -1), ev: (b) => -(b.ev ?? -9), kick: (b) => +(betKick(b) || 0), player: (b) => b.player }[sortBy] || ((b) => -(b.lock ?? -1));
   rows.sort((x, y) => { const a = key(x), c = key(y); return typeof a === "string" ? a.localeCompare(c) : a - c; });
   box.append(el("div", { class: "count" }, `${rows.length} shown of ${nPicks} assists picks on ${all.length} priced lines.`));
-  if (showAll) box.append(el("div", { class: "count" }, "No assists line clears the bar yet, so every live line is shown with the model's read of both sides."));
+  if (showAll) box.append(el("div", { class: "count" }, "No assists line is a pick yet, so every live line is shown with both opinions on it."));
   if (!rows.length) { box.append(el("div", { class: "empty" }, "No assists line matches these filters.")); return; }
   for (const b of rows) box.append(card(b, false));
 }
@@ -1802,68 +1856,75 @@ function renderAssists() {
 // ---------------------------------------------------------------- glossary
 function glossTerms() {
   const g = DATA.meta?.grading || {};
-  const bars = g.bars || { A: 72, B: 55 }, u = g.units || { A: 1, B: 0.5, C: 0.25 }, cl = g.clv || { decent: 0.52, good: 0.56, great: 0.6 }, cp = g.clv_pct || { good: 0.01, excellent: 0.03, elite: 0.05 };
-  const pickBar = g.pick_bar ?? 0.06, overBar = g.pick_bar_over ?? 0.10, claimMin = g.pick_min_claim ?? 0.55, lw = g.line_weight ?? 0.6, segK = g.segment_k ?? 30, shrink = g.claim_shrink ?? 0.6;
+  const bars = g.bars || { A: 70 }, u = g.units || { A: 1, B: 0.5, C: 0.25 }, cl = g.clv || { decent: 0.52, good: 0.56, great: 0.6 }, cp = g.clv_pct || { good: 0.01, excellent: 0.03, elite: 0.05 };
+  const e = ENGINE(), cw = g.corrector_weight ?? 0.6;
   return [
     ["The bet itself", [
       ["Over / Under", "A tackle prop is a number (the line) and two sides. Over wins if the player's official total ends above the line, Under if it ends below. A half-point line (5.5) always settles one way; a whole-number line (6) can land exactly and the bet is a push."],
       ["Line", "The number the book posts for a player, such as Under 5.5 combined tackles. Lines move between opening and kickoff as money comes in and news lands; the site logs the line at the time of the pick and the last one before kickoff (the closing line)."],
       ["Combined tackles (tackles + assists) and solo tackles", "Two markets per player. The official scorer credits a solo tackle when one player makes the stop and an assist when he shares it; combined is solo plus assists. The site's parlay legs are combined only, because the books do not allow solo-tackle legs in a same-game parlay."],
-      ["Assists (the market)", "The book's line on a player's assisted tackles alone. Priced on the Assists tab from the combined projection less the solo one, with the same bars, grades, checklist and links as the tackle board. A trial market since week 9 of 2026: every pick is logged and graded, none can be a lock or a parlay leg until the record earns it, and the Track record tab filters it on its own."],
+      ["Assists (the market)", "The book's line on a player's assisted tackles alone. Priced on the Assists tab from the combined projection less the solo one, with the same test, checklist and links as the tackle board. A trial market since week 9 of 2026: every pick is logged and graded, none can be an A, a lock or a parlay leg until the record earns it, and the Track record tab filters it on its own. When odds credits run short it is the first thing left out of a pull."],
       ["American odds (+ and −)", "The price. −110 means risk 110 to win 100; +120 means risk 100 to win 120. The number after the sign is always measured against 100."],
       ["Decimal odds", "The same price as a multiplier on the stake, winnings and stake together: −110 is 1.91, +120 is 2.20. Parlay payouts multiply the decimal odds of the legs."],
       ["Implied chance (implied probability)", "What the price says the chance of winning is, assuming no margin. For a minus price it is odds ÷ (odds + 100): −110 implies 52.4%. For a plus price it is 100 ÷ (odds + 100): +120 implies 45.5%. A bet is worth making only if the real chance is above the implied one."],
       ["Vig (juice, hold)", "The book's margin. The two sides' implied chances add to more than 100%; at −110 both ways they add to 104.8%, so the book keeps about 4.5% of what is bet on that line over time. It is why a coin-flip bet loses money and why a hit rate of 52.4% at −110 only breaks even."],
       ["No-vig (fair) price", "The two implied chances scaled so they add to 100%: the market's own estimate of the chance, with the margin stripped out. −110 both ways is 50/50 no-vig; −130/+110 is about 54/46. Used everywhere the site compares the model with the market, so the margin never counts as market opinion."],
       ["Push and void", "A push is a bet that lands exactly on a whole-number line: the stake is returned. A void is a bet cancelled by the book, here almost always because the player did not play; the Track record counts neither as a win or a loss."],
-      ["Unit", "A fixed stake the record is kept in, so a bettor with a $10 unit and one with a $100 unit read the same page. The suggested stake is " + u.A + " unit on an A, " + u.B + " on a B, " + u.C + " on a C. 'Units, 1 per bet' is the record if every pick were one unit; 'Units at suggested stake' follows the grades."],
+      ["Unit", "A fixed stake the record is kept in, so a bettor with a $10 unit and one with a $100 unit read the same page. Every pick carries its own suggested stake in units (see Stake, slate sizing); 'Units, 1 per bet' is the record if every pick were one unit."],
       ["Hit rate", "Wins divided by wins plus losses (pushes and voids left out). The break-even hit rate at −110 is 52.4%, so a 55% hit rate on −110 prices is a profit and a 51% one is a loss."],
       ["Return per bet (ROI)", "Units won or lost divided by bets made. +5% means five cents of profit for every dollar staked over the sample. The best sustained numbers in any market are single digits."],
-      ["Parlay, same-game parlay", "Two or more legs that must all win; the payout multiplies the decimal odds, so the price is long and the chance is the product of the legs' chances (two 60% legs together hit 36%). A same-game parlay has legs from one game; the books restrict which markets can go in one, which is why the site's parlay is two combined-tackle legs."],
+      ["Parlay, same-game parlay", "Two or more legs that must all win; the payout multiplies the decimal odds, so the price is long and the chance is the product of the legs' chances (two 60% legs together hit 36%). A same-game parlay has legs from one game: the book prices it itself, under the product when the legs move together, and restricts which markets can go in one, which is why the site's parlay is two combined-tackle legs and why its odds are marked as an estimate when both legs share a game. Every leg must be a pick in its own right."],
       ["Slip link", "The 'Bet at DraftKings' links on a pick or parlay open the book's app with that selection already on the slip. theScore Bet has no slip link: its lines come from the US theScore Bet feed (the former ESPN BET), whose links the Alberta app cannot open, so find the player in the app by hand, and check the price there, since the Alberta book can price differently. Prices there can differ from the ones pulled here; the pick stands on the price shown on the site."]]],
     ["The projection", [
-      ["Projection", "The model's expected tackles for the player in this game: his per-snap tackle rate in his current role, times the snaps he is expected to play, times the game's adjustments (the opponent's pace and run rate, the home scorekeepers, the point spread, rest). It is an average, not a prediction of one number: a 6.0 projection means 6 is the centre of a wide range."],
-      ["Priced projection, line weight", "The number the picks are priced from. The posted line is itself a forecast, and it has predicted tackles better than the raw projection on its own, so the pricing mean is " + pct(1 - lw) + " model and " + pct(lw) + " the consensus line. It keeps the model's claimed edges honest; the raw projection is on the Projections tab."],
+      ["Projection (the model's own number)", "The model's expected tackles for the player in this game. Two views of him are blended: his tackles per game this season, and his tackles per defensive snap times the snaps he is expected to play. Game factors that pass their test every morning move it (the opponent's expected volume, the spread, the depth chart, coverage targets, indoors for corners, a regular out at his position), and a second model trained on every defender-game since 2023 takes " + pct(cw) + " of the final number. It is an average, not a prediction of one number: a 6.0 projection means 6 is the centre of a wide range."],
+      ["Factor model, second model", "The factor model is the hand-built one: a base rate times a handful of game factors. The second model (gradient boosting) learns directly from every past game what the factor model and the raw signals together imply. Out of sample the blend beats either alone for the regulars who get lines, with the second model carrying " + pct(cw) + " of the number; the Model check tab shows both, season by season."],
+      ["Game logic", "The row on a card that says what moved his number by 3% or more. Each figure is measured, not assumed: the projection is rebuilt with that one signal switched to neutral (his snap share back at his season share, the spread at zero, the teammate not out) and the difference is the signal's effect on the final number."],
       ["Fair line", "The half-point line the model puts closest to a coin flip for the player. Comparing it with the posted line is the quickest read of where the model and the market disagree."],
-      ["Dispersion", "How wide the range around the projection is, as variance divided by mean. 1.0 is Poisson (the spread of a plain count); linebackers run tighter than that, corners and linemen wider. It sets the chance of each side, so the same one-tackle gap is worth more on a tight player than a loose one."],
+      ["Dispersion (spread)", "How wide the range around the projection is, as variance divided by mean. 1.0 is Poisson (the spread of a plain count); tackle counts run wider. It is fitted as the spread that makes the actual counts most likely around the projection the board prices with, by position, by whether he is a regular, and by market. It sets the chance of each side, so the same one-tackle gap is worth more on a tight player than a loose one."],
       ["Snap share, implied snap share", "The share of the defence's plays he was on the field for. His tackles scale with it, so a role change moves the projection more than anything else. The implied snap share in a pick's rundown is the share he would have to play for the posted line to be the fair line: an easy sanity check against his recent games."],
-      ["Stat crew", "The home stadium's scorekeepers, who decide what counts as a tackle and an assist. Crews differ by a few percent on combined tackles, consistently enough to price; the Projections tab shows each game's crew effect."],
-      ["Model chance", "The model's probability that the side wins, from the priced projection and the dispersion. It overstates the edge on the picks it chooses (a pick is chosen partly because the model happened to lean its way), which is why the claimed chance is corrected before it is used."],
-      ["Claimed chance", "The model chance after two corrections. It is shrunk " + pct(1 - shrink) + " of the way toward even, because selected picks overclaim, and then adjusted by how picks of its kind (side, market, position) have actually resolved, shrunk by n/(n+" + segK + ") so a handful of results cannot swing it. This is the number the site stands behind; the Track record tab checks it against what happened."],
-      ["Calibration (claimed vs hit)", "Whether claimed chances come true at the rate claimed. A slice claimed at 58% that hits 58% is calibrated; one that hits 50% overclaims by 8 points. The Track record tab shows it by grade, side, market and position, and the segment corrections feed back into the claimed chance."]]],
+      ["Stat crew", "The home stadium's scorekeepers, who decide what counts as a tackle and an assist. A crew's tendency in one season says little about the next (it was dropped as a factor in November 2026 after failing its test); the second model still sees it and can use what is real in it."],
+      ["The model's own chance", "The chance of a side from the model's own number and spread alone, with no look at the book. It is the model's evidence in its purest form, and it overstates: the model taken whole predicts worse than the book's price. It is one of the two numbers a grade is built from, and it is the lock score."],
+      ["The book's fair chance", "The book's own estimate of the same chance: its price on both sides of the line with its margin taken out. When two books post the same line their fair chances are averaged; a one-sided price is priced against the books that quote both sides."],
+      ["Win chance", "The one probability the site stands behind for a line: the book's fair chance moved " + pct(e.beta) + " of the way to the model's own chance (measured in odds). When the model and the book agree it is the fair chance, so agreement never makes a pick; the model's disagreement is counted at half its size because that is what it has been worth (the Track record tab's \"Against the market\" keeps testing it)."],
+      ["Cautious chance", "The same calculation with the model's disagreement counted at " + pct(e.beta_low) + " instead of " + pct(e.beta) + ": what the win chance would be if the model's view is worth half of what we think. A pick has to pay for itself even then."],
+      ["Calibration (said vs hit)", "Whether chances come true at the rate stated. A group of lines given 58% that wins 58% is calibrated; one that wins 50% overclaims by 8 points. The Track record tab shows it for the win chance on every closing line, picked or not."]]],
     ["Choosing picks", [
-      ["Expected return (EV)", "Profit per unit staked if the claimed chance is right: claimed chance × what a win pays, minus the chance of losing. A 58% claim at −110 is +10.5%. It is the model's own number and never the book's; a pick needs " + signedPct(pickBar) + " (" + signedPct(overBar) + " for an Over) and a claimed chance of at least " + pct(claimMin) + "."],
-      ["Pick bar, Over bar, claim floor", "The three thresholds a line must clear to be a play: expected return of " + signedPct(pickBar) + ", " + signedPct(overBar) + " for Overs (the model's Overs have hit well under half, so they carry a higher bar), and a claimed chance of " + pct(claimMin) + " (a plus-money side with a coin-flip claim is not a play, however long the price)."],
-      ["Pass", "A line that is priced but does not clear the bars. The board shows every live line with the model's read of both sides when no pick clears the bar, so a Pass is still a read, not a blank."],
-      ["Claimed edge", "The return a pick makes at the price if our claimed chance is right: claimed chance times the decimal odds, minus 1. A pick needs 2% and an A needs 4%. Week 9's A losses were mostly heavy-juice Unders whose claimed chance only matched the price: picks with a claimed edge under 0 went 12-20 in weeks 8 and 9, A picks with 4% or more went 13-2."],
-      ["Sleeper", "A line where the model's own number, before it is blended with the book's line, disagrees with the book by a margin that held in every week tracked: solo tackles with the model half a tackle or more under the line and his season median within a tackle of it (Under), combined tackles with the model half a tackle to a tackle over (Over). Graded A, B or C from the model's own chance, his role and the game's volume; never the price. Kept on its own record at 1 unit each, never a lock. The full math is in the Sleepers box on the Plays tab."],
-      ["Lock score", "A 0 to 100 score from the model's own evidence: expected return, claimed chance, how often he has cleared this line this season (at his expected snap share), games of data in his current role, and a role or outlier signal behind the pick. It never uses whether the book agrees. " + bars.A + " and up is an A (solo tackles only, with a claimed edge of 4% or more; otherwise it shows as a B), " + bars.B + " to " + (bars.A - 1) + " a B, below that a C."],
-      ["Grade (A, B, C)", "The lock score in three bands. A: the model is confident and the price is wrong by a lot, backed by his game log. B: a real edge with one weak spot. C: clears the bar on price alone. The Track record tab tests whether A beats B beats C; the stakes follow the grades."],
-      ["Lock", "A pick the model strongly believes in: an A-grade score on a lock-eligible pick. There are at most a few per slate day, and a day with no A has no lock, because a lock is never the best of a thin board. Locks are the green-edged cards and the 'Locks' record on the Track record tab."],
-      ["Lock-eligible, the checklist", "The situations in which the model is biased or blind, so a pick can never be a lock or a parlay leg whatever its score: a new or reduced role, back from absence, first game for a new team, fewer than three games in his current role, listed questionable, missing snap counts, or an Over. Each is a tag on the card; the pick can still be played at its grade."],
-      ["An A in yellow", "A card's left edge is yellow when it is a pick and green when it is a lock. An A-grade pick with a yellow edge is an A that is not a lock: either the checklist blocks it (the tag says why) or the slate already has its allowed number of locks."],
-      ["Consistency", "How often he has cleared this line in his games this season, read at the snap share he is expected to play, so a game he sat half of does not count against him. It is a fifth of the lock score."],
-      ["Signal", "A reason behind the number beyond the projection: a role change the market may be slow to price, or an outlier last game the market may have over-reacted to (an outlier fade). A pick with a signal scores higher; a pick with the signal against it is 'flagged' and sits out."],
-      ["Thin", "Too few games in his current role for the model to trust its own number. A thin pick cannot be a lock and scores lower; the rundown says how many games it has."],
-      ["Tags", "The short labels on a card: role changes (New role, Reduced role, Promoted, Demoted, Back from absence, New team), the injury report (Questionable, Opp QB out), a lineman's pressure profile (Run-stuffer, Interior, Pass rusher, a read of the line, not a model adjustment) and Model far from line (the model's own number and the market are 25%+ apart, so one of them knows something). Hover a tag for its rule."],
-      ["Rundown", "The paragraph in the 'Why' box under every priced line: the projection against the line, the implied snap share, his game log at this line, the role and injury reads, the checklist, how picks of its kind have resolved, and the outside consensus. Written from the pricer's own numbers, so it is always the same read the grade is."],
+      ["Return at the win chance (EV)", "Profit per unit staked if the win chance is right: win chance x what a win pays, minus the chance of losing. A 58% win chance at −110 is +10.7%."],
+      ["Cautious edge", "The same return at the cautious chance. It is the test a line must pass: zero or better and it is a pick, " + signedPct(e.b_edge_low) + " or better and it is at least a B. It can only shrink when the book's price moves toward the model, which is why the grade is built on it."],
+      ["Pick, lean, no pick", "A pick has a cautious edge of zero or better. A lean has a return of " + signedPct(e.lean_edge) + " or more at the win chance but is under water at the cautious one: it is shown and logged so it can be judged later, and never staked (at the close in weeks 7 to 9, leans went 72-68). Everything else is no pick; the board still shows both opinions on it."],
+      ["Sleeper", "A second, simpler rule kept on its own record: a line where the model's own number disagrees with the book's line by a margin that held in every week tracked (solo tackles with the model half a tackle or more under the line and his season median within a tackle of it; combined tackles with the model half a tackle to a tackle over). Graded A, B or C from the model's own chance, his role and the game's volume; never the price, so a sleeper can be a likely hit and a poor bet. Each sleeper says what the pricing engine makes of it at its price. The rules are frozen, 1 unit each, never a lock. The full math is in the Sleepers box on the Plays tab."],
+      ["Lock score", "The model's own chance of the pick's side, out of 100. It never uses whether the book agrees. It ranks the locks, and an A needs " + Math.round(bars.A ?? 70) + " or better."],
+      ["Grade (A, B, C)", "A: a cautious edge of " + signedPct(e.b_edge_low) + " or more, the model's own chance at " + pct(e.a_model) + " or more, and a clear lock checklist. B: a cautious edge of " + signedPct(e.b_edge_low) + " or more. C: a pick short of that. Both numbers behind a grade can only get worse when the book moves toward us, so a grade is never earned by agreeing with the book. The Track record tab tests whether A beats B beats C."],
+      ["Lock", "A pick the model strongly believes in: an A, highest model chance first. There are at most a few per slate day, and a day with no A has no lock, because a lock is never the best of a thin board. Locks are the green-edged cards and the 'Locks' record on the Track record tab."],
+      ["Lock-eligible, the checklist", "The situations in which the model is biased or blind, so a pick can never be a lock, an A or a parlay leg whatever its numbers: a new or reduced role, the next man up when a regular is out (and his Under is not a pick at all when the model does not expect him to play much), back from absence, first game for a new team, fewer than three games in his current role, listed questionable, missing snap counts, or an Over. Each is a tag on the card; the pick can still be played at its grade."],
+      ["An A in yellow", "A card's left edge is yellow when it is a pick and green when it is a lock. An A-grade pick with a yellow edge is an A that is not a lock: the slate already has its allowed number of locks, or two of its kind."],
+      ["Stake, slate sizing", "Each pick starts at a quarter of the Kelly stake at its cautious chance, so a pick that only just passes gets the minimum. Then the day's picks are sized as one book, because they are not independent bets: the solo Unders of one Sunday win and lose as a group. Stakes are divided for the number of picks of the same kind that day and scaled to stay under a cap per game, per kind and per day."],
+      ["Kelly stake", "The stake that grows a bankroll fastest for a known edge: the edge divided by what a win pays. Because the edge is never known exactly, a fraction of it is used (here a quarter, at the cautious chance)."],
+      ["Consistency", "How often he has landed on this side of this line in his games this season, read at the snap share he is expected to play. Shown on the card for the eye. It is in no score: once the projection is known it adds nothing to the chance (tested on every closing line of weeks 7 to 9)."],
+      ["Thin", "Fewer than three games of data. A thin line is never a pick."],
+      ["Tags", "The short labels on a card: role changes (New role, Reduced role, Promoted, Demoted, Back from absence, New team, Teammate gone), the injury report (Questionable, Opp QB out), a lineman's pressure profile (Run-stuffer, Interior, Pass rusher, a read of the line, not a model adjustment), Lean, and Model far from line (the model's own number and the market are 25%+ apart, so one of them knows something). Hover a tag for its rule."],
+      ["Rundown", "The paragraph in the 'Why' box under every priced line: who he is, his last games, the model's chance against the book's fair chance and what each is worth at the price, the implied snap share, his game log at this line, and the role and injury context. Written from the pricer's own numbers, so it is always the same read the grade is."],
       ["Consensus (FantasyPros)", "An outside expert projection, shown relative to its usual relation with this model (it runs about a quarter above box scores, so its raw number means little). For comparison only: it never prices, grades or chooses a pick."],
       ["Best price per line", "Books post the same line at different prices. With the box ticked the board shows each line once at its best price; untick it to see every book. The book filter narrows the board to one book's lines."]]],
     ["Judging the record", [
       ["Closing line", "The last line and price before kickoff, with everything the market knows priced in. It is the best single estimate of the true chance available, better than the result of one game, which is mostly luck."],
       ["Beat the close", "Among picks whose closing number differed from the one we took, the share that moved our way (a better line, or the same line at a price that moved toward our side). Picks whose number never moved are left out. " + pct(cl.decent) + " or below is noise, " + pct(cl.good) + " and up is what sharp bettors sustain, " + pct(cl.great) + " and up is rare."],
       ["No-vig CLV (closing-line value, in points)", "The measure bettors quote: the fair (no-vig) closing chance of our side minus the chance implied by the price we took, averaged over every pick with a closing price, in probability points. A −110 price that closes unchanged scores −2.4 (the vig). " + signedPct(cp.good) + " to " + signedPct(cp.excellent) + " sustained is good, " + signedPct(cp.excellent) + " to " + signedPct(cp.elite) + " excellent, above " + signedPct(cp.elite) + " elite and short-lived. When the line itself moved, the closing price is carried to our line through the market's own expected tackles. Tackle lines rarely move, so most picks score near the vig and the few that move drive the average."],
-      ["Claimed edge vs the price", "The model's claimed chance minus the book's implied chance at the price taken, averaged over a slice: the edge we said we had."],
+      ["Against the market (log-loss)", "The scoreboard that can say whether the edge is real. Every closing line the model had a number for, picked or not, is scored twice: with the chance the book's own closing price gave it, and with the win chance. Log-loss punishes a confident wrong chance heavily and rewards an honest one; lower is better and a coin flip scores 0.693. If the win chance keeps scoring better than the book's price, with weeks as the unit, the model knows something the price does not. A record needs most of a season to say the same thing."],
+      ["Likely range", "Where the true hit rate behind a record plausibly sits (a 95% interval). 10-4 looks like 71%, but with fourteen bets the truth could be anywhere from the mid 40s to the high 80s. The range also allows for the fact that a week's picks win and lose together, which makes a record worth fewer bets than it counts. Two records whose ranges overlap have not been told apart."],
+      ["Weeks as the unit", "The picks of one week are not independent: every solo Under on the board won 68%, 64% and 53% in weeks 7, 8 and 9, far more spread than luck on separate bets allows. So anything measured on this site (a factor, a rule, the scoreboard) is judged by how it does week after week, not by counting picks."],
+      ["Settled once", "A pick settles on the first final box score that grades it and the result is then frozen, as at the book, which does not reopen a bet for a later stat correction. Corrections to the official count are counted and shown, never applied to the record; the model itself always learns from the corrected stats."],
+      ["Claimed edge vs the price", "The win chance minus the book's implied chance at the price taken, averaged over a slice: the edge we said we had."],
       ["Realised edge vs the price", "The slice's hit rate minus the book's average implied chance on it: the edge that actually showed up. The gap between claimed and realised is the overclaim; read it per slice, because it differs by side, market and position."],
       ["Whole board, market base rate", "How every closing line of a kind resolved, picked or not: if 74% of all Unders on the board hit in a week, a 74% hit rate on our Unders was the market, not the model."],
       ["Lift over the board", "Our hit rate on a kind of pick minus the whole-board rate for that kind: what choosing these lines added. A kind of pick is evidence for the model only where lift and beating the close agree with the record."],
       ["Luck or skill (the luck table)", "The weekly table that puts hit rate, the whole-board rate, lift and beat-the-close side by side, with a verdict: 'we picked well' when the lift is real, 'the market went our way' when the board as a whole resolved our way, and a note when there were too few picks to say. Every post-mortem starts from it."],
-      ["Segment", "A kind of pick: side × market × position (Under combined LB, Over solo CB and so on). Claimed chances are corrected per segment, with recent weeks weighing more (a pick's weight halves every three weeks, so a book that re-prices a market shows in the correction within a couple of weeks), and the record is read per segment, because the model is not equally right everywhere."],
+      ["Segment (kind of pick)", "Side × market × position (Under combined LB, Over solo CB and so on). The record is read per kind, because the model is not equally right everywhere, and no more than two locks or parlay legs of one kind are taken a day. Until week 10 the claimed chance was also corrected per kind; the correction flipped sign week to week and was retired."],
       ["Market watch", "Every closing line on the board, not just our picks: how often the over hit against what the market's own price implied. It says whether the market itself was biased that week."],
-      ["Backtest, miss, held-out season", "On the Model check tab. Every past defender-game predicted using only what was known before it; 'miss' is the average error in tackles. The held-out season is trained on earlier seasons and scored on the latest only, nothing tuned on the games it is scored on: the honest number. Each piece of the model stays only while the model is worse without it."],
+      ["Backtest, miss, deviance", "On the Model check tab. Every past defender-game predicted using only what was known before it. 'Miss' is the average error in tackles; 'deviance' is the proper score for an average and the one a piece of the model is judged on. The final projection is scored season by season with its second model trained on earlier seasons only: the honest number. Every factor is re-tested each morning on the games it moves; one that stops earning its place is flagged for the full test."],
       ["Walk-forward", "Scoring a model only on games after everything it learned from. In-sample numbers (scored on the games it trained on) flatter a model several times over; nothing on this site is reported in-sample without saying so."]]],
     ["My board", [
-      ["Live and official", "While a game is on, a bet on My board is tracked from ESPN's live box score; the morning after, the official stat line replaces it. The two can differ by an assist here and there; only the official one settles the ledger."],
+      ["Live and official", "While a game is on, a bet on My board is tracked from ESPN's live box score; the morning after, the official stat line confirms it. The two can differ by an assist here and there. The site's own record settles a pick once, on the first final box score (see Settled once)."],
       ["On current pace (heading for)", "Where his total is headed: what he has so far plus the model's expected tackles for the part of the game left (the projection already counts the snaps he should play), nudged a little by his rate today. Early tackles say little about the rest of a game, so one tackle in the first quarter moves the estimate by about a tackle, not to twelve. With the money that would mean. A read, not a promise: a player hurt mid-game keeps his estimate until the box score shows it."],
       ["In play", "Money counts toward the day's total only once the game has kicked off, because a bet can still be withdrawn before then. The unstarted column shows what is queued."],
       ["Ledger", "Every week's board kept on this device, with the official result and the grade on each bet, and the running total for the season. Closed weeks fold away; clearing the board archives the week, it never deletes it. Back it up: the ledger lives in the browser only."]]]];

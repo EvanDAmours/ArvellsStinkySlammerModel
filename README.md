@@ -13,8 +13,11 @@ Everything runs on GitHub's servers on a schedule. You don't run anything by han
 | `run.py` | Entry point: `python run.py daily` and `python run.py odds --auto` |
 | `config.py` | Every setting (seasons, betting thresholds, model knobs) in one place |
 | `pipeline/sources.py` | Loads nflverse data (player stats, snaps, schedule, injuries, team stats, play-by-play, depth charts, PFR advanced defence incl. pressures) with fallbacks and a self-check against official tackle totals; ESPN's injury feed (suspensions, injured reserve) merged with the league report; FantasyPros expert-consensus tackle projections as a cross-check |
-| `pipeline/model.py` | Projections: a per-game base and a per-snap base (tackles per snap x expected snap share x expected team snaps) blended, the vacancy rule, stat crews, opportunity volume, depth chart, PFR, run/pass mix, rest, injury report, dome corners; a gradient-boosted second model blended in; the tackle distribution (by position and snap share); line pricing and grading |
-| `pipeline/backtest.py` | Walk-forward test of every predictor on every past game |
+| `pipeline/model.py` | Projections: a per-game base and a per-snap base (tackles per snap x expected snap share x expected team snaps) blended, the game factors switched on in `config.FACTORS`, a gradient-boosted second model blended in; the tackle distribution (by position and snap share); the pricing engine (one chance per line from the book's fair price and the model's own chance), grades and stakes |
+| `pipeline/backtest.py` | Walk-forward test: the final projection out of sample, a daily test of every factor, the fitted spread, calibration |
+| `pipeline/evaluate.py` | The scoreboard: the engine's chance on every closing line scored beside the book's own fair price |
+| `pipeline/linelog.py` | Keeps the model's read of every line at each pull, so any rule can be scored later |
+| `tools/replay_five.py` | Replays a finished week pull by pull under the current rules |
 | `pipeline/odds.py` | Pulls tackle lines from The Odds API and stores timestamped snapshots |
 | `pipeline/grade.py` | Logs picks and grades them against box scores and the closing line |
 | `docs/` | The website (`index.html`) and the data it reads (`docs/data/*.json`) |
@@ -118,22 +121,26 @@ season total from Pro Football Reference works).
 
 ## Confidence grades
 
-Every priced line gets a lock score (0-100) and a grade: **A** (72+), **B** (55+) or **C**. The score blends the
-expected return, the model's own probability for the side, how often the player has cleared the line this season,
-and how many games of data he has; a role-change or outlier-fade signal adds a bonus. Nothing in the score comes
-from the market agreeing with the pick: the edge is what the market has not priced. Weights are in `config.py`.
-The records bar on both tabs shows the A, B and C records, and the Track record tab has a full "Record by grade"
-block (hit rate, units, return per bet, units at the suggested stake), so the grade itself is tested: if A does
-not beat C over time, the weights are wrong. A lock-eligibility checklist, computed without any reference to the market, keeps locks and
+Every line gets one win chance: the book's fair chance (its two-way price with the margin out) moved half of the
+way to the model's own chance. A line is a **pick** when the bet still breaks even with the model's disagreement
+counted at a quarter (the cautious edge is zero or better). Grades: **A** needs a cautious edge of 2% or more, the
+model's own chance at 70% or more and a clear lock checklist; **B** the cautious edge of 2%; **C** is a pick short
+of that. The lock score is the model's own chance out of 100. Nothing in a grade can improve because the market
+agrees with the pick (a test enforces it): the edge is what the market has not priced. Settings are in `config.py`
+(`ENGINE`, `STAKE`). The Track record tab tests the grades themselves (each record with its likely range) and
+scores the win chance against the book's own closing price on every line ("Against the market").
+A lock-eligibility checklist, computed without any reference to the market, keeps locks and
 parlay legs to players the model is reliable on: never a lock when he is in a new role (a part-timer who just
-played a starter's snaps), a reduced role, back from an absence, in his first game for a new team, has fewer than
+played a starter's snaps), the next man up for a regular who is out, a reduced role, back from an absence, in his first game for a new team, has fewer than
 three games in his current role, or is listed questionable. Each reason is tagged on the card; the pick can still be
 played at its grade. The Model check tab's "Where the model is weakest" table watches these situations daily.
 
 ## The model log
 
-`MODEL_LOG.md` is the project's memory: every change with its evidence, weekly post-mortems, ideas tried and
-rejected, and pitfalls. Read it before changing anything and append to it after.
+`MODEL_LOG.md` is the project's memory: how the model works now, the rules of evidence, a decision register (every
+live rule with its evidence and what would revert it), a register of everything tried and rejected, the open
+issues, the latest post-mortem and the pitfalls. `MODEL_LOG_ARCHIVE.md` holds the history behind it (earlier
+research rounds, post-mortems and changelog entries). Read the log before changing anything and append to it after.
 
 ## Changing settings
 

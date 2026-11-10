@@ -1,13 +1,13 @@
 """Projection model and bet pricing.
 
-What the model does (each piece was tested walk-forward before it was kept):
-  1. Season-to-date tackles per game, shrunk lightly toward last season's rate (or a position prior).
-  2. A small point-spread tilt: underdog defenses stay on the field longer.
-  3. Stat-crew factor for the stadium: crews that split tackles into assists raise combined
-     tackles and cut solos. Every venue's rate is measured from the data itself.
-  4. A role bump for a backup when a regular at his position group is out.
-  5. A count distribution tighter than Poisson for linebackers (measured), used to price lines.
+The projection: a factor model (a per-game and a per-snap base, then the game factors switched on in config.FACTORS) and a
+gradient-boosted corrector trained on every finished game, blended (config.GBM). Counts are negative binomial around it.
+
+The pricing engine: for every posted line, the book's fair chance (its two-way price with the vig out) moved by a fraction of
+the model's disagreement, in log-odds (config.ENGINE). That one probability gives the return, the pick, the grade and the stake.
+MODEL_LOG.md holds the evidence for every piece and what was tried and dropped.
 """
+import functools
 import math
 
 import numpy as np
@@ -251,6 +251,7 @@ def add_history_features(H):
     else:
         H["promoted"], H["demoted"] = False, False
     H["comb_prev_raw"] = g.comb.cumsum() - H.comb
+    H["solo_prev_raw"] = g.solo_t.cumsum() - H.solo_t      # the solo share without the stat-crew adjustment (config.FACTORS crew off)
     H["comb_prev"] = g.comb_adj.cumsum() - H.comb_adj
     H["solo_prev"] = g.solo_adj.cumsum() - H.solo_adj
     H["last"] = g.comb.shift(1)
@@ -637,22 +638,23 @@ def dome_factor(F):
     return pd.Series(np.where((F.group == "CB") & roof.isin(["dome", "closed"]), C.DOME_CB, 1.0), index=F.index)
 
 
-def outlier_damp_factor(F):
+def outlier_damp_factor(F, raw=False):
     """After a game far above or below his base, in a settled role, the season average still leans toward that game."""
     c = C.OUTLIER_DAMP
     last = pd.to_numeric(_col_or(F, "last", np.nan), errors="coerce")
-    base = _base_for_outliers(F)
+    base = _base_for_outliers(F, raw)
     settled = snap_jump(F).between(0.8, 1.25)
     hi = (last - base >= C.FADE_GAP) & settled; lo = (base - last >= C.FADE_GAP) & settled
     return pd.Series(np.where(hi.fillna(False), c["after_high"], np.where(lo.fillna(False), c["after_low"], 1.0)), index=F.index)
 
 
-def _base_for_outliers(F):
-    """The shrunk per-game base, recomputed cheaply (same formula as project_frame's base)."""
+def _base_for_outliers(F, raw=False):
+    """The shrunk per-game base, recomputed cheaply (same formula as project_frame's base; raw = without the stat-crew adjustment)."""
     k = F.group.map(C.SHRINK_GAMES_BY_GROUP).fillna(C.SHRINK_GAMES)
-    prior = np.where(F.ps_games.fillna(0) >= 4, F.ps_avg, F.group.map(C.POS_PRIOR).fillna(4.0))
+    prev, ps = (F.comb_prev_raw, F.ps_avg_raw) if raw else (F.comb_prev, F.ps_avg)
+    prior = np.where(F.ps_games.fillna(0) >= 4, ps, F.group.map(C.POS_PRIOR).fillna(4.0))
     n = F.n_prev.astype(float)
-    return pd.Series(np.where(n + k > 0, (F.comb_prev + k * prior) / np.maximum(n + k, 1e-9), prior), index=F.index)
+    return pd.Series(np.where(n + k > 0, (prev + k * prior) / np.maximum(n + k, 1e-9), prior), index=F.index)
 
 
 def rest_factor(F):
@@ -660,10 +662,18 @@ def rest_factor(F):
     return pd.Series(np.where(F.get("rest", pd.Series(7, index=F.index)).fillna(7) >= r["bye_days"], r["bye"], 1.0), index=F.index)
 
 
-def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_snap=True, use_volume=True, use_depth=True, use_pfr=True, use_mix=True, use_rest=True, use_injury=True, use_new_role=True, use_role_shift=True,
-                  use_persnap=True, use_vacancy=True, use_dome=True, use_solo_drift=True, use_outlier_damp=True, parts=None, pfr_typ=None):
-    """(base, mu, mu_solo). `parts`, when a dict, receives every piece of the build per row (the base, the per-snap view,
-    each game factor as a multiplier, the solo share) so a card can show how the number was made; the numbers are the same."""
+FACTOR_KEYS = ("tilt", "crew", "role", "snap", "volume", "depth", "pfr", "mix", "rest", "injury", "new_role", "role_shift", "persnap", "vacancy", "dome", "solo_drift", "outlier_damp")
+
+
+def project_frame(F, k=None, use_tilt=None, use_crew=None, use_role=None, use_snap=None, use_volume=None, use_depth=None, use_pfr=None, use_mix=None, use_rest=None, use_injury=None, use_new_role=None, use_role_shift=None,
+                  use_persnap=None, use_vacancy=None, use_dome=None, use_solo_drift=None, use_outlier_damp=None, parts=None, pfr_typ=None):
+    """(base, mu, mu_solo) of the factor model. A factor left as None follows config.FACTORS (the model as it runs); the backtest
+    passes True or False to test one. `parts`, when a dict, receives every piece of the build per row (the base, the per-snap
+    view, each game factor as a multiplier, the solo share); the numbers are the same."""
+    on = lambda v, key: bool(C.FACTORS.get(key, True)) if v is None else bool(v)
+    use_tilt, use_crew, use_role, use_snap, use_volume, use_depth = on(use_tilt, "tilt"), on(use_crew, "crew"), on(use_role, "role"), on(use_snap, "snap"), on(use_volume, "volume"), on(use_depth, "depth")
+    use_pfr, use_mix, use_rest, use_injury, use_new_role, use_role_shift = on(use_pfr, "pfr"), on(use_mix, "mix"), on(use_rest, "rest"), on(use_injury, "injury"), on(use_new_role, "new_role"), on(use_role_shift, "role_shift")
+    use_persnap, use_vacancy, use_dome, use_solo_drift, use_outlier_damp = on(use_persnap, "persnap"), on(use_vacancy, "vacancy"), on(use_dome, "dome"), on(use_solo_drift, "solo_drift"), on(use_outlier_damp, "outlier_damp")
     k = F.group.map(C.SHRINK_GAMES_BY_GROUP).fillna(C.SHRINK_GAMES) if k is None else k
     if use_crew:
         prev, ps = F.comb_prev, F.ps_avg
@@ -695,7 +705,7 @@ def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_sn
     if use_dome:
         xf["dome"] = dome_factor(F).values
     if use_outlier_damp:
-        xf["damp"] = outlier_damp_factor(F).values
+        xf["damp"] = outlier_damp_factor(F, raw=not use_crew).values
     for v in xf.values():
         extra = extra * v
     # the per-game core: season rate x snap trend x role bump x the share-related corrections
@@ -726,7 +736,8 @@ def project_frame(F, k=None, use_tilt=True, use_crew=True, use_role=True, use_sn
             core = np.where(rule, wv * ps_last.values + (1 - wv) * core, core)
             vac_on = np.asarray(rule, dtype=bool)
     m_s = C.SOLO_SHARE_PSEUDO
-    solo_share = (F.solo_prev + m_s * F.group.map(C.POS_SOLO_SHARE).fillna(0.6)) / (F.comb_prev + m_s)
+    s_prev, c_prev = (F.solo_prev, F.comb_prev) if use_crew or "solo_prev_raw" not in F else (F.solo_prev_raw, F.comb_prev_raw)   # crew off: his raw solo share
+    solo_share = (s_prev + m_s * F.group.map(C.POS_SOLO_SHARE).fillna(0.6)) / (c_prev + m_s)
     if use_solo_drift:
         solo_share = solo_share * pd.to_numeric(_col_or(F, "solo_drift", 1.0), errors="coerce").fillna(1.0)
     mu = core * tilt * crew_c * volume * extra
@@ -765,7 +776,7 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
     agg = done.groupby("player_id").agg(
         player=("player", "last"), name_key=("name_key", "last"), team=("team", "last"), group=("group", "last"),
         n_prev=("comb", "size"), comb_prev=("comb_adj", "sum"), comb_prev_raw=("comb", "sum"),
-        solo_prev=("solo_adj", "sum"), pct_prev=("def_pct", "mean"), **sums).reset_index()
+        solo_prev=("solo_adj", "sum"), solo_prev_raw=("solo_t", "sum"), pct_prev=("def_pct", "mean"), **sums).reset_index()
     agg = agg.rename(columns={c: c + "_prev" for c in sums})
     last_dc = done.sort_values("week").groupby("player_id").dc_starter.last() if "dc_starter" in done.columns else None
     lasts = done.sort_values("week").groupby("player_id").agg(last=("comb", "last"), pct_last=("def_pct", "last"), last_week=("week", "last"),
@@ -901,6 +912,85 @@ def upcoming_rows(H, sched, injuries, season, week, vol=None, dc=None, pbp_start
     return F
 
 
+SIGNALS = {   # signal -> (short label for the card, what it means in football terms). Each is switched to neutral in turn and the FINAL number rebuilt
+    "snaps": ("Snap share", "his snap share in his recent games against his season share"),
+    "role": ("Next man up", "a regular at his position is out and he is the backup who steps in"),
+    "vacancy": ("Teammate out", "a regular at his position group is out or gone"),
+    "tilt": ("Spread", "point spread: an underdog's defence faces more plays"),
+    "volume": ("Opponent volume", "tackle chances expected this game (opponent carries + completions + sacks) against what he has faced"),
+    "mix": ("Run/pass mix", "this opponent's run/pass mix against the mix he has faced"),
+    "depth": ("Depth chart", "promoted or demoted on the latest depth chart"),
+    "pfr": ("Coverage", "how often he is targeted in coverage and how often he misses tackles"),
+    "dome": ("Indoors", "corners run higher indoors"),
+    "last": ("Last game", "his last game against his season average"),
+    "injury": ("Injury report", "listed questionable or limited in practice"),
+    "rest": ("Rest", "days since his team's last game"),
+    "crew": ("Stat crew", "how this stadium's stat crew has credited tackles"),
+    "matchup": ("Matchup", "tackles this opponent has allowed to his position group"),
+    "absence": ("Absence", "weeks since his last game, or a new team"),
+}
+
+
+def _neutral(F, key, typ=None):
+    """The feature rows with one signal switched to neutral: as if it said nothing about this game."""
+    G = F.copy()
+    n = G.n_prev.astype(float).clip(lower=1)
+    has = lambda *cols: all(c in G for c in cols)
+    if key == "snaps" and has("pct_prev"):
+        for c in ("pct_last", "pct_last3"):
+            if c in G:
+                G[c] = G.pct_prev.where(G.pct_prev.notna(), G[c])
+    elif key == "role":
+        G["role_signal"] = False
+    elif key == "vacancy":
+        G["vacancy"] = False
+    elif key == "tilt":
+        G["spread_dog"] = 0.0
+    elif key == "volume" and has("exp_opps", "opps_prev_mean"):
+        G["exp_opps"] = G.opps_prev_mean.where(G.opps_prev_mean.notna(), G.exp_opps)
+    elif key == "mix" and has("exp_runs", "exp_comps", "runs_faced_prev", "comps_faced_prev"):
+        G["exp_runs"] = (G.runs_faced_prev / n).where(G.runs_faced_prev.notna(), G.exp_runs)
+        G["exp_comps"] = (G.comps_faced_prev / n).where(G.comps_faced_prev.notna(), G.exp_comps)
+    elif key == "depth":
+        G["promoted"], G["demoted"] = False, False
+    elif key == "pfr":
+        if has("targets_prev") and typ is not None and typ == typ and typ > 0:
+            db = G.group.isin(["CB", "S"]) & G.targets_prev.notna()
+            G.loc[db, "targets_prev"] = typ * n[db]
+        if has("missed_prev", "pfr_comb_prev"):
+            ok, base = G.missed_prev.notna(), C.PFR["miss_base"]
+            G.loc[ok, "missed_prev"] = base / (1 - base) * G.pfr_comb_prev.fillna(0)[ok]
+    elif key == "dome":
+        G["roof"] = ""
+    elif key == "last" and has("last", "comb_prev_raw"):
+        G["last"] = (G.comb_prev_raw / n).where(G.n_prev > 0, G["last"])
+    elif key == "injury":
+        G["status"], G["practice"] = "", ""
+    elif key == "rest":
+        G["rest"] = 7
+    elif key == "crew":
+        G["crew_comb"], G["crew_solo"] = 1.0, 1.0
+    elif key == "matchup":
+        G["allowed_rel"] = 1.0
+    elif key == "absence":
+        G["gap_weeks"], G["team_changed"] = 1, False
+    return G
+
+
+def signal_effects(F, final, scale, gbm, typ=None):
+    """How far each signal moved the final projection: the number rebuilt with that signal neutral (through the factor
+    model and the corrector both), as final / rebuilt - 1 per row. This is what the card's Game logic shows: with the
+    corrector at 80% of the number, a factor's own multiplier says little about what reached the projection."""
+    out = {}
+    fin = np.asarray(final, dtype=float)
+    for key in SIGNALS:
+        G = _neutral(F, key, typ)
+        mu = project_frame(G, pfr_typ=typ)[1] * scale
+        cf = blend_gbm(mu, gbm(gbm_features(G, mu))) if gbm is not None else np.asarray(mu, dtype=float)
+        out[key] = fin / np.clip(np.asarray(cf, dtype=float), 1e-6, None) - 1
+    return out
+
+
 def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
     """scale: the backtest's level calibration (actual / predicted), applied to the projected means.
     gbm: the trained corrector's predict function; its blend moves the combined projection and the solo one in step."""
@@ -924,23 +1014,28 @@ def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
         F = F.assign(proj_factor=mu.values, proj_gbm=np.asarray(g))
         mu, mu_solo = blended, mu_solo * ratio
     F = F.assign(base=base.values, proj=mu.values, proj_solo=mu_solo.values)
-    # how the number was built, piece by piece, for the card (logic_steps): every factor as the multiplier it applied
-    for k_, v in parts.items():
-        F["lf_" + k_] = v
-    F["lf_scale"] = float(scale) if np.isscalar(scale) else np.asarray(scale, dtype=float)
-    F["lf_scale_solo"] = by_grp.fillna(scale_solo).values
-    F["lf_official"] = official
-    F["lf_gbm"] = (mu.values / np.clip(mu_raw.values * (float(scale) if np.isscalar(scale) else 1.0), 1e-6, None)) if gbm is not None else 1.0
+    # how the number was built, for the card (logic_steps): the pieces of the base (lf_*), and how far each signal moved the
+    # final number (fx_*: the projection rebuilt with that signal neutral)
+    extra = {"lf_" + k_: v for k_, v in parts.items()}
+    extra["lf_scale"] = float(scale) if np.isscalar(scale) else np.asarray(scale, dtype=float)
+    extra["lf_scale_solo"] = by_grp.fillna(scale_solo).values
+    extra["lf_official"] = official
+    extra["lf_gbm"] = (mu.values / np.clip(mu_raw.values * (float(scale) if np.isscalar(scale) else 1.0), 1e-6, None)) if gbm is not None else 1.0
+    try:
+        extra.update({"fx_" + k_: v for k_, v in signal_effects(F, mu.values, scale, gbm, typ).items()})
+    except Exception as e:  # noqa: BLE001    (the card's explanation must never stop the projections)
+        print(f"projections: signal effects skipped ({type(e).__name__}: {e})")
+    F = pd.concat([F.drop(columns=[c for c in extra if c in F.columns]), pd.DataFrame(extra, index=F.index)], axis=1)      # one join: many single inserts fragment the frame
     F["phi"] = F.group.map(phi_by_group).fillna(1.0)
     F["share_pred"] = share_pred(F).values
     F["rate_clean"] = persnap_rate(F).values
-    F["vacancy_rule"] = vacancy_rule(F).values
+    F["vacancy_rule"] = (vacancy_rule(F) & bool(C.FACTORS.get("vacancy", True))).values
     # a lineman's profile for the card (PFR pressures per game, prior games): no model effect (research round 5 rejected it)
     F["press_pg"] = (pd.to_numeric(_col_or(F, "press_prev", np.nan), errors="coerce") / F.n_prev.astype(float).clip(lower=1)).where(F.group == "DL").values
     low = F.share_pred.fillna(_col_or(F, "pct_prev", 1.0)).fillna(1.0) < C.PHI_SHARE_SPLIT
     low_phi = F.group.map({g: phi_by_group.get(f"{g}:low") for g in F.group.unique()})
     F.loc[low & low_phi.notna(), "phi"] = low_phi[low & low_phi.notna()]
-    # solo tackles are less spread than combined ones (var/mean 1.05-1.27 vs 1.18-1.49): their own dispersion
+    # solo tackles are less spread than combined ones: their own dispersion
     F["phi_solo"] = F.group.map({g: phi_by_group.get(f"{g}|solo") for g in F.group.unique()})
     low_solo = F.group.map({g: phi_by_group.get(f"{g}:low|solo") for g in F.group.unique()})
     F.loc[low & low_solo.notna(), "phi_solo"] = low_solo[low & low_solo.notna()]
@@ -951,17 +1046,21 @@ def finalize_projections(F, phi_by_group, k=None, scale=1.0, gbm=None):
     for c_ in fl.columns:
         F[c_] = fl[c_].values
     F["snap_jump"] = snap_jump(F).values
-    F.loc[F.new_role, "phi"] = F.phi + C.NEW_ROLE["phi_bump"]     # his count is far more spread than a settled player's
+    # a new role spreads his count: the extra spread the backtest measured around the final projection, else the config's
+    bump = float(phi_by_group.get("__new_role_bump__", C.NEW_ROLE["phi_bump"])) if isinstance(phi_by_group, dict) else C.NEW_ROLE["phi_bump"]
+    bump_solo = float(phi_by_group.get("__new_role_bump_solo__", C.NEW_ROLE.get("phi_bump_solo", 0.25))) if isinstance(phi_by_group, dict) else C.NEW_ROLE.get("phi_bump_solo", 0.25)
+    F.loc[F.new_role, "phi"] = F.phi + bump
     F["fair_line"] = [fair_line(m, p) for m, p in zip(F.proj, F.phi)]
-    F["fair_line_solo"] = [fair_line(m, p) for m, p in zip(F.proj_solo, F.phi_solo)]
     # assists: the combined projection less the solo one; their own dispersion from the backtest when it has one
     F["proj_ast"] = (F.proj - F.proj_solo).clip(lower=0.05)
     F["phi_ast"] = F.group.map({g: phi_by_group.get(f"{g}|ast") for g in F.group.unique()}) if isinstance(phi_by_group, dict) else np.nan
+    low_ast = F.group.map({g: phi_by_group.get(f"{g}:low|ast") for g in F.group.unique()}) if isinstance(phi_by_group, dict) else pd.Series(np.nan, index=F.index)
+    F.loc[low & low_ast.notna(), "phi_ast"] = low_ast[low & low_ast.notna()]
     F["phi_ast"] = F.phi_ast.fillna(F.phi)
     F.loc[F.venue == "NEUTRAL", "phi_ast"] = F.phi_ast + 0.15
-    # a new role spreads his solo and assist counts too (new-role rows: solo var/mean 1.44 against 1.18 used)
-    F.loc[F.new_role, "phi_solo"] = F.phi_solo + C.NEW_ROLE.get("phi_bump_solo", 0.25)
-    F.loc[F.new_role & F.phi_ast.notna(), "phi_ast"] = F.phi_ast + C.NEW_ROLE.get("phi_bump_solo", 0.25)
+    F.loc[F.new_role, "phi_solo"] = F.phi_solo + bump_solo
+    F.loc[F.new_role & F.phi_ast.notna(), "phi_ast"] = F.phi_ast + bump_solo
+    F["fair_line_solo"] = [fair_line(m, p) for m, p in zip(F.proj_solo, F.phi_solo)]
     F["fair_line_ast"] = [fair_line(m, p) for m, p in zip(F.proj_ast, F.phi_ast)]
     F["season_avg"] = F.comb_prev_raw / F.n_prev.clip(lower=1)
     return F
@@ -979,46 +1078,86 @@ def _log(row, col):
 
 
 def claimed_prob(p_side, adj=0.0):
-    """A pick's claimed chance: shrunk toward even (never toward the book), then corrected by how claims like it have
-    resolved (segment calibration, our own graded picks)."""
+    """Legacy (picks logged before the engine, through week 9 of 2026, that carry no claimed chance): the old pricer's chance shrunk toward even."""
     return float(np.clip(0.5 + C.CLAIM_SHRINK * (float(p_side) - 0.5) + float(adj), 0.05, 0.95))
 
 
-def segment_adjust(segments, side, kind, group):
-    """Correction to a pick's claimed chance from the graded record of picks like it: finest segment with enough
-    picks (side x market x position, then side x market, then side). `kind` is 'solo', 'assists' or 'combined'
-    (True/False still read as solo/combined). Returns (adjustment, segment name)."""
-    if not segments:
-        return 0.0, ""
-    c = C.SEGMENT_CAL
-    mk = kind if isinstance(kind, str) else ("solo" if kind else "combined")
-    for key in (f"{side} {mk} {group}", f"{side} {mk}", f"{side}"):
-        seg = segments.get(key)
-        if seg and seg.get("n", 0) >= c["min_n"]:
-            n = float(seg.get("n_eff", seg["n"]))      # recency-weighted count when the calibration carries one
-            w = n / (n + c["k"])
-            return float(np.clip(w * (seg["hit"] - seg["claimed"]), -c["cap"], c["cap"])), key
-    return 0.0, ""
+# ---- the engine (config.ENGINE): one probability per line
+def fair_over(over_odds, under_odds):
+    """The book's fair chance of the Over from its own two-way price: each side's implied chance over their sum (the vig
+    taken out in proportion). NaN when the book quotes one side only: a one-sided price holds an unknown vig."""
+    if over_odds is None or under_odds is None or pd.isna(over_odds) or pd.isna(under_odds):
+        return float("nan")
+    po, pu = 1 / american_to_decimal(over_odds), 1 / american_to_decimal(under_odds)
+    return po / (po + pu)
 
 
-def lock_score(ev, p_side, consistency, n_games, signal, adj=0.0):
-    """0-100 confidence in a pick from the model's own evidence only: expected return at the price, the model's
-    probability for the side, how often the player cleared the line this season, games of data, and whether a
-    role-change or outlier-fade signal backs the pick. Weights in config.LOCK_WEIGHTS; tested on the Track record tab."""
-    w = C.LOCK_WEIGHTS
-    ev_part = float(np.clip(ev / C.LOCK_EV_FULL, 0, 1))
-    lo, hi = C.LOCK_EV_FADE
-    if ev > lo:                                   # too good to be true: the biggest disagreements with the market are mostly model error
-        ev_part = float(np.clip((hi - ev) / (hi - lo), 0, 1))
-    model_part = float(np.clip((claimed_prob(p_side, adj) - 0.5) / (C.LOCK_MODEL_FULL - 0.5), 0, 1))
-    cons_part = 0.5 if consistency is None or np.isnan(consistency) else float(consistency)
-    n_part = float(np.clip(n_games / 6.0, 0, 1))
-    score = 100 * (w["ev"] * ev_part + w["model"] * model_part + w["consistency"] * cons_part + w["sample"] * n_part + w["signal"] * (1.0 if signal else 0.0))
-    return float(np.clip(score, 0, 100))
+def _logit(p):
+    p = min(max(float(p), 1e-4), 1 - 1e-4)
+    return math.log(p / (1 - p))
+
+
+def engine_chance(p_model, p_fair, beta):
+    """The book's fair chance moved by `beta` of the model's disagreement, in log-odds. beta 0 is the book, 1 the model."""
+    z = _logit(p_fair) + beta * (_logit(p_model) - _logit(p_fair))
+    return 1 / (1 + math.exp(-z))
+
+
+@functools.lru_cache(maxsize=200000)
+def _implied_mean(p_over_target, phi, line):
+    lo, hi = 0.05, 40.0
+    for _ in range(50):
+        mid = (lo + hi) / 2
+        if p_over(mid, phi, line) < p_over_target:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2
+
+
+def implied_mean(p_over_target, phi, line):
+    """The mean of a count with spread phi whose chance of clearing `line` is `p_over_target`: a chance read back as a
+    number of tackles (the book's own expectation from its fair price, or the engine's from its win chance)."""
+    if p_over_target is None or pd.isna(p_over_target) or pd.isna(phi) or pd.isna(line):
+        return float("nan")
+    return _implied_mean(round(float(np.clip(p_over_target, 1e-4, 1 - 1e-4)), 4), round(float(phi), 3), float(line))
+
+
+def kelly_fraction(p, dec):
+    """The Kelly fraction of a bet with chance p at decimal odds dec (0 when there is no edge)."""
+    if dec is None or pd.isna(dec) or dec <= 1 or p is None or pd.isna(p):
+        return 0.0
+    b = float(dec) - 1
+    return max(0.0, (float(p) * b - (1 - float(p))) / b)
+
+
+def kelly_stake(p_low, dec):
+    """Units to stake on a pick before the slate is sized (config.STAKE): a fraction of the Kelly fraction of the
+    bankroll AT THE CAUTIOUS CHANCE, clipped; None when the price is missing. A pick that only just survives the cautious
+    test gets the minimum. The correlation divisor and the game, kind and slate caps come later (grade.size_stakes)."""
+    c = C.STAKE
+    if dec is None or pd.isna(dec) or dec <= 1 or p_low is None or pd.isna(p_low) or float(p_low) * float(dec) - 1 < C.ENGINE["pick_edge_low"] - 1e-12:
+        return None                                   # no price, or not a pick at the cautious chance
+    return float(np.clip(c["kelly_fraction"] * kelly_fraction(p_low, dec) * c["bankroll"], c["min"], c["max"]))
+
+
+def engine_grade(edge_low, p_model_side, blocked, market=None):
+    """A, B or C for a pick, from two numbers that cannot improve when the book agrees more: the cautious edge and the
+    model's own chance. A: cautious edge of 2%+, the model's own chance 70%+, the lock checklist clear, a market that can
+    carry an A. B: cautious edge of 2%+. C: a pick short of that. None when it is not a pick."""
+    e = C.ENGINE
+    if edge_low is None or pd.isna(edge_low) or edge_low < e["pick_edge_low"]:
+        return None
+    if edge_low >= e["b_edge_low"]:
+        if p_model_side >= e["a_model"] and not blocked and (market is None or market in C.A_GRADE_MARKETS):
+            return "A"
+        return "B"
+    return "C"
 
 
 def grade_of(score):
-    return "A" if score >= C.GRADE_BARS["A"] else "B" if score >= C.GRADE_BARS["B"] else "C"
+    """Legacy name: the score bar of an A (the grade itself needs the cautious edge and the checklist: engine_grade)."""
+    return "A" if score >= C.LOCK_MIN_SCORE else "B"
 
 
 def _num(v, d=np.nan):
@@ -1029,16 +1168,18 @@ def _num(v, d=np.nan):
     return d if np.isnan(v) else v
 
 
-def rundown(p, line, side, kind, mu_model, mu, p_side, claim, ev, pick, why, fl, new_role, in_role_n, log_raw):
+def rundown(p, line, side, kind, mu_model, eng, pick, why, fl, new_role, in_role_n, log_raw):
     """A templated read-up of one line from the numbers the pricer used: who he is, his recent games, the model's
-    read, what the book's line implies about his snaps, what decides it, and the nudges. Every sentence is a
-    number restated; nothing here is a view the data does not hold. `kind`: 'solo', 'assists' or 'combined'."""
+    read against the book's price, what the book's line implies about his snaps, what decides it, and the context. Every
+    sentence is a number restated; nothing here is a view the data does not hold. `kind`: 'solo', 'assists' or 'combined'.
+    eng: dict(p_model, fair, p, p_low, ev, edge_low, mkt_mean) for this side."""
     kind = kind if isinstance(kind, str) else ("solo" if kind else "combined")
     solo = kind == "solo"; ast = kind == "assists"
     stat = {"solo": "solo tackles", "assists": "assists"}.get(kind, "tackles + assists")
-    n = int(_num(p.get("n_prev"), 0)); grp = str(p.get("group", "")); team = str(p.get("team", "")); opp = str(p.get("opp_team", ""))
-    avg = (_num(p.get("solo_prev")) if solo else (_num(p.get("comb_prev_raw")) - _num(p.get("solo_prev"))) if ast else _num(p.get("comb_prev_raw"))) / max(n, 1) if n else np.nan
-    share = _num(p.get("pct_prev")); last_sh = _num(p.get("pct_last")); exp_sh = _num(p.get("share_pred")); rate = _num(p.get("rate_clean")); tsn = _num(p.get("tsnaps_exp"))
+    n = int(_num(p.get("n_prev"), 0)); grp = str(p.get("group", "")); team = str(p.get("team", ""))
+    solo_sum = _num(p.get("solo_prev_raw"), _num(p.get("solo_prev")))
+    avg = (solo_sum if solo else (_num(p.get("comb_prev_raw")) - solo_sum) if ast else _num(p.get("comb_prev_raw"))) / max(n, 1) if n else np.nan
+    share = _num(p.get("pct_prev")); last_sh = _num(p.get("pct_last")); exp_sh = _num(p.get("share_pred")); rate = _num(p.get("rate_clean"))
     ps_g = int(_num(p.get("ps_games"), 0)); ps_avg = _num(p.get("ps_avg_raw"))
     out = []
     pos = {"CB": "corner", "S": "safety", "LB": "linebacker", "DL": "lineman"}.get(grp, grp)
@@ -1057,8 +1198,11 @@ def rundown(p, line, side, kind, mu_model, mu, p_side, claim, ev, pick, why, fl,
         out.append(f"Last {len(tail)} game{'s' if len(tail) != 1 else ''}: {recent}{' of the snaps' if sh and len(sh) == len(tail) else ''}.")
     if not np.isnan(exp_sh) and not np.isnan(last_sh) and abs(exp_sh - last_sh) >= 0.15:
         out.append(f"Expected at {exp_sh:.0%} of the snaps tonight against {last_sh:.0%} last game.")
-    # the model's read
-    out.append(f"The model's own number is {mu_model:.1f}; priced from {mu:.1f} after blending with the line. {side} {line:g}: model {p_side:.0%}, claimed {claim:.0%} after shrinking, {ev:+.0%} expected return at this price.")
+    # the model's read against the book's price
+    mm = eng.get("mkt_mean")
+    out.append(f"The model's own number is {mu_model:.1f}, which gives the {side.lower()} of {line:g} a {eng['p_model']:.0%} chance. The book's price, with its margin taken out, says {eng['fair']:.0%}"
+               + (f" (as a number of tackles: {mm:.1f})" if mm is not None and mm == mm else "") + f". Counting the model's disagreement at half its size, the win chance is {eng['p']:.0%}: "
+               f"{eng['ev']:+.0%} at this price. Counted at a quarter (the cautious test a pick must pass): {eng['p_low']:.0%}, {eng['edge_low']:+.0%}.")
     # the book's reading: the snap share at which the model's number would meet the line (the per-snap part scales with share)
     if not np.isnan(exp_sh) and exp_sh > 0.05 and mu_model > 0.05 and not np.isnan(rate):
         implied = float(np.clip(exp_sh * line / mu_model, 0.05, 1.0))
@@ -1070,16 +1214,16 @@ def rundown(p, line, side, kind, mu_model, mu, p_side, claim, ev, pick, why, fl,
     if lg:
         k = sum((x > line) if side == "Over" else (x < line) for x in lg)
         out.append(f"He landed on the {side.lower()} of {line:g} in {k} of his {len(lg)} games this season.")
-    # nudges
+    # context
     nud = []
     st = str(p.get("status", "")).lower()
     if st == "questionable":
-        nud.append("listed questionable (priced 8% down; the bet voids if he sits)")
+        nud.append("listed questionable (the bet voids if he sits)")
     gone = str(p.get("gone_regulars") or "").strip()
     if gone and gone.lower() != "nan":
         nud.append(f"gone at his position: {gone}")
-    elif _flag(p.get("vacancy_rule", False)) or _flag(p.get("vacancy", False)):
-        nud.append("a regular at his position is out or gone, so his share is read from his last game")
+    elif _flag(p.get("vacancy", False)):
+        nud.append("a regular at his position is out or gone")
     if new_role:
         nud.append("a part-timer who just played a starter's snaps; his history describes someone else")
     if fl.get("reduced_role"):
@@ -1094,22 +1238,19 @@ def rundown(p, line, side, kind, mu_model, mu, p_side, claim, ev, pick, why, fl,
         nud.append("the opposing lead rusher is out")
     dc = str(p.get("dc_status", ""))
     if dc in ("promoted", "demoted"):
-        nud.append(f"{dc} on the latest depth chart ({'+2' if dc == 'promoted' else '-10'}% in the number)")
-    crew = _num(p.get("crew_solo") if solo else p.get("crew_comb"), 1.0)
-    if abs(crew - 1) >= 0.02:
-        nud.append(f"this stadium's stat crew credits {stat} {abs(crew - 1):.0%} {'high' if crew > 1 else 'low'}")
+        nud.append(f"{dc} on the latest depth chart")
     roof = str(p.get("roof", "")).lower()
     if grp == "CB" and roof in ("dome", "closed"):
-        nud.append("indoors: corners run 5% higher")
+        nud.append("indoors, where corners run higher")
     rest = _num(p.get("rest"))
     if not np.isnan(rest) and rest >= 10:
-        nud.append("off a bye (defences run 4% under their average)")
+        nud.append("off a bye")
     fp = _num(p.get("fp_rel_solo") if solo else p.get("fp_rel_comb"))
     if not np.isnan(fp) and abs(fp) >= 0.08:
         nud.append(f"the outside expert consensus sits {fp:+.0%} from its usual relation to this model for him")
     if nud:
         out.append("Also: " + "; ".join(nud) + ".")
-    out.append(("Pick: " if pick in ("Over", "Under") else "Pass: ") + why + ".")
+    out.append(("Pick: " if pick in ("Over", "Under") else "No pick: ") + why + ".")
     return " ".join(out)
 
 
@@ -1146,98 +1287,50 @@ def parlay_corr_ratio(legs):
     return float(np.clip(hit_all.mean() / prod, *c["clip"]))
 
 
-def kelly_stake(claim, dec):
-    """Units to stake on a pick (config.STAKE): a fraction of the Kelly fraction of the bankroll, from the claimed
-    chance and the decimal price; None when there is no edge or no price. The per-game cap is applied later
-    (grade.cap_stakes), once every pick on the game is known."""
-    c = C.STAKE
-    if dec is None or pd.isna(dec) or dec <= 1 or claim is None or pd.isna(claim):
-        return None
-    b = float(dec) - 1
-    f = (float(claim) * b - (1 - float(claim))) / b
-    if f <= 0:
-        return None
-    return float(np.clip(c["kelly_fraction"] * f * c["bankroll"], c["min"], c["max"]))
-
-
-def blend_mean(mu_model, mkt_line, kind, blend=None):
-    """The pricing mean: the model's number and the consensus line, each level-corrected, weighted by the market's
-    estimated blend (pipeline/blend.py) or the default line weight. NaN when the model has no number (never 0.05)."""
-    if mu_model is None or not np.isfinite(float(mu_model)):
-        return float("nan")
-    b = (blend or {}).get(kind) if blend else None
-    if b:
-        w, bm, bl = float(b.get("w", C.LINE_WEIGHT)), float(b.get("bias_model", 0.0)), float(b.get("bias_line", 0.0))
-    else:
-        w, bm, bl = C.LINE_WEIGHT, 0.0, 0.0
-    return max(0.05, (1 - w) * (float(mu_model) + bm) + w * (float(mkt_line) + bl))
-
-
-LOGIC_LABELS = {   # factor -> (short label for the card, what it means in football terms)
-    "snap": ("Snap trend", "his snap share over his last three games against his season share"),
-    "role": ("Next man up", "a regular at his position is out and he is the backup who steps in"),
-    "new_role": ("New role", "a part-timer who just played a starter's snaps"),
-    "share_shift": ("Role shift", "his last game's role against his season role"),
-    "tilt": ("Spread", "point spread: an underdog's defence faces more plays"),
-    "crew": ("Stat crew", "this stadium's stat crew credits tackles high or low"),
-    "volume": ("Opponent volume", "tackle chances expected this game (opponent carries + completions + sacks) against what he has faced"),
-    "depth": ("Depth chart", "promoted or demoted on the latest depth chart"),
-    "pfr": ("Coverage", "how often he is targeted in coverage and how often he misses tackles"),
-    "mix": ("Run/pass mix", "this opponent's run/pass mix through his own run and pass tackle rates"),
-    "rest": ("Bye", "defences off a bye run under their average"),
-    "injury": ("Injury report", "listed questionable or limited in practice"),
-    "availability": ("Absence", "back from a missed game or new to the team"),
-    "dome": ("Indoors", "corners run higher indoors"),
-    "damp": ("Outlier damp", "one big game in his log counts for less"),
-    "scale": ("Level", "the backtest's level calibration"),
-    "gbm": ("Second model", "the boosted model trained on every defender-game since 2023"),
-}
-
-
 def logic_steps(p, kind="combined", min_effect=0.0):
-    """How the model built a player's number, from the pieces finalize_projections stored (lf_*): his base rate, the
-    per-snap view, every game factor as a percentage, the second model, the solo share. Returns (steps, text): steps
-    are (label, effect as a fraction or None, detail) in order; text is one paragraph. Empty when the row has no pieces."""
+    """How the model built a player's number, from what finalize_projections stored: his base rate and the per-snap view
+    (lf_*), then how far each signal moved the FINAL projection (fx_*: the number rebuilt with that signal neutral, through
+    the factor model and the corrector both), the two models' own numbers, and the solo share. Returns (steps, text):
+    steps are (label, effect as a fraction or None, detail) in order; text is one paragraph. Empty when the row has no pieces."""
     g = lambda c, d=np.nan: _num(p.get(c), d) if hasattr(p, "get") else d
     if np.isnan(g("lf_base")):
         return [], ""
     kind = kind if isinstance(kind, str) else ("solo" if kind else "combined")
     n = int(g("n_prev", 0)); avg = g("comb_prev_raw", np.nan) / max(n, 1) if n else np.nan
     grp = str(p.get("group", "")); steps = []
-    prior = f"last season's {g('ps_avg'):.1f}" if g("ps_games", 0) >= 4 and not np.isnan(g("ps_avg")) else f"the {grp} average"
+    prior = f"last season's {g('ps_avg_raw', g('ps_avg')):.1f}" if g("ps_games", 0) >= 4 and not np.isnan(g("ps_avg_raw", g("ps_avg"))) else f"the {grp} average"
     rate_lab = "Season rate" if kind == "combined" else "Season rate (tackles + assists; the solo share comes last)"
-    steps.append((rate_lab, None, f"{avg:.1f} a game over {n} games; adjusted for the stat crews of his games and weighted with {prior}: {g('lf_base'):.1f}" if n else f"no games yet: {prior}"))
+    steps.append((rate_lab, None, f"{avg:.1f} a game over {n} games, weighted with {prior}: {g('lf_base'):.1f}" if n else f"no games yet: {prior}"))
     ps = g("lf_persnap")
     if not np.isnan(ps):
-        steps.append(("Per-snap view", None, f"{g('rate_clean'):.3f} tackles a snap x {g('share_pred'):.0%} of {g('tsnaps_exp'):.0f} expected defensive snaps = {ps:.1f}; blended 60/40 with the season rate"))
-    if _flag(p.get("lf_vacancy_rule", False)):
-        steps.append(("Vacancy rule", None, "a regular at his position is out and his snaps jumped: moved halfway to his rate at last game's share"))
-    pg, core_pre, core = g("lf_pg"), g("lf_core_pre"), g("lf_core")
-    w_ps = 0.0 if np.isnan(ps) else C.PERSNAP["weight"]
-    for k_ in ("snap", "role", "new_role", "share_shift", "tilt", "crew", "volume", "depth", "pfr", "mix", "rest", "injury", "availability", "dome", "damp", "scale", "gbm"):
-        src = {"crew": "crew_solo", "scale": "scale_solo"}.get(k_, k_) if kind == "solo" else k_
-        v = g("lf_" + src, 1.0)
-        if k_ in ("snap", "role", "new_role", "share_shift") and not np.isnan(v) and v > 0 and not any(np.isnan(x) for x in (pg, core_pre, core)):
-            # these move only the per-game part (60% of the base when the per-snap view is in): their effect on the number
-            pre_wo = (1 - w_ps) * pg / v + w_ps * (0 if np.isnan(ps) else ps)
-            wv = C.VACANCY["weight"]       # the vacancy rule mixes in his last-game share's rate, which these do not touch
-            core_wo = (core - (1 - wv) * core_pre) + (1 - wv) * pre_wo if _flag(p.get("lf_vacancy_rule", False)) else pre_wo
-            v = core / core_wo if core_wo > 0 else v
-        if np.isnan(v) or abs(v - 1) < max(min_effect, 0.005):
+        w_ps = C.PERSNAP["weight"]
+        steps.append(("Per-snap view", None, f"{g('rate_clean'):.3f} tackles a snap x {g('share_pred'):.0%} of {g('tsnaps_exp'):.0f} expected defensive snaps = {ps:.1f}; blended {1 - w_ps:.0%}/{w_ps:.0%} with the season rate"))
+    for k_, (lab, what) in SIGNALS.items():
+        v = g("fx_" + k_, 0.0)
+        if np.isnan(v) or abs(v) < max(min_effect, 0.005):
             continue
-        lab, what = LOGIC_LABELS[k_]
         detail = what
         if k_ == "volume" and not np.isnan(g("exp_opps")) and not np.isnan(g("opps_prev_mean")):
             detail = f"{g('exp_opps'):.0f} tackle chances expected against the {g('opps_prev_mean'):.0f} he has faced a game"
-        elif k_ == "snap" and not np.isnan(g("pct_last3")):
-            detail = f"{g('pct_last3'):.0%} of the snaps over his last three games against {g('pct_prev'):.0%} this season"
+        elif k_ == "snaps" and not np.isnan(g("pct_last")) and not np.isnan(g("pct_prev")):
+            detail = f"{g('pct_last'):.0%} of the snaps last game" + (f", {g('pct_last3'):.0%} over his last three," if not np.isnan(g("pct_last3")) else "") + f" against {g('pct_prev'):.0%} this season"
         elif k_ == "tilt" and not np.isnan(g("spread_dog")):
             sd = g("spread_dog"); detail = f"his team is a {abs(sd):g}-point {'underdog' if sd > 0 else 'favourite'}: {'more' if sd > 0 else 'fewer'} plays for his defence"
-        elif k_ == "depth":
+        elif k_ == "depth" and str(p.get("dc_status") or "") in ("promoted", "demoted"):
             detail = f"{p.get('dc_status')} on the latest depth chart"
         elif k_ == "injury":
             detail = f"listed {str(p.get('status') or p.get('practice') or 'on the report').lower()}"
-        steps.append((lab, float(v - 1), detail))
+        elif k_ == "last" and not np.isnan(g("last")) and not np.isnan(avg):
+            detail = f"{g('last'):.0f} last game against {avg:.1f} a game this season"
+        elif k_ == "rest" and not np.isnan(g("rest")):
+            detail = f"{g('rest'):.0f} days since his team's last game"
+        elif k_ == "matchup" and not np.isnan(g("allowed_rel")):
+            detail = f"this opponent has allowed {g('allowed_rel') - 1:+.0%} against the league to his position group"
+        steps.append((lab, float(v), detail))
+    pf, pg_ = g("proj_factor"), g("proj_gbm")
+    if not np.isnan(pf) and not np.isnan(pg_):
+        w = C.GBM["weight"]
+        steps.append(("Two models", None, f"the factor model says {pf:.1f}, the boosted model (trained on every defender-game since 2023) {pg_:.1f}; the number is {1 - w:.0%} the first and {w:.0%} the second"))
     if kind == "solo":
         steps.append(("Solo share", None, f"{g('lf_solo_share'):.0%} of his tackles solo (his own, weighted with his position's)"))
         off = g("lf_official", 1.0)
@@ -1247,13 +1340,15 @@ def logic_steps(p, kind="combined", min_effect=0.0):
     unit = {"solo": "solo tackles", "assists": "assists"}.get(kind, "tackles + assists")
     bits = [f"{lab} {e:+.0%}" if e is not None else f"{lab}: {d}" for lab, e, d in steps]
     text = f"How the model built {total:.1f} {unit}: " + "; ".join(bits) + "."
+    if any(e is not None and lab != "Official count" for lab, e, _ in steps):
+        text += " Each percentage is how far that signal moved the final number: the projection rebuilt without it."
     if kind == "assists":
         text += " Assists are the combined number less the solo one."
     gone = str(p.get("gone_regulars") or "").strip() if hasattr(p, "get") else ""
     if gone and gone.lower() != "nan":
-        text += f" Gone at his position (the vacancy and next-man-up effects above already price it): {gone}."
+        text += f" Gone at his position (the Teammate out and Next man up effects above already carry it): {gone}."
     if _flag(p.get("team_changed", False)) if hasattr(p, "get") else False:
-        text += f" He was traded or moved: first games for {p.get('team')}, priced down and never a lock until he settles."
+        text += f" He was traded or moved: first games for {p.get('team')}, never a lock until he settles."
     return steps, text
 
 
@@ -1275,9 +1370,10 @@ def sleeper_grade(side, p_model, exp_opps, unsteady):
     return "C", f"model chance under {sl['b_model_over']:.0%}"
 
 
-def sleeper_note(side, kind, mu, line, phi, p_model, log_raw, exp_opps, grade, why):
+def sleeper_note(side, kind, mu, line, phi, p_model, log_raw, exp_opps, grade, why, at_price=""):
     """One short paragraph for the site: the model's number against the line, its own chance of the side from its count
-    distribution, the player's season against the line, the game's volume and the grade with its reason."""
+    distribution, the player's season against the line, the game's volume, the grade with its reason, and what the
+    pricing engine makes of the same line at its price."""
     k_under, k_over = int(math.floor(line)), int(math.floor(line)) + 1
     unit = "solo tackles" if kind == "solo" else "tackles + assists"
     target = f"{k_under} or fewer" if side == "Under" else f"{k_over} or more"
@@ -1290,23 +1386,34 @@ def sleeper_note(side, kind, mu, line, phi, p_model, log_raw, exp_opps, grade, w
     if exp_opps is not None:
         parts.append(f"His defence expects {exp_opps:.0f} tackle opportunities (carries + completions + sacks; league about 50).")
     parts.append(f"Grade {grade}: {why}.")
+    if at_price:
+        parts.append(at_price)
     return " ".join(parts)
 
 
 def price_lines(lines, P, segments=None, blend=None):
-    """Evaluate every posted line against the projection; return one row per line with EV, pick and confidence grade.
-    blend: per-market line weights and level corrections (pipeline/blend.py), else the default line weight."""
+    """Evaluate every posted line against the projection (the engine, config.ENGINE); return one row per line with the win
+    chance, the cautious chance, the returns at this book's price, the pick, the grade and the stake before slate sizing.
+    `segments` and `blend` are accepted and ignored: the corrections they carried were retired on 2026-11-09."""
     if lines is None or len(lines) == 0 or P is None or len(P) == 0:
         return pd.DataFrame()
     from pipeline.sources import norm_name
+    e_ = C.ENGINE
     L = lines.copy()
     L["name_key"] = L.player.map(norm_name)
-    # consensus line across books, from rows that quote both sides: Bally Bet posts Over-only rows, sometimes far off
+    # the consensus line across books, from rows that quote both sides: Bally Bet posts Over-only rows, sometimes far off
     # (2026-10-31: Jordyn Brooks 25.5 against DraftKings' 8.5 made a 17.0 "consensus" and a +62% Over pick)
     two = L.over_odds.notna() & L.under_odds.notna()
     med_two = L[two].groupby(["player", "market"]).line.median()
     med_all = L.groupby(["player", "market"]).line.median()
     L["mkt_line"] = [med_two.get((p_, m_), med_all.get((p_, m_))) for p_, m_ in zip(L.player, L.market)]
+    # the fair chance at each line: the vig-free chance of the books that quote both sides of exactly this line, averaged.
+    # A book alone on its line is its own anchor; a one-sided price is priced against the two-way books on the same line.
+    L["_fair"] = [fair_over(o, u) for o, u in zip(L.over_odds, L.under_odds)]
+    cons = L[two].groupby(["player", "market", "line"])._fair.agg(["mean", "size"])
+    key3 = list(zip(L.player, L.market, L.line))
+    L["fair_cons"] = [cons["mean"].get(k_, np.nan) if len(cons) else np.nan for k_ in key3]
+    L["books_n"] = [int(cons["size"].get(k_, 0)) if len(cons) else 0 for k_ in key3]
     P = P.copy()
     P["team_name"] = P.team.map(TEAM_NAMES)
     rows = []
@@ -1329,39 +1436,36 @@ def price_lines(lines, P, segments=None, blend=None):
         mu_model = p.proj_solo if solo else p.get("proj_ast", max(0.05, p.proj - p.proj_solo)) if ast else p.proj
         phi_col = "phi_solo" if solo else "phi_ast" if ast else "phi"
         phi_use = float(p.get(phi_col, p.phi)) if pd.notna(p.get(phi_col, np.nan)) else float(p.phi)
-        mu = blend_mean(mu_model, r.mkt_line, kind, blend)
-        if not np.isfinite(mu):
+        if mu_model is None or not np.isfinite(float(mu_model)):
             rows.append({**base, "pick": "No projection", "why": "The model has no number for him this week"})
             continue
-        po_model = p_over(mu, phi_use, float(r.line))
+        mu_model, line = float(mu_model), float(r.line)
+        fair = float(r.fair_cons) if pd.notna(r.fair_cons) else float("nan")
+        ident = dict(team=p.team, opp=p.opp_team, group=p.group, jersey=None if pd.isna(p.get("jersey", np.nan)) else int(p.get("jersey")),
+                     player_id=None if pd.isna(p.get("player_id", np.nan)) else str(p.get("player_id")), espn_id=None if pd.isna(p.get("espn_id", np.nan)) else str(p.get("espn_id")).split(".")[0])
+        if not np.isfinite(fair):
+            rows.append({**base, **ident, "proj_model": mu_model, "pick": "Pass", "why": "One-sided price, and no book quotes both sides of this line: there is no fair chance to price it against"})
+            continue
+        po_model = float(np.clip(p_over(mu_model, phi_use, line), 0.02, 0.98))     # the model's own chance of the Over
+        po, po_low = engine_chance(po_model, fair, e_["beta"]), engine_chance(po_model, fair, e_["beta_low"])
         # informational only, never part of the grade: the model and the consensus line far apart means one of them
         # knows something; the card says so and the reader checks
-        far_from_line = abs(float(mu_model) - float(r.mkt_line)) / max(1.0, float(r.mkt_line)) >= 0.25
-        has_u = pd.notna(r.under_odds)
+        far_from_line = abs(mu_model - float(r.mkt_line)) / max(1.0, float(r.mkt_line)) >= 0.25
         d_o = american_to_decimal(r.over_odds) if pd.notna(r.over_odds) else None
-        d_u = american_to_decimal(r.under_odds) if has_u else None
-        if d_o and d_u:
-            mkt = (1 / d_o) / (1 / d_o + 1 / d_u)
-        elif d_o:
-            mkt = 1 / d_o
-        else:
-            mkt = 1 - 1 / d_u
-        po = mkt + C.PROB_SHRINK * (po_model - mkt)
-        # half of each side's segment correction (how our claims for picks of this kind have resolved) moves the
-        # probability that decides whether this line is a pick; the full correction reaches the claim and the score
-        wv = C.SEGMENT_CAL.get("ev_weight", 0.0)
-        adj_o = segment_adjust(segments, "Over", kind, p.group)[0] if wv else 0.0
-        adj_u = segment_adjust(segments, "Under", kind, p.group)[0] if wv else 0.0
-        po_o = float(np.clip(po + wv * adj_o, 0.02, 0.98)); pu_u = float(np.clip(1 - po + wv * adj_u, 0.02, 0.98))
-        ev_o = po_o * (d_o - 1) - (1 - po_o) if d_o else -9
-        ev_u = pu_u * (d_u - 1) - (1 - pu_u) if d_u else -9
-        side, ev = ("Over", ev_o) if ev_o >= ev_u else ("Under", ev_u)
+        d_u = american_to_decimal(r.under_odds) if pd.notna(r.under_odds) else None
+        ev_o = po * d_o - 1 if d_o else -9
+        ev_u = (1 - po) * d_u - 1 if d_u else -9
+        side, ev = ("Over", ev_o) if ev_o > ev_u else ("Under", ev_u)
+        dec = d_o if side == "Over" else d_u
+        sgn = lambda x: x if side == "Over" else 1 - x
+        p_side, p_low, p_model_side, fair_side = sgn(po), sgn(po_low), sgn(po_model), sgn(fair)
+        edge_low = p_low * dec - 1
         fl = {k: _flag(p.get(k, False)) for k in ("new_role", "reduced_role", "absence", "missed_game", "new_team")}
         new_role = fl["new_role"]
         shifted = any(fl.values())
         log = _log(p, "log_solo" if solo else "log_ast" if ast else "log_comb")
         log_raw = list(log)
-        # consistency counts in-role games only: games where he played at least 70% of the snap share he played last game
+        # games in his current role: games where he played at least 70% of the snap share he played last game
         lp = _log(p, "log_pct")
         pct_last = p.get("pct_last", np.nan)
         in_role_n = int(p.n_prev)
@@ -1375,54 +1479,48 @@ def price_lines(lines, P, segments=None, blend=None):
                 log = scaled if len(scaled) >= C.NEW_ROLE["min_in_role_games"] else ([] if new_role else log)
             else:
                 log = in_role if len(in_role) >= C.NEW_ROLE["min_in_role_games"] else ([] if new_role else log)
-        hits = [(x > r.line) if side == "Over" else (x < r.line) for x in log]
-        consistency = float(np.mean(hits)) if hits else float("nan")
-        mkt_side = mkt if side == "Over" else 1 - mkt
-        dec = d_o if side == "Over" else d_u
+        hits = [(x > line) if side == "Over" else (x < line) for x in log]
+        consistency = float(np.mean(hits)) if hits else float("nan")       # shown on the card; it adds nothing to the chance (MODEL_LOG A9) and is in no score
         gap = (p["last"] - p.base) if pd.notna(p["last"]) else 0.0
-        # the outlier fade: Under after a big game, only when that game came in his usual role. (An Over after a low game
-        # is not a signal: the backtest says a low game predicts lower, not a bounce.)
-        fade = side == "Under" and gap >= C.FADE_GAP and not shifted
-        role = bool(p.role_signal) and side == "Over"
+        fade = side == "Under" and gap >= C.FADE_GAP and not shifted       # context for the card: an Under after a big game in his usual role
+        role_now = bool(_flag(p.role_signal))                              # next man up: a backup, a regular at his position out
+        role = role_now and side == "Over"
         flagged = str(p.status).lower() in OUT_STATUSES
         uncertain = str(p.status).lower() == "questionable"
         thin = p.n_prev < C.MIN_GAMES_FOR_PICK and not role
-        bar = C.SIGNAL_BAR if (fade or role) else (C.PICK_BAR_OVER if side == "Over" else C.PICK_BAR)
-        p_side = po if side == "Over" else 1 - po
-        seg_adj, seg_key = segment_adjust(segments, side, kind, p.group)
-        claim = claimed_prob(p_side, seg_adj)
-        low_claim = claim < C.PICK_MIN_CLAIM
-        claim_ev = claim * dec - 1 if dec else float("nan")       # the return at our own claimed chance (config.PICK_MIN_CLAIM_EV)
-        low_edge = not (claim_ev >= C.PICK_MIN_CLAIM_EV)
-        pick = side if (ev >= bar and not flagged and not thin and not low_claim and not low_edge) else "Pass"
-        # lock eligibility checklist (market-free): the model must be on ground where it is reliable
+        # the lock checklist (the model's own ground): where his history does not describe his role, or he may not play
         settled = in_role_n >= C.LOCK_RULES["min_in_role_games"] or in_role_n >= int(p.n_prev)
         snaps_missing = pd.isna(pct_last) and int(p.n_prev) > 0      # he has games but no snap count for his last one: the role checks are blind
-        block = [name for ok, name in ((new_role, "new role"), (fl["reduced_role"], "reduced role"), (fl["absence"] or fl["missed_game"], "back from absence"),
+        block = [name for ok, name in ((new_role, "new role"), (role_now, "next man up"), (fl["reduced_role"], "reduced role"), (fl["absence"] or fl["missed_game"], "back from absence"),
                                        (fl["new_team"], "new team"), (not settled, f"only {in_role_n} game{'s' if in_role_n != 1 else ''} in this role"),
                                        (uncertain, "questionable"), (snaps_missing, "snap counts missing for his last game"),
                                        (side == "Over" and not C.LOCK_RULES.get("overs_eligible", True), "Over side")) if ok]
-        lock = lock_score(ev, p_side, consistency, in_role_n, fade or role, seg_adj)
-        grade, capped, thin_edge = grade_of(lock), False, False
-        if grade == "A" and not (claim_ev >= C.A_MIN_CLAIM_EV):     # an A must beat its price by 4% at the claimed chance (2026-11-09 post-mortem)
-            grade, thin_edge = "B", True
-        if grade == "A" and r.market not in C.A_GRADE_MARKETS:     # combined claims ran 9 points high over weeks 7-9: no A there until they earn it
-            grade, capped = "B", True                               # (not a lock_block: that would also bar it from the combined-only parlays)
-        # a sleeper: the model's own number, before the blend with the line, disagrees with the book by a margin that held in
-        # every live week (config.SLEEPER); tracked on its own record whether or not the bars make it a pick
-        sl, sleeper, s_grade, s_p, s_note, s_med = C.SLEEPER, "", None, None, None, None
+        # an Under on a backup stepping in for a regular who is out, when the share model does not expect him to play much:
+        # the projection runs 16% low on exactly these (config.LOCK_RULES), and a book that posts a line on him knows he plays
+        sp_ = p.get("share_pred", np.nan)
+        blind_under = role_now and side == "Under" and not C.LOCK_RULES.get("next_man_up_under", False) and not (pd.notna(sp_) and float(sp_) >= C.PHI_SHARE_SPLIT)
+        tier = "pick" if edge_low >= e_["pick_edge_low"] else "lean" if ev >= e_["lean_edge"] else "pass"
+        if flagged or thin or blind_under:
+            tier = "pass"
+        pick = side if tier == "pick" else "Pass"
+        grade = engine_grade(edge_low, p_model_side, bool(block), r.market) if tier == "pick" else None
+        lock = 100.0 * p_model_side                                   # the lock score: the model's own chance of this side
+        not_a = (grade == "B" and p_model_side >= e_["a_model"] and edge_low >= e_["b_edge_low"])       # an A but for the checklist or the market
+        # a sleeper: the model's own number disagrees with the line by a margin that held in every live week (config.SLEEPER);
+        # a frozen rule set tracked on its own record whether or not the engine makes the line a pick
+        sl, sleeper, s_grade, s_p, s_note, s_med, s_ev = C.SLEEPER, "", None, None, None, None, None
         if not flagged and not thin:
-            g_ = float(mu_model) - float(r.line)
+            g_ = mu_model - line
             ok_o = d_o is not None and (sl["min_ev"] is None or ev_o >= sl["min_ev"])
             ok_u = d_u is not None and (sl["min_ev"] is None or ev_u >= sl["min_ev"])
             med = float(np.median(log_raw)) if log_raw else float("nan")
             if kind == "combined" and sl["comb_over"][0] <= g_ < sl["comb_over"][1] and ok_o:
                 sleeper = "Over"
-            elif solo and g_ <= sl["solo_under"] and ok_u and med == med and med >= float(r.line) + sl.get("solo_hist", -99):
+            elif solo and g_ <= sl["solo_under"] and ok_u and med == med and med >= line + sl.get("solo_hist", -99):
                 sleeper = "Under"
             if sleeper:
-                po_m = p_over(float(mu_model), phi_use, float(r.line))
-                s_p = float(po_m if sleeper == "Over" else 1 - po_m)
+                so = sleeper == "Over"
+                s_p = float(po_model if so else 1 - po_model)
                 s_med = med if med == med else None
                 unsteady = [nm for ok, nm in ((new_role, "new role"), (fl["reduced_role"], "reduced role"), (fl["absence"] or fl["missed_game"], "back from absence"),
                                               (fl["new_team"], "new team"), (uncertain, "questionable"), (snaps_missing, "snap count missing"),
@@ -1430,81 +1528,102 @@ def price_lines(lines, P, segments=None, blend=None):
                 eo = p.get("exp_opps", np.nan)
                 eo = float(eo) if pd.notna(eo) else None
                 s_grade, s_why = sleeper_grade(sleeper, s_p, eo, unsteady)
-                s_note = sleeper_note(sleeper, kind, float(mu_model), float(r.line), phi_use, s_p, log_raw, eo, s_grade, s_why)
+                s_dec = d_o if so else d_u
+                s_win, s_low = (po if so else 1 - po), (po_low if so else 1 - po_low)
+                s_ev = float(s_win * s_dec - 1)
+                s_edge_low = s_low * s_dec - 1
+                verdict = ("the pricing engine also makes it a pick" if s_edge_low >= e_["pick_edge_low"] and sleeper == side and tier == "pick" else
+                           "a lean for the pricing engine (an edge at the win chance, none at the cautious one): not staked" if s_ev >= e_["lean_edge"] else
+                           "no edge for the pricing engine at this price")
+                at_price = f"At this price: win chance {s_win:.0%} against {1 / s_dec:.0%} to break even ({s_ev:+.0%}); {verdict}."
+                s_note = sleeper_note(sleeper, kind, mu_model, line, phi_use, s_p, log_raw, eo, s_grade, s_why, at_price)
+        num = f"win chance {p_side:.0%} against {1 / dec:.0%} to break even at this price ({ev:+.0%}); at the cautious chance {p_low:.0%} ({edge_low:+.0%}). Model alone {p_model_side:.0%}, the book's fair price {fair_side:.0%}"
         if flagged:
             why = f"His own status is {p.status or 'uncertain'}: wait for the final report"
         elif thin:
             why = f"Only {int(p.n_prev)} games of data"
-        elif ev < bar:
-            why = f"Best side returns {ev:+.0%}; needs {bar:.0%}"
-        elif low_claim:
-            why = f"{side} returns {ev:+.0%} but the claimed chance is only {claim:.0%}; a pick needs {C.PICK_MIN_CLAIM:.0%}"
-        elif low_edge:
-            why = f"{side} at {claim:.0%} claimed returns {claim_ev:+.0%} at this price; a pick needs {C.PICK_MIN_CLAIM_EV:.0%} at the claimed chance"
+        elif blind_under:
+            why = (f"No pick: he is the next man up (a regular at his position is out) and the model expects him at {float(sp_):.0%} of the snaps" if pd.notna(sp_) else "No pick: he is the next man up (a regular at his position is out)") + \
+                  f". On backups like this the projection has run 16% low, so its Under is not an edge; the numbers, for the record: {num}"
+        elif tier == "pass":
+            why = f"No edge: {side} {line:g}, {num}"
+        elif tier == "lean":
+            why = f"Lean, not a pick: {side} {line:g}, {num}. The edge is there only if the model's disagreement is worth half its size; a pick must survive a quarter"
         else:
-            why = f"{side} returns {ev:+.0%}" + (", backed by a role change" if role else ", fading an outlier last game" if fade else ", price gap only")
+            why = f"{side} {line:g}: {num}"
+            if role:
+                why += "; backed by a role change (a regular at his position is out)"
+            elif fade:
+                why += "; after an outlier last game in his usual role"
             if uncertain:
-                why += "; listed questionable: priced 8% under his average, not a lock, voids if he sits"
+                why += "; listed questionable: not a lock, voids if he sits"
             if new_role:
                 sp = p.get("share_pred", np.nan)
                 why += (f"; new role: {float(pct_last):.0%} of snaps last game vs {float(p.get('pct_prev', np.nan)):.0%} this season, "
                         f"projected at {float(sp):.0%} of the snaps with a wider range" if pd.notna(sp) else "; new role, projected with a wider range")
             elif fl["reduced_role"]:
-                why += f"; reduced role: {float(pct_last):.0%} of snaps last game vs {float(p.get('pct_prev', np.nan)):.0%} this season, priced down"
+                why += f"; reduced role: {float(pct_last):.0%} of snaps last game vs {float(p.get('pct_prev', np.nan)):.0%} this season"
             if fl["absence"] or fl["missed_game"]:
-                why += f"; back from absence ({int(p.get('gap_weeks', 0))} weeks since his last game), priced down"
+                why += f"; back from absence ({int(p.get('gap_weeks', 0))} weeks since his last game)"
             if fl["new_team"]:
-                why += "; first game for a new team, priced down"
-            if _flag(p.get("vacancy_rule", False)):
-                why += f"; a regular at his position is out or gone and he played {float(pct_last):.0%} of the snaps: projected at that share"
+                why += "; first game for a new team"
+            if _flag(p.get("vacancy", False)) and pd.notna(pct_last) and float(p.get("snap_jump", 1.0) or 1.0) >= C.VACANCY["min_jump"]:
+                why += f"; a regular at his position is out or gone and he played {float(pct_last):.0%} of the snaps: the share model holds him near that"
             if block:
                 why += "; not lock-eligible: " + ", ".join(block)
-        if thin_edge and pick != "Pass":
-            why += f"; scores as an A, shown as a B: at its {claim:.0%} claimed chance it returns {claim_ev:+.0%}, an A needs {C.A_MIN_CLAIM_EV:.0%}"
-        lg_steps, lg_text = logic_steps(p, kind)
-        if capped and pick != "Pass":
-            why += "; scores as an A, shown as a B: A grades and locks are solo tackles only (combined claims ran 9 points high in weeks 7-9)"
+            if not_a:
+                why += f"; the numbers of an A (cautious edge {edge_low:+.0%}, model {p_model_side:.0%}), shown as a B: " + ("the lock checklist is not clear" if block else "this market cannot carry an A yet")
         if sleeper:
-            why += f"; sleeper ({sleeper}, grade {s_grade}): the model's own number is {float(mu_model):.1f} against a line of {float(r.line):g}"
-        rows.append({**base, "team": p.team, "opp": p.opp_team, "group": p.group, "jersey": None if pd.isna(p.get("jersey", np.nan)) else int(p.get("jersey")), "proj": float(mu), "proj_model": float(mu_model),
-                     "player_id": None if pd.isna(p.get("player_id", np.nan)) else str(p.get("player_id")), "espn_id": None if pd.isna(p.get("espn_id", np.nan)) else str(p.get("espn_id")).split(".")[0],
+            why += f"; sleeper ({sleeper}, grade {s_grade}): the model's own number is {mu_model:.1f} against a line of {line:g}"
+        lg_steps, lg_text = logic_steps(p, kind)
+        mu_eng = implied_mean(po, phi_use, line)                       # the engine's win chance read back as a number of tackles
+        mkt_mean = implied_mean(fair, phi_use, line)                   # the book's fair price read back the same way
+        eng = dict(p_model=p_model_side, fair=fair_side, p=p_side, p_low=p_low, ev=ev, edge_low=edge_low, mkt_mean=mkt_mean)
+        rows.append({**base, **ident, "proj": float(mu_eng), "proj_model": mu_model, "mkt_mean": float(mkt_mean),
                      "exp_opps": None if pd.isna(p.get("exp_opps", np.nan)) else float(p.get("exp_opps")),
-                     "mkt_line": float(r.mkt_line), "phi": phi_use, "model_over": po, "market_over": mkt, "ev": ev, "side": side, "far_from_line": bool(far_from_line),
-                     "p_claim": claim, "claim_ev": None if claim_ev != claim_ev else float(claim_ev), "segment": seg_key, "segment_adj": float(seg_adj),
+                     "mkt_line": float(r.mkt_line), "books_n": int(r.books_n), "phi": phi_use, "model_over": po, "model_over_low": po_low, "model_over_own": po_model, "market_over": fair,
+                     "ev": ev, "side": side, "far_from_line": bool(far_from_line),
+                     "p_claim": float(p_side), "p_low": float(p_low), "p_model": float(p_model_side), "claim_ev": float(ev), "edge_low": float(edge_low),
+                     "kelly_low": kelly_fraction(p_low, dec), "tier": tier, "segment": f"{side} {kind} {p.group}",
                      "pick": pick, "why": why, "signal_fade": bool(fade), "signal_role": role, "status": p.status,
                      "season_avg": float(p.season_avg), "last": None if pd.isna(p["last"]) else float(p["last"]),
                      "n_prev": int(p.n_prev), "consistency": consistency, "cons_hits": int(sum(hits)), "cons_n": len(hits),
-                     "mkt_side": float(mkt_side), "payout": None if dec is None else float(dec - 1),
-                     "stake": kelly_stake(claim, dec) if pick in ("Over", "Under") else None,
+                     "mkt_side": float(fair_side), "payout": None if dec is None else float(dec - 1),
+                     "stake": kelly_stake(p_low, dec) if tier == "pick" else None,
                      "international": str(p.get("venue", "")) == "NEUTRAL", "depth": p.get("dc_status", ""), "uncertain": bool(uncertain),
                      "new_role": bool(new_role), "snap_jump": None if pd.isna(p.get("snap_jump", np.nan)) else float(p.get("snap_jump")),
                      "reduced_role": fl["reduced_role"], "absence": bool(fl["absence"] or fl["missed_game"]), "new_team": fl["new_team"],
                      "in_role_games": in_role_n, "lock_block": ", ".join(block), "lock_eligible": not block,
-                     "vacancy": _flag(p.get("vacancy_rule", False)), "share_pred": None if pd.isna(p.get("share_pred", np.nan)) else float(p.get("share_pred")),
-                     "opp_qb_out": bool(p.get("opp_qb_out", False)), "opp_rb_out": bool(p.get("opp_rb_out", False)),
+                     "vacancy": _flag(p.get("vacancy", False)), "share_pred": None if pd.isna(p.get("share_pred", np.nan)) else float(p.get("share_pred")),
+                     "opp_qb_out": bool(_flag(p.get("opp_qb_out", False))), "opp_rb_out": bool(_flag(p.get("opp_rb_out", False))),
                      "rest": None if pd.isna(p.get("rest", np.nan)) else int(p.get("rest")),
-                     "rundown": rundown(p, float(r.line), side, kind, float(mu_model), float(mu), float(p_side), float(claim), float(ev), pick, why, fl, new_role, in_role_n, log_raw),
+                     "rundown": rundown(p, line, side, kind, mu_model, eng, pick, why, fl, new_role, in_role_n, log_raw),
                      "press_pg": None if pd.isna(p.get("press_pg", np.nan)) else float(p.get("press_pg")),
                      "fp_comb": None if pd.isna(p.get("fp_comb", np.nan)) else float(p.get("fp_comb")),
                      "fp_solo": None if pd.isna(p.get("fp_solo", np.nan)) else float(p.get("fp_solo")),
                      "fp_rel": None if ast or pd.isna(p.get("fp_rel_solo" if solo else "fp_rel_comb", np.nan)) else float(p.get("fp_rel_solo" if solo else "fp_rel_comb")),
-                     "lock": lock, "grade": grade, "sleeper": sleeper,
-                     "sleeper_ev": (ev_o if sleeper == "Over" else ev_u) if sleeper else None,
+                     "lock": lock, "grade": grade, "sleeper": sleeper, "sleeper_ev": s_ev,
                      "sleeper_grade": s_grade, "sleeper_p": s_p, "sleeper_note": s_note, "sleeper_med": s_med,
                      "logic": lg_text or None, "gone_regulars": (str(p.get("gone_regulars")) if str(p.get("gone_regulars") or "").strip() not in ("", "nan") else None), "logic_chips": [[lab, round(e, 3)] for lab, e, _ in lg_steps if e is not None and abs(e) >= 0.03] or None})
     out = pd.DataFrame(rows)
-    if "ev" in out:
-        out = out.sort_values("ev", ascending=False, na_position="last")
-        # line shopping: mark the best book for each player / market / side / line
-        out["best_price"] = ~out.duplicated(["player", "market", "side", "line"]) & out.ev.notna()
-        out = out.sort_values(["lock", "ev"], ascending=[False, False], na_position="last")
+    # every column the log, the sizing and the site read exists even when no line on this board could be priced (a pull of
+    # one-sided prices only, or of players the model does not carry): the replay of week 8 crashed on a missing column
+    for c_, d_ in (("ev", np.nan), ("side", None), ("lock", np.nan), ("tier", None), ("grade", None), ("stake", np.nan), ("proj", np.nan), ("proj_model", np.nan),
+                   ("p_claim", np.nan), ("p_low", np.nan), ("p_model", np.nan), ("edge_low", np.nan), ("market_over", np.nan), ("model_over", np.nan), ("sleeper", ""),
+                   ("lock_block", ""), ("payout", np.nan), ("segment", None), ("team", None), ("opp", None), ("group", None), ("phi", np.nan), ("exp_opps", np.nan)):
+        if c_ not in out.columns:
+            out[c_] = d_
+    out = out.sort_values("ev", ascending=False, na_position="last")
+    # line shopping: mark the best book for each player / market / side / line
+    out["best_price"] = ~out.duplicated(["player", "market", "side", "line"]) & out.ev.notna()
+    out = out.sort_values(["lock", "ev"], ascending=[False, False], na_position="last")
     return out
 
 
 # ---------------------------------------------------------------- second model: gradient-boosted corrector
 GBM_FEATURES = ["log_mu", "n_prev", "snap", "pct_prev", "vol", "spread", "tgt", "miss", "demoted", "promoted", "starter", "q", "limited",
                 "rest", "week", "last", "avg", "ps_avg", "crew", "grp", "is_home", "exp_runs", "exp_comps", "run_tk_rate", "pass_tk_rate", "jump", "gap", "new_team",
-                "rate_clean", "share_pred", "tsnaps", "blowout_last", "vacancy", "allowed_rel", "dome"]
+                "rate_clean", "share_pred", "tsnaps", "blowout_last", "vacancy", "allowed_rel", "dome", "role"]
 
 
 def gbm_features(F, mu):
@@ -1523,6 +1642,7 @@ def gbm_features(F, mu):
         "tsnaps": pd.to_numeric(col("tsnaps_exp"), errors="coerce").fillna(65.0),
         "blowout_last": (pd.to_numeric(col("last_margin"), errors="coerce").fillna(0) >= C.SHARE_MODEL["blowout_margin"]).astype(float),
         "vacancy": col("vacancy", False).map(_flag).astype(float), "allowed_rel": pd.to_numeric(col("allowed_rel"), errors="coerce").fillna(1.0),
+        "role": col("role_signal", False).map(_flag).astype(float),      # next man up: a backup whose regular is out (2026-11-09: the bias on these rows fell from +0.40 to +0.29 at a weight of 0.8)
         "dome": col("roof", "").fillna("").astype(str).str.lower().isin(["dome", "closed"]).astype(float),
         "pct_prev": col("pct_prev").fillna(0),
         "vol": (col("exp_opps") / col("opps_prev_mean")).fillna(1.0).clip(0.6, 1.6),
