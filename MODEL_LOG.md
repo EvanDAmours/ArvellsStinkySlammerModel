@@ -521,7 +521,7 @@ and C9. What remains, and what the rebuild itself turned up:
    `data/weekly_five.md` now carries that evidence in plain text. Its sessions are set up to push to a branch of
    their own (`claude/relaxed-heisenberg`), so a push to this branch may be refused: the task is told to push its
    entry to its own branch then, or to leave a patch, and to say where; the entry then needs merging. Read what its
-   Tuesday and Friday runs produce. Week 9's Monday night game is still to be added to its post-mortem.
+   Tuesday and Friday runs produce. Week 9's Monday night game carried no pick (post-mortem of 2026-11-10).
 9. **The repository is public (owner).** Picks, projections, every odds snapshot and this file are readable without
    the site's password. A private repository needs paid Actions minutes for a ticker that runs all day.
 10. **The closing price is an hour old** (the last pull before kickoff): closing-line value and the scoreboard are
@@ -667,6 +667,48 @@ the record is the week evidence about the model.
 Post-mortems of weeks 7 and 8 are in the archive. From week 10 a post-mortem starts from the scoreboard (Track
 record, "Against the market") and the luck table, reads every record with its likely range, and changes nothing
 inside the freeze unless it finds a defect.
+
+### Week 9 closed, Tuesday 2026-11-10 (standing post-mortem, 8:20 am MST; measures only, nothing changed)
+
+Grading had landed: `data/weekly_five.md` generated 2026-11-10 10:16 UTC, after the last logged kickoff of the week
+(Sunday night, 2026-11-09 01:20 UTC). **Monday night's game of week 9 carried no pick**: no pick in `data/picks.csv`
+has a kickoff after Sunday night, so this slate adds no bet to any record. Week 10 has no line and no graded pick
+yet (first kickoff Thursday 2026-11-12, 19:15 Edmonton).
+
+1. **Scoreboard since week 10:** none (0 lines). Weeks 7 to 9 are in-sample background only: engine better than the
+   book by +0.0091 (give or take 0.0033; t +2.8) on 912 lines; solo +0.0173 (0.0049), combined +0.0012 (0.0034),
+   assists +0.0085. These test nothing. Distinguishable from nothing out of sample: not yet measurable.
+2. **Record since the engine:** none graded. Counted record of all rules to date (scratch daily, 619 rows logged):
+   200-183 (52%, range 43% to 61%), +0.14 u at 1 a bet; A 13-9 (59%, 37% to 78%, claimed 64%), B 74-63 (54%, 43% to
+   65%, claimed 59%), C 46-45 (51%, 38% to 63%, claimed 57%): A over B over C in the point estimates, every range
+   overlaps. Locks 10-4 (71%), +3.45 u. Parlays 1-2. Week 9 alone (results.json, one row per bet, counted): 73-67,
+   6 void, which differs from the Sunday entry's best-grade-per-player count (68-63); both are the same bets seen
+   with and without the void and duplicate rows, not a regrade. Stakes per slate day against the caps: not
+   assessed this run (no engine-era slate).
+3. **Calibration:** nothing since the engine. All weeks, engine's side on every line: said 42% hit 55%, 48/49,
+   52/55, 57/58, 62/63, 69/73 (91 to 252 lines a bucket): no sign of over-claiming at any chance on the
+   in-sample weeks.
+4. **Luck or skill:** nothing new. Week 9 (already written): Unders lift -0% over the board (53% on 53%), the
+   market's level, not selection. The whole board's Overs won 34%/38%/47% on solo in weeks 7/8/9 against a fair
+   49% to 50%: the solo level swung 13 points from week 8 to week 9.
+5. **Conditions on trial** (all 0 graded, state running): E4 A picks 0/30, E4 old A rule 0/30, E5 combined A
+   0/20, E6 Overs 0/40, E5 locks 0, E2 0/4 weeks, S1 0/4 weeks. None reached its count.
+6. **Shadow candidates since week 10:** none graded. All weeks (in-sample included): flat 0.5 weight -0.0012
+   (t -2.0), centred combined gap +0.0006 (t +7.3), lined-player solo level +0.0008 (t +0.6). None adopted before
+   2026-12-08; rule R6.
+7. **Misses:** no losing pick on this slate (no pick), so no box-score audit.
+8. **Backtest (scratch daily, 31,506 games):** no flags raised. Final projection against the factor model by
+   fold, deviance: 2024 1.4071 vs 1.4412, 2025 1.3399 vs 1.3920, 2026 1.3181 vs 1.3802; overall -0.0464 (t -10.6),
+   regulars (starters) -0.0124 (t -2.4). Regulars' bias +0.024 overall, +0.140 in 2026 (open issue 2). No factor
+   "hurts" and none out of the model is a "candidate" (role-shift regulars t -1.7, the nearest; bar -2). Tails: 5.1%
+   below the 5th percentile, 4.8% above the 95th.
+9. **Open issues:** (2) model below the book: the 2026 regulars' bias is +0.14 a game, nothing new. (3) grade
+   order: A 13-9 over B 74-63 over C 46-45 on all weeks, ranges overlap, 30 engine-era A picks still to come.
+   (4) linemen pocket: nothing new. (5) next man up: still 918 games, 12% low out of sample. (6) Overs: 0 engine-era
+   Over picks; Over combined 13-16, Over solo 7-11 over all plays.
+10. **What changed:** nothing; frozen until 2026-12-08. For the owner: the odds-credit state (open issue 7)
+   decides whether the Wednesday early look and the pre-kickoff pulls can run for week 10. The scratch run had no
+   password for the sealed site files (`meta.json.enc` treated as missing), which is expected.
 
 ### Week 9 through Sunday, 2026 (graded 2026-11-09 from ESPN finals; Monday's game pending; written 6 am MST at the owner's request)
 
