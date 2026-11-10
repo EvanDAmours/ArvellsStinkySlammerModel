@@ -197,10 +197,11 @@ check(sum(1 for b in bets if b.get("five")) == len(five), "locks marked on the b
 parlays = pd.read_csv(tmp / "data/parlays.csv") if (tmp / "data/parlays.csv").exists() else pd.DataFrame()
 check(len(parlays) >= 2 and parlays.parlay_id.nunique() >= 1 and parlays.groupby("parlay_id").size().between(2, 4).all(), f"recommended parlay built ({parlays.parlay_id.nunique() if len(parlays) else 0} parlay, {len(parlays)} legs)")
 check(len(parlays) and parlays.player.nunique() == len(parlays) and parlays.units.between(0.1, 1.0).all(), "parlay legs are distinct players with a stake between 0.1 and 1 unit")
-check(all(b["edge_low"] >= _E["b_edge_low"] - 1e-9 and b["p_model"] >= _E["a_model"] - 1e-9 and not b.get("lock_block") and b["market"] in C.A_GRADE_MARKETS for b in priced if b.get("grade") == "A")
+_a_ok = (lambda b: b.get("sleeper") == b.get("pick")) if _E.get("a_rule") == "sleeper" else (lambda b: b["edge_low"] >= _E["b_edge_low"] - 1e-9 and b["p_model"] >= _E["a_model"] - 1e-9)
+check(all(_a_ok(b) and b["edge_low"] >= _E["pick_edge_low"] - 1e-9 and not b.get("lock_block") and b["market"] in C.A_GRADE_MARKETS for b in priced if b.get("grade") == "A")
       and all(b["edge_low"] >= _E["b_edge_low"] - 1e-9 for b in priced if b.get("grade") == "B") and all(b["edge_low"] < _E["b_edge_low"] for b in priced if b.get("grade") == "C")
       and (five.market.isin(C.A_GRADE_MARKETS).all() if len(five) else True),
-      f"an A has a cautious edge of 2%+, a model chance of 70%+, a clear checklist and a market that can carry one; a B the edge; a C is a pick short of it ({dict(pd.Series([b.get('grade') for b in priced if b.get('grade')]).value_counts())})")
+      f"an A is a pick the sleeper rule names on the same side (the older rule: a cautious edge of 2%+ and a model chance of 70%+), with a clear checklist and a market that can carry one; a B has the edge; a C is a pick short of it ({dict(pd.Series([b.get('grade') for b in priced if b.get('grade')]).value_counts())})")
 # Rule 0 (CLAUDE.md): a pick is never graded, ranked or chosen by whether the book agrees with it. At a fixed model chance and a
 # fixed margin, moving the book's fair chance toward the model's must never raise the cautious edge (what chooses a pick) or the
 # grade; the lock score (what ranks) is the model's own chance and does not see the book at all. (The stake is not part of the
@@ -450,7 +451,7 @@ _no = R.auto_plan(now=dt.datetime.combine(_od + dt.timedelta(days=14), dt.time(1
 check(_op is not None and len(_op["days"]) == 5 and _op["days"][0] == str(_od + dt.timedelta(days=1)) and _no is None and R.OPENER_SLOT in R.slots_on(_od) and R.OPENER_SLOT not in R.slots_on(_od + dt.timedelta(days=14)),
       "the early look at the whole week is pulled on its trial Wednesdays and on no other")
 _whys = " ".join(str(b.get("why", "")) for b in _ba)
-check(("part-time:" in _whys or "hot:" in _whys or "solo share:" in _whys) and "in no grade" in _whys, "the card names the measurements on trial (solo share, part-time, hot) where they apply, and says they are in no grade")
+check(("part-time:" in _whys or "solo share:" in _whys) and "in no grade" in _whys and "hot:" not in _whys, "the card names the measurements on trial (the book's solo share, part-time) where they apply, says they are in no grade, and no longer names the hot flag that failed on weeks 1 to 6")
 _ll = pd.read_csv(tmp / "data" / "lines_log.csv")
 check("share_gap" in _ll.columns and "level" in _ll.columns and (_ll[_ll.market == "player_solo_tackles"].share_gap.notna().any() if (_ll.market == "player_solo_tackles").any() else True),
       "the line log carries the solo-share gap and the lined-player level for every line")
@@ -465,13 +466,15 @@ _ep = pd.DataFrame(dict(season=_lv["season"], week=[_lv["week"] - 1, _lv["week"]
                         market=["player_solo_tackles", "player_tackles_assists", "player_tackles_assists", "player_solo_tackles", "player_tackles_assists", "player_solo_tackles"],
                         side=["Under", "Under", "Over", "Under", "Under", "Under"], grade=["A", "A", "C", "B", "A", "C"], result=["Win", "Win", "Loss", "Win", "Loss", "Pending"],
                         units=[0.9, 0.8, -1.0, 1.1, -1.0, 0.0], stake=[1.0, 2.0, 0.1, 0.5, 1.0, 0.3], p_claim=[0.6, 0.62, 0.52, 0.58, 0.61, 0.55], p_model=[0.72, 0.74, 0.55, 0.66, 0.71, 0.6],
-                        five=[True, True, False, False, True, False], group=["CB", "LB", "LB", "S", "LB", "DL"], commence_time="2026-11-15T18:00:00Z"))
+                        five=[True, True, False, False, True, False], group=["CB", "LB", "LB", "S", "LB", "DL"], commence_time="2026-11-15T18:00:00Z",
+                        why=["", "", "", "blend; solo share: the book's solo line is 64% of its own combined line", "", ""]))
 _era = G.engine_era(_ep); _wt = {w["name"]: w for w in _era["watches"]}; _none = G.engine_era(_ep.iloc[0:1])
 check(_era["bets"] == 4 and _era["wins"] == 2 and _era["losses"] == 2 and _era["pending"] == 1 and abs(_era["units"] - (-0.1)) < 1e-9 and abs(_era["units_at_stake"] - (1.6 - 0.1 + 0.55 - 1.0)) < 1e-9 and abs(_era["staked"] - 3.6) < 1e-9
       and len(_era["by_week"]) == 2 and _wt["A picks"]["n"] == 2 and _wt["A picks"]["of"] == 30 and _wt["A picks"]["state"] == "running" and abs(_wt["A picks"]["model_said"] - 0.725) < 1e-9
       and _wt["Combined A picks"]["n"] == 2 and _wt["Over picks"]["n"] == 1 and _wt["Locks"]["wins"] == 1 and _wt["Locks"]["losses"] == 1 and _wt["Locks"]["state"] == "running"
       and _era["locks"]["bets"] == 2 and {g["grade"] for g in _era["by_grade"]} == {"A", "B", "C"} and sum(c["bets"] for c in _era["calibration"]) == 4
-      and _none["bets"] == 0 and len(_none["watches"]) == 5 and all(w["state"] == "running" for w in _none["watches"]),
+      and _none["bets"] == 0 and len(_none["watches"]) == 8 and all(w["state"] == "running" for w in _none["watches"])
+      and _wt["Solo Under picks on a flagged line"]["wins"] == 1 and _wt["Solo Under picks on a flagged line"]["n"] == 1 and _wt["Solo Under picks on an unflagged line"]["n"] == 0,
       f"the record since the engine leaves out the weeks before it and counts each condition of the decision register ({_era['wins']}-{_era['losses']}, {len(_era['watches'])} conditions)")
 _evd = "\n".join(G._evidence_sections(dict(scoreboard=_sb_live, era=_era, bets=5, wins=3, losses=2, pushes=0, units=0.8, hit_lo=0.2, hit_hi=0.9, by_grade=G.record_by_grade(_ep), by_side_market=[])))
 check(all(k in _evd for k in ("## Against the market", "(out of sample)", "### Candidates in the shadow", "## Since the engine", "Conditions of the decision register on trial", "| E2 The engine's weight (0.65 solo, 0.35 combined) |", "| E4 A picks |", "## All plays to date"))

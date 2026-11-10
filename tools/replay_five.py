@@ -149,8 +149,9 @@ def replay(season, week, markets=None, out=OUT, keep_all=False, loaded=None, P=N
         data = json.loads(OUT_PATH.read_text()) if OUT_PATH.exists() else dict(weeks=[])
         data["weeks"] = [w for w in data["weeks"] if not (w["season"] == season and w["week"] == week)] + [entry]
         data["weeks"].sort(key=lambda w: (w["season"], w["week"]))
-        data["note"] = ("Replayed under the current rules using only what was known at each line pull. Weeks without odds "
-                        "snapshots cannot be replayed: line pulling started in week 7 of 2026, and historical lines need a paid Odds API plan.")
+        data["note"] = ("Replayed under the current rules using only what was known at each line pull. Weeks 7 on have every pull of the week; "
+                        "weeks 4 to 6 have one, the lines an hour before kickoff, fetched from the feed's history on 2026-11-10. Weeks 1 to 3 "
+                        "have no pick: a player needs three games of the season first.")
         OUT_PATH.write_text(json.dumps(data, indent=1))
     f, p = entry["five"], entry["plays"]
     print(f"\nweek {week} replay: locks {f['wins']}-{f['losses']} ({f['pending']} pending, {f['units']:+.2f}u); "

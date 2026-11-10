@@ -60,13 +60,16 @@ ODDS_BOOKMAKERS = [
     # are not on the Alberta roster, and Play Alberta, Stake, DAZN Bet, Tonybet, PowerPlay are not on the API.
 ]
 # The solo-share gap (a measurement since 2026-11-10, in no rule): his own solo share to date, shrunk over `k` tackles of the
-# league's, minus the share the book's two lines imply (solo line / combined line). At `flag` or below, the book's solo line
-# is high for the way he makes his tackles: on weeks 7 to 9 those solo Unders went 96-39 at the close, picked or not.
+# league's, minus the share the book's two lines imply (solo line / combined line). Logged for every solo line. On weeks 7 to 9
+# a gap of `flag` or below went 96-39 on the solo Under; on weeks 1 to 6 (fetched afterwards) the gap added nothing once the
+# book's own share was known (gap without a high book share 44-42), so the card's flag reads the book's share (HOLES) instead.
 SHARE_GAP = dict(k=25.0, flag=-0.04)
-# Two more candidates from the sweep of 2026-11-10 (tools/holes.py), named on the card and in no rule: a part-time player's
-# solo Under (under `part_time` of the snaps this season) and a hot player's combined Over (his last three games `hot`
-# tackles or more over his season average).
-HOLES = dict(part_time=0.85, hot=0.5, book_share=0.58)      # book_share: the book's own solo line as a share of its combined line (2026-11-10, hour's search)
+# Candidates from the sweep of 2026-11-10 (tools/holes.py), in no rule. book_share: the book's solo line as a share of its own
+# combined line; at 58% or more the solo Under went 117-49 on weeks 7 to 9 and 176-103 on weeks 1 to 6, which it was not found
+# on (flagged on the card). part_time: under 85% of the snaps this season, solo Under 82-40 then 66-47 (flagged on the card).
+# hot: last three games half a tackle over his season average, combined Over 75-47 then 36-45: failed, no longer on the card,
+# still scored by the tool.
+HOLES = dict(part_time=0.85, hot=0.5, book_share=0.58)
 OPENER_DATES = ("2026-11-11", "2026-11-18")          # Wednesdays with an early look at the whole week's lines (weeks 10 and 11): a trial, see MODEL_LOG
 ODDS_KEY_ENV = ["ODDS_API_KEY", "PARLAY_API_KEY"]   # GitHub secrets holding Odds API keys, used in this order
 MIN_CREDITS_LEFT = 25              # a key with fewer credits left this month is skipped; pulling stops when every key is below it
@@ -156,8 +159,10 @@ FACTORS = dict(tilt=True, role=True, volume=True, depth=True, pfr=True, dome=Tru
 GBM = dict(weight=0.6, max_iter=800, learning_rate=0.02, max_leaf_nodes=31, min_samples_leaf=40, l2=0.5, seeds=(0, 1, 2))
 REGULAR_SHARE = 0.8                 # "regulars": expected at this share of the snaps or more. They are the players the books post lines on, so they are who a change is judged on
 POS_PRIOR = {"LB": 6.0, "S": 4.5, "CB": 3.5, "DL": 2.5}       # tackles per game, used only with no history
-POS_SOLO_SHARE = {"LB": 0.52, "S": 0.62, "CB": 0.72, "DL": 0.45}
-SOLO_SHARE_PSEUDO = 25             # tackles of position prior mixed into a player's solo share (was 8): solo error -1.0% on 2025-26, -0.7% on 2023-24
+POS_SOLO_SHARE = {"LB": 0.49, "S": 0.57, "CB": 0.66, "DL": 0.44}       # the positions' solo shares measured on 2023-26 (were 0.52, 0.62, 0.72, 0.45)
+SOLO_SHARE_PSEUDO = 150            # tackles of position prior mixed into a player's solo share (was 25, 8 before): a player's own share is mostly noise over a
+                                   # season. Solo deviance on regulars -0.0174 (t -5.9) in each of three seasons; on 2026's closing lines the engine's margin over
+                                   # the book goes from +0.0038 to +0.0075 on weeks 2 to 6 and +0.0073 to +0.0092 on weeks 7 to 9 (MODEL_LOG, 2026-11-10)
 # Segment calibration (2026-10-31): a pick's claimed chance is corrected by how the model's claims have actually
 # resolved for picks like it (side x market x position), shrunk by n/(n+k) toward no correction. Our own results only,
 # never the book's. Finest segment with min_n graded picks wins; the correction is capped.

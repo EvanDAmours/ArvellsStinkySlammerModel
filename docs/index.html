@@ -1057,7 +1057,7 @@ function renderRecord() {
           w.picks.map((p) => [`${p.player} ${p.side} ${num(p.line)} ${(MARKET[p.market] || p.market).toLowerCase()}`, odds(p.odds), p.book, p.grade ? el("span", { class: `grade ${p.grade}` }, p.grade) : "", Math.round(p.lock), p.actual == null ? "" : num(p.actual, 0), p.result]))),
         ...(w.parlays || []).map((q) => parlayBox({ ...q, placed: true }, true)));
     });
-    deeper.push(more("Replayed under the current rules", el("p", {}, r.retro.note || "What the current model would have picked, using only what was known at each line pull. Weeks before 7 cannot be replayed: no lines were collected."), ...weeks));
+    deeper.push(more("Replayed under the current rules", el("p", {}, r.retro.note || "What the current model would have picked, using only what was known at each line pull."), ...weeks));
   }
   if (deeper.length) { const sec = section("Luck, calibration and replays", "The checks behind the record: whether a result was the model or the market, how the model's claims have held up, and the replayed weeks.", ...deeper); sec.id = "rec-deeper"; box.append(sec); }
 

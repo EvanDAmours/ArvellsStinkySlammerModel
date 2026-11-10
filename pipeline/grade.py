@@ -701,12 +701,18 @@ def engine_era(Pc):
     a_bar = C.ENGINE["a_model"]
     own, el = num(E, "p_model"), num(E, "edge_low")
     old_a = (own >= a_bar) & (el >= C.ENGINE["b_edge_low"])         # what an A was until 2026-11-09: sure on the model's own chance
+    flagged = E["why"].astype(str).str.contains("solo share:", regex=False) if "why" in E.columns else pd.Series(False, index=E.index)
+    solo_under = (kind == "solo") & (side == "Under")
     out["watches"] = [
         watch("E4", "A picks", "An A is a pick that is also a sleeper on the same side. Read at 30 graded: it stays only if these hit 60% or better and beat the B and C picks.", E[grade == "A"], of=30, bar=0.60),
         watch("E4", "The A rule it replaced", f"Picks with a cautious edge of 2%+ and a model chance of {a_bar:.0%}+, whatever their grade now. Counted beside the new A, so the two rules can be told apart.", E[old_a], of=30),
         watch("E5", "Combined A picks", "A picks and locks go back to solo only if these hit under 55% over their first 20.", E[(grade == "A") & (kind == "combined")], of=20, bar=0.55),
         watch("E6", "Over picks", "Re-read at 40. The candidate is to show Overs as leans only.", E[side == "Over"], of=40),
         watch("E5", "Locks", "The target is 70% over the season.", E[five], bar=0.70),
+        # the book-share flag (config.HOLES, open issue 15): the card's "solo share:" clause, in no grade until it is read here
+        watch("H1", "Solo Under picks on a flagged line", f"The book's solo line is {C.HOLES['book_share']:.0%} or more of its own combined line. Replayed on weeks 4 to 9 these went 63-25 and the unflagged ones 48-54. Read after week 13: at 58% or better here and ahead of the unflagged, the flag becomes an input to the A grade.", E[solo_under & flagged], of=30, bar=0.58),
+        watch("H1", "Solo Under picks on an unflagged line", "The other half of the same test.", E[solo_under & ~flagged], of=30),
+        watch("H1", "Solo Over picks on a flagged line", "Replayed on weeks 4 to 9: 3-10. Read at 15: under 45%, the Over is no pick on a flagged line.", E[(kind == "solo") & (side == "Over") & flagged], of=15),
     ]
     return out
 

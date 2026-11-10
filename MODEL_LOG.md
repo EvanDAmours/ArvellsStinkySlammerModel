@@ -92,7 +92,9 @@ does not describe his current role, or who may not play, can be a pick, never a 
    - Second model: a gradient-boosted corrector (Poisson loss, three seeds), trained every morning on every
      defender-game since 2023, with the factor model's number and the raw signals as inputs, the next-man-up flag
      among them. It carries 60% of the final number.
-   - Solo = the combined number x his solo share (his own, shrunk toward his position's over 25 tackles) x the
+   - Solo = the combined number x his solo share (his own, shrunk toward his position's over 150 tackles since
+     2026-11-10: a season of a player's own share is mostly noise; the positions' shares are CB 0.66, S 0.57,
+     LB 0.49, DL 0.44) x the
      league's 3-week solo drift x a solo level per position x this season's official-count factor (the books and
      the box score count a tackle made with an assist as solo: 1.024 in 2026; the model trains on solo alone, the
      stable series). Assists = combined less solo.
@@ -238,7 +240,11 @@ in-sample. The full write-up is Research round 11.
   0.4, 0.6, 0.7, and 0.8 is no better than 0.6 on folds 2025-26 (-0.0085 against -0.0089) and worse on the 2024 fold
   (+0.024, t +2.3). Since 2026-10-27, kept 2026-11-09. Re-open: a full 2026 fold in which regulars prefer 0.8 by t -2.
 - **P5. The next-man-up flag is an input to the corrector.** New 2026-11-09, adopted with P3 as one design.
-- **P6. Shrinkage by position** (LB 0.5 games, S 1, CB 3, DL 3), solo share shrunk over 25 tackles, league solo drift
+- **P6. Shrinkage by position** (LB 0.5 games, S 1, CB 3, DL 3), solo share shrunk over 150 tackles of the
+  position's share (CB 0.66, S 0.57, LB 0.49, DL 0.44; 25 tackles and 0.72, 0.62, 0.52, 0.45 until 2026-11-10, 11 am:
+  changelog. Back to 25 if the solo deviance on regulars is worse with it over the 2026 season's remaining weeks by
+  t +2, or the engine's solo margin over the book on weeks 10 to 13 is worse than the old share's on the same lines),
+  league solo drift
   over 3 weeks, solo level per position, the official-count factor (1.024 in 2026, refreshed every morning). Rounds 1
   to 5 and the 2026-11-09 solo-count entry (archive). Re-open with a full extra season.
 - **P7. The spread is fitted, not set:** maximum likelihood around the out-of-sample final projection, by position,
@@ -297,7 +303,9 @@ in-sample. The full write-up is Research round 11.
   the last thing to go. The Sunday 10 am look duplicates that pull since the clocks changed (the early games kick
   off at noon Edmonton now) and is the first to go.
 - **R4. Frozen until 2026-12-08** (rule 6 above). Lifted once by the owner on 2026-11-09 for six named changes
-  (changelog, 10 pm), before week 10 had a line; it stands again.
+  (changelog, 10 pm), before week 10 had a line. On 2026-11-10 the solo share was corrected as a defect (P6), on the
+  owner's instruction to test on the season's past lines and correct what they show, again before week 10 had a
+  line. It stands again: no pricing rule, bar or stake moved on 2026-11-10.
 - **R7. Changed 2026-11-09, 10 pm, at the owner's instruction** (they amend E2, E4 and E5 above; evidence in the
   changelog, all of it in-sample):
   - *E2:* the weight is 0.65 on solo lines and 0.35 on combined (assists 0.5); the cautious chance is half of it.
@@ -307,7 +315,9 @@ in-sample. The full write-up is Research round 11.
     C; else back to the old rule (cautious edge 2%+ and a model chance of 70%+), which is counted beside it.
   - *Combined level:* combined projections of the week times actual over projected on the season's earlier lined
     games (shrunk n / (n + 100), clipped 0.9 to 1.1). Off if that ratio falls inside 0.99 to 1.01 over four weeks
-    or the scoreboard's combined margin is worse with it. Solo has no level.
+    or the scoreboard's combined margin is worse with it. Solo has no level. Since 2026-11-10 the line log holds
+    weeks 2 to 6 as well (replayed on their closing lines), so the level is read on the whole season: 1.008 for
+    week 10, where weeks 7 to 9 alone gave about 1.03.
   - *Misfit:* one book alone on the player and market and a model chance of 93%+ is no pick.
   - *Role news:* a pull rebuilds the projections when a player expected at 30%+ of the snaps is newly out or
     newly cleared.
@@ -423,6 +433,10 @@ record where they concern picks.
 - **A wider spread for thin histories** (2026-11-09; round 11): best-fit spread around the final projection by prior games 1.28 (2 games), 1.27 (3-4), 1.26 (5-7), 1.25 (8+): nothing to allow for.
 
 ### Pricing, calibration and pick rules
+- **The hot player's combined Over** (2026-11-10, 8:30 am candidate; rejected 11 am): last three games half a tackle over his season average. 75-47 on weeks 7 to 9 where it was found, 36-45 (-13% a bet) on weeks 1 to 6. Off the card; still scored by `tools/holes.py`.
+- **The book-share correction inside the engine** (2026-11-10, 11 am): the fair chance of a solo Under moved up when the book's solo line is 58%+ of its combined line. Fitted on weeks 7 to 9 and scored on weeks 2 to 6: -0.0090 (the shift is three times too large); leave one week out +0.0028 (t +0.7), worse in weeks 2, 4 and 5; a fixed small shift (0.15 to 0.2) +0.0015 to +0.0019 (t 2) on all weeks but +0.0005 (t 0.6) on weeks 2 to 6. The signal is real as a bet (issue 15) and too uneven week to week to be a probability. Re-open with weeks 10 to 13.
+- **The solo-share gap as its own signal** (2026-11-10, 11 am): once the book's share is known the player's own share adds nothing: gap of -0.04 or lower without a book share of 58%: 44-42 on weeks 1 to 6; a book share of 58% without the gap: 41-26.
+- **A level by position for lined players, solo or combined** (2026-11-10, 11 am): walk-forward on weeks 3 to 9, solo +0.0003 (t +0.1), combined -0.0037 (t -1.4, all of it weeks 8 and 9). Corners' solo ran 21% under the model on weeks 7 to 9 and 1% under on weeks 2 to 6.
 - **Pricing from the model's number alone** (2026-10-26; week 7 post-mortem): claimed 62%, hit 53%; old rules on week 7 closing lines 59-57, -3.1 units against 50-41, +11.8 with the blend (partly in-sample). Re-open if: over 4+ weeks the pure model beats the blend.
 - **Shrinking the probability toward the market on top of the blend** (2026-10-26; backlog): by 0.25-0.5; fewer picks and worse results on week 7 at every bar. The blend alone did the work (PROB_SHRINK left off). Superseded, not contradicted: that was week 7 picks on the raw-line blend; the engine of 2026-11-09 anchors on the fair price and was chosen on every closing line of three weeks.
 - **Consistency as a filter** (2026-10-26, backlog; 2026-11-09, open issues A9): cleared the line in 67%+ of games: no lift on week 7; on 778 lines "cleared this line in his games" adds nothing (-0.21, t = -0.5).
@@ -488,11 +502,15 @@ What is not settled, most consequential first. The register of the 2026-11-09 re
 archive with its evidence; the rebuild closed A1, A2, A3, A4, A6, A7, A9, A10, C6, C8 and D1 to D3, and partly A11
 and C9. What remains, and what the rebuild itself turned up:
 
-1. **No edge has been demonstrated.** The record as bet is 200-183 (likely range 43% to 61%), +0.1 units; locks 10-4
-   (44% to 89%, against a break-even near 58%). No-vig closing-line value -2.75 points, give or take 0.74 (a price
-   that never moves scores -2.4). The scoreboard's margin over the book on the logged numbers is +0.0068 (t +1.9,
-   three weeks, in-sample for the weight); with the rebuilt projection's numbers +0.0044 (t +1.0). It is all solo:
-   +0.0107 (t +2.2) on solo lines, -0.0020 (t -0.4) on combined. Weeks 10 to 13 are the first out-of-sample test.
+1. **The first out-of-sample evidence is in, and it is mixed.** Weeks 2 to 6 were fetched on 2026-11-10, after
+   every rule was chosen on weeks 7 to 9 (changelog, 11 am). On their 1,655 closing lines the engine beat the book by
+   +0.0075 of log-loss (t +1.7; +0.0081, t +2.7 over all eight weeks), positive in solo, combined and assists; the
+   model alone beat the book too (0.6772 against 0.6817). Its picks of weeks 4 to 6, replayed: 96-81, +11.1 units at
+   1 a bet, but -3.0 units on 87.5 staked: the bigger stakes did worse than the small ones (picks the model
+   gave 70% to 75% went 13-15, -7.9 units staked; stakes of half a unit or more 33-36). A picks 14-8, locks 2-3. The record as bet before the engine is 200-183, +0.1 units.
+   So: the price is better than the book's on eight weeks, the picks win at a flat stake, and neither the grades nor
+   the stakes are shown to order. One snapshot a week for weeks 2 to 6 (an hour before kickoff), and the injury
+   report of the replay is the final one. Weeks 10 to 13 remain the test.
 2. **The model sits below the book, in both markets, every week.** Mean gap -0.19 (combined) and -0.21 (solo) in
    log-odds: the model gives the Over 45% where the book gives 49.6%. On solo the book was the one that was wrong in
    weeks 7 and 8 (Overs hit 33% and 39%) and right in week 9 (50%). On combined the model was wrong all three weeks
@@ -519,10 +537,12 @@ and C9. What remains, and what the rebuild itself turned up:
    The share model does not know which backup takes the snaps; a depth chart read the same morning would.
 6. **Overs.** 6-9 as picks at the closing lines, 15-20 in the replay, 28-40 live before the engine. Same test as
    Unders, never locks. Candidate: Overs as leans only. Re-read at 40 further Over picks.
-7. **Odds credits: settled for November.** The owner replaced `ODDS_API_KEY` on 2026-11-09 (500 credits, checked with
-   the "Check odds keys" workflow); `PARLAY_API_KEY` is no longer set. The budget runs every scheduled pull and the
-   two Wednesday early looks on solo and combined; the assists trial market stays out (about 540 credits would be
-   needed). Credits reset on the 1st.
+7. **Odds credits: no longer a constraint.** The owner replaced `ODDS_API_KEY` again on 2026-11-10 with a paid key:
+   20,000 credits and the feed's history. 15,414 were left after the day's fetches (week 8 timing sample 110; the
+   closing lines of weeks 1 to 6 in three markets and the same weeks 16 hours before kickoff in two, 4,476 together).
+   The budget now runs every scheduled pull with the assists market. `config.ODDS_RESET_DAY` still assumes the
+   calendar month: a paid plan renews on its purchase date (owner to confirm; nothing depends on it at this size).
+   The season before (2025) could be fetched for about 5,400 credits if a 17-week test is wanted.
 8. **The standing post-mortem task: working.** Its first run under the instructions of 2026-11-09 (Tuesday
    2026-11-10, 8:24 am) read the plain weekly log, ran the daily in a scratch copy, wrote the close of week 9 in the
    set order and pushed it to this branch itself (commit 6f35256, `MODEL_LOG.md` only), in eight minutes. Nothing
@@ -534,21 +554,36 @@ and C9. What remains, and what the rebuild itself turned up:
 11. **Prices are not Alberta prices.** theScore Bet's lines are its US feed; three books post tackle lines on the
     feed; bet365 is not carried. That a tackle made with an assist settles as solo at the book is inferred from
     ESPN, not confirmed: one settled slip would do it (Nohl Williams Under 2.5 solo, week 9).
-15. **The solo-share gap (candidate, the strongest so far).** Solo Unders where the book's two lines imply a higher
-    solo share than the player's own went 96-39 at the close in weeks 7 to 9, most of them lines the model passed on
-    (changelog, 2026-11-10, 8:20 am). Logged from week 10 (`share_gap`). Read at the end of week 13: if those Unders hit
-    58% or better out of sample and beat the rest of the solo board, make it a pick rule and an A input.
-    Two more candidates found the same day run beside it (`tools/holes.py`): part-time players' solo Unders (82-40)
-    and hot players' combined Overs (75-47). The second cuts against the model's own damping of hot streaks: if it
-    holds, the projection's treatment of recent form on combined is the thing to re-test, not just a pick rule.
-    (Re-tested the same day on four seasons: the model does not lag hot players; the lag is the books'. And a fifth
-    line: either solo pattern with Rotowire's solo number well under the line too, 47-16.)
-16. **The solo share is over-dispersed: a fix is measured and waiting.** 150 tackles of the position's share as
-    the prior (now 25), priors from the data (CB 0.67, S 0.58, LB 0.49, DL 0.44; now 0.72, 0.62, 0.52, 0.45),
-    optionally last season's tackles at half weight. Solo projection -0.0174 (t -5.9) on regulars, each of three
-    seasons; replay of weeks 7 to 9 no worse. Passes the protocol's test; needs the owner's word (the freeze), a
-    real daily and the smoke test. It would also move the share-gap flag (the flag would use the cautious share:
-    100-41 at -0.04, 49-14 at -0.08).
+15. **The book's own solo share (candidate, confirmed once out of sample).** Solo Under where the book's solo line is
+    58% or more of its own combined line: 117-49 on weeks 7 to 9 where it was found, then 176-103 (63%, +12% a bet at
+    the best closing price) on weeks 1 to 6, fetched afterwards; positive in seven of the nine weeks, 293-152 in all.
+    It needs no model. With the engine's own Under pick on the same line: 51-25 on weeks 2 to 6, 33-11 on 7 to 9;
+    the engine's Over picks against it lost 5-13. The solo-share gap it was first seen through adds nothing to it
+    (a gap without a high book share: 44-42 on weeks 1 to 6), and as a correction inside the engine it does not hold
+    week to week (leave one week out +0.0028, t +0.7; rejected register). So it is a flag on the card and a line in
+    `tools/holes.py`, in no grade. Read after week 13 on weeks 10 to 13: if those Unders hit 58% or better again and
+    the engine's flagged Under picks beat its unflagged ones, make the flag an input to the A grade and bar the
+    Over pick on a flagged line. In the replays, which pick at the logged price: the engine's solo Under picks on
+    a flagged line 23-12 (weeks 4 to 6) and 40-13 (7 to 9), on an unflagged line 15-22 and 33-32; its solo Over
+    picks on a flagged line 1-5 and 2-5; A picks on a flagged line 12-6 and 20-2, the other A picks 2-2 and 4-4.
+    The three splits are counted from week 10 under "Rules on trial" (`grade.engine_era`, rule H1).
+    Beside it: part-time players' solo Unders (82-40, then 66-47 on weeks 1 to 6; 35-33 with neither a high book
+    share nor a gap: weak alone) and either pattern with Rotowire's solo number well under the
+    line (47-16, then 78-38). The hot player's combined Over failed (75-47, then 36-45): off the card.
+16. **Closed 2026-11-10: the solo share was over-dispersed.** Adopted (P6; changelog, 11 am).
+18. **Stakes on weeks 4 to 6 lost where flat bets won** (issue 1): -3.0 units staked against +11.1 flat. Three weeks.
+    If weeks 10 to 13 show the same (staked return under the flat return by more than the luck table allows), the
+    stake should stop growing with the model's own chance above 70% on solo. Related: issue 3.
+19. **Combined Overs.** The engine's combined Over picks at the closing lines are 3-11 over eight weeks (1-6 on
+    weeks 2 to 6); in the replays, which pick at earlier prices, 15-12. Fourteen bets. Counted under the "Over
+    picks" watch.
+20. **Lines open about a day before kickoff.** In the week 8 sample nothing was posted 96 hours out, one book at 72
+    and 48, DraftKings in part at 24, the board at 6. On weeks 1 to 6, 91% of the closing board was up 16 hours
+    before kickoff at the same line (89% of solo lines, 79% of combined did not move) and the same price: the
+    book-share Unders went 159-93 at the early line. So the Wednesday early look (weeks 10 and 11) will most
+    likely find nothing, at no cost; and there is no price to be had by waiting for the last hour or by going
+    early. When a line did move it moved the right way (Under the early line 34-18 when a combined line fell,
+    29-48 when it rose): the model's side at the early line against the later move is the test still to run.
 17. **Corners and safeties are too spread out on combined** (candidate): a slope for the two positions and the
     opponent's implied points for safeties, -0.0085 (t -3.1) on regulars 2025-26, worse for part-time backs. Re-test
     as one pre-stated variant, applied to regulars only, before anything is built.
@@ -763,6 +798,96 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 ## Changelog
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
+
+### 2026-11-10, 11 am (the season's past lines fetched; the solo share corrected; one hole confirmed, one flag dropped)
+
+Owner: "I gave you a brand new API key. 20,000 credits, with historical odds data. Run whatever historical tests
+you want for this season to improve model prediction and find any other discrepancies we can correct and any holes
+in the books lines that we can win on." And, of the site's banner ("169 credits to spend"): "is it right or no?"
+
+**The banner was wrong.** It repeated the count of Monday's last pull, made with the old key. `write_site` now asks
+the keys at every daily and pull (a free call; commit ea7ec87). The "Check odds keys" workflow read 20,000, and
+15,414 after the fetches below.
+
+**What was fetched** (`run.py history`, extended: it finds a past week's games in the feed, takes a snapshot per
+game any number of hours before kickoff, and can save early looks apart in `data/odds_early`): the closing lines
+(an hour before kickoff) of weeks 1 to 6 in three markets, 3,620 prices, into `data/odds`; the same weeks 16 hours
+before kickoff in two markets; week 8 at 96, 72, 48, 24 and 6 hours as a timing sample. None of weeks 1 to 6 was
+seen when the rules, the weights or the candidates were chosen (weeks 7 to 9), so they are an out-of-sample test of
+all of them, with two limits: one snapshot a week, and the replay's injury report is the final one.
+
+**1. The engine against the book on weeks 2 to 6** (1,655 decided closing lines; week 1 has no projection history):
+
+| | book | model alone | engine | engine's margin |
+|---|---|---|---|---|
+| current solo share | 0.6817 | 0.6843 | 0.6779 | +0.0038 (t +0.8) |
+| cautious solo share (adopted below) | 0.6817 | 0.6772 | 0.6742 | +0.0075 (t +1.7) |
+
+With the cautious share the margin is positive in each market (solo +0.0089, combined +0.0076, assists +0.0060)
+and in four of the five weeks; over all eight weeks +0.0081 (t +2.7). At the best closing price, the engine's side
+with a cautious edge of 2% or more went 112-70 (+20% a bet) on weeks 2 to 6. The shadow candidates on the same
+weeks: flat weight +0.0003 (t +0.8), centred combined gap -0.0012 (t -2.5: it failed where it was not found), solo
+level -0.0001. None is adopted; they keep running.
+
+**2. The picks, replayed** (`tools/replay_five.py`, weeks 4 to 6 on the closing snapshot, weeks 7 to 9 on every
+pull; weeks 1 to 3 make no pick, a player needs three games):
+
+| | weeks 4 to 6 | weeks 7 to 9 | all six |
+|---|---|---|---|
+| rules of 2026-11-09 | 94-89, +2.7u flat, -4.1u staked | 117-85, +28.6u, +7.4u | 211-174 |
+| with the cautious solo share | 96-81, +11.1u flat, -3.0u on 87.5 staked | 123-85, +32.9u, +13.7u on 78.4 | 219-166, +44.0u, +10.7u |
+
+A picks 14-8 and 24-6; locks 2-3 and 6-0. On weeks 4 to 6 the stakes lost where flat bets won (open issue 18) and
+B picks (37-39) did no better than C (45-34): grades and stakes are not shown to order (issue 3). `data/retro_five.json`
+now holds weeks 4 to 9 under the adopted rules.
+
+**3. Adopted: the cautious solo share** (decision P6; open issue 16 closed). `SOLO_SHARE_PSEUDO` 25 to 150,
+`POS_SOLO_SHARE` to the measured CB 0.66, S 0.57, LB 0.49, DL 0.44. Why: a player's own solo share over a season
+is mostly noise, and the model believed it (the hour's search, below). Evidence, in the protocol's order: smoke
+test 180 of 180; walk-forward on the final solo projection, regulars, three seasons: -0.0174 deviance (t -5.9),
+each season; on this season's lined players 1.224 against 1.235 (weeks 2 to 6) and 1.124 against 1.136 (weeks 7
+to 9); the scoreboard and the replay above, better on the weeks it was not found on as well as the ones it was;
+a real daily in a scratch copy (708 projections, level and scoreboard as expected). It is a defect in the
+projection, so the freeze (R4) allows it; no pricing rule moved. Week 10 has no line yet, so the engine's
+out-of-sample record starts clean. Revert: P6.
+
+**4. The level for lined players now reads the whole season.** The line log held weeks 7 to 9 only, so the
+combined level (R7) was about 1.03 from three weeks in which combined ran high. Weeks 2 to 6 are added to
+`data/lines_log.csv` from the replay (the model's number at each closing line, `pulled_at` marked `-replay`, as
+weeks 7 and 8 already were). On the eight weeks the ratio is 1.01: the level for week 10 is 1.008. The site's
+"Against the market" table therefore shows eight weeks; its verdict is still read on the weeks since the engine.
+
+**5. Holes in the books' lines, on weeks 1 to 6** (`tools/holes.py`; each was written down from weeks 7 to 9):
+
+| candidate | weeks 7 to 9 | weeks 1 to 6 |
+|---|---|---|
+| solo Under, book's solo line 58%+ of its combined line | 117-49 | 176-103 (63%, +12%); 4 of 6 weeks up, 2 flat |
+| the same, and Rotowire's solo number well under the line | 35-9 | 68-30 (69%, +21%) |
+| solo Under, share gap -0.04 or lower | 99-40 | 179-119, but 44-42 without a high book share |
+| solo Under, part-time player | 82-40 | 66-47 (58%); 35-33 with neither a high book share nor a gap |
+| combined Over, hot player | 75-47 | 36-45: failed |
+| solo Under, neither gap nor part-time | 84-81 | 149-153 |
+
+The book's solo share is the signal and it needs no model: where a book sets a solo line that is a large part of
+its own combined line, the Under has won two in three, at the early price as well as the last one. Where the
+engine also picks the Under: 51-25 and 33-11. As a probability inside the engine it fails (rejected register), so
+nothing in the pricing changes. On the card: the "solo share" flag now fires on the book's share (58%+), the "hot"
+flag is gone, "part-time" stays. In the replays the flag splits the engine's own solo picks in both halves: solo
+Under picks on a flagged line 63-25, on an unflagged line 48-54; solo Over picks on a flagged line 3-10; A picks on a
+flagged line 32-8, the rest 6-6. That is the case for a pick rule, and it is a pick rule: frozen (R4), so it is
+counted from week 10 under "Rules on trial" (three new lines, rule H1) and put to the owner. Open issue 15 holds
+the test.
+
+**6. Also measured, nothing changed.** Lines open about a day before kickoff and barely move after (open issue
+20): the Wednesday early look stays as asked but will most likely be empty. Solo Unders at a favourite's price
+(1.83 or shorter) went 191-107 on weeks 1 to 6 and 115-58 on 7 to 9: the same lines as the book-share hole, mostly.
+Corners' and linemen's Unders in both markets were 57% to 67% in both halves at the best price: a base rate to
+re-read with more weeks, not a rule. Combined Unders as a whole: 55% on weeks 1 to 6, 49% on 7 to 9: no base rate.
+
+Smoke test: the synthetic board had no solo line, so no solo-only flag had ever been exercised: a dozen solo lines
+added (`tests/fake_data.py`), and the A-grade check, written for the older rule and passing by coincidence,
+now tests the rule in force. 180 of 180. Scripts: scratchpad `res/h20_oos.py` to `h26_early.py`, replays `rn6`
+(old share), `rn7`, `rn8` (adopted).
 
 ### 2026-11-10, 10 am (an hour's search for signals: the solo share is far too extreme; nothing changed yet)
 
@@ -1315,3 +1440,14 @@ Never tested; each with what would justify it. Anything tested and dropped is in
   that recomputes a number from its parts needs that tolerance.
 - **A summary written by a helper is checked against its source before it enters this file.** The rejected register
   was compiled by a subagent from the archive; nine figures spot-checked against the text, all matched.
+
+- **A test that cannot fail tests nothing.** The synthetic board had combined and assists lines only, so every
+  solo-only card flag passed "where they apply" by never applying, and the A-grade check still tested the rule
+  replaced a day earlier, passing because every synthetic A happened to clear the old bar too (2026-11-10). When a
+  rule changes, read the check that names it; when a feature is per market, the synthetic board needs that market.
+- **A level read on three weeks is those three weeks.** The lined-player level was 1.03 from weeks 7 to 9 and 1.01
+  once weeks 2 to 6 were in. A walk-forward statistic says how many weeks feed it, in the log line that prints it.
+- **Found on three weeks, checked on six.** Of six candidates written down from weeks 7 to 9, two held on weeks
+  1 to 6 at nearly full size, two held only through the first, one was weak alone and one reversed (75-47 to
+  36-45). A pattern from three weeks is a coin until other weeks agree.
+- A DataFrame column named `level` cannot be read as an attribute (`df.level`, `groupby(...).level`): use brackets.
