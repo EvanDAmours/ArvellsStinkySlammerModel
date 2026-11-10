@@ -406,6 +406,11 @@ record where they concern picks.
 - **A bigger next-man-up bump (1.20)** (2026-11-09; round 11): bias on those rows +0.25 to +0.22, but deviance worse for everyone (-0.0121 against -0.0135) and for the 60%+ class.
 - **The vacancy rule at half or quarter weight on the final projection** (2026-11-09; round 11): with it the final number over-projects its rows (-0.28 at 0.5, -0.11 at 0.25, +0.15 without); with against without +0.038 (t +0.6) on 213 rows. Out.
 - **A minimal factor set** (2026-11-09; round 11): also dropping volume, spread tilt, indoors and depth chart loses the gain for the 60%+ class (+0.0000 against -0.0033); feeding the corrector the season rate alone is worse again (+0.0032).
+- **Opponent and game effects on the solo share** (2026-11-10; hour's search): added to the recalibrated share one at a time, regulars 2024-26: the opponent's solo share allowed -0.0021 (t -0.9; the raw gradient is 0.538 to 0.574 across fifths and grows each season, so re-open with a season more), the defence's own lean, run share faced, spread, home, implied points, indoors, week, snaps: none at t -2.
+- **An in-season level by position** (2026-11-10; hour's search): the season's actual over projected so far, shrunk over 300 to 2,000 tackles: +0.0029 to +0.0008 (worse) over 2024-26, better only in 2026 (-0.003), where linebackers run 5% over. A season's level by position is noise in a normal year.
+- **The league's recent tackle volume as a level** (2026-11-10; hour's search): volume rose from 63.9 a team-game in 2023 to 66.2 in 2026, but the last three weeks' volume says nothing about next week's level (correlation 0.04 over 47 weeks).
+- **Correcting the snap forecast's biases** (2026-11-10; hour's search): non-starters on the depth chart expected at 50%+ play 5 points less than forecast, demoted players 9, after a bye 2, heavy favourites 2. Removing the bias (walk-forward) leaves the tackle projection no better (+0.0010, t +1.0): the corrector already knows.
+- **The corrector's weight, or the games of prior, by position** (2026-11-10; hour's search): 0.6 is the best weight for linebackers in every season and inside noise for the rest (corners at 0.45: -0.0038, t -1.8); more prior for safeties, corners or linebackers: nothing at t -2 on its own position.
 
 ### Spread and distribution
 - **Player-level dispersion** (2026-10-26; round 1): per-player variance shrunk to the position value had worse likelihood than the position value at every shrinkage tried. Phi stays by position.
@@ -534,13 +539,22 @@ and C9. What remains, and what the rebuild itself turned up:
     ESPN, not confirmed: one settled slip would do it (Nohl Williams Under 2.5 solo, week 9).
 15. **The solo-share gap (candidate, the strongest so far).** Solo Unders where the book's two lines imply a higher
     solo share than the player's own went 96-39 at the close in weeks 7 to 9, most of them lines the model passed on
-    (changelog, 2026-11-10, 9 am). Logged from week 10 (`share_gap`). Read at the end of week 13: if those Unders hit
+    (changelog, 2026-11-10, 8:20 am). Logged from week 10 (`share_gap`). Read at the end of week 13: if those Unders hit
     58% or better out of sample and beat the rest of the solo board, make it a pick rule and an A input.
     Two more candidates found the same day run beside it (`tools/holes.py`): part-time players' solo Unders (82-40)
     and hot players' combined Overs (75-47). The second cuts against the model's own damping of hot streaks: if it
     holds, the projection's treatment of recent form on combined is the thing to re-test, not just a pick rule.
     (Re-tested the same day on four seasons: the model does not lag hot players; the lag is the books'. And a fifth
     line: either solo pattern with Rotowire's solo number well under the line too, 47-16.)
+16. **The solo share is over-dispersed: a fix is measured and waiting.** 150 tackles of the position's share as
+    the prior (now 25), priors from the data (CB 0.67, S 0.58, LB 0.49, DL 0.44; now 0.72, 0.62, 0.52, 0.45),
+    optionally last season's tackles at half weight. Solo projection -0.0174 (t -5.9) on regulars, each of three
+    seasons; replay of weeks 7 to 9 no worse. Passes the protocol's test; needs the owner's word (the freeze), a
+    real daily and the smoke test. It would also move the share-gap flag (the flag would use the cautious share:
+    100-41 at -0.04, 49-14 at -0.08).
+17. **Corners and safeties are too spread out on combined** (candidate): a slope for the two positions and the
+    opponent's implied points for safeties, -0.0085 (t -3.1) on regulars 2025-26, worse for part-time backs. Re-test
+    as one pre-stated variant, applied to regulars only, before anything is built.
 12. **Closing-line value and the prices disagree.** On the replay's picks the price logged beat the closing price
     of the same line (+29.9 units against +25.0 on 186 picks), yet the no-vig closing-line value of the same picks
     is -2 points. One of the two is measured wrong (the vig widening near kickoff, or the conversion through the
@@ -753,7 +767,68 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
-### 2026-11-10, noon (a validation pass against outside sources: the formula stands, nothing changes)
+### 2026-11-10, 10 am (an hour's search for signals: the solo share is far too extreme; nothing changed yet)
+
+Owner: "use one hour of real time to dive deep into the analytics and find any other signals." Sixteen parts,
+9:08 to 10:08 am. Four seasons of the model's own out-of-sample projections where a question could be put to
+them (thousands of games), the closing lines of weeks 7 to 9 where it could not (three weeks: hints only).
+Scripts: scratchpad `res/h1_scan.py` to `h17_poslevel.py`. Nothing in the model changes in this entry.
+
+**1. The solo share is over-dispersed (the finding of the hour; open issue 16).** Given the tackles a player
+makes, the share that are solo regresses to his position's norm far more than the model allows. Regulars,
+2024-26, by the model's share: it says 0.72 and they post 0.68; it says 0.46 and they post 0.49. A calibration
+slope fitted walk-forward is 0.3 to 0.4 where 1.0 would be right. The share is built as his solo tackles plus 25
+tackles of a position prior (`config.SOLO_SHARE_PSEUDO`, chosen on absolute error in round 5) and the priors
+themselves are high (CB 0.72 against 0.67 posted, S 0.62 against 0.58, LB 0.52 against 0.49).
+- As it would ship (the position's share from earlier seasons as the prior, 150 tackles of it): solo given
+  combined -0.0375 (t -6.7) on 5,986 regular games, better in each season (-0.038, -0.029, -0.057); the solo
+  projection itself -0.0174 of Poisson deviance (t -5.9). Counting last season's tackles at half weight too:
+  -0.0194 (t -6.1). The surface is flat from 100 to 250 tackles; 25 is worth nothing (-0.0000).
+- For scale: the whole rebuild of 2026-11-09 was worth -0.0089 on the combined projection.
+- Against the books (384 solo lines, weeks 7 to 9): the model's typical miss 1.433 with the cautious share against
+  1.451 now and 1.475 for the line itself; where the model sits 0.75+ under the line the Under went 28-10 against
+  35-15 now. Replay through the engine with 150 tackles and corrected priors: 123-86, +32.2 units flat, +13.6 at
+  the stakes, A 24-6, locks 6-0, against 117-85, +28.6, +7.4, 25-6, 8-1 now: no harm, a little better (three weeks).
+- Not adopted here: the hour was for finding. Recommended to the owner as the next change.
+
+**2. Corners and safeties: the combined projection is too spread out (open issue 17).** Top fifth of corners by
+projection: 0.914 of projected over three seasons (t -4.0, each season); safeties 0.938 (t -3.7); the bottom
+fifths 5 to 9% over. And safeties run over against an opponent the market expects to score (25.5+ implied points:
++5.6%, t +3.1, each season). A slope for the two positions plus the opponent's implied points for safeties,
+fitted on earlier seasons: regulars 2025-26 -0.0085 (t -3.1), 2025 -0.0093, 2026 -0.0066. Six variants were tried
+and it is worse for defensive backs expected at 50 to 80% (+0.016, t +1.7), so it is a candidate, not a result.
+Linebackers need nothing (slope 0.93 to 0.98).
+
+**3. Checked and found sound.** The corrector's weight by position (0.6 is the best or within noise for each; a
+higher weight is worse everywhere). The chance the model quotes across the range of lines (within 1 to 3 points
+of what happened, 18,000 synthetic lines; a little low on Overs at lines of 2.5 and under, which the two fixes
+above address). Part-time players in the model's own history (level: 0.985 to 1.001), so the part-time solo
+Under is the books' error, not ours.
+
+**4. Tested and rejected** (rejected register): opponent and game effects on the solo share; an in-season level
+by position; the league's recent tackle volume; a correction of the snap forecast's biases; games of prior by
+position.
+
+**5. On the books' lines (three weeks; hints).**
+- **The books make the same mistake as the model, and their own lines show it.** Where a book's solo line is 58%
+  or more of its own combined line, the solo Under went 117-49 (70%; by week 43-14, 42-18, 32-17) against 121-103
+  below that, with no model at all: players the lines put at 0.58 to 0.65 posted 0.495. With the cautious share,
+  his share 0.10 or more under the book's implied share: 42-10. In `tools/holes.py` as a sixth line
+  (`config.HOLES["book_share"]`).
+- The two solo flags as a book: 153-72 (68%), +26% a bet, 75 lines a week; by week +38%, +28%, +11%. The edge is
+  shrinking: the share the books' lines imply fell 0.583, 0.575, 0.558 while the share posted rose to 0.558.
+- Left out one week at a time, the flags add to the book's price in each week (solo); "hot" and "corner or
+  lineman" do on combined.
+- Combined lines where the model sits half a tackle or more under the line: the Over won 39-21. The model's
+  combined Unders have been wrong; the engine already gives combined disagreement little weight.
+- A team's lead tacklers went Over 59-37 and Over 28-11 when also hot, but over 2024-25 the model shows no such
+  lean (0.98) and the lean is one three-week burst (1.13 in weeks 7 to 9): probably luck, not a hole.
+- Nothing in line movement (1,231 series), spread, total, home or away, opponent pace, or the assists market
+  (one week of lines).
+
+**Not finished.** The first replay run was stopped at its time limit during week 9; week 9 was re-run alone.
+
+### 2026-11-10, 9 am (a validation pass against outside sources: the formula stands, nothing changes)
 
 Owner: "creative liberty to re-dive into the formula and the things we source... anything to validate it:
 injury reports, team sources, online pundits." Six checks, each against something the model did not build.
@@ -779,7 +854,7 @@ One new candidate: on solo lines with the share gap or part-time, Rotowire's sol
 pattern, it calls nothing (17-14). An outside opinion as a confirmer, never a selector. In `tools/holes.py` as a
 fifth line. Scripts: scratchpad `res/n6_outside.py`, `n7_snaps_crew.py`, `n8_pundit_lines.py`, `ext/`.
 
-### 2026-11-10, 11 am (the part-time and hot flags on the card)
+### 2026-11-10, 8:45 am (the part-time and hot flags on the card)
 
 At the owner's request the two candidates of the sweep are named in a card's "why" where they apply, as the
 solo-share gap already was: "part-time" on a solo line (under 85% of the snaps this season) and "hot" on a
@@ -787,7 +862,7 @@ combined line (last three games half a tackle or more over his season average). 
 numbers, shared with `tools/holes.py`. Each clause says it is a measurement on trial and in no grade; no pick,
 grade or stake reads them. Smoke test 180 of 180. Revert: remove the two clauses in `model.price_lines`.
 
-### 2026-11-10, 10 am (a sweep of the closing lines for other holes: two more candidates, written down before week 10)
+### 2026-11-10, 8:30 am (a sweep of the closing lines for other holes: two more candidates, written down before week 10)
 
 Owner, after the solo-share gap: "are there any other holes in the books' lines like that?" Twelve things knowable
 before kickoff were cut against the result at the closing line of weeks 7 to 9, solo and combined (about 120
@@ -809,7 +884,7 @@ on any weeks (790 decided lines here, best closing price of the side).
 Read at the end of week 13 with the share gap (open issue 15): each needs 58%+ out of sample and to beat the rest
 of its market before it becomes a rule. Sweep script: scratchpad `res/n5_holes.py`.
 
-### 2026-11-10, 9 am (an early look at the week for weeks 10 and 11; the solo-share gap measured and logged)
+### 2026-11-10, 8:20 am (an early look at the week for weeks 10 and 11; the solo-share gap measured and logged)
 
 Owner: "add one early pull for week 10 and 11, and test solo share per player."
 
@@ -839,7 +914,7 @@ Script: scratchpad `res/n4_soloshare.py`.
 
 **Validation.** Smoke test 179 of 179 in the clean environment (two new checks).
 
-### 2026-11-10, 6 am (five more ideas tested at the owner's request: none adopted)
+### 2026-11-10, 5 am (five more ideas tested at the owner's request: none adopted)
 
 The owner asked what else could find better picks, was given five ideas marked "measurable" or "a guess", and
 said to do them. Each was tested first; none passed, so nothing in the model changes. Numbers are in the rejected

@@ -99,6 +99,7 @@ def candidates(D):
             ("Solo Under, a part-time player (under 85% of the snaps)", "Under", s[part], s[~part]),
             ("Solo Under, neither of the two (the rest of the solo board)", "Under", s[~gap & ~part], s[gap | part]),
             ("Combined Over, his last three games half a tackle over his season average", "Over", c[hot], c[~hot]),
+            ("Solo Under, the book's two lines alone imply a solo share of 58% or more (no model)", "Under", s[s.book_share >= C.HOLES["book_share"]], s[s.book_share < C.HOLES["book_share"]]),
             ("Solo Under, share gap or part-time, and Rotowire's solo number well under the line too", "Under", s[(gap | part) & agrees], s[(gap | part) & ~agrees & s.rw_solo.notna()])]
 
 
