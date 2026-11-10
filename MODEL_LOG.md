@@ -814,7 +814,9 @@ position.
   or more of its own combined line, the solo Under went 117-49 (70%; by week 43-14, 42-18, 32-17) against 121-103
   below that, with no model at all: players the lines put at 0.58 to 0.65 posted 0.495. With the cautious share,
   his share 0.10 or more under the book's implied share: 42-10. In `tools/holes.py` as a sixth line
-  (`config.HOLES["book_share"]`).
+  (`config.HOLES["book_share"]`). It is the same at each book on its own two lines (DraftKings 112-47, theScore
+  92-39) though the Under already costs about -131 there, and it is where the whole solo edge sat: under 58% and
+  full-time, the solo Under was 71-77. Week 9 alone, the week the board did not go Under: 29-16 against 42-49.
 - The two solo flags as a book: 153-72 (68%), +26% a bet, 75 lines a week; by week +38%, +28%, +11%. The edge is
   shrinking: the share the books' lines imply fell 0.583, 0.575, 0.558 while the share posted rose to 0.558.
 - Left out one week at a time, the flags add to the book's price in each week (solo); "hot" and "corner or
