@@ -1,7 +1,7 @@
 # Locks and parlays: running tally
 
 The locks: the highest-confidence picks of each slate day (3 on a one-game day, 5 on a multi-game day), named before kickoff and tracked here. Target: 70% hits. Then the recommended parlay for each slate day.
-Generated 2026-11-09 21:09 UTC by the daily job. Do not edit by hand.
+Generated 2026-11-10 10:16 UTC by the daily job. Do not edit by hand.
 
 **Locks record: 10-4 (71%), +3.45 units, 0 pending.**
 
@@ -51,8 +51,8 @@ All plays by side: our hit rate against the share of every closing line on the b
 | 2026 wk 7 | Under | 98 | 54% | 58% | 57% of 245 lines | -3% | 49% | the market went our way |
 | 2026 wk 8 | Over | 7 | 29% | 56% | 47% of 264 lines | -18% | 67% | we picked badly (few picks) |
 | 2026 wk 8 | Under | 99 | 55% | 57% | 58% of 264 lines | -3% | 61% | the market went our way |
-| 2026 wk 9 | Over | 1 | 0% | 59% | 48% of 409 lines | -48% |  | we picked badly (few picks) |
-| 2026 wk 9 | Under | 139 | 53% | 60% | 52% of 409 lines | +0% | 52% | the market went our way |
+| 2026 wk 9 | Over | 1 | 0% | 59% | 49% of 438 lines | -49% |  | we picked badly (few picks) |
+| 2026 wk 9 | Under | 139 | 53% | 60% | 53% of 438 lines | -0% | 52% | the market went our way |
 
 ## Parlays
 
@@ -63,3 +63,89 @@ All plays by side: our hit rate against the share of every closing line on the b
 | 2026-10-29 (wk 8) | Isaiah McDuffie Under 7.5 (Loss); Brandon Cisse Under 3.5 (Win) | +268 | 36% | 0.1u | Loss | -0.10 |
 | 2026-11-01 (wk 8) | Jason Marshall Jr. Under 2.5 (Win); Christian Benford Under 3.5 (Win); Sam Williams Under 3.5 (Win) | +346 | 37% | 0.1u | Win | +0.35 |
 | 2026-11-08 (wk 9) | Sam Williams Under 8.5 (Win); Pat Surtain II Under 5.5 (Win); Sauce Gardner Under 4.5 (Loss) | +425 | 24% | 0.1u | Loss | -0.10 |
+
+## Against the market (every logged closing line)
+
+The chance each gives the Over on every line the model had a number for, picked or not, scored by log-loss against what happened (lower is better). The closing price is the last pull before kickoff. The engine's weight was chosen on the weeks before 2026 week 10: only the weeks from there on test it.
+
+| Weeks | Lines | Book | Model alone | Engine | Engine better than the book by |
+| --- | --- | --- | --- | --- | --- |
+| wk 7 (in-sample) | 235 | 0.6921 | 0.6993 | 0.6892 | +0.0030 |
+| wk 8 (in-sample) | 250 | 0.6821 | 0.6636 | 0.6654 | +0.0167 |
+| wk 9 (in-sample) | 427 | 0.6958 | 0.6898 | 0.6877 | +0.0081 |
+| All weeks | 912 | 0.6911 | 0.6850 | 0.6819 | +0.0091 (give or take 0.0033; t +2.8) |
+| **Since week 10 (out of sample)** | 0 | | | | no graded line yet |
+
+By market, all weeks: assists +0.0085 on 143 lines; combined +0.0012 (give or take 0.0034) on 383 lines; solo +0.0173 (give or take 0.0049) on 386 lines.
+
+The engine's side on every line at the best closing price, by tier (all weeks):
+
+| Tier | Lines | Record | Hit | Likely range | Chance said | Return a bet |
+| --- | --- | --- | --- | --- | --- | --- |
+| Picks, B or better | 94 | 59-35 | 63% | 50% to 74% | 61% | +22.8% |
+| Picks, C | 84 | 50-34 | 60% | 46% to 72% | 55% | +17.3% |
+| Leans (not staked) | 129 | 70-59 | 54% | 43% to 65% | 54% | +2.7% |
+| No pick | 605 | 333-272 | 55% | 46% to 64% | 52% | +3.7% |
+
+Calibration of the engine's chance (its side on every line, all weeks): said 42%, hit 55% (91); said 48%, hit 49% (201); said 52%, hit 55% (252); said 57%, hit 58% (210); said 62%, hit 63% (107); said 69%, hit 73% (51).
+
+### Candidates in the shadow
+
+Scored on the same lines and never used for a pick. Their numbers were fixed on 2026-11-09 (config.SHADOW); each is decided after 2026-12-08 on the weeks from week 10 on. Positive: the candidate was a better forecast than the engine.
+
+| Candidate | Log-loss | Against the engine, all weeks (in-sample included) | Since the engine, out of sample |
+| --- | --- | --- | --- |
+| The flat weight of 0.5 in both markets (the rule until 2026-11-09) | 0.6832 | -0.0012 (give or take 0.0006; t -2.0) | no graded line yet |
+| The combined gap centred on the week's own mean | 0.6814 | +0.0006 (give or take 0.0001; t +7.3) | no graded line yet |
+| The level for lined players on solo lines too | 0.6811 | +0.0008 (give or take 0.0013; t +0.6) | no graded line yet |
+
+### The whole board, no model
+
+Every closing line of the week: how often the Over won, against the chance the book's fair price gave it. A gap here is the level of the whole market that week; no choice of lines explains it, and a side that won because of it was not picked by skill.
+
+| Week | Market | Lines | Over won | Book's fair chance of the Over |
+| --- | --- | --- | --- | --- |
+| 2026 wk 7 | combined | 122 | 52% | 49% |
+| 2026 wk 7 | solo | 123 | 34% | 49% |
+| 2026 wk 8 | combined | 133 | 50% | 50% |
+| 2026 wk 8 | solo | 131 | 38% | 49% |
+| 2026 wk 9 | assists | 143 | 49% | 50% |
+| 2026 wk 9 | combined | 149 | 52% | 49% |
+| 2026 wk 9 | solo | 146 | 47% | 50% |
+
+## Since the engine (2026 week 10 on)
+
+The picks the current rules chose, one bet per player, market and side. The decision register's conditions are read on these alone.
+
+No pick graded yet.
+
+Conditions of the decision register on trial:
+
+| Rule | Condition | So far | Record | Hit | Likely range | Model said | State |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| E4 A picks | An A is a pick that is also a sleeper on the same side. Read at 30 graded: it stays only if these hit 60% or better and beat the B and C picks. | 0 of 30 picks | 0-0 |  |  |  | running |
+| E4 The A rule it replaced | Picks with a cautious edge of 2%+ and a model chance of 70%+, whatever their grade now. Counted beside the new A, so the two rules can be told apart. | 0 of 30 picks | 0-0 |  |  |  | running |
+| E5 Combined A picks | A picks and locks go back to solo only if these hit under 55% over their first 20. | 0 of 20 picks | 0-0 |  |  |  | running |
+| E6 Over picks | Re-read at 40. The candidate is to show Overs as leans only. | 0 of 40 picks | 0-0 |  |  |  | running |
+| E5 Locks | The target is 70% over the season. | 0 picks | 0-0 |  |  |  | running |
+| E2 The engine's weight (0.65 solo, 0.35 combined) | Moved toward the book if the engine's margin over the book since week 10 is negative by more than twice its give or take, read after week 13; raised only by the same test. | 0 of 4 weeks |  |  |  |  | running |
+| S1 Stakes on the cautious chance | Sized on the win chance instead once the engine's margin over the book is positive by more than twice its give or take. | 0 of 4 weeks |  |  |  |  | running |
+
+## All plays to date (every rule set)
+
+**Record 200-183 (52%, likely range 43% to 61%), +0.14 units at 1 a bet.** No-vig closing-line value -2.75 points (give or take 0.37) on 399 bets.
+
+| Grade | Record | Hit | Likely range | Chance said | Units at 1 a bet |
+| --- | --- | --- | --- | --- | --- |
+| A | 13-9 | 59% | 37% to 78% | 64% | +0.58 |
+| B | 74-63 | 54% | 43% to 65% | 59% | +1.81 |
+| C | 46-45 | 51% | 38% to 63% | 57% | +3.97 |
+| ungraded | 67-66 | 50% | 35% to 66% |  | -6.22 |
+
+| Side and market | Record | Hit | Likely range | Units at 1 a bet |
+| --- | --- | --- | --- | --- |
+| Over combined | 13-16 | 45% | 27% to 64% | -4.14 |
+| Over solo | 7-11 | 39% | 19% to 63% | -4.01 |
+| Under combined | 44-44 | 50% | 37% to 63% | -2.76 |
+| Under solo | 129-107 | 55% | 45% to 64% | +9.52 |
+| Under assists | 7-5 | 58% | 30% to 82% | +1.53 |

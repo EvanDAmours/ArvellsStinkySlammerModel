@@ -1,122 +1,114 @@
 [
  {
-  "game_id": "2026_09_JAX_BAL",
-  "home": "BAL",
-  "away": "JAX",
-  "kickoff": "2026-11-06T01:15:00+00:00",
-  "edmonton": "Thu 2026-11-05 19:15",
+  "game_id": "2026_10_WAS_NYG",
+  "home": "NYG",
+  "away": "WAS",
+  "kickoff": "2026-11-13T01:15:00+00:00",
+  "edmonton": "Thu 2026-11-12 19:15",
   "international": false
  },
  {
-  "game_id": "2026_09_CIN_ATL",
-  "home": "ATL",
-  "away": "CIN",
-  "kickoff": "2026-11-08T14:30:00+00:00",
-  "edmonton": "Sun 2026-11-08 08:30",
+  "game_id": "2026_10_NE_DET",
+  "home": "DET",
+  "away": "NE",
+  "kickoff": "2026-11-15T14:30:00+00:00",
+  "edmonton": "Sun 2026-11-15 08:30",
   "international": true
  },
  {
-  "game_id": "2026_09_DEN_CAR",
-  "home": "CAR",
-  "away": "DEN",
-  "kickoff": "2026-11-08T18:00:00+00:00",
-  "edmonton": "Sun 2026-11-08 12:00",
+  "game_id": "2026_10_KC_ATL",
+  "home": "ATL",
+  "away": "KC",
+  "kickoff": "2026-11-15T18:00:00+00:00",
+  "edmonton": "Sun 2026-11-15 12:00",
   "international": false
  },
  {
-  "game_id": "2026_09_DAL_IND",
-  "home": "IND",
-  "away": "DAL",
-  "kickoff": "2026-11-08T18:00:00+00:00",
-  "edmonton": "Sun 2026-11-08 12:00",
-  "international": false
- },
- {
-  "game_id": "2026_09_NYJ_KC",
-  "home": "KC",
-  "away": "NYJ",
-  "kickoff": "2026-11-08T18:00:00+00:00",
-  "edmonton": "Sun 2026-11-08 12:00",
-  "international": false
- },
- {
-  "game_id": "2026_09_DET_MIA",
-  "home": "MIA",
-  "away": "DET",
-  "kickoff": "2026-11-08T18:00:00+00:00",
-  "edmonton": "Sun 2026-11-08 12:00",
-  "international": false
- },
- {
-  "game_id": "2026_09_CLE_NO",
-  "home": "NO",
-  "away": "CLE",
-  "kickoff": "2026-11-08T18:00:00+00:00",
-  "edmonton": "Sun 2026-11-08 12:00",
-  "international": false
- },
- {
-  "game_id": "2026_09_NYG_PHI",
-  "home": "PHI",
-  "away": "NYG",
-  "kickoff": "2026-11-08T18:00:00+00:00",
-  "edmonton": "Sun 2026-11-08 12:00",
-  "international": false
- },
- {
-  "game_id": "2026_09_LA_WAS",
-  "home": "WAS",
-  "away": "LA",
-  "kickoff": "2026-11-08T18:00:00+00:00",
-  "edmonton": "Sun 2026-11-08 12:00",
-  "international": false
- },
- {
-  "game_id": "2026_09_HOU_LAC",
-  "home": "LAC",
+  "game_id": "2026_10_HOU_CLE",
+  "home": "CLE",
   "away": "HOU",
-  "kickoff": "2026-11-08T21:05:00+00:00",
-  "edmonton": "Sun 2026-11-08 15:05",
+  "kickoff": "2026-11-15T18:00:00+00:00",
+  "edmonton": "Sun 2026-11-15 12:00",
   "international": false
  },
  {
-  "game_id": "2026_09_LV_SF",
-  "home": "SF",
-  "away": "LV",
-  "kickoff": "2026-11-08T21:05:00+00:00",
-  "edmonton": "Sun 2026-11-08 15:05",
+  "game_id": "2026_10_MIN_GB",
+  "home": "GB",
+  "away": "MIN",
+  "kickoff": "2026-11-15T18:00:00+00:00",
+  "edmonton": "Sun 2026-11-15 12:00",
   "international": false
  },
  {
-  "game_id": "2026_09_GB_NE",
-  "home": "NE",
-  "away": "GB",
-  "kickoff": "2026-11-08T21:25:00+00:00",
-  "edmonton": "Sun 2026-11-08 15:25",
+  "game_id": "2026_10_MIA_IND",
+  "home": "IND",
+  "away": "MIA",
+  "kickoff": "2026-11-15T18:00:00+00:00",
+  "edmonton": "Sun 2026-11-15 12:00",
   "international": false
  },
  {
-  "game_id": "2026_09_ARI_SEA",
-  "home": "SEA",
-  "away": "ARI",
-  "kickoff": "2026-11-08T21:25:00+00:00",
-  "edmonton": "Sun 2026-11-08 15:25",
+  "game_id": "2026_10_CAR_NO",
+  "home": "NO",
+  "away": "CAR",
+  "kickoff": "2026-11-15T18:00:00+00:00",
+  "edmonton": "Sun 2026-11-15 12:00",
   "international": false
  },
  {
-  "game_id": "2026_09_TB_CHI",
-  "home": "CHI",
-  "away": "TB",
-  "kickoff": "2026-11-09T01:20:00+00:00",
-  "edmonton": "Sun 2026-11-08 19:20",
-  "international": false
- },
- {
-  "game_id": "2026_09_BUF_MIN",
-  "home": "MIN",
+  "game_id": "2026_10_BUF_NYJ",
+  "home": "NYJ",
   "away": "BUF",
-  "kickoff": "2026-11-10T01:15:00+00:00",
-  "edmonton": "Mon 2026-11-09 19:15",
+  "kickoff": "2026-11-15T18:00:00+00:00",
+  "edmonton": "Sun 2026-11-15 12:00",
+  "international": false
+ },
+ {
+  "game_id": "2026_10_JAX_TEN",
+  "home": "TEN",
+  "away": "JAX",
+  "kickoff": "2026-11-15T18:00:00+00:00",
+  "edmonton": "Sun 2026-11-15 12:00",
+  "international": false
+ },
+ {
+  "game_id": "2026_10_LA_ARI",
+  "home": "ARI",
+  "away": "LA",
+  "kickoff": "2026-11-15T21:05:00+00:00",
+  "edmonton": "Sun 2026-11-15 15:05",
+  "international": false
+ },
+ {
+  "game_id": "2026_10_SEA_LV",
+  "home": "LV",
+  "away": "SEA",
+  "kickoff": "2026-11-15T21:05:00+00:00",
+  "edmonton": "Sun 2026-11-15 15:05",
+  "international": false
+ },
+ {
+  "game_id": "2026_10_SF_DAL",
+  "home": "DAL",
+  "away": "SF",
+  "kickoff": "2026-11-15T21:25:00+00:00",
+  "edmonton": "Sun 2026-11-15 15:25",
+  "international": false
+ },
+ {
+  "game_id": "2026_10_PIT_CIN",
+  "home": "CIN",
+  "away": "PIT",
+  "kickoff": "2026-11-16T01:20:00+00:00",
+  "edmonton": "Sun 2026-11-15 19:20",
+  "international": false
+ },
+ {
+  "game_id": "2026_10_LAC_BAL",
+  "home": "BAL",
+  "away": "LAC",
+  "kickoff": "2026-11-17T01:15:00+00:00",
+  "edmonton": "Mon 2026-11-16 19:15",
   "international": false
  }
 ]
