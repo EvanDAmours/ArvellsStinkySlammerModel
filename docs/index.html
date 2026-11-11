@@ -121,7 +121,8 @@ details.trial > summary > b { flex: 1 1 12ch; } details.trial > summary .trial-n
 .mine-note { color: var(--muted); font-size: 0.85rem; margin: -4px 0 10px; }
 .wi-form { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 8px 0 10px; }
 .wi-form label { font-size: 0.88rem; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; } .wi-form select, .wi-form input[type=number] { font: inherit; color: var(--ink); padding: 4px 6px; }
-.wi-form input[type=number] { width: 6.5em; } .wi-form .wi-grades { display: inline-flex; gap: 10px; align-items: center; } .wi-form .wi-grades label { gap: 4px; color: var(--ink); }
+.wi-form input[type=number] { width: 6.5em; } .wi-form input[type=text] { font: inherit; color: var(--ink); padding: 4px 6px; width: 7em; } .wi-form label.wide input[type=text] { width: min(22em, 60vw); }
+.live.custom .trend select, .ledger-t select { font: inherit; padding: 2px 4px; } .custom-form label { white-space: nowrap; } .custom-form input[type=number] { width: 5.5em; } .rm-link { font: inherit; color: var(--muted); background: none; border: none; padding: 0; cursor: pointer; text-decoration: underline; } .wi-form .wi-grades { display: inline-flex; gap: 10px; align-items: center; } .wi-form .wi-grades label { gap: 4px; color: var(--ink); }
 .wi-out { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 0 0 10px; }
 .wi-out .rec-card .big { font-size: 1.7rem; }
 @media (max-width: 640px) { .wi-form label { flex: 1 1 46%; min-width: 0; } .wi-form select { flex: 1 1 0; min-width: 0; } .wi-form .wi-grades, .wi-form label.wide { flex: 1 1 100%; } .wi-form .wi-grades label { flex: 0 0 auto; } }
@@ -162,7 +163,7 @@ table .tot td { font-weight: 700; border-top: 2px solid var(--line); }
 .md table { font-size: 0.86rem; } .md td, .md th { white-space: normal; } .md code { font-size: 0.85em; background: var(--bg, #eef0f3); padding: 1px 4px; border-radius: 4px; }
 .rec-filters .reset.on { background: var(--ink); color: var(--panel); border-color: var(--ink); }
 #mine-body .chips .reset { font: 600 0.85rem var(--cond); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; color: var(--ink); }
-.grade-chips .gchip { margin-right: 12px; white-space: nowrap; } .grade-chips .grade { margin-right: 3px; }
+.grade-chips { display: inline-flex; flex-wrap: wrap; gap: 4px 12px; max-width: 100%; } .grade-chips .gchip { white-space: nowrap; } .grade-chips .grade { margin-right: 3px; }
 #mine-body textarea.code { width: 100%; font: 0.78rem/1.3 ui-monospace, Menlo, monospace; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; margin: 4px 0 8px; word-break: break-all; }
 .pulls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0 2px; font-size: 0.82rem; color: var(--muted); }
 .pulls .day { font-weight: 700; color: var(--ink); margin: 0 2px 0 6px; } .pulls .day:first-child { margin-left: 0; }
@@ -1627,6 +1628,74 @@ function saveMine(list) { try { localStorage.setItem(MINE_KEY(), JSON.stringify(
 let MINE = null;
 const mine = () => (MINE ??= loadMine());
 const board = () => mine().filter((b) => !b.archived);     // the live board; a cleared bet stays in the ledger as archived
+const tracked = () => board().filter((b) => !b.custom);    // the tackle bets, followed live; a custom bet is settled by hand
+
+// ---- custom bets: anything the site does not price (a moneyline, a spread, a bet at another book), typed in and
+// settled by hand. No line is pulled for them, so they cost no credits; they count in the board's totals and the ledger.
+const CUSTOM_RESULTS = [["", "Pending"], ["Win", "Won"], ["Loss", "Lost"], ["Push", "Push"], ["Void", "Void"]];
+const weekKeyOf = (season, week) => `mine-${season || ""}-wk${week || ""}`;
+function weekList(key) { if (key === MINE_KEY()) return mine(); try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) { return []; } }
+function saveWeek(key, list) { if (key === MINE_KEY()) { MINE = list; saveMine(list); } else { try { localStorage.setItem(key, JSON.stringify(list)); } catch (e) { /* fine */ } } }
+// American odds as typed (-110, +150, 150); a decimal price (1.91, 2.5) is turned into American
+function parseOdds(t) {
+  const v = parseFloat(String(t ?? "").replace(/[^0-9.+-]/g, "")); if (!isFinite(v)) return null;
+  if (Math.abs(v) >= 100) return Math.round(v);
+  if (v > 1 && v < 100) return v >= 2 ? Math.round((v - 1) * 100) : -Math.round(100 / (v - 1));
+  return null;
+}
+function addCustom({ desc, odds: price, stake, result, week }) {
+  const season = DATA.meta?.season, key = weekKeyOf(season, week), list = weekList(key), now = new Date().toISOString();
+  const b = { key: `custom|${Date.now().toString(36)}`, custom: true, desc, odds: price, stake: stake ?? null, season, week, added: now };
+  if (result) b.settled = { result, source: "manual", at: now };
+  list.push(b); saveWeek(key, list);
+}
+function setCustomResult(weekKey, key, result) {
+  const list = weekList(weekKey), b = list.find((x) => x.key === key); if (!b) return;
+  if (result) b.settled = { result, source: "manual", at: new Date().toISOString() }; else delete b.settled;
+  saveWeek(weekKey, list); renderMine();
+}
+function removeCustom(weekKey, key) {
+  const list = weekList(weekKey), i = list.findIndex((x) => x.key === key); if (i < 0) return;
+  if (!confirm(`Remove "${list[i].desc}" for good?`)) return;
+  list.splice(i, 1); saveWeek(weekKey, list); renderMine();
+}
+function customSelect(b, weekKey) {
+  const s = el("select", { "aria-label": `Result of ${b.desc}` }, ...CUSTOM_RESULTS.map(([v, t]) => { const o = el("option", { value: v }, t); if ((b.settled?.result || "") === v) o.selected = true; return o; }));
+  s.addEventListener("change", () => setCustomResult(weekKey, b.key, s.value));
+  return s;
+}
+function customCard(b) {
+  const m = betMoney(b), dec = toDec(b.odds), win = m.stake != null && dec ? m.stake * (dec - 1) : null, r = m.result;
+  const stakeBox = el("label", { class: "stake" }, "$ ", (() => { const i = el("input", { type: "number", min: "0", step: "1", inputmode: "decimal", placeholder: "stake", value: m.stake == null ? "" : String(m.stake) }); i.addEventListener("change", () => setStake(b.key, i.value)); return i; })(),
+    win != null && !r ? el("small", {}, ` to win ${money(win)}`) : "", m.profit != null && r ? el("b", { class: m.profit > 0 ? "ok" : m.profit < 0 ? "no" : "" }, ` ${m.profit > 0 ? "+" : ""}${money(m.profit) || "$0"}`) : "");
+  const rm = el("button", { type: "button", class: "rm" }, "Remove"); rm.onclick = () => removeCustom(MINE_KEY(), b.key);
+  return el("div", { class: "live custom" + (r === "Win" ? " good done" : r === "Loss" ? " bad done" : r ? " done" : "") },
+    el("div", { class: "who" }, b.desc, el("small", {}, "custom bet")),
+    el("div", { class: "now" }, el("b", {}, odds(b.odds)), el("span", {}, "price")),
+    el("div", { class: "trend" }, el("label", {}, "Result ", customSelect(b, MINE_KEY())), " · you settle this one: the site pulls no line for it"),
+    stakeBox, rm);
+}
+function customForm() {
+  const wk = DATA.meta?.week || 1, wrap = el("div", { class: "section" }, el("h3", {}, "Add a custom bet"),
+    el("p", { class: "lead" }, "For a bet the site does not price: a moneyline, a spread, a total, a parlay, anything at any book. Type it in and mark it won or lost yourself. No line is pulled for it, so it costs no credits. It counts in your board's totals and in the season ledger."));
+  const desc = el("input", { type: "text", placeholder: "Giants moneyline", maxlength: "80", "aria-label": "What the bet is" });
+  const price = el("input", { type: "text", placeholder: "-110 or +150", inputmode: "text", "aria-label": "Odds" });
+  const stake = el("input", { type: "number", min: "0", step: "1", inputmode: "decimal", placeholder: "stake", "aria-label": "Stake in dollars" });
+  const week = el("select", { "aria-label": "Week" }, ...Array.from({ length: wk }, (_, i) => wk - i).map((w) => el("option", { value: String(w) }, w === wk ? `Week ${w} (this week)` : `Week ${w}`)));
+  const res = el("select", { "aria-label": "Result" }, ...CUSTOM_RESULTS.map(([v, t]) => el("option", { value: v }, t)));
+  const msg = el("small", { class: "muted", role: "status" });
+  const go = el("button", { type: "button", class: "reset" }, "Add the bet");
+  go.onclick = () => {
+    const d = desc.value.trim(), o = parseOdds(price.value), st = stake.value === "" || isNaN(+stake.value) ? null : Math.max(0, +stake.value);
+    if (!d) { msg.textContent = "Say what the bet is."; desc.focus(); return; }
+    if (o == null) { msg.textContent = "Odds as the book shows them: -110, +150 or a decimal such as 1.91."; price.focus(); return; }
+    addCustom({ desc: d, odds: o, stake: st, result: res.value || null, week: +week.value });
+    REC_OPEN.add(`mine-ledger-${DATA.meta?.season}-wk${+week.value}`);
+    renderMine();
+  };
+  wrap.append(el("div", { class: "wi-form custom-form" }, el("label", { class: "wide" }, "Bet ", desc), el("label", {}, "Odds ", price), el("label", {}, "Stake $ ", stake), el("label", {}, "Week ", week), el("label", {}, "Result ", res), go), msg);
+  return wrap;
+}
 function toggleMine(b) {
   const list = mine(), k = betKey(b), i = list.findIndex((x) => x.key === k);
   if (i >= 0 && list[i].archived) { list[i].archived = false; }            // cleared earlier: back onto the board, history kept
@@ -1673,7 +1742,7 @@ function gameOf(bet) {
   return (LIVE.events || []).find((e) => e.teams.some((t) => want.has(t)));
 }
 async function refreshLive() {
-  const list = board();
+  const list = tracked();
   if (!list.length) return;
   try {
     const sb = await espn("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard");
@@ -1696,7 +1765,7 @@ async function refreshLive() {
 }
 function liveLoop(now) {
   clearTimeout(LIVE.timer);
-  const list = board();
+  const list = tracked();
   if (!list.length) return;
   const run = async () => { await refreshLive(); const live = (LIVE.events || []).some((g) => g.state === "in" && list.some((b) => gameOf(b)?.id === g.id)); const soon = list.some((b) => { const g = gameOf(b); return g && g.state === "pre" && new Date(g.date) - Date.now() < 30 * 60000; });
     LIVE.timer = setTimeout(run, live ? 60000 : soon ? 120000 : 600000); };
@@ -1724,10 +1793,10 @@ function elapsedShare(g) {
 }
 function renderMine() {
   const box = $("#mine-body"); if (!box) return; box.replaceChildren();
-  const list = board();
+  const every = board(), list = every.filter((b) => !b.custom), customs = every.filter((b) => b.custom);
   if (LIVE.error && (LIVE.events || []).some((g) => g.state === "in")) box.append(el("div", { class: "warn" }, `ESPN's live feed is not answering (${LIVE.error}). Live tackles and pace are paused; every bet is still settled from the official box score the morning after, and nothing on the ledger is lost.`));
   else if (LIVE.error && !LIVE.events) box.append(el("div", { class: "warn" }, `ESPN's scoreboard is not answering (${LIVE.error}), so kickoff times and live tracking are unavailable for now. Official grading still settles every bet.`));
-  if (!list.length) { box.append(el("div", { class: "empty" }, "Nothing on your board yet. Press \"+ My board\" on any card on the Plays tab and it is tracked here, live, with your stake."), ...mineTools(false), ledgerSection()); return; }
+  if (!every.length) { box.append(el("div", { class: "empty" }, "Nothing on your board yet. Press \"+ My board\" on any card on the Plays tab and it is tracked here, live, with your stake. A bet the site does not price (a moneyline, a spread) goes in under \"Add a custom bet\" below."), ...mineTools(false), ledgerSection()); return; }
   let w = 0, l = 0, p = 0, onTrack = 0, live = 0, staked = 0, toWin = 0, settled = 0, pendingStake = 0, paced = 0, pacedN = 0, unstarted = 0, unstartedStake = 0, pendingWin = 0, pendingRisk = 0;
   const GR = { A: 0, B: 1, C: 2 };
   const sorted = [...list].sort((a, b) => (GR[a.grade] ?? 3) - (GR[b.grade] ?? 3) || (b.lock ?? 0) - (a.lock ?? 0) || String(a.commence_time || "").localeCompare(String(b.commence_time || "")));
@@ -1784,14 +1853,19 @@ function renderMine() {
     return c;
   });
   if (changed) saveMine(mine());
+  // custom bets: settled by hand, counted in the same totals
+  for (const b of customs) { const m = betMoney(b), dec = toDec(b.odds);
+    if (m.result === "Win") w++; else if (m.result === "Loss") l++; else if (m.result === "Push") p++;
+    if (m.stake != null) { if (m.result) settled += m.profit || 0; else { pendingRisk += m.stake; if (dec) pendingWin += m.stake * (dec - 1); } } }
+  const nCustomOpen = customs.filter((b) => !b.settled?.result).length;
   const dollars = (x) => (x > 0 ? "+" : "") + (money(x) || "$0"), sign = (x) => (x > 0 ? "pos" : x < 0 ? "neg" : "");
   const mcard = (cls, title, big, ...sub) => el("div", { class: `rec-card ${cls}` }, el("h4", {}, title), el("div", { class: "big" }, ...big), el("div", { class: "sub" }, ...sub));
   const nPre = groups.pre.length, nPost = groups.post.length;
   box.append(el("div", { class: "rec-cards" },
-    mcard("rc-replay", "This week's board", [String(cards.length), el("small", {}, cards.length === 1 ? "bet" : "bets")],
-      [nPre ? `${nPre} to kick off` : "", live ? `${live} in play` : "", nPost ? `${nPost} settled` : ""].filter(Boolean).join(" · ") || "nothing started yet"),
+    mcard("rc-replay", "This week's board", [String(every.length), el("small", {}, every.length === 1 ? "bet" : "bets")],
+      [nPre ? `${nPre} to kick off` : "", live ? `${live} in play` : "", nPost ? `${nPost} settled` : "", customs.length ? `${customs.length} custom${nCustomOpen ? ` (${nCustomOpen} open)` : ""}` : ""].filter(Boolean).join(" · ") || "nothing started yet"),
     w + l + p ? mcard(settled >= 0 ? "rc-live" : "rc-old", "Settled so far", [el("span", { class: sign(settled) }, dollars(settled)), el("small", {}, `${w}-${l}${p ? `-${p}` : ""}`)],
-      pendingStake ? `${money(pendingStake)} still riding on games in play.` : "From the bets whose games are final.") : "",
+      pendingStake ? `${money(pendingStake)} still riding on games in play.` : customs.some((b) => b.settled?.result) ? "From the bets whose games are final and the custom bets you settled." : "From the bets whose games are final.") : "",
     live ? mcard("rc-live", "In play now", [`${onTrack} of ${live}`, el("small", {}, "on track")],
       el("span", { title: "Settled results plus every bet in play finishing the way it is trending right now. Bets that have not kicked off are not counted." }, "On current pace: ", el("b", { class: sign(paced) }, dollars(paced)), ` over ${pacedN} started bet${pacedN === 1 ? "" : "s"}.`)) : "",
     pendingRisk ? mcard("rc-replay", "If the rest all hit", [el("span", { class: "pos" }, dollars(settled + pendingWin))],
@@ -1800,7 +1874,12 @@ function renderMine() {
   const openLinks = list.filter((b) => b.link && (!gameOf(b) || gameOf(b).state === "pre")).map((b) => b.link);
   const slip = tailLink(openLinks);
   if (slip && openLinks.length >= 2) box.append(el("div", { class: "tail" }, el("a", { class: "bet-link", href: slip.href, target: "_blank", rel: "noopener noreferrer" }, `Open every unstarted bet on this board at ${slip.book} in one slip (${openLinks.length}) ↗`), " The slip opens as one parlay; split it there if you want singles."));
-  renderMineSections(box, groups, cards.length);
+  if (cards.length) renderMineSections(box, groups, cards.length);
+  if (customs.length) {
+    const net = customs.reduce((t, b) => t + (betMoney(b).result ? betMoney(b).profit || 0 : 0), 0), cw = customs.filter((b) => b.settled?.result === "Win").length, cl = customs.filter((b) => b.settled?.result === "Loss").length;
+    box.append(el("h3", { class: "mine-h", id: "mine-custom" }, `Custom bets · ${customs.length}`, el("small", {}, ` settled by you${cw + cl ? ` · ${cw}-${cl} · ` : ""}`, cw + cl ? el("b", { class: sign(net) }, dollars(net)) : "")));
+    for (const b of customs) box.append(customCard(b));
+  }
   for (const t of mineTools(true)) box.append(t);
   box.append(ledgerSection());
 }
@@ -1808,13 +1887,14 @@ function renderMine() {
 function mineTools(hasBets) {
   const add = addPicker(); add.id = "mine-add";
   const how = el("div", { class: "section", id: "mine-how" }, el("h3", {}, "How My board works"),
-    el("p", { class: "lead" }, "The bets you took, tracked live, with your stakes. Press \"+ My board\" on any card on the Plays tab; it is kept in this browser only. While a game is on, each bet refreshes from ESPN's box score every minute: tackles so far, the pace for the full game, and whether the bet is trending the right way. The official box score the books settle on can differ by a tackle from the live feed, and the official one is what the ledger keeps."));
+    el("p", { class: "lead" }, "The bets you took, tracked live, with your stakes. Press \"+ My board\" on any card on the Plays tab; it is kept in this browser only. While a game is on, each bet refreshes from ESPN's box score every minute: tackles so far, the pace for the full game, and whether the bet is trending the right way. The official box score the books settle on can differ by a tackle from the live feed, and the official one is what the ledger keeps. A custom bet is one you type in and settle yourself; it is counted in the same totals."));
   if (hasBets) {
     const clr = el("button", { type: "button", class: "reset danger", title: "Takes every bet off the live board; the season ledger keeps them with their results" }, "Clear this week's board (the ledger keeps it)");
     clr.onclick = () => { if (confirm("Take every bet off this week's board? They stay in the season ledger with their results.")) { const all = mine(); all.forEach((b) => { b.archived = true; }); saveMine(all); renderPlays(); renderMine(); } };
     how.append(clr);
   }
-  return [foldOf(add, [(DATA.week_lines || []).length ? "find any line pulled this week" : "no lines pulled this week yet"]), foldOf(how, ["and how to clear the week"])];
+  const cust = customForm(); cust.id = "mine-custom-add";
+  return [foldOf(cust, ["a moneyline, a spread, anything the site does not price"]), foldOf(add, [(DATA.week_lines || []).length ? "find any line pulled this week" : "no lines pulled this week yet"]), foldOf(how, ["and how to clear the week"])];
 }
 
 // My board with many bets: filter by state, group the live ones by game, and a compact one-line-per-bet view
@@ -1897,6 +1977,7 @@ const WEEK_RE = /^mine-(\d+)-wk(\d+)$/;
 function officialGrade(b, weekHint) {
   // the official result for this bet: the grader's row for the model's own picks, else the box score published for
   // every defender-game (actuals.json), so a bet added from the picker or stored before weeks were recorded grades too
+  if (b.custom) return null;                              // a custom bet is settled by hand
   const week = b.week || weekHint || null; if (!week) return null;
   const nk = normName(b.player);
   const hit = (DATA.results?.picks || []).find((p) => p.week === week && normName(p.player) === nk && p.market === b.market && p.side === b.side && +p.line === +b.line && p.result && p.result !== "Pending");
@@ -1924,11 +2005,11 @@ const GRADE_ORDER = { A: 0, B: 1, C: 2 };
 function gradeChips(list) {
   // record and profit by grade for a list of bets: how the model's own confidence has paid on your board
   const out = el("span", { class: "grade-chips" });
-  for (const g of ["A", "B", "C", "none"]) {
-    const sub = list.filter((b) => (g === "none" ? !b.grade : b.grade === g)); if (!sub.length) continue;
+  for (const g of ["A", "B", "C", "none", "custom"]) {
+    const sub = list.filter((b) => (g === "custom" ? b.custom : g === "none" ? !b.grade && !b.custom : b.grade === g)); if (!sub.length) continue;
     let w = 0, l = 0, pr = 0, st = 0;
     for (const b of sub) { const m = betMoney(b); if (m.result === "Win") w++; else if (m.result === "Loss") l++; if (m.stake != null && m.result) { st += m.stake; pr += m.profit; } }
-    out.append(el("span", { class: "gchip" }, g === "none" ? el("span", { class: "muted" }, "no grade") : el("span", { class: `grade ${g}` }, g), ` ${w}-${l}`, st ? el("b", { class: pr > 0 ? "pos" : pr < 0 ? "neg" : "" }, ` ${pr > 0 ? "+" : ""}${money(pr)}`) : ""));
+    out.append(el("span", { class: "gchip" }, g === "custom" ? el("span", { class: "muted" }, "custom") : g === "none" ? el("span", { class: "muted" }, "no grade") : el("span", { class: `grade ${g}` }, g), ` ${w}-${l}`, st ? el("b", { class: pr > 0 ? "pos" : pr < 0 ? "neg" : "" }, ` ${pr > 0 ? "+" : ""}${money(pr)}`) : ""));
   }
   return out;
 }
@@ -1960,6 +2041,9 @@ function ledgerSection() {
     d.append(el("summary", {}, el("b", { class: "t" }, `Week ${r.week}`),
       el("span", { class: "s" }, wl(r.w, r.l, r.p), r.st ? " · " : "", r.st ? el("b", { class: sgn(r.pr) }, usd(r.pr)) : "", ` · ${r.list.length} bet${r.list.length === 1 ? "" : "s"}${r.pend ? `, ${r.pend} pending` : ""}${r.closed ? "" : " · this week"}`)));
     const tb = table([[""], ["Bet"], ["Result"], ["Had", "n"], ["Profit", "n"]], [...r.list].sort((a, b) => (GRADE_ORDER[a.grade] ?? 3) - (GRADE_ORDER[b.grade] ?? 3) || String(a.commence_time || "").localeCompare(String(b.commence_time || ""))).map((b) => { const m = betMoney(b);
+      if (b.custom) { const rm = el("button", { type: "button", class: "rm-link" }, "remove"); rm.onclick = () => removeCustom(r.key, b.key);
+        return [el("span", { class: "muted", title: "A custom bet: typed in and settled by you" }, "✎"), el("span", {}, `${b.desc} `, el("small", {}, [odds(b.odds), m.stake == null ? "no stake" : money(m.stake), "custom"].filter(Boolean).join(" · "), " · ", rm)),
+          customSelect(b, r.key), "", m.profit == null || !m.result ? "" : el("b", { class: sgn(m.profit) }, usd(m.profit))]; }
       return [b.grade ? el("span", { class: `grade ${b.grade}`, title: b.lock != null ? `Lock score ${Math.round(b.lock)}` : "" }, b.grade) : "",
         el("span", { title: b.settled ? (b.settled.source === "official" ? "Settled on the official box score" : "Settled on the live feed; the official box score replaces it") : "" }, `${b.player} `, el("b", { class: b.side === "Under" ? "under" : "over" }, `${b.side === "Under" ? "U" : "O"} ${num(b.line)}`), ` ${({ solo: "solo", assists: "assists" })[kindOf(b.market)] || "tackles"}`,
           el("small", {}, [odds(b.odds), m.stake == null ? "no stake" : money(m.stake), b.book || ""].filter(Boolean).join(" · "))),
@@ -1998,6 +2082,7 @@ function ledgerShort() {
   for (const wk of allWeeks()) {
     const m = wk.key.match(WEEK_RE); if (!m) continue;
     w[`${m[1]}-${m[2]}`] = wk.list.map((b) => {
+      if (b.custom) return ["~", b.desc, b.odds ?? null, b.stake ?? null, b.settled?.result ? b.settled.result[0] : null, b.archived ? 1 : null, String(b.key).slice(7)];
       const t = b.commence_time ? Math.round(new Date(b.commence_time).getTime() / 60000 - SHORT_T0) : null;
       const r = b.settled?.result ? (b.settled.source === "official" ? b.settled.result[0] : b.settled.result[0].toLowerCase()) : null;
       const row = [b.player, b.team || "", b.opp || "", b.group || "", shortIdx(SHORT_MK, b.market), (b.side || b.pick) === "Under" ? 1 : 0, +b.line, shortIdx(SHORT_BK, b.book),
@@ -2013,6 +2098,8 @@ function ledgerFromShort(o) {
   for (const [sw, rows] of Object.entries(o.w || {})) {
     const [season, week] = sw.split("-").map(Number);
     weeks[`mine-${season}-wk${week}`] = rows.map((r) => {
+      if (r[0] === "~") { const c = { key: `custom|${r[6]}`, custom: true, desc: r[1], odds: r[2] ?? null, stake: r[3] ?? null, season, week };
+        if (r[4]) c.settled = { result: RES[r[4]] || r[4], source: "manual" }; if (r[5]) c.archived = true; return c; }
       const [player, team, opp, group, mk, under, line, bk, odds, stake, grade, lock, t, jersey, res, actual, arch] = r;
       const b = { player, team, opp, group, market: typeof mk === "number" ? SHORT_MK[mk] : mk, side: under ? "Under" : "Over", line, book: typeof bk === "number" ? SHORT_BK[bk] : bk,
                   odds: odds ?? null, stake: stake ?? null, grade: grade ?? null, lock: lock ?? null, season, week, jersey: jersey ?? null,

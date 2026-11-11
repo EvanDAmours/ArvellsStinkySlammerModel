@@ -888,6 +888,26 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-11, 3:20 pm (My board: a custom bet, typed in and settled by hand)
+
+The owner asked to track bets the site does not price (a Giants moneyline and spread, for example) without pulling
+lines for them. Site only; no rule changed and no credit is spent.
+
+- **What.** "Add a custom bet" on My board: what the bet is, the odds (American, or a decimal price that is turned
+  into American), the stake, the week (this one or an earlier one) and the result if it is already known. A custom
+  bet has its own card on the board with a result to set (pending, won, lost, push, void), a stake and a remove
+  button. It counts in the board's totals ("Settled so far", "If the rest all hit"), in the season ledger (its own
+  "custom" chip beside the grades, a result that can be changed there, and removal) and in the backup file, code
+  and link. The live feed and the official grading skip it: nothing is fetched for it.
+- **Why.** Vision: an easier site. One ledger for everything the owner bets, at no cost in credits.
+- **Evidence.** Driven in a browser at 1,200 px and 390 px on an empty board and on a board of nine tackle bets:
+  a +150 win on $20 shows +$30, a 1.91 (-110) win on $20 shows +$18.18, and the week, season and by-grade totals
+  move by exactly those; changing a result on the card or in the ledger moves them back; a backup code restores
+  the custom bets identically and a second import adds none; no script error, no page overflow (the by-grade
+  chips now wrap: the fifth chip pushed the row four pixels past a phone's edge). Smoke test: 187 checks.
+- **Kept in the browser only**, like the rest of My board: nothing about these bets is written to the repo.
+- **Revert if** unwanted: remove `customForm` from `mineTools`; bets already stored stay in the ledger.
+
 ### 2026-11-11, 2:30 pm (a bias audit: where the math leans, measured on three seasons; nothing changed)
 
 The owner asked whether biases built into the model's math could hurt the picks. Measured on every stored line of
