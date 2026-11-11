@@ -647,6 +647,7 @@ and C9. What remains, and what the rebuild itself turned up:
     likely find nothing, at no cost; and there is no price to be had by waiting for the last hour or by going
     early. When a line did move it moved the right way (Under the early line 34-18 when a combined line fell,
     29-48 when it rose): the model's side at the early line against the later move is the test still to run.
+    The first live early look (Wednesday 2026-11-11, 10 am) found no line for any week 10 game, as expected.
 21. **The assists market has earned a look at promotion.** Engine against the book: +0.0098 (t +3.7) on 1,299 lines
     of 2025, +0.0066 (t +2.9) on 709 of 2026. Picks in the replays: 195-117 (62%; Unders 144-87, Overs 51-30). It
     is still the trial market (no A, no lock, no parlay leg: `config.LOCK_MARKETS`). An A needs a sleeper rule,
@@ -871,6 +872,22 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 ## Changelog
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
+
+### 2026-11-11, 11:10 am (the first Wednesday early look: no book had a line; the daily ran on the new rules)
+
+Scheduled check of the first early look (`config.OPENER_DATES`, Wednesday 10 am Edmonton). Nothing changed.
+
+- The pull ran on time (commit "Pipeline 2026-11-11T16:00", `data/cache/pull_log.json`: `"2026-11-11 10:00": games 0`).
+  No book had a tackle line for any week 10 game, the Thursday game included, about 32 hours before its kickoff.
+  It cost no credits. That is what the week 8 sample and weeks 1 to 6 said it would find (open issue 20). Next
+  Wednesday's look (2026-11-18) stays in place as asked; if it is empty too, the trial has its answer and the
+  dates come out.
+- The morning's daily (10:17 UTC) ran on the rules of 2026-11-10: 708 projections for week 10, the level for
+  lined players 1.008, and `data/weekly_five.md` lists the conditions of H1 and S3. No week 10 line, pick or log
+  row exists yet, so the checks of the first priced board (grades, the ladder, the caps, the flag in the "why")
+  wait for Thursday's 9 am pull, which has its own scheduled check.
+- The ticker's run in progress could not be read for errors until it ends; the pull's own commit and log entry
+  show it completed.
 
 ### 2026-11-10, 3:01 pm (the calculator: locks only, and the sleepers' own list)
 
