@@ -61,37 +61,7 @@ evidence, revert condition) and a line in the decision register or the rejected 
 this log did not happen. When this file passes about 1,200 lines, move the oldest changelog entries and research
 rounds to the archive, unchanged. The site's Patch log tab is built from both files (`pipeline/patchlog.py`), so
 keep the headings' form: "## Research ...", "### ..." under "## Weekly post-mortems", "### <when> (<what>)" under
-"## The December exploration (plan; credits reset 2026-12-01, access ends 2026-12-10)
-
-Written 2026-11-10 at the owner's request ("Dec 1 can plan for another big exploration"). A scheduled task wakes the
-owner's session on 2026-12-01 at 9 am Edmonton to run it; any session can run it from this section. It measures and
-logs; it changes no rule (the rules are read after week 13, on 2026-12-08, by their own conditions).
-
-Budget: 20,000 credits from 12-01. Keep 1,500 for the live pulls of 12-01 to 12-10 (weeks 13 and 14). Check the count
-first ("Check odds keys" workflow) and after every fetch. A historical snapshot costs 10 credits a market a game
-(nothing when no line is posted). Fetch with the "Fetch past lines for a market" workflow (`run.py history`), one run
-at a time; test with `python tools/season_test.py --season S` in a scratch copy.
-
-In this order, each with what it would change:
-1. **When to bet** (about 10,600): the 2025 season 24 hours and 6 hours before each kickoff, solo and combined, into
-   `data/odds_early` (never into `data/odds`: the closing lines must stay the last snapshot). For the A and B
-   picks of the replay: the price and the line at 24 h, 6 h and 1 h. Does the flagged solo Under pay more early or
-   late, does the line move toward the model, and is a pick made at 24 h still a pick at the close? Decides the
-   pull schedule and when the owner bets. This season's weeks 1 to 6 already say "no difference between 16 h and
-   1 h" on six weeks.
-2. **Alternate lines: answered on 2026-11-10, dropped.** Week 9 was sampled (`data/odds_alt`, 280 credits):
-   DraftKings' alternates are Over-only ladders ("4+ tackles"), with no Under to bet the flag at, and every Over on
-   them returned -5.7% (combined) and -13.8% (solo) that week. Nothing to fetch.
-3. **Assists, 2024** (about 2,700): the third season for open issue 21 (the trial market's promotion).
-4. **Assists at the close, 2026 weeks 7 and 8** (about 300): completes this season's scoreboard in three markets.
-5. **2023** (31 to probe, about 5,300 if it is there): a fourth season for the book-share flag with no model (the
-   projection has no season before 2023 to train on, so no replay). Only if credits remain after 1 to 4.
-6. **Anything the live weeks 10 to 12 raise**: read "Rules on trial" and the post-mortems first; a question they
-   open outranks 5.
-By 12-09: spend what is left on the next item down, log the results under the changelog, and remind the owner that
-the key ends on 12-10 (open issue 7).
-
-## Changelog".
+"## Changelog".
 
 Losing picks are not mistakes. Tackle props are high-variance and a good bet loses often. A mistake is a change
 made without evidence, a change not tested, a change not recorded, or a known pitfall repeated. This file exists
@@ -658,6 +628,19 @@ and C9. What remains, and what the rebuild itself turned up:
     changed: E2 is read on weeks 10 to 13, and the flat 0.5 runs in the shadow for exactly this. The centred
     combined gap in the shadow failed on both fetched samples (t -2.5 and -3.1): expect it rejected at the read.
 23. **Closed 2026-11-10: the 2024 season is fetched and tested** (changelog, 12:40 pm). `data/odds/2024`.
+24. **Built-in leans, measured 2026-11-11** (changelog, 2:30 pm; `tools/bias_audit.py`). Nothing changed: the rules
+    are frozen to 2026-12-08 and none of this is a defect. To read at that review, on weeks 10 to 13 first:
+    (a) the model's own sureness stops paying above about 75% (picks at 75%+ hit 64%, at 70 to 75% hit 70%), and
+    locks, which are chosen by it, hit like any A (40-14 against 127-41): should a lock be chosen another way, or
+    the label dropped? (b) An Under needs the player to miss part of the game: at 95%+ of the snaps the combined
+    Under hits 48.6% and the solo Under 52.6%. Is there anything known before kickoff that says who plays every
+    snap? (c) The flag lives on the book trailing a falling league solo share (0.64, 0.60, 0.55, 0.54): track the
+    share of solo lines flagged and the break-even price each week; the A and B grades need both. (d) Picks are
+    counted as independent and are not (a solo and a combined Under on one player agree 79% of the time; weeks
+    swing 1.18 times wider): count a player once a game in the evidence and widen the ranges. (e) Overs on
+    corners and linemen (33-45 on 78 picks) and the solo Over in general (the engine's chance is 3 to 6 points
+    high on most buckets of 1,162 lines). (f) The model runs about 3% low on combined for linebackers and
+    safeties and 7% low on linebackers' assists.
 17. **Corners and safeties are too spread out on combined** (candidate): a slope for the two positions and the
     opponent's implied points for safeties, -0.0085 (t -3.1) on regulars 2025-26, worse for part-time backs. Re-test
     as one pre-stated variant, applied to regulars only, before anything is built.
@@ -672,6 +655,38 @@ and C9. What remains, and what the rebuild itself turned up:
     share's own uncertainty is not in the solo spread. A same-game parlay's price is our estimate, not the book's.
     The regime-robust solo price (archive, 2026-11-08) has not been tried as the solo model. ESPN spells 9 of 528
     names differently from the stats feed. An outside heartbeat for the scheduler would cover a failed hand-over.
+
+## The December exploration (plan; credits reset 2026-12-01, access ends 2026-12-10)
+
+Written 2026-11-10 at the owner's request ("Dec 1 can plan for another big exploration"). A scheduled task wakes the
+owner's session on 2026-12-01 at 9 am Edmonton to run it; any session can run it from this section. It measures and
+logs; it changes no rule (the rules are read after week 13, on 2026-12-08, by their own conditions).
+
+Budget: 20,000 credits from 12-01. Keep 1,500 for the live pulls of 12-01 to 12-10 (weeks 13 and 14). Check the count
+first ("Check odds keys" workflow) and after every fetch. A historical snapshot costs 10 credits a market a game
+(nothing when no line is posted). Fetch with the "Fetch past lines for a market" workflow (`run.py history`), one run
+at a time; test with `python tools/season_test.py --season S` in a scratch copy.
+
+In this order, each with what it would change:
+1. **When to bet** (about 10,600): the 2025 season 24 hours and 6 hours before each kickoff, solo and combined, into
+   `data/odds_early` (never into `data/odds`: the closing lines must stay the last snapshot). For the A and B
+   picks of the replay: the price and the line at 24 h, 6 h and 1 h. Does the flagged solo Under pay more early or
+   late, does the line move toward the model, and is a pick made at 24 h still a pick at the close? Decides the
+   pull schedule and when the owner bets. This season's weeks 1 to 6 already say "no difference between 16 h and
+   1 h" on six weeks.
+2. **Alternate lines: answered on 2026-11-10, dropped.** Week 9 was sampled (`data/odds_alt`, 280 credits):
+   DraftKings' alternates are Over-only ladders ("4+ tackles"), with no Under to bet the flag at, and every Over on
+   them returned -5.7% (combined) and -13.8% (solo) that week. Nothing to fetch.
+3. **Assists, 2024** (about 2,700): the third season for open issue 21 (the trial market's promotion).
+4. **Assists at the close, 2026 weeks 7 and 8** (about 300): completes this season's scoreboard in three markets.
+5. **2023** (31 to probe, about 5,300 if it is there): a fourth season for the book-share flag with no model (the
+   projection has no season before 2023 to train on, so no replay). Only if credits remain after 1 to 4.
+6. **Anything the live weeks 10 to 12 raise**: read "Rules on trial" and the post-mortems first; a question they
+   open outranks 5.
+7. **The follow-ups of the bias audit of 2026-11-11** (no credits; `tools/bias_audit.py` on the three seasons plus
+   the live weeks): the questions listed in open issue 24, read on weeks 10 to 13 first.
+By 12-09: spend what is left on the next item down, log the results under the changelog, and remind the owner that
+the key ends on 12-10 (open issue 7).
 
 ## Research round 11: the rebuild (2026-11-09, evening and night MST, at the owner's request)
 
@@ -872,6 +887,59 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 ## Changelog
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
+
+### 2026-11-11, 2:30 pm (a bias audit: where the math leans, measured on three seasons; nothing changed)
+
+The owner asked whether biases built into the model's math could hurt the picks. Measured on every stored line of
+the three replayed seasons (11,537 line rows with a result; 4,479 solo, 5,002 combined, 2,056 assists lines) and the
+2,541 replayed picks. `tools/bias_audit.py` repeats it. No rule, grade, stake or projection changed: the rules are
+frozen to 2026-12-08 and nothing found is a defect. The questions it opens are open issue 24.
+
+What leans, most consequential first:
+
+1. **The surer the model alone is, the less that is worth.** Its own chance of the Under at 70%+ came in at 61.3%
+   on combined (411 lines, said 75.7%) and 68.9% on solo (431, said 75.2%). Among the picks, the hit rate does not
+   rise with the cautious edge (60.6%, 59.3%, 61.4%, 62.2%, 60.1% from the smallest edge to the largest), and by
+   the model's own chance it peaks at 70 to 75% (263-115, 69.6%) and falls back above (176-98, 64.2%). A big
+   disagreement with the book is partly the model's own error. The engine's weights, grades that ignore the size
+   of the edge and stakes by grade already answer most of it. What is left: locks are picked by the model's own
+   sureness, and they hit like any A (40-14, 74.1%, against all A 127-41, 75.6%).
+2. **An Under is a bet on playing time.** By the share of defensive snaps played: under 50%, the Under hit 89% on
+   combined and 86% on solo; 50 to 70%, 72% and 68%; at 95% and more (59% of all lines), 48.6% on combined and
+   52.6% on solo. The model's expected playing time is right on average (2025: 90.6% expected, 90.5% played), so
+   this is no error in the number. It is where the Under's margin comes from: with the player on the field all
+   game, a combined Under is a coin flip and only the flagged solo line has a cushion.
+3. **The flag lives on a league trend.** The league's official solo share of combined tackles fell from 0.644
+   (2023) to 0.602, 0.552 and 0.542 (2026). The book's solo share for players with both lines trailed it each
+   year (0.639 against 0.621 in 2024, 0.593 against 0.563, 0.558 against 0.538), and so did the model's in 2024
+   (0.665; its solo number was 0.15 high that season, level in 2025, 0.08 high in 2026). The book is catching
+   up: 77% of solo lines were flagged in 2024, 55% in 2025 (70% early, 37% late), 41% in 2026, and the flagged
+   Under's break-even price rose from 54.2% to 55.0% to 56.7%. The flagged Under still hit 57.5%, 63.1% and
+   66.7%, so the margin has not shrunk yet, but there are fewer of them and the fall in the league share is
+   slowing. If it stops, the flag fades. Unflagged solo Unders are at break-even (2026: 50.1% against 50.5%).
+4. **Picks are not independent, and the records count them as if they were.** A solo Under and a combined Under on
+   the same player (427 pairs) end the same way 79% of the time (correlation +0.56); two picks on one team in one
+   game +0.13; weekly results swing 1.18 times wider than independent picks would. So the "likely range" beside a
+   record is too narrow by about a fifth, a bad week is more ordinary than the ranges say, and 121 of 2,414 bets
+   are the same bet at a second book.
+5. **Overs.** The engine's chance for a solo Over is 3 to 6 points high in four of the five buckets with 40 lines
+   or more (1,162 lines, three seasons; in 2025-26 every one of those buckets lost money). The Over block on flagged lines removed most of them (solo Over
+   picks 44-36). Over picks on corners and linemen are 33-45 on 78 (said 52%), on linebackers and safeties 124-75.
+6. **Small leans in the number itself**, players with a line, 2025-26: combined 2% low (+0.12, se 0.05), from
+   linebackers (+0.22) and safeties (+0.16), which tilts the model to the Under there; linebackers' assists 7% low
+   (+0.23, se 0.08); linemen's solos 0.23 low (se 0.10); solo overall right (-0.02, se 0.04).
+7. **The Under is the market's own soft side on combined and solo, not on assists.** Every line once, no rule:
+   the Under hit 53.8% on combined, 56.9% on solo and 50.0% on assists against a book's fair chance of 50%.
+
+What does not lean: home or away, favourite or underdog, the part of the season, the size of a combined line, the
+plays a defence was expected to face (within 0.6 of a play each season).
+
+What the record itself cannot settle: the replays price at the close; the rules were chosen on these weeks; and the
+solo count. The first pass used the plain solo column in place of the official one and made every solo Under look
+five points better (pitfall added), which shows how much rides on how DraftKings settles a solo tackle. The owner's
+check of one settled slip is still the missing piece.
+
+**Revert:** nothing to revert. `tools/bias_audit.py` is new and measures only.
 
 ### 2026-11-11, 1:15 pm (the calculator: the stake spelled out by grade, and the locks in their own box)
 
@@ -1853,6 +1921,11 @@ Never tested; each with what would justify it. Anything tested and dropped is in
   size of every stake for a day and a half on three weeks of closing lines (37-25 against 31-20). On 21 weeks it
   ranked nothing. Before a number sets a grade or a stake, the record by its buckets is read on weeks it was not
   chosen on, and again whenever more weeks arrive.
+- **A solo line is settled on the official count, and an audit must use it too.** The history frame's `solo` is
+  nflverse's plain solo, the series the model trains on; the books and the grading settle on `solo_off` (solo plus
+  tackle with assist), which is higher in 15% of player-games. The first pass of the bias audit (2026-11-11) used
+  `solo` and showed every solo Under five points better than it is, and a model 0.33 tackles too high that is in
+  fact 0.02 too high. Check any new frame against the graded picks before reading it (`tools/bias_audit.py` does).
 - **A replay shown on the site is a file, and a file goes stale.** `data/retro_five.json` and
   `data/replay_seasons.json` are written by hand-run tools, not by the daily. After any change to a pick rule, a
   grade or a stake, re-run them before the push, or the Track record tab reports the previous rules' replay.

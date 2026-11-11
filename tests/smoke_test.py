@@ -497,6 +497,10 @@ _res = json.loads((tmp / "docs" / "data" / "results.json").read_text())
 check(all(k in _html for k in ("rec-history", "function historySection", "rec-picks-list", "function recCards", "function foldOf")) and "replays" in _res
       and all({"season", "plays", "by_grade", "by_week"} <= set(e) and e["plays"]["wins"] + e["plays"]["losses"] == sum(g["wins"] + g["losses"] for g in e["by_grade"]) for e in _rs.get("seasons", [])),
       f"the Track record tab carries the then-and-now section, keeps the pick list behind a dropdown and gets the replayed seasons ({[e['season'] for e in _rs.get('seasons', [])]})")
+from tools import bias_audit as _BA
+_bp = pd.DataFrame(dict(win=[1.0, 1.0, 0.0, 0.0, 1.0, 0.0], g=["a", "a", "b", "b", "c", "c"]))
+check(abs(_BA.pair_corr(_bp, "g") - 1 / 3) < 1e-9 and _BA.said_hit(pd.DataFrame(dict(p=[.55, .65], h=[1.0, 0.0])), "p", "h", [0, .6, 1]).count("\n") == 3,
+      "the bias audit tool loads, and its pair correlation and said-against-hit tables compute")
 _rp = Path(__file__).resolve().parents[1] / "data" / "retro_five.json"   # the real replay: the smoke copy leaves it out
 _rw = json.loads(_rp.read_text()).get("weeks", []) if _rp.exists() else []
 check(all(k in _html for k in ("then-now-pay", "THEN_NOW_PAY", '["A only", "n"], ["A + B", "n"], ["All picks", "n"]'))
