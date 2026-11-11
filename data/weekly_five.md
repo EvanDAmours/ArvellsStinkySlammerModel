@@ -1,7 +1,7 @@
 # Locks and parlays: running tally
 
 The locks: the highest-confidence picks of each slate day (3 on a one-game day, 5 on a multi-game day), named before kickoff and tracked here. Target: 70% hits. Then the recommended parlay for each slate day.
-Generated 2026-11-10 10:16 UTC by the daily job. Do not edit by hand.
+Generated 2026-11-11 10:16 UTC by the daily job. Do not edit by hand.
 
 **Locks record: 10-4 (71%), +3.45 units, 0 pending.**
 
@@ -70,24 +70,29 @@ The chance each gives the Over on every line the model had a number for, picked 
 
 | Weeks | Lines | Book | Model alone | Engine | Engine better than the book by |
 | --- | --- | --- | --- | --- | --- |
+| wk 2 (in-sample) | 340 | 0.6816 | 0.6853 | 0.6767 | +0.0048 |
+| wk 3 (in-sample) | 298 | 0.6824 | 0.6520 | 0.6591 | +0.0233 |
+| wk 4 (in-sample) | 327 | 0.6823 | 0.6824 | 0.6780 | +0.0043 |
+| wk 5 (in-sample) | 311 | 0.6771 | 0.6953 | 0.6835 | -0.0063 |
+| wk 6 (in-sample) | 379 | 0.6844 | 0.6702 | 0.6730 | +0.0114 |
 | wk 7 (in-sample) | 235 | 0.6921 | 0.6993 | 0.6892 | +0.0030 |
 | wk 8 (in-sample) | 250 | 0.6821 | 0.6636 | 0.6654 | +0.0167 |
 | wk 9 (in-sample) | 427 | 0.6958 | 0.6898 | 0.6877 | +0.0081 |
-| All weeks | 912 | 0.6911 | 0.6850 | 0.6819 | +0.0091 (give or take 0.0033; t +2.8) |
+| All weeks | 2567 | 0.6850 | 0.6800 | 0.6770 | +0.0081 (give or take 0.0030; t +2.7) |
 | **Since week 10 (out of sample)** | 0 | | | | no graded line yet |
 
-By market, all weeks: assists +0.0085 on 143 lines; combined +0.0012 (give or take 0.0034) on 383 lines; solo +0.0173 (give or take 0.0049) on 386 lines.
+By market, all weeks: assists +0.0065 (give or take 0.0022) on 710 lines; combined +0.0049 (give or take 0.0025) on 922 lines; solo +0.0123 (give or take 0.0061) on 935 lines.
 
 The engine's side on every line at the best closing price, by tier (all weeks):
 
 | Tier | Lines | Record | Hit | Likely range | Chance said | Return a bet |
 | --- | --- | --- | --- | --- | --- | --- |
-| Picks, B or better | 94 | 59-35 | 63% | 50% to 74% | 61% | +22.8% |
-| Picks, C | 84 | 50-34 | 60% | 46% to 72% | 55% | +17.3% |
-| Leans (not staked) | 129 | 70-59 | 54% | 43% to 65% | 54% | +2.7% |
-| No pick | 605 | 333-272 | 55% | 46% to 64% | 52% | +3.7% |
+| Picks, B or better | 276 | 171-105 | 62% | 54% to 69% | 60% | +21.0% |
+| Picks, C | 229 | 132-97 | 58% | 50% to 65% | 57% | +10.3% |
+| Leans (not staked) | 397 | 221-176 | 56% | 49% to 62% | 54% | +5.5% |
+| No pick | 1665 | 890-775 | 53% | 48% to 59% | 52% | -0.2% |
 
-Calibration of the engine's chance (its side on every line, all weeks): said 42%, hit 55% (91); said 48%, hit 49% (201); said 52%, hit 55% (252); said 57%, hit 58% (210); said 62%, hit 63% (107); said 69%, hit 73% (51).
+Calibration of the engine's chance (its side on every line, all weeks): said 43%, hit 45% (263); said 48%, hit 46% (576); said 53%, hit 55% (661); said 57%, hit 60% (570); said 62%, hit 65% (331); said 69%, hit 67% (166).
 
 ### Candidates in the shadow
 
@@ -95,9 +100,9 @@ Scored on the same lines and never used for a pick. Their numbers were fixed on 
 
 | Candidate | Log-loss | Against the engine, all weeks (in-sample included) | Since the engine, out of sample |
 | --- | --- | --- | --- |
-| The flat weight of 0.5 in both markets (the rule until 2026-11-09) | 0.6832 | -0.0012 (give or take 0.0006; t -2.0) | no graded line yet |
-| The combined gap centred on the week's own mean | 0.6814 | +0.0006 (give or take 0.0001; t +7.3) | no graded line yet |
-| The level for lined players on solo lines too | 0.6811 | +0.0008 (give or take 0.0013; t +0.6) | no graded line yet |
+| The flat weight of 0.5 in both markets (the rule until 2026-11-09) | 0.6772 | -0.0002 (give or take 0.0004; t -0.5) | no graded line yet |
+| The combined gap centred on the week's own mean | 0.6775 | -0.0006 (give or take 0.0004; t -1.3) | no graded line yet |
+| The level for lined players on solo lines too | 0.6767 | +0.0003 (give or take 0.0004; t +0.8) | no graded line yet |
 
 ### The whole board, no model
 
@@ -105,6 +110,114 @@ Every closing line of the week: how often the Over won, against the chance the b
 
 | Week | Market | Lines | Over won | Book's fair chance of the Over |
 | --- | --- | --- | --- | --- |
+| 2024 wk 1 | combined | 174 | 44% | 50% |
+| 2024 wk 1 | solo | 137 | 42% | 50% |
+| 2024 wk 2 | combined | 170 | 48% | 50% |
+| 2024 wk 2 | solo | 166 | 50% | 51% |
+| 2024 wk 3 | combined | 169 | 43% | 50% |
+| 2024 wk 3 | solo | 169 | 46% | 50% |
+| 2024 wk 4 | combined | 177 | 44% | 50% |
+| 2024 wk 4 | solo | 172 | 46% | 50% |
+| 2024 wk 5 | combined | 137 | 45% | 49% |
+| 2024 wk 5 | solo | 108 | 44% | 50% |
+| 2024 wk 6 | combined | 131 | 39% | 50% |
+| 2024 wk 6 | solo | 115 | 36% | 50% |
+| 2024 wk 7 | combined | 149 | 43% | 50% |
+| 2024 wk 7 | solo | 116 | 39% | 49% |
+| 2024 wk 8 | combined | 145 | 51% | 50% |
+| 2024 wk 8 | solo | 107 | 43% | 49% |
+| 2024 wk 9 | combined | 146 | 47% | 49% |
+| 2024 wk 9 | solo | 111 | 42% | 49% |
+| 2024 wk 10 | combined | 154 | 52% | 50% |
+| 2024 wk 10 | solo | 127 | 41% | 49% |
+| 2024 wk 11 | combined | 152 | 52% | 50% |
+| 2024 wk 11 | solo | 129 | 43% | 50% |
+| 2024 wk 12 | combined | 121 | 45% | 50% |
+| 2024 wk 12 | solo | 102 | 41% | 50% |
+| 2024 wk 13 | combined | 163 | 52% | 50% |
+| 2024 wk 13 | solo | 135 | 47% | 50% |
+| 2024 wk 14 | combined | 135 | 55% | 50% |
+| 2024 wk 14 | solo | 116 | 46% | 50% |
+| 2024 wk 15 | combined | 154 | 51% | 50% |
+| 2024 wk 15 | solo | 134 | 42% | 50% |
+| 2024 wk 16 | combined | 158 | 44% | 50% |
+| 2024 wk 16 | solo | 140 | 42% | 50% |
+| 2024 wk 17 | combined | 140 | 46% | 50% |
+| 2024 wk 17 | solo | 127 | 48% | 50% |
+| 2024 wk 18 | combined | 64 | 47% | 50% |
+| 2024 wk 18 | solo | 62 | 40% | 50% |
+| 2025 wk 1 | assists | 130 | 57% | 49% |
+| 2025 wk 1 | combined | 131 | 53% | 51% |
+| 2025 wk 1 | solo | 132 | 45% | 50% |
+| 2025 wk 2 | assists | 165 | 48% | 49% |
+| 2025 wk 2 | combined | 172 | 45% | 50% |
+| 2025 wk 2 | solo | 180 | 46% | 50% |
+| 2025 wk 3 | assists | 90 | 48% | 49% |
+| 2025 wk 3 | combined | 123 | 38% | 50% |
+| 2025 wk 3 | solo | 89 | 39% | 50% |
+| 2025 wk 4 | assists | 97 | 48% | 49% |
+| 2025 wk 4 | combined | 102 | 45% | 51% |
+| 2025 wk 4 | solo | 97 | 37% | 50% |
+| 2025 wk 5 | assists | 71 | 48% | 50% |
+| 2025 wk 5 | combined | 87 | 45% | 49% |
+| 2025 wk 5 | solo | 77 | 34% | 51% |
+| 2025 wk 6 | assists | 88 | 58% | 50% |
+| 2025 wk 6 | combined | 96 | 45% | 50% |
+| 2025 wk 6 | solo | 94 | 37% | 50% |
+| 2025 wk 7 | assists | 111 | 46% | 49% |
+| 2025 wk 7 | combined | 125 | 40% | 50% |
+| 2025 wk 7 | solo | 119 | 36% | 50% |
+| 2025 wk 8 | assists | 75 | 52% | 49% |
+| 2025 wk 8 | combined | 88 | 39% | 50% |
+| 2025 wk 8 | solo | 77 | 27% | 50% |
+| 2025 wk 9 | assists | 73 | 75% | 50% |
+| 2025 wk 9 | combined | 89 | 62% | 50% |
+| 2025 wk 9 | solo | 73 | 53% | 51% |
+| 2025 wk 10 | assists | 76 | 57% | 49% |
+| 2025 wk 10 | combined | 140 | 49% | 50% |
+| 2025 wk 10 | solo | 76 | 38% | 50% |
+| 2025 wk 11 | assists | 88 | 60% | 49% |
+| 2025 wk 11 | combined | 97 | 39% | 50% |
+| 2025 wk 11 | solo | 87 | 40% | 50% |
+| 2025 wk 12 | assists | 82 | 45% | 51% |
+| 2025 wk 12 | combined | 88 | 43% | 50% |
+| 2025 wk 12 | solo | 82 | 44% | 49% |
+| 2025 wk 13 | assists | 94 | 53% | 50% |
+| 2025 wk 13 | combined | 101 | 44% | 50% |
+| 2025 wk 13 | solo | 93 | 47% | 50% |
+| 2025 wk 14 | assists | 90 | 48% | 51% |
+| 2025 wk 14 | combined | 92 | 39% | 50% |
+| 2025 wk 14 | solo | 88 | 41% | 50% |
+| 2025 wk 15 | assists | 110 | 48% | 50% |
+| 2025 wk 15 | combined | 125 | 50% | 50% |
+| 2025 wk 15 | solo | 110 | 47% | 49% |
+| 2025 wk 16 | assists | 91 | 46% | 49% |
+| 2025 wk 16 | combined | 92 | 51% | 50% |
+| 2025 wk 16 | solo | 90 | 47% | 49% |
+| 2025 wk 17 | assists | 125 | 48% | 50% |
+| 2025 wk 17 | combined | 125 | 45% | 51% |
+| 2025 wk 17 | solo | 125 | 47% | 50% |
+| 2025 wk 18 | assists | 45 | 24% | 48% |
+| 2025 wk 18 | combined | 45 | 27% | 50% |
+| 2025 wk 18 | solo | 45 | 38% | 49% |
+| 2026 wk 1 | assists | 103 | 45% | 49% |
+| 2026 wk 1 | combined | 108 | 44% | 49% |
+| 2026 wk 1 | solo | 103 | 45% | 50% |
+| 2026 wk 2 | assists | 117 | 51% | 48% |
+| 2026 wk 2 | combined | 120 | 45% | 50% |
+| 2026 wk 2 | solo | 118 | 49% | 50% |
+| 2026 wk 3 | assists | 106 | 57% | 50% |
+| 2026 wk 3 | combined | 107 | 42% | 49% |
+| 2026 wk 3 | solo | 107 | 37% | 49% |
+| 2026 wk 4 | assists | 115 | 49% | 49% |
+| 2026 wk 4 | combined | 116 | 50% | 49% |
+| 2026 wk 4 | solo | 113 | 51% | 50% |
+| 2026 wk 5 | assists | 110 | 47% | 48% |
+| 2026 wk 5 | combined | 111 | 45% | 48% |
+| 2026 wk 5 | solo | 110 | 55% | 51% |
+| 2026 wk 6 | assists | 131 | 49% | 50% |
+| 2026 wk 6 | combined | 133 | 42% | 50% |
+| 2026 wk 6 | solo | 132 | 39% | 49% |
 | 2026 wk 7 | combined | 122 | 52% | 49% |
 | 2026 wk 7 | solo | 123 | 34% | 49% |
 | 2026 wk 8 | combined | 133 | 50% | 50% |
@@ -123,13 +236,15 @@ Conditions of the decision register on trial:
 
 | Rule | Condition | So far | Record | Hit | Likely range | Model said | State |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| E4 A picks | An A is a pick that is also a sleeper on the same side. Read at 30 graded: it stays only if these hit 60% or better and beat the B and C picks. | 0 of 30 picks | 0-0 |  |  |  | running |
-| E4 The A rule it replaced | Picks with a cautious edge of 2%+ and a model chance of 70%+, whatever their grade now. Counted beside the new A, so the two rules can be told apart. | 0 of 30 picks | 0-0 |  |  |  | running |
-| E5 Combined A picks | A picks and locks go back to solo only if these hit under 55% over their first 20. | 0 of 20 picks | 0-0 |  |  |  | running |
+| H1 A picks | A solo Under pick on a line the book set at 58% or more of its own combined line, also a sleeper, the checklist clear. Replayed on 21 weeks of two seasons: 106-35. Read at 30 graded: it stays only if these hit 60% or better and beat the B and C picks. | 0 of 30 picks | 0-0 |  |  |  | running |
+| H1 B picks | Every other solo Under pick on such a line. Replayed: 210-106. Read at 40: these must beat the C picks, or B and C become one grade. | 0 of 40 picks | 0-0 |  |  |  | running |
+| H1 C picks | Every other pick. Replayed: 621-428 (59%; 55% on the 2026 weeks). Read at 100: under 52.4%, the break-even at the usual price, C picks are shown as leans and not staked. | 0 of 100 picks | 0-0 |  |  |  | running |
+| E4 The A rules it replaced | Picks that are also a sleeper on the same side with a clear checklist (the A until 2026-11-10), whatever their grade now. | 0 of 30 picks | 0-0 |  |  |  | running |
 | E6 Over picks | Re-read at 40. The candidate is to show Overs as leans only. | 0 of 40 picks | 0-0 |  |  |  | running |
+| H1 Solo Under picks on an unflagged line | The other half of the hole: 207-165 replayed, 48-54 on the 2026 weeks. Read at 40: under 52.4%, they stop being picks. | 0 of 40 picks | 0-0 |  |  |  | running |
+| S3 Stakes by grade | A 1 unit, B 0.5, C 0.25. Read after week 13: the units won at these stakes against the same picks at one size. | 0 picks | 0-0 |  |  |  | running |
 | E5 Locks | The target is 70% over the season. | 0 picks | 0-0 |  |  |  | running |
 | E2 The engine's weight (0.65 solo, 0.35 combined) | Moved toward the book if the engine's margin over the book since week 10 is negative by more than twice its give or take, read after week 13; raised only by the same test. | 0 of 4 weeks |  |  |  |  | running |
-| S1 Stakes on the cautious chance | Sized on the win chance instead once the engine's margin over the book is positive by more than twice its give or take. | 0 of 4 weeks |  |  |  |  | running |
 
 ## All plays to date (every rule set)
 
