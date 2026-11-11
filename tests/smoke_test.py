@@ -497,6 +497,12 @@ _res = json.loads((tmp / "docs" / "data" / "results.json").read_text())
 check(all(k in _html for k in ("rec-history", "function historySection", "rec-picks-list", "function recCards", "function foldOf")) and "replays" in _res
       and all({"season", "plays", "by_grade", "by_week"} <= set(e) and e["plays"]["wins"] + e["plays"]["losses"] == sum(g["wins"] + g["losses"] for g in e["by_grade"]) for e in _rs.get("seasons", [])),
       f"the Track record tab carries the then-and-now section, keeps the pick list behind a dropdown and gets the replayed seasons ({[e['season'] for e in _rs.get('seasons', [])]})")
+_rp = Path(__file__).resolve().parents[1] / "data" / "retro_five.json"   # the real replay: the smoke copy leaves it out
+_rw = json.loads(_rp.read_text()).get("weeks", []) if _rp.exists() else []
+check(all(k in _html for k in ("then-now-pay", "THEN_NOW_PAY", '["A only", "n"], ["A + B", "n"], ["All picks", "n"]'))
+      and all("units" in g and "staked" in g for w in _rw for g in w.get("by_grade", []))
+      and all(abs(sum(g["staked"] for g in w["by_grade"]) - w["plays"]["units_at_stake"]) < 0.02 for w in _rw if w.get("by_grade")),
+      f"then and now shows what the A picks alone, A and B, and every pick paid, and the replayed weeks carry the units by grade it needs ({len(_rw)} weeks)")
 check(all(k in _html for k in ("rec-whatif", "function whatIfSection", "unit-value")) and all(abs(sum(g["units"] for g in w["by_grade"].values()) - w["units"]) < 1e-6
       and sum(g["wins"] + g["losses"] for g in w["by_grade"].values()) == w["wins"] + w["losses"] for e in _rs.get("seasons", []) for w in e["by_week"]),
       "the Track record tab has the unit-value calculator, and the replayed seasons carry each week's units by grade (they add up to the week)")

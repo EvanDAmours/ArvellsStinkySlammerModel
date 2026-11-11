@@ -1032,7 +1032,7 @@ function whatIfSection(r, s, lw) {
     const sel = (label, value, opts, set, cls) => { const e = el("select", { "aria-label": label }, ...opts.map(([v, t]) => { const o = el("option", { value: String(v) }, t); if (String(v) === String(value)) o.selected = true; return o; })); e.addEventListener("change", () => { set(e.value); draw(); }); return el("label", cls ? { class: cls } : {}, label, e); };
     const boxes = (label, all, set, show, aria) => el("span", { class: "wi-grades" }, el("span", { class: "muted" }, label), ...all.map((g) => { const c = el("input", { type: "checkbox", "aria-label": `${aria} ${g}` }); c.checked = set.has(g); c.addEventListener("change", () => { if (c.checked) set.add(g); else set.delete(g); result(); }); return el("label", { title: WI_POS[g] || "" }, c, show(g)); }));
     const unit = el("input", { type: "number", min: "0", step: "1", inputmode: "decimal", value: String(WI.unit), "aria-label": "What one unit is worth, in dollars" });
-    unit.addEventListener("input", () => { const v = parseFloat(unit.value); WI.unit = v > 0 ? v : 0; try { localStorage.setItem("unit-value", String(WI.unit)); } catch (e) { /* fine */ } result(); });
+    unit.addEventListener("input", () => { const v = parseFloat(unit.value); WI.unit = v > 0 ? v : 0; try { localStorage.setItem("unit-value", String(WI.unit)); } catch (e) { /* fine */ } result(); if (THEN_NOW_PAY) THEN_NOW_PAY(); });
     form.replaceChildren(el("label", {}, "One unit = $", unit),
       sel("Picks", WI.src, sources.map((x) => [x.key, x.label]), (v) => { WI.src = v; WI.from = null; WI.to = null; WI.fromMin = true; WI.toMax = true; }, "wide"),
       sel("Show", WI.which, [["all", "Every pick"], ...(sets.locks.length ? [["locks", "Locks only"]] : []), ...(sets.sleepers.length ? [["sleepers", "Sleepers (their own list)"]] : [])], (v) => { WI.which = v; WI.grades = null; }, "wide"),
@@ -1077,6 +1077,7 @@ function whatIfSection(r, s, lw) {
   draw();
   return sec;
 }
+let THEN_NOW_PAY = null;   // redraws the dollars line under "Then and now" when the unit value changes
 function historySection(r, s, lw) {
   // then and now: what was bet under the rules of the time, beside what today's rules pick on the same weeks' lines
   const retro = (r.retro?.weeks || []), seasons = r.replays?.seasons || [];
@@ -1085,18 +1086,34 @@ function historySection(r, s, lw) {
   const weeks = [...new Set([...retro.map((w) => w.week), ...bet.map((p) => p.week)])].sort((a, b) => b - a);
   const byWeek = (w) => tally(bet.filter((p) => p.week === w)), rep = (w) => retro.find((x) => x.week === w);
   const recOf = (t) => (t && t.n ? el("span", {}, wl(t.wins, t.losses), ` (${pct(t.hit)})`) : el("span", { class: "muted" }, "–"));
-  const grOf = (x, g) => { const y = (x?.by_grade || []).find((z) => z.grade === g); return y ? wl(y.wins, y.losses) : ""; };
+  const gOf = (x, g) => (x?.by_grade || []).find((z) => z.grade === g), grOf = (x, g) => { const y = gOf(x, g); return y ? wl(y.wins, y.losses) : ""; };
+  // what the new model's picks paid at 1 unit each: the A picks alone, the A and B picks, every pick
+  const payA = (x) => gOf(x, "A")?.units || 0, payAB = (x) => payA(x) + (gOf(x, "B")?.units || 0);
   const rows = weeks.map((w) => { const a = byWeek(w), b = rep(w), live = w >= lw;
     return [`Week ${w}`, a.n ? el("span", {}, recOf(a), live ? el("small", { class: "muted" }, " live") : "") : el("span", { class: "muted" }, live ? "pending" : "not betting yet"),
       b ? recOf({ n: b.plays.wins + b.plays.losses, wins: b.plays.wins, losses: b.plays.losses, hit: b.plays.hit }) : el("span", { class: "muted" }, live ? "same as left" : "–"),
-      a.n ? units(a.units, 1) : "", b ? units(b.plays.units, 1) : "", grOf(b, "A"), grOf(b, "B"), grOf(b, "C"), b ? units(b.plays.units_at_stake, 1) : ""]; });
+      a.n ? units(a.units, 1) : "", grOf(b, "A"), grOf(b, "B"), grOf(b, "C"), b && gOf(b, "A") ? units(payA(b), 1) : "", b && (gOf(b, "A") || gOf(b, "B")) ? units(payAB(b), 1) : "", b ? units(b.plays.units, 1) : "", b ? units(b.plays.units_at_stake, 1) : ""]; });
   // the weeks both exist for, added up
   const both = weeks.filter((w) => w < lw && byWeek(w).n && rep(w)), ta = tally(bet.filter((p) => both.includes(p.week))), tb = both.map(rep);
   const tsum = (f) => tb.reduce((a, x) => a + (f(x) || 0), 0), gsum = (g) => wl(tsum((x) => (x.by_grade || []).find((z) => z.grade === g)?.wins), tsum((x) => (x.by_grade || []).find((z) => z.grade === g)?.losses));
   const tw = tsum((x) => x.plays.wins), tl = tsum((x) => x.plays.losses);
-  const tot = both.length > 1 ? [`Weeks ${Math.min(...both)}-${Math.max(...both)}`, recOf(ta), recOf({ n: tw + tl, wins: tw, losses: tl, hit: tw + tl ? tw / (tw + tl) : null }), units(ta.units, 1), units(tsum((x) => x.plays.units), 1), gsum("A"), gsum("B"), gsum("C"), units(tsum((x) => x.plays.units_at_stake), 1)] : null;
-  const cmp = ph(table([["Week"], ["As bet then"], ["New model"], ["Then, units", "n"], ["New, units", "n"], ["New: A"], ["B"], ["C"], ["New, at its stakes", "n"]], tot ? [...rows, tot] : rows), "4 5 6 7 8 9");
-  if (tot) cmp.querySelector("tbody tr:last-child")?.classList.add("tot");
+  const tot = both.length > 1 ? [`Weeks ${Math.min(...both)}-${Math.max(...both)}`, recOf(ta), recOf({ n: tw + tl, wins: tw, losses: tl, hit: tw + tl ? tw / (tw + tl) : null }), units(ta.units, 1), gsum("A"), gsum("B"), gsum("C"), units(tsum(payA), 1), units(tsum(payAB), 1), units(tsum((x) => x.plays.units), 1), units(tsum((x) => x.plays.units_at_stake), 1)] : null;
+  // every replayed week, the new model alone (the weeks before the site was betting included)
+  const past = retro.filter((x) => x.week < lw), psum = (f) => past.reduce((a, x) => a + (f(x) || 0), 0), pg = (g) => ({ w: psum((x) => gOf(x, g)?.wins), l: psum((x) => gOf(x, g)?.losses) });
+  const pw = psum((x) => x.plays.wins), pl = psum((x) => x.plays.losses), span = past.length ? `${Math.min(...past.map((x) => x.week))}-${Math.max(...past.map((x) => x.week))}` : "";
+  const allTot = past.length > 1 && past.length !== both.length ? [`Weeks ${span}`, el("span", { class: "muted" }, "new model only"), recOf({ n: pw + pl, wins: pw, losses: pl, hit: pw + pl ? pw / (pw + pl) : null }), "",
+    ...["A", "B", "C"].map((g) => wl(pg(g).w, pg(g).l)), units(psum(payA), 1), units(psum(payAB), 1), units(psum((x) => x.plays.units), 1), units(psum((x) => x.plays.units_at_stake), 1)] : null;
+  const tots = [tot, allTot].filter(Boolean);
+  const cmp = ph(table([["Week"], ["As bet then"], ["New model"], ["Then, units", "n"], ["New: A"], ["B"], ["C"], ["A only", "n"], ["A + B", "n"], ["All picks", "n"], ["All, at its stakes", "n"]], [...rows, ...tots]), "2 4 5 6 7 11");
+  [...cmp.querySelectorAll("tbody tr")].slice(rows.length).forEach((tr) => tr.classList.add("tot"));
+  // the same three answers in dollars, at the unit value set in the calculator
+  const payLine = el("p", { class: "muted", id: "then-now-pay" });
+  THEN_NOW_PAY = () => { payLine.replaceChildren(); if (!past.length || !(WI.unit > 0)) return;
+    const usd = (u) => { const v = u * WI.unit, a = Math.abs(v); return el("b", { class: v > 0 ? "pos" : v < 0 ? "neg" : "" }, `${v < 0 ? "-" : "+"}$${a >= 1000 ? Math.round(a).toLocaleString() : a.toFixed(2)}`); };
+    const n = (g) => pg(g).w + pg(g).l, st = (x, g) => gOf(x, g)?.staked || 0;
+    payLine.append(`In dollars, at $${+WI.unit.toFixed(2)} a unit (set in the calculator above), weeks ${span} replayed, 1 unit on each pick: only the A picks `, usd(psum(payA)), ` on ${n("A")} bets; A and B `, usd(psum(payAB)), ` on ${n("A") + n("B")}; every pick `, usd(psum((x) => x.plays.units)), ` on ${pw + pl}. `,
+      "At the model's own stakes (A 1 unit, B 0.5, C 0.25): only A ", usd(psum((x) => st(x, "A"))), "; A and B ", usd(psum((x) => st(x, "A") + st(x, "B"))), "; every pick ", usd(psum((x) => x.plays.units_at_stake)), "."); };
+  THEN_NOW_PAY();
   // the same bets, sorted by what the new model does with them
   const key = (p, w) => `${w}|${p.player}|${p.market}|${p.side}`;
   const nowAll = both.flatMap((w) => (rep(w).all_picks || []).filter((p) => p.result === "Win" || p.result === "Loss").map((p) => ({ ...p, week: w })));
@@ -1125,8 +1142,8 @@ function historySection(r, s, lw) {
     el("div", { class: "fold-body" }, el("div", { class: "scroll" }, ph(table([["Week"], ["Record"], ["Units at the stakes", "n"], ["Hit rate", "n"], ["A"], ["B"], ["C"], ["Staked", "n"]],
       [...x.by_week].reverse().map((w) => [`Week ${w.week}`, wl(w.wins, w.losses), units(w.units_at_stake, 1), w.hit == null ? "" : pct(w.hit), ...["A", "B", "C"].map((g) => { const y = w.by_grade?.[g]; return !y ? "" : typeof y === "string" ? y : wl(y.wins, y.losses); }), num(w.staked, 1)]), "5 6 7 8")))))));
   const sec = section("Then and now: what was bet, and what the new model would have picked",
-    `Two different things, side by side. "As bet then" is every pick this site actually made, under the rules it ran on at the time, with its real result. "New model, replayed" is today's rules run over the same weeks' stored lines after the fact: what it would have picked, not what was bet. From week ${lw} the two are the same thing, and the left column is the live record.`,
-    weeks.length ? el("div", { class: "scroll" }, cmp) : null,
+    `Two different things, side by side. "As bet then" is every pick this site actually made, under the rules it ran on at the time, with its real result. "New model, replayed" is today's rules run over the same weeks' stored lines after the fact: what it would have picked, not what was bet. From week ${lw} the two are the same thing, and the left column is the live record. "A only", "A + B" and "All picks" are what the new model's picks would have paid in units at 1 unit a pick: betting only its A picks, its A and B picks, or every pick. The last column is every pick at the model's own stakes.`,
+    weeks.length ? el("div", { class: "scroll" }, cmp) : null, weeks.length ? el("small", { class: "only-phone muted" }, "On a phone this table shows the new model's side only. What was bet each week, and the record by grade, are in the week list below.") : null, weeks.length ? payLine : null,
     weeks.length ? el("p", { class: "note" }, "Units: at 1 a bet, so the two columns compare like with like. At its stakes: the new model's own stakes (A 1, B 0.5, C 0.25).") : null,
     h2h,
     weekFolds.length ? el("p", { class: "lead" }, "Every pick and its outcome, week by week:") : null, ...weekFolds,

@@ -873,6 +873,28 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-11, 12:40 pm (then and now: what the A picks alone, A and B, and every pick paid)
+
+The owner asked for the "Then and now" table on the Track record tab to show what the new model's picks would
+have paid betting only the A picks, only A and B, and every pick. Site only; no rule, grade or stake changed.
+
+- **What.** The table's "New, units" column became three, at 1 unit a pick: "A only", "A + B" and "All picks"
+  (the last is the old column), beside the records by grade and "All, at its stakes". A second total row adds up
+  every replayed week (4 to 9) for the new model alone, under the row for the weeks both exist for (7 to 9). A
+  line under the table gives the same three answers in dollars at the unit value set in the calculator (and
+  follows it when it changes), at 1 unit a pick and at the model's own stakes. On a phone the table shows the
+  week, the new model's record and the three paid columns; a note points to the week list for what was bet.
+- **Why.** Vision: an easier site. The question "what if I only bet the A picks" needed the calculator; it is
+  now read off the table the owner was already looking at.
+- **Evidence.** The figures come from `data/retro_five.json` (`by_grade[].units` and `.staked`, `plays`), with no
+  new computation in the pipeline. Weeks 4 to 9, replayed: A only +13.5 units on 40 bets (32-8), A and B +24.4
+  on 88, every pick +50.3 on 372 (216-156); at its stakes +13.5, +18.9 and +25.4. They match the replay record
+  already logged (2026-11-10) and the calculator. Checked in a browser at 1,200 px and 390 px: no script error,
+  no page overflow, the dollars line follows the unit value. Smoke test: 185 checks.
+- **Caution, as before.** These are replays of the weeks the rules were chosen on (weeks 4 to 9 are in sample);
+  the page says so. The out-of-sample read starts at week 10.
+- **Revert if** the owner finds the table too wide: drop the three columns back to one in `historySection`.
+
 ### 2026-11-11, 11:10 am (the first Wednesday early look: no book had a line; the daily ran on the new rules)
 
 Scheduled check of the first early look (`config.OPENER_DATES`, Wednesday 10 am Edmonton). Nothing changed.
