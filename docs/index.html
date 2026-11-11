@@ -1051,7 +1051,15 @@ function whatIfSection(r, s, lw) {
       const usd = (u) => { const v = u * WI.unit, a = Math.abs(v); return `${v < 0 ? "-" : "+"}$${a >= 1000 ? Math.round(a).toLocaleString() : a.toFixed(2)}`; }, cls = (u) => (u > 0 ? "pos" : u < 0 ? "neg" : "");
       const card = (c, title, big, sub) => el("div", { class: `rec-card ${c}` }, el("h4", {}, title), el("div", { class: "big" }, ...big), el("div", { class: "sub" }, sub));
       const n = tot.w + tot.l;
-      const what = [[...WI.grades].filter((g) => grades.includes(g)).map((g) => (g === "none" ? "ungraded" : g)).join(", ") || "no", WI.kind ? WI_KIND[WI.kind].toLowerCase() : "", WI.side ? `${WI.side}${n === 1 ? "" : "s"}` : "", sleepers ? `sleeper${n === 1 ? "" : "s"}` : WI.which === "locks" ? `lock${n === 1 ? "" : "s"}` : WI.side ? "" : `pick${n === 1 ? "" : "s"}`, pos.length ? `(${pos.join(", ")})` : ""].filter(Boolean).join(" ");
+      // how the stake was built, grade by grade, so the two stake choices can be told apart at a glance
+      const dol = (v) => `$${v % 1 ? v.toFixed(2) : v}`, perG = ["A", "B", "C", "none"].map((g) => ({ g, k: rows.filter((x) => x.grade === g).reduce((a, x) => a + x.wins + x.losses, 0) })).filter((x) => x.k);
+      const stakedHow = perG.map((x) => `${x.k} ${x.g === "none" ? "ungraded" : x.g}${sleepers ? ` sleeper${x.k === 1 ? "" : "s"}` : ""} at ${dol(stakeOf(x.g) * WI.unit)}`).join(", ");
+      const sameAsFlat = !sleepers && n && perG.every((x) => stakeOf(x.g) === 1 && (gu[x.g] ?? gu.C) === 1) && perG.length < grades.length
+        ? `An ${perG.map((x) => x.g).join("")} pick is 1 unit under both stake choices, so they give the same answer here: tick B or C to see them part.` : "";
+      // the locks of the same weeks on their own: a lock is an A pick, so one unit under either stake choice
+      const lockT = sets.locks.filter((x) => x.week >= WI.from && x.week <= WI.to).reduce((a, x) => ({ w: a.w + x.wins, l: a.l + x.losses, u: a.u + x.units }), { w: 0, l: 0, u: 0 }), lockN = lockT.w + lockT.l;
+      const usdFlat = (u) => { const v = u * WI.unit, a = Math.abs(v); return `${v < 0 ? "-" : "+"}$${a >= 1000 ? Math.round(a).toLocaleString() : a.toFixed(2)}`; };
+      const what =[[...WI.grades].filter((g) => grades.includes(g)).map((g) => (g === "none" ? "ungraded" : g)).join(", ") || "no", WI.kind ? WI_KIND[WI.kind].toLowerCase() : "", WI.side ? `${WI.side}${n === 1 ? "" : "s"}` : "", sleepers ? `sleeper${n === 1 ? "" : "s"}` : WI.which === "locks" ? `lock${n === 1 ? "" : "s"}` : WI.side ? "" : `pick${n === 1 ? "" : "s"}`, pos.length ? `(${pos.join(", ")})` : ""].filter(Boolean).join(" ");
       const byWeek = weeks.filter((w) => w >= WI.from && w <= WI.to).map((w) => ({ w, ...sum(rows.filter((y) => y.week === w)) }));
       let run = 0; const tb = byWeek.map((x) => { run += x.u; return [`Week ${x.w}${src.key === "now" ? (x.w < lw ? " (replay)" : " (live)") : ""}`, x.w + x.l ? wl(x.w, x.l) : el("span", { class: "muted" }, "no pick"), el("b", { class: cls(x.u) }, x.w + x.l ? usd(x.u) : ""), el("b", { class: cls(run) }, usd(run))]; });
       // the same selection cut by grade, by position and by market and side
@@ -1064,7 +1072,9 @@ function whatIfSection(r, s, lw) {
         el("div", { class: "wi-out" },
           card(tot.u >= 0 ? "rc-live" : "rc-old", "You would be", [el("span", { class: cls(tot.u) }, n ? usd(tot.u) : "$0")], n ? `${tot.u >= 0 ? "+" : ""}${num(tot.u, 1)} units on ${num(tot.st, 1)} staked (${tot.st ? signedPct(tot.u / tot.st) : "–"}).` : "No pick matches."),
           card("rc-replay", "Record", [wl(tot.w, tot.l), el("small", {}, n ? pct(tot.w / n) : "")], `${n} ${what}, week ${WI.from}${WI.to !== WI.from ? ` to ${WI.to}` : ""}.`),
-          card("rc-replay", "Money out", [`$${Math.round(tot.st * WI.unit).toLocaleString()}`], `${WI.stake === "grade" && !sleepers ? "The grade's units" : "One unit"} on each, at $${num(WI.unit, WI.unit % 1 ? 2 : 0)} a unit. About $${n && byWeek.length ? Math.round(tot.st * WI.unit / byWeek.length).toLocaleString() : 0} a week.`)),
+          card("rc-replay", "Money staked", [`$${Math.round(tot.st * WI.unit).toLocaleString()}`], n ? `${stakedHow}. About $${byWeek.length ? Math.round(tot.st * WI.unit / byWeek.length).toLocaleString() : 0} a week.${sameAsFlat ? ` ${sameAsFlat}` : ""}` : "Nothing staked."),
+          WI.which === "locks" || !sets.locks.length ? "" : card(lockT.u >= 0 ? "rc-live" : "rc-old", "Just the locks", [el("span", { class: cls(lockT.u) }, lockN ? usdFlat(lockT.u) : "$0")],
+            lockN ? `${lockT.w}-${lockT.l} (${pct(lockT.w / lockN)}): every lock of week ${WI.from}${WI.to !== WI.from ? ` to ${WI.to}` : ""} at 1 unit each, $${Math.round(lockN * WI.unit).toLocaleString()} staked. The other filters do not apply to this box.` : "No lock in these weeks.")),
         byWeek.length > 1 ? keep("rec-whatif-weeks", "Week by week", el("div", { class: "scroll" }, table([["Week"], ["Record"], ["That week", "n"], ["Running total", "n"]], tb))) : "",
         n ? keep("rec-whatif-cuts", "Broken down: by grade, position, market and side", el("div", { class: "scroll" }, table([["These picks, by"], ["Record"], ["Hit rate", "n"], ["Up or down", "n"]], breakdown))) : "",
         picks.length ? keep("rec-whatif-picks", `The picks themselves (${picks.length})`, el("div", { class: "scroll", style: "max-height:460px;overflow:auto" }, ph(table([[""], ["Pick"], ["Result"], ["Had", "n"], ["Price", "n"], ["Up or down", "n"]],

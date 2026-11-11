@@ -503,9 +503,9 @@ check(all(k in _html for k in ("then-now-pay", "THEN_NOW_PAY", '["A only", "n"],
       and all("units" in g and "staked" in g for w in _rw for g in w.get("by_grade", []))
       and all(abs(sum(g["staked"] for g in w["by_grade"]) - w["plays"]["units_at_stake"]) < 0.02 for w in _rw if w.get("by_grade")),
       f"then and now shows what the A picks alone, A and B, and every pick paid, and the replayed weeks carry the units by grade it needs ({len(_rw)} weeks)")
-check(all(k in _html for k in ("rec-whatif", "function whatIfSection", "unit-value")) and all(abs(sum(g["units"] for g in w["by_grade"].values()) - w["units"]) < 1e-6
+check(all(k in _html for k in ("rec-whatif", "function whatIfSection", "unit-value", "Money staked", "Just the locks", "stakedHow")) and all(abs(sum(g["units"] for g in w["by_grade"].values()) - w["units"]) < 1e-6
       and sum(g["wins"] + g["losses"] for g in w["by_grade"].values()) == w["wins"] + w["losses"] for e in _rs.get("seasons", []) for w in e["by_week"]),
-      "the Track record tab has the unit-value calculator, and the replayed seasons carry each week's units by grade (they add up to the week)")
+      "the Track record tab has the unit-value calculator (the stake spelled out by grade, the locks in their own box), and the replayed seasons carry each week's units by grade (they add up to the week)")
 check(all(k in _html for k in ('aria-label": `${aria} ${g}`', "rec-whatif-cuts", "rec-whatif-picks")) and all(e.get("cells") and sum(c[5] for c in e["cells"]) == e["plays"]["wins"]
       and sum(c[6] for c in e["cells"]) == e["plays"]["losses"] and abs(sum(c[7] for c in e["cells"]) - e["plays"]["units"]) < 0.05 and {c[2] for c in e["cells"]} <= {"solo", "combined", "assists"} for e in _rs.get("seasons", [])),
       "the calculator filters by market, side and position, and each replayed season's cells (week, grade, market, side, position) add up to its record")

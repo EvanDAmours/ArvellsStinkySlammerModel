@@ -873,6 +873,23 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-11, 1:15 pm (the calculator: the stake spelled out by grade, and the locks in their own box)
+
+The owner read the calculator's "Money out" box as wrong: it showed $400 under "1 unit on every pick" and under
+"By grade (A 1, B 0.5, C 0.25)". Site only; no rule changed.
+
+- **What was found.** The sum was right. The calculator opens with only the A grade ticked, and an A pick is 1
+  unit under both stake choices, so 40 A picks are $400 either way; with B and C ticked the two choices part
+  ($3,720 flat against $1,350 by grade on weeks 4 to 9). The box gave no way to see that, which is the defect.
+- **What changed.** The box is now "Money staked" and spells out how the stake was built ("40 A at $10, 48 B at
+  $5, 284 C at $2.50"). When every chosen pick stakes 1 unit under both choices it says so and says to tick B
+  or C. A fourth box, "Just the locks", shows what the locks of the chosen source and weeks paid at 1 unit each
+  (2026 weeks 4 to 9: 7-2, +$22.70 at $10; 2025: 31-10, +$118.63); the other filters do not apply to it, and it
+  is hidden when "Locks only" is already the selection.
+- **Evidence.** Driven in a browser at 1,200 px and 390 px across both stake choices, the three sources and the
+  three "Show" choices: the figures match the replay records already logged, no script error, no overflow.
+- **Revert if** the owner prefers the three boxes: remove the fourth card in `whatIfSection`.
+
 ### 2026-11-11, 12:40 pm (then and now: what the A picks alone, A and B, and every pick paid)
 
 The owner asked for the "Then and now" table on the Track record tab to show what the new model's picks would
