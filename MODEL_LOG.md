@@ -888,6 +888,17 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-12, 8:30 am (a pull by hand, half an hour before the Thursday 9 am slot, at the owner's request)
+
+The owner was home early and asked for the 9 am lines at 8:30. "Pull tackle lines" was run by hand with a 12 hour
+window (tonight's game only, as the 9 am slot covers; there is no Friday game). Nothing in the code or the schedule
+changed, and the 9 am and 1 pm slots still run on their own (a pull by hand does not mark a slot served).
+
+- **What came back** (commit "Lines 2026-11-12T14:29"): 13 combined lines for Commanders at Giants, all at Bally
+  Bet, each with an Over price only. No book had a two-way line and none had a solo line, 10 hours 45 minutes
+  before kickoff, so nothing could be priced: 0 picks. One more data point for open issue 20 (when lines open):
+  on this Thursday the board was not up at 8:30 am.
+
 ### 2026-11-11, 3:20 pm (My board: a custom bet, typed in and settled by hand)
 
 The owner asked to track bets the site does not price (a Giants moneyline and spread, for example) without pulling
