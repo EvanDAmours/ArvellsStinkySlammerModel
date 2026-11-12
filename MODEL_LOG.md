@@ -888,6 +888,28 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-12, 1:20 pm (the first priced board under H1 and S3: the checks pass; DraftKings posted at mid-morning)
+
+Scheduled check after the Thursday 1 pm pull, and two pulls by hand before it at the owner's request (9:53 and
+10:58 am, once DraftKings was up). Nothing changed in the code or the rules.
+
+- **When the lines came.** Nothing two-way at 8:30 or 9 am; DraftKings had all three markets up for nine players by
+  9:53 am, 9 hours 20 minutes before kickoff (open issue 20). theScore Bet had nothing by 1 pm. The 1 pm slot ran on
+  time (commit "Pipeline 2026-11-12T19:00"): 40 prices, 27 two-way, the same players; five lines and 36 prices had
+  moved since 10:58.
+- **The board against the rules in force: no break.** Six picks, all C at 0.25 units (1.5 units, far inside the
+  caps): every pick has its chances, edge, tier, grade and stake; no A or B, because the only solo line at 58% or
+  more of the two-way combined line (Nick Cross, 3.5 against 5.5) is no pick (the model's number is above it); no
+  solo Over pick on a flagged line; the level is 1.008 on the priced combined rows and 1 on solo.
+- **A near miss worth knowing.** Micah McFadden's solo line moved from 4.5 to 5.5: against DraftKings' combined 9.5
+  that is 57.9%, a hair under the flag. The share is taken on two-way books only, as written; Bally Bet's
+  Over-only 8.5 does not count. It stays a C.
+- **Four of the six picks are Unders on McFadden** (combined 9.5, assists 3.5, solo 4.5 as first posted and solo
+  5.5 after the move). His card says why the book is high: 100% of the snaps last game against 40% on the season.
+  The model alone says 86% on the solo Under, which is the zone the bias audit found overstated (open issue 24a),
+  and the checklist already bars him as a lock ("new role, only 2 games in this role"). One opinion, one unit.
+- The ticker's run was still going and its log could not be read; the pull's commit and log entry show it done.
+
 ### 2026-11-12, 10:10 am (the Thursday 9 am pull: ran clean, still no two-way line; the role-news rebuild fired)
 
 Scheduled check of the first week 10 pull. Nothing changed.
