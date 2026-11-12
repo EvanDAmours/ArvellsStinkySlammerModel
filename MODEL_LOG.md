@@ -888,6 +888,22 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-12, 10:10 am (the Thursday 9 am pull: ran clean, still no two-way line; the role-news rebuild fired)
+
+Scheduled check of the first week 10 pull. Nothing changed.
+
+- The 9 am slot ran on time (ticker log, 15:00 UTC; commit "Pipeline 2026-11-12T15:01"): one game, one book, 13
+  combined lines at Bally Bet with an Over price only, the same as the pull by hand at 8:30. No two-way line and
+  no solo line ten hours before kickoff, so 0 picks. Cost 1 credit; 1,872 left.
+- **The rebuild on role news fired live for the first time** (open issue 13): the refreshed report moved Trent
+  McDuffie from questionable to out, and the projections were rebuilt before pricing (709 projections, the level
+  for lined players 1.008). It ran in under a minute and the second refresh found nothing further.
+- No "tick failed", no traceback, no rejected key in the log. The lines log shows level 1.0 on these 13 rows only
+  because an unpriced row carries the default; the projections carry 1.008.
+- The checks of a priced board (A only on flagged solo Unders that are sleepers, B the other flagged solo Unders,
+  no solo Over on a flagged line, stakes 1, 0.5 and 0.25 within the caps of 5, 20 and 25) still wait for a book to
+  post both sides: the 1 pm pull is the next chance, and a check is scheduled after it.
+
 ### 2026-11-12, 8:30 am (a pull by hand, half an hour before the Thursday 9 am slot, at the owner's request)
 
 The owner was home early and asked for the 9 am lines at 8:30. "Pull tackle lines" was run by hand with a 12 hour
