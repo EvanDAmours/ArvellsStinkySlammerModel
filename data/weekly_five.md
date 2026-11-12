@@ -1,7 +1,7 @@
 # Locks and parlays: running tally
 
 The locks: the highest-confidence picks of each slate day (3 on a one-game day, 5 on a multi-game day), named before kickoff and tracked here. Target: 70% hits. Then the recommended parlay for each slate day.
-Generated 2026-11-12 10:16 UTC by the daily job. Do not edit by hand.
+Generated 2026-11-12 15:01 UTC by the daily job. Do not edit by hand.
 
 **Locks record: 10-4 (71%), +3.45 units, 0 pending.**
 
