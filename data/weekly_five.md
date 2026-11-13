@@ -1,7 +1,7 @@
 # Locks and parlays: running tally
 
 The locks: the highest-confidence picks of each slate day (3 on a one-game day, 5 on a multi-game day), named before kickoff and tracked here. Target: 70% hits. Then the recommended parlay for each slate day.
-Generated 2026-11-12 16:53 UTC by the daily job. Do not edit by hand.
+Generated 2026-11-13 00:16 UTC by the daily job. Do not edit by hand.
 
 **Locks record: 10-4 (71%), +3.45 units, 0 pending.**
 
@@ -230,7 +230,28 @@ Every closing line of the week: how often the Over won, against the chance the b
 
 The picks the current rules chose, one bet per player, market and side. The decision register's conditions are read on these alone.
 
-No pick graded yet.
+**Record 0-0 (5 pending), +0.00 units at 1 a bet, +0.00 on 0.0 units at the stakes.**
+Locks: 0-0.
+
+| Week | Record | Hit | Win chance said | Units at 1 a bet | Staked | Units at the stakes |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026 wk 10 | 0-0 (5 pending) |  |  | +0.00 | 0.0 | +0.00 |
+
+| Grade | Record | Hit | Likely range | Win chance said | Units at 1 a bet |
+| --- | --- | --- | --- | --- | --- |
+| C | 0-0 (5 pending) |  |  |  | +0.00 |
+
+| Side and market | Record | Hit | Likely range | Units at 1 a bet |
+| --- | --- | --- | --- | --- |
+| Over solo | 0-0 (1 pending) |  |  | +0.00 |
+| Under combined | 0-0 (1 pending) |  |  | +0.00 |
+| Under solo | 0-0 (2 pending) |  |  | +0.00 |
+| Under assists | 0-0 (1 pending) |  |  | +0.00 |
+
+| Position | Record | Hit | Likely range | Units at 1 a bet |
+| --- | --- | --- | --- | --- |
+| LB | 0-0 (4 pending) |  |  | +0.00 |
+| S | 0-0 (1 pending) |  |  | +0.00 |
 
 Conditions of the decision register on trial:
 
@@ -248,19 +269,19 @@ Conditions of the decision register on trial:
 
 ## All plays to date (every rule set)
 
-**Record 200-183 (52%, likely range 43% to 61%), +0.14 units at 1 a bet.** No-vig closing-line value -2.75 points (give or take 0.37) on 399 bets.
+**Record 200-183 (5 pending) (52%, likely range 43% to 61%), +0.14 units at 1 a bet.** No-vig closing-line value -2.77 points (give or take 0.35) on 404 bets.
 
 | Grade | Record | Hit | Likely range | Chance said | Units at 1 a bet |
 | --- | --- | --- | --- | --- | --- |
 | A | 13-9 | 59% | 37% to 78% | 64% | +0.58 |
 | B | 74-63 | 54% | 43% to 65% | 59% | +1.81 |
-| C | 46-45 | 51% | 38% to 63% | 57% | +3.97 |
+| C | 46-45 (5 pending) | 51% | 38% to 63% | 57% | +3.97 |
 | ungraded | 67-66 | 50% | 35% to 66% |  | -6.22 |
 
 | Side and market | Record | Hit | Likely range | Units at 1 a bet |
 | --- | --- | --- | --- | --- |
 | Over combined | 13-16 | 45% | 27% to 64% | -4.14 |
-| Over solo | 7-11 | 39% | 19% to 63% | -4.01 |
-| Under combined | 44-44 | 50% | 37% to 63% | -2.76 |
-| Under solo | 129-107 | 55% | 45% to 64% | +9.52 |
-| Under assists | 7-5 | 58% | 30% to 82% | +1.53 |
+| Over solo | 7-11 (1 pending) | 39% | 19% to 63% | -4.01 |
+| Under combined | 44-44 (1 pending) | 50% | 37% to 63% | -2.76 |
+| Under solo | 129-107 (2 pending) | 55% | 45% to 64% | +9.52 |
+| Under assists | 7-5 (1 pending) | 58% | 30% to 82% | +1.53 |
