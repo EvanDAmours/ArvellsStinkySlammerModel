@@ -546,6 +546,8 @@ and C9. What remains, and what the rebuild itself turned up:
    hour before kickoff with the final injury report, the projection's constants were tuned with 2025 in the data,
    and the best price is taken across three books of which Alberta has one or two. Weeks 10 to 13 are still the
    live test, and the record as bet before the engine is still 200-183.
+   Live so far (week 10 through Thursday, one game): the engine worse than the book by 0.0295 on 30 lines, picks
+   2-4, on a board whose Overs won 60% to 69%. No information yet.
 2. **The model sits below the book, in both markets, every week.** Mean gap -0.19 (combined) and -0.21 (solo) in
    log-odds: the model gives the Over 45% where the book gives 49.6%. On solo the book was the one that was wrong in
    weeks 7 and 8 (Overs hit 33% and 39%) and right in week 9 (50%). On combined the model was wrong all three weeks
@@ -581,7 +583,7 @@ and C9. What remains, and what the rebuild itself turned up:
 8. **The standing post-mortem task: working.** Its first run under the instructions of 2026-11-09 (Tuesday
    2026-11-10, 8:24 am) read the plain weekly log, ran the daily in a scratch copy, wrote the close of week 9 in the
    set order and pushed it to this branch itself (commit 6f35256, `MODEL_LOG.md` only), in eight minutes. Nothing
-   to merge. Read its Friday entry, the first with engine-era picks in it.
+   to merge. Its Friday entry of 2026-11-13 (week 10, Thursday's slate) is the first with engine-era picks in it.
 9. **The repository is public (owner).** Picks, projections, every odds snapshot and this file are readable without
    the site's password. A private repository needs paid Actions minutes for a ticker that runs all day.
 10. **The closing price is an hour old** (the last pull before kickoff): closing-line value and the scoreboard are
@@ -651,6 +653,10 @@ and C9. What remains, and what the rebuild itself turned up:
 13. **Role news is untested.** The rebuild at pull time (R7) is a mechanism with no record: watch the first Sunday
     for a rebuild in the ticker's log and what it changed. The same goes for lines that do not fit the player:
     count how many the guard removes a week.
+25. **"Rules on trial" shows S3 as "read it now" from the first graded pick** (found 2026-11-13 by the standing
+    post-mortem; display only). `watch` in `grade.engine_era` (`pipeline/grade.py`, line 684) gives that state to a
+    condition with no count and no bar; S3 is read after week 13. Fix for the owner's session: keep it "running"
+    until week 13 is graded (a week count, as E2 has). No pick, grade or stake reads the state.
 14. **Smaller.** The proportional no-vig split is off by about a point at very short and long prices. The solo
     share's own uncertainty is not in the solo spread. A same-game parlay's price is our estimate, not the book's.
     The regime-robust solo price (archive, 2026-11-08) has not been tried as the solo model. ESPN spells 9 of 528
@@ -810,6 +816,82 @@ the record is the week evidence about the model.
 Post-mortems of weeks 7 and 8 are in the archive. From week 10 a post-mortem starts from the scoreboard (Track
 record, "Against the market") and the luck table, reads every record with its likely range, and changes nothing
 inside the freeze unless it finds a defect.
+
+### Week 10, opened Friday 2026-11-13 with Thursday's slate (standing post-mortem, 8:59 am MST; measures only, nothing changed)
+
+Grading had landed: `data/weekly_five.md` generated 2026-11-13 10:16 UTC, nine hours after the kickoff of Commanders
+at Giants (2026-11-13 01:15 UTC). This is the first slate under the engine, H1 and S3: one game, one book with two-way
+lines (DraftKings), 30 closing lines, six bets. Monday's run adds Sunday; Tuesday's closes the week.
+
+1. **Scoreboard since week 10:** 30 lines, book 0.6424, model alone 0.7214, engine 0.6719: the engine is **worse
+   than the book by 0.0295**, no give or take (one week). By market: assists -0.0376, combined -0.0313, solo -0.0197,
+   10 lines each. Not distinguishable from nothing: one game. Background only, in-sample: weeks 2 to 9 with this
+   week, +0.0076 (give or take 0.0030; t +2.6) on 2,597 lines.
+2. **Record since the engine: 2-4 (33%, range 9% to 71%), -2.53 units at 1 a bet, -0.16 on 2.25 staked;** the win
+   chance said 63%. It means nothing yet, and less than six bets suggests: three of the four losses are one
+   player (Micah McFadden's combined, solo and assists Unders). A player counted once: 2-2.
+   - By grade: A 1-0 (21% to 100%; Arvell Reese Under 5.5 solo, 4 solo tackles, +0.62), B none, C 1-4 (20%, 3% to
+     64%, -3.16 at 1 a bet, -0.79 at the stakes). The ranges overlap entirely; no order can be read.
+   - By side and market: Under solo 1-2, Under combined 0-1, Under assists 0-1 (the assists trial, 7-6 over all
+     plays), Over solo 1-0 (Jeremy Reaves Over 2.5, 7 solo). By position: LB 1-4, S 1-0.
+   - Solo Unders on a flagged line 1-0 (Reese, the book's solo line 65% of its combined line); on an unflagged line
+     0-2 (McFadden 4.5, Sonny Styles 4.5; each had 5).
+   - Locks 1-0 (Reese); every lock to date 11-4 (73%, +4.08 units). No parlay this slate (no combined leg
+     qualified); parlays stay 1-2. Sleepers on their own record 2-1 this slate (Reese won, Styles lost, Greg Newsome
+     combined Over 3.5 won with 4), 5-3 and +0.85 units since their rules were frozen.
+   - Stakes against the caps: 2.25 units on the day (A 1, five C at 0.25) against 25; 2.25 in the game against 5;
+     the largest kind, solo Unders, 1.5 against 20. Far inside all three.
+   - The bet counted is the first line logged, or the best grade: McFadden's solo Under counts at 4.5 (lost with
+     5) and not at the 5.5 logged two hours later (won); his combined Under counts at 9.5 (lost with 10; the 8.5
+     at the close lost too); Reese counts as the A at 5.5 and not the C at 4.5 (both won).
+3. **Calibration since the engine** (one to three bets a bucket: nothing to read). Win chance: said 55%, hit 0 of
+   1; 59%, 1 of 1; 63%, 0 of 1; 66%, 1 of 3. The model's own chance: said 64%, 0 of 1; 67%, 1 of 2; 73%, 1 of 2;
+   83%, 0 of 1. The 83% and both 73-76% misses are McFadden, in a new role (two games; open issue 24a).
+4. **Luck or skill:** the week so far is the level of the market. Every closing line of the game: the Over won
+   69% on combined (13 lines, the book's fair chance 50%), 60% on solo (10, 49%) and 60% on assists (10, 49%).
+   The model sits below the book (open issue 2), so the engine's score suffered and five of the six bets were
+   Unders in a game that ran over, with no choice of lines in it. Within that: Unders hit 1 of 5 (20%)
+   against a board base of 38% on 33 lines, lift -18 points ("we picked badly, few picks"); the one Over won
+   against a base of 64%. The luck table says the Unders "beat the close" 100% while the no-vig closing-line
+   value of all nine logged rows is negative (-0.1 to -9.8 points): open issue 12 again, not a finding. No kind
+   of pick has lift, the close and the record agreeing; no kind is evidence either way on five picks.
+5. **Conditions on trial** (copied from the weekly log): H1 A picks 1 of 30, 1-0, running. H1 B picks 0 of 40,
+   running. H1 C picks 5 of 100, 1-4, running. E4 the old A rule 2 of 30, 1-1, running. E6 Over picks 1 of 40,
+   1-0, running. H1 solo Unders on an unflagged line 2 of 40, 0-2, running. E5 locks 1-0, running. E2 the
+   engine's weight 1 of 4 weeks, margin -0.0295, running. S3 stakes by grade: 6 picks, **shown as "read it now",
+   which is a labelling defect and not a condition met** (its text and decision S3 say after week 13; see point
+   10). At this slate the ladder lost 0.16 on 2.25 (-7%) where the same picks at one size lost 2.53 on 6 (-42%).
+   None reached its count.
+6. **Candidates in the shadow, since week 10** (30 lines, one week, no give or take): flat weight 0.5, -0.0028;
+   the combined gap centred on the week's mean, +0.0012; the solo level for lined players, -0.0016. None is
+   adopted before 2026-12-08 (R6).
+7. **The misses** (four counted losses; snap counts from the stats feed): three within one tackle of the line
+   (McFadden combined 10 on 9.5 and solo 5 on 4.5; Styles solo 5 on 4.5), one further out (McFadden assists 5 on
+   3.5). None is a snap surprise: McFadden played 69 of 69 snaps where the share model expected 90% (his card
+   said new role, 100% last game against 40% on the season), Styles 65 of 65 (expected 92%), and the Giants'
+   defence was on the field for 69 snaps against 64.8 expected. What the box score does show is that the model's
+   own number for McFadden was far too low (6.4 combined, he made 10), which the checklist had flagged (new
+   role, two games; never a lock or an A) and which the bias audit named (24a: the model's sureness above 75%
+   stops paying). Nothing else can be shown as a cause.
+8. **Internal validation** (scratch daily, 31,544 games, 709 projections for week 10, level for lined players
+   1.008): no flag raised. Final projection against the factor model, deviance by fold: 2024 1.4047 against
+   1.4412, 2025 1.3395 against 1.3920, 2026 1.3170 against 1.3791; overall -0.0476 (t -10.6), regulars -0.0141
+   (t -2.8). Regulars' bias +0.020 overall, +0.152 in 2026. No factor "hurts", no factor out of the model is a
+   "candidate" (nearest: role shift on regulars, t -1.7; bar -2). Tails: 5.9% below the 5th percentile, 4.9%
+   above the 95th.
+9. **Open issues:** (1) the edge on live weeks: first live week negative, -0.0295 on one game; no information
+   yet. (2) the model below the book: the whole board went Over (60% to 69%) and the model was on the wrong side
+   of the level, as in weeks 7 to 9 on combined; the 2026 regulars' bias is +0.15 a game. (3) grade order: A 1-0,
+   C 1-4; nothing to read. (4) the linemen pocket: no lineman pick. (5) next man up: no pick; still 918 games,
+   12% low. (6) Overs: 1-0 since the engine, 1 of 40.
+10. **What changed:** nothing; frozen until 2026-12-08. For the owner: (a) a small defect in the display, left
+    for your session (open issue 25): the S3 line under "Rules on trial" reads "read it now" from its first graded
+    pick, because `grade.engine_era`'s `watch` gives that state to any condition with neither a count nor a bar
+    (`pipeline/grade.py`, line 684); it should stay "running" until week 13 is graded. No pick, grade or stake is
+    touched by it. (b) The odds key ends on 2026-12-10 (open issue 7); 1,872 credits were left before Thursday's
+    last two pulls. (c) Next slate: Sunday is the first full board under H1, the first with B picks and more than
+    one A; watch flagged against unflagged solo Unders and whether the board's Overs keep running above the
+    book's fair chance.
 
 ### Week 9 closed, Tuesday 2026-11-10 (standing post-mortem, 8:20 am MST; measures only, nothing changed)
 
