@@ -1,7 +1,7 @@
 # Locks and parlays: running tally
 
 The locks: the highest-confidence picks of each slate day (3 on a one-game day, 5 on a multi-game day), named before kickoff and tracked here. Target: 70% hits. Then the recommended parlay for each slate day.
-Generated 2026-11-14 20:49 UTC by the daily job. Do not edit by hand.
+Generated 2026-11-14 23:30 UTC by the daily job. Do not edit by hand.
 
 **Locks record: 11-4 (73%), +4.08 units, 0 pending.**
 
@@ -244,29 +244,33 @@ Every closing line of the week: how often the Over won, against the chance the b
 
 The picks the current rules chose, one bet per player, market and side. The decision register's conditions are read on these alone.
 
-**Record 2-4 (33%, likely range 9% to 71%), -2.53 units at 1 a bet, -0.16 on 2.2 units at the stakes; win chance said 63%.**
+**Record 2-4 (11 pending) (33%, likely range 9% to 71%), -2.53 units at 1 a bet, -0.16 on 2.2 units at the stakes; win chance said 63%.**
 Locks: 1-0 (100%, likely range 21% to 100%).
 
 | Week | Record | Hit | Win chance said | Units at 1 a bet | Staked | Units at the stakes |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2026 wk 10 | 2-4 | 33% | 63% | -2.53 | 2.2 | -0.16 |
+| 2026 wk 10 | 2-4 (11 pending) | 33% | 63% | -2.53 | 2.2 | -0.16 |
 
 | Grade | Record | Hit | Likely range | Win chance said | Units at 1 a bet |
 | --- | --- | --- | --- | --- | --- |
 | A | 1-0 | 100% | 21% to 100% | 66% | +0.62 |
-| C | 1-4 | 20% | 3% to 64% | 62% | -3.16 |
+| B | 0-0 (3 pending) |  |  |  | +0.00 |
+| C | 1-4 (8 pending) | 20% | 3% to 64% | 62% | -3.16 |
 
 | Side and market | Record | Hit | Likely range | Units at 1 a bet |
 | --- | --- | --- | --- | --- |
-| Over solo | 1-0 | 100% | 21% to 100% | +0.84 |
-| Under combined | 0-1 | 0% | 0% to 79% | -1.00 |
-| Under solo | 1-2 | 33% | 6% to 80% | -1.38 |
-| Under assists | 0-1 | 0% | 0% to 79% | -1.00 |
+| Over solo | 1-0 (3 pending) | 100% | 21% to 100% | +0.84 |
+| Over assists | 0-0 (1 pending) |  |  | +0.00 |
+| Under combined | 0-1 (1 pending) | 0% | 0% to 79% | -1.00 |
+| Under solo | 1-2 (5 pending) | 33% | 6% to 80% | -1.38 |
+| Under assists | 0-1 (1 pending) | 0% | 0% to 79% | -1.00 |
 
 | Position | Record | Hit | Likely range | Units at 1 a bet |
 | --- | --- | --- | --- | --- |
-| LB | 1-4 | 20% | 3% to 64% | -3.38 |
-| S | 1-0 | 100% | 21% to 100% | +0.84 |
+| DL | 0-0 (2 pending) |  |  | +0.00 |
+| LB | 1-4 (6 pending) | 20% | 3% to 64% | -3.38 |
+| S | 1-0 (1 pending) | 100% | 21% to 100% | +0.84 |
+| CB | 0-0 (2 pending) |  |  | +0.00 |
 
 Calibration of the win chance: 50% to 55%: said 55%, hit 0% of 1 (0% to 79%); 55% to 60%: said 59%, hit 100% of 1 (21% to 100%); 60% to 65%: said 63%, hit 0% of 1 (0% to 79%); 65% to 70%: said 66%, hit 33% of 3 (6% to 80%).
 
@@ -288,19 +292,20 @@ Conditions of the decision register on trial:
 
 ## All plays to date (every rule set)
 
-**Record 202-187 (52%, likely range 44% to 60%), -2.40 units at 1 a bet.** No-vig closing-line value -2.76 points (give or take 0.34) on 405 bets.
+**Record 202-187 (11 pending) (52%, likely range 44% to 60%), -2.40 units at 1 a bet.** No-vig closing-line value -2.77 points (give or take 0.34) on 416 bets.
 
 | Grade | Record | Hit | Likely range | Chance said | Units at 1 a bet |
 | --- | --- | --- | --- | --- | --- |
 | A | 14-9 | 61% | 40% to 79% | 64% | +1.21 |
-| B | 74-63 | 54% | 43% to 65% | 59% | +1.81 |
-| C | 47-49 | 49% | 37% to 61% | 58% | +0.81 |
+| B | 74-63 (3 pending) | 54% | 43% to 65% | 59% | +1.81 |
+| C | 47-49 (8 pending) | 49% | 37% to 61% | 58% | +0.81 |
 | ungraded | 67-66 | 50% | 35% to 66% |  | -6.22 |
 
 | Side and market | Record | Hit | Likely range | Units at 1 a bet |
 | --- | --- | --- | --- | --- |
 | Over combined | 13-16 | 45% | 27% to 64% | -4.14 |
-| Over solo | 8-11 | 42% | 22% to 65% | -3.17 |
-| Under combined | 44-45 | 49% | 37% to 62% | -3.76 |
-| Under solo | 130-109 | 54% | 45% to 63% | +8.15 |
-| Under assists | 7-6 | 54% | 28% to 78% | +0.53 |
+| Over solo | 8-11 (3 pending) | 42% | 22% to 65% | -3.17 |
+| Over assists | 0-0 (1 pending) |  |  | +0.00 |
+| Under combined | 44-45 (1 pending) | 49% | 37% to 62% | -3.76 |
+| Under solo | 130-109 (5 pending) | 54% | 45% to 63% | +8.15 |
+| Under assists | 7-6 (1 pending) | 54% | 28% to 78% | +0.53 |
