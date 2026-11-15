@@ -970,6 +970,13 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-15, 10:45 am (My board: the season record in the ledger panel shown full size)
+
+The owner found the season record in the ledger's Season panel tiny and broken over three lines ("32", "-", "11").
+The panel's style for a tile's label (small, grey, one per line) also caught the two coloured halves of the record.
+The tile styles now apply to the tile's own number and label only. Checked in a browser at 1,200 px and 390 px: the
+record reads "15-13" on one line at the panel's number size. Site only; smoke test passes.
+
 ### 2026-11-15, 10:30 am (My board: a bet's grade follows the board until kickoff)
 
 The owner saw Shemar James as an A lock on the Plays tab and a B on My board. Two causes, one a defect:
