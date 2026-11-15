@@ -508,6 +508,7 @@ check(all(k in _html for k in ("function playRows", "plays-jump", "plays-grp-", 
 check("a bet's grade follows the board until its game kicks off" in _html, "My board keeps an unstarted bet's grade in step with the board")
 check(".stat-panel .tile > span {" in _html and ".stat-panel .tile span {" not in _html, "the panels' label style leaves a record's coloured halves alone")
 check("...(liveN ? [units(e.units_at_stake, 1)" in _html, "the live card's units are passed as pieces, not as one array printed as text")
+check(all(k in _html for k in ("If every bet ended right now", "now-ticker", "nowPL += r_")), "My board shows what the week pays if every game ended now, green or red")
 from tools import bias_audit as _BA
 _bp = pd.DataFrame(dict(win=[1.0, 1.0, 0.0, 0.0, 1.0, 0.0], g=["a", "a", "b", "b", "c", "c"]))
 check(abs(_BA.pair_corr(_bp, "g") - 1 / 3) < 1e-9 and _BA.said_hit(pd.DataFrame(dict(p=[.55, .65], h=[1.0, 0.0])), "p", "h", [0, .6, 1]).count("\n") == 3,

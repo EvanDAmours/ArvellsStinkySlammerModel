@@ -970,6 +970,23 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-15, 12:35 pm (My board: "If every bet ended right now")
+
+The owner asked for a running figure of what the week would pay if every bet closed this second, green when up and
+red when down. Site only; no rule changed.
+
+- **What.** A banner above My board's panels: settled results (custom bets included) plus every bet in play graded on
+  the count it has right now (an Under below its line wins, at the line pushes, above loses; an Over the other way),
+  as if its game ended now. Bets not started are left out. Green with a green edge when the figure is up, red when
+  down, plain at zero; a line under it says how much is settled and how many bets in play are winning and losing at
+  the current count. It refreshes with the live feed, every minute while a game is on. It differs from "on current
+  pace", which grades each bet on where its count is heading, not where it is.
+- **Also.** "On current pace" now counts settled custom bets, as "settled so far" already did.
+- **Evidence.** A simulated third quarter (three Unders and one Over on one team, a settled custom win): the banner
+  read +$35.42, the sum by hand ($12 settled; +$13.33, -$10, +$11, +$9.09 in play). No script error, no overflow at
+  1,200 px and 390 px. Smoke test passes.
+- **Revert if** unwanted: remove the banner block in `renderMine`.
+
 ### 2026-11-15, 12:00 pm (Track record: the live card's units read "[object HTMLElement]")
 
 Once week 10 had results, the first Track record card printed "[object HTMLElement],u on 5.3 staked, · 75 pending":

@@ -236,6 +236,11 @@ details.parlay-box > summary { cursor: pointer; } details.parlay-box > summary s
 .play .add.on, #mine-body .add.on { background: #1f8a4c; color: #fff; border-color: #1f8a4c; }
 #mine-body .add { font: 600 0.8rem var(--cond); padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); cursor: pointer; margin: 2px 6px 2px 0; }
 #mine-body input[type=search] { font: inherit; padding: 6px 10px; width: min(100%, 320px); margin: 4px 0 8px; }
+.now-ticker { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; background: var(--panel); border: 1px solid var(--line); border-left: 6px solid var(--line); border-radius: 12px; padding: 10px 16px; margin: 4px 0 12px; }
+.now-ticker .lbl { font: 700 0.85rem/1 var(--cond); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.now-ticker b { font: 700 2.2rem/1 var(--cond); font-variant-numeric: tabular-nums; } .now-ticker .sub { color: var(--muted); font-size: 0.85rem; flex-basis: 100%; }
+.now-ticker.up { border-left-color: #1f8a4c; background: color-mix(in srgb, #1f8a4c 9%, var(--panel)); } .now-ticker.up b { color: #1f8a4c; }
+.now-ticker.down { border-left-color: #c0392b; background: color-mix(in srgb, #c0392b 9%, var(--panel)); } .now-ticker.down b { color: #c0392b; }
 .stat-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin: 4px 0 12px; }
 .stat-panel { background: var(--panel); border: 1px solid var(--line); border-top: 4px solid var(--line); border-radius: 12px; padding: 10px 14px 12px; }
 .stat-panel.rc-live { border-top-color: #1f8a4c; } .stat-panel.rc-old { border-top-color: #c0392b; } .stat-panel.rc-replay { border-top-color: #2f6db5; } .stat-panel.rc-money { border-top-color: var(--flag); }
@@ -1878,6 +1883,7 @@ function renderMine() {
   if (LIVE.error && (LIVE.events || []).some((g) => g.state === "in")) box.append(el("div", { class: "warn" }, `ESPN's live feed is not answering (${LIVE.error}). Live tackles and pace are paused; every bet is still settled from the official box score the morning after, and nothing on the ledger is lost.`));
   else if (LIVE.error && !LIVE.events) box.append(el("div", { class: "warn" }, `ESPN's scoreboard is not answering (${LIVE.error}), so kickoff times and live tracking are unavailable for now. Official grading still settles every bet.`));
   if (!every.length) { box.append(el("div", { class: "empty" }, "Nothing on your board yet. Press \"+ My board\" on any card on the Plays tab and it is tracked here, live, with your stake. A bet the site does not price (a moneyline, a spread) goes in under \"Add a custom bet\" below."), ...mineTools(false), ledgerSection()); return; }
+  let nowPL = 0, nowN = 0, nowW = 0, nowL = 0;   // every bet in play graded on its count right now
   let w = 0, l = 0, p = 0, onTrack = 0, live = 0, staked = 0, toWin = 0, settled = 0, pendingStake = 0, paced = 0, pacedN = 0, unstarted = 0, unstartedStake = 0, pendingWin = 0, pendingRisk = 0;
   const GR = { A: 0, B: 1, C: 2 };
   const sorted = [...list].sort((a, b) => (GR[a.grade] ?? 3) - (GR[b.grade] ?? 3) || (b.lock ?? 0) - (a.lock ?? 0) || String(a.commence_time || "").localeCompare(String(b.commence_time || "")));
@@ -1916,7 +1922,8 @@ function renderMine() {
       else { unstarted++; unstartedStake += stake; }
       if (!status.startsWith("Final") && win != null) { pendingWin += win; pendingRisk += stake; }   // every bet not yet settled, started or not
       if (status.startsWith("Final")) { result = status.includes("Win") ? win : status.includes("Loss") ? -stake : 0; settled += result; paced += result; pacedN++; }
-      else if (started) { pendingStake += stake; paced += cls.includes("good") ? (win ?? 0) : -stake; pacedN++; } }
+      else if (started) { pendingStake += stake; paced += cls.includes("good") ? (win ?? 0) : -stake; pacedN++;
+        if (have != null) { const r_ = have === +b.line ? 0 : (under ? have < +b.line : have > +b.line) ? (win ?? 0) : -stake; nowPL += r_; nowN++; if (r_ > 0) nowW++; else if (r_ < 0) nowL++; } } }
     if (status.startsWith("Final")) { if (status.includes("Win")) w++; else if (status.includes("Loss")) l++; else p++; }
     const stakeBox = el("label", { class: "stake" }, "$ ", (() => { const i = el("input", { type: "number", min: "0", step: "1", inputmode: "decimal", placeholder: "stake", value: stake == null ? "" : String(stake) }); i.addEventListener("change", () => setStake(b.key, i.value)); return i; })(),
       win != null ? el("small", {}, ` to win ${money(win)}`) : "", result != null ? el("b", { class: result > 0 ? "ok" : result < 0 ? "no" : "" }, ` ${result > 0 ? "+" : ""}${money(result)}`) : "");
@@ -1937,12 +1944,17 @@ function renderMine() {
   // custom bets: settled by hand, counted in the same totals
   for (const b of customs) { const m = betMoney(b), dec = toDec(b.odds);
     if (m.result === "Win") w++; else if (m.result === "Loss") l++; else if (m.result === "Push") p++;
-    if (m.stake != null) { if (m.result) settled += m.profit || 0; else { pendingRisk += m.stake; if (dec) pendingWin += m.stake * (dec - 1); } } }
+    if (m.stake != null) { if (m.result) { settled += m.profit || 0; paced += m.profit || 0; } else { pendingRisk += m.stake; if (dec) pendingWin += m.stake * (dec - 1); } } }
   const nCustomOpen = customs.filter((b) => !b.settled?.result).length;
   const dollars = (x) => (x > 0 ? "+" : "") + (money(x) || "$0"), sign = (x) => (x > 0 ? "pos" : x < 0 ? "neg" : "");
   // every number the old strip had (the owner wants them all), grouped in three panels: how it has gone, what is on
   // now, and the money; custom bets counted
   const lastUp = LIVE.at ? new Date(LIVE.at).toLocaleTimeString([], { timeZone: TZ, hour: "numeric", minute: "2-digit" }) : "–";
+  // the ticker: what the week would pay if every game stopped this second, settled bets plus each bet in play at its count now
+  if (nowN || w + l + p) { const v = settled + nowPL;
+    box.append(el("div", { class: `now-ticker ${v > 0 ? "up" : v < 0 ? "down" : ""}`, title: "Settled results plus every bet in play graded on the tackles it has right now, as if its game ended this second. Bets not started are left out." },
+      el("span", { class: "lbl" }, "If every bet ended right now"), el("b", {}, dollars(v)),
+      el("span", { class: "sub" }, nowN ? `${money(settled) ? dollars(settled) + " settled · " : ""}${nowN} in play: ${nowW} winning, ${nowL} losing${nowN - nowW - nowL ? `, ${nowN - nowW - nowL} level` : ""} at the current count` : "every started bet is settled"))); }
   box.append(statPanels([
     ["Results", "rc-live", [
       tile(dollars(settled), `settled so far${pendingStake ? ` · ${money(pendingStake)} still riding` : ""}`, sign(settled), "", true),
