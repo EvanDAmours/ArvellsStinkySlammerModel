@@ -970,6 +970,23 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-14, 6:20 pm (the Slate filter: an international morning slot, and the noon games back under "Early")
+
+The owner asked to filter the Plays tab to the international morning game (Patriots at Lions, 8:30 am Edmonton on
+2026-11-15). Site only; no rule changed.
+
+- **What.** The Slate filter on the Plays tab and the Sunday slate filter on the Projections tab gain "International
+  (morning)": games kicking off before 10 am Edmonton time (the overseas games at 7:30 or 8:30 am). No stateside game
+  kicks off that early.
+- **A defect found on the way, fixed.** The slots were cut at noon and 5 pm Edmonton, set when the early games kicked
+  off at 11 am (UTC-7). Alberta has been UTC-6 all year since 2026-11-01, so the early games kick off at noon and the
+  filter had been putting them under "Afternoon" since week 9. The cuts are now 10 am, 2 pm and 6 pm (overseas,
+  early at noon, afternoon at 3:05 and 3:25 pm, prime time from 6:15 pm), and the labels say noon and 3 pm.
+- **Evidence.** In a browser: 14:30 UTC reads as the morning slot, 18:00 as early, 21:05 as afternoon, 01:20 as prime
+  time; on a synthetic board of 100 lines the morning filter shows only the six lines set to the morning game, no
+  script error. Smoke test: 188 checks.
+- **Revert if** unwanted: drop the option; keep the corrected cuts.
+
 ### 2026-11-12, 1:20 pm (the first priced board under H1 and S3: the checks pass; DraftKings posted at mid-morning)
 
 Scheduled check after the Thursday 1 pm pull, and two pulls by hand before it at the owner's request (9:53 and
@@ -2077,6 +2094,9 @@ Never tested; each with what would justify it. Anything tested and dropped is in
   tackle with assist), which is higher in 15% of player-games. The first pass of the bias audit (2026-11-11) used
   `solo` and showed every solo Under five points better than it is, and a model 0.33 tackles too high that is in
   fact 0.02 too high. Check any new frame against the graded picks before reading it (`tools/bias_audit.py` does).
+- **A clock change moves every cut-off written in local hours.** Alberta went to UTC-6 all year on 2026-11-01; the
+  Slate filter's noon cut had assumed UTC-7 and filed the noon games under "Afternoon" for two weeks before anyone
+  noticed. When the offset changes, search the site and `run.py` for hours written as local times.
 - **A replay shown on the site is a file, and a file goes stale.** `data/retro_five.json` and
   `data/replay_seasons.json` are written by hand-run tools, not by the daily. After any change to a pick rule, a
   grade or a stake, re-run them before the push, or the Track record tab reports the previous rules' replay.

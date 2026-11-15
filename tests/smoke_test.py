@@ -499,6 +499,8 @@ check(all(k in _html for k in ("rec-history", "function historySection", "rec-pi
       f"the Track record tab carries the then-and-now section, keeps the pick list behind a dropdown and gets the replayed seasons ({[e['season'] for e in _rs.get('seasons', [])]})")
 check(all(k in _html for k in ("function customForm", "function addCustom", "function parseOdds", "mine-custom-add", 'if (b.custom) return null;', 'if (r[0] === "~")', "const tracked = ()")),
       "My board takes a custom bet (typed in, settled by hand, no line pulled): in the totals, the ledger and the backup code")
+check('<option value="intl">International (morning)</option>' in _html and 'h < 10 ? "intl" : h < 14 ? "early" : h < 18 ? "late" : "prime"' in _html,
+      "the Plays and Projections tabs can show the international morning games on their own, and the noon games count as early (Edmonton is UTC-6)")
 from tools import bias_audit as _BA
 _bp = pd.DataFrame(dict(win=[1.0, 1.0, 0.0, 0.0, 1.0, 0.0], g=["a", "a", "b", "b", "c", "c"]))
 check(abs(_BA.pair_corr(_bp, "g") - 1 / 3) < 1e-9 and _BA.said_hit(pd.DataFrame(dict(p=[.55, .65], h=[1.0, 0.0])), "p", "h", [0, .6, 1]).count("\n") == 3,

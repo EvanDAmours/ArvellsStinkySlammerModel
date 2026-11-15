@@ -302,7 +302,7 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
       <label>Side <select id="side"><option value="">Both</option><option value="Under">Unders</option><option value="Over">Overs</option></select></label>
       <label>Book <select id="book"><option value="">Any book</option></select></label>
       <label>Market <select id="market"><option value="">Both</option><option value="player_tackles_assists">Tackles + assists</option><option value="player_solo_tackles">Solo tackles</option></select></label>
-      <label>Slate <select id="slate"><option value="">All games</option><option value="early">Early (noon)</option><option value="late">Afternoon</option><option value="prime">Prime time</option></select></label>
+      <label>Slate <select id="slate"><option value="">All games</option><option value="intl">International (morning)</option><option value="early">Early (noon)</option><option value="late">Afternoon (3 pm)</option><option value="prime">Prime time</option></select></label>
       <label>Sort <select id="sort"><option value="grade">Grade</option><option value="lock">Lock score</option><option value="ev">Expected return</option><option value="kick">Kickoff</option><option value="player">Player</option><option value="line">Line</option></select></label>
       <label><input type="checkbox" id="picks-only" checked> Picks only</label>
       <label><input type="checkbox" id="best-only" checked> Best price per line</label>
@@ -314,7 +314,7 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
     <p class="note">Projected tackles for every defender playing this week. The fair line is the half-point line the model puts closest to a coin flip. Stat crew is the home scorekeepers’ effect on combined tackles.</p>
     <div class="controls"><input type="search" id="q" placeholder="Search player or team" aria-label="Search player or team">
       <span class="daybar" id="daybar" role="group" aria-label="Game day"></span>
-      <label id="proj-slate-label" hidden>Sunday slate <select id="proj-slate"><option value="">All Sunday games</option><option value="early">Early (11 am)</option><option value="late">Afternoon (2 pm)</option><option value="prime">Prime time</option></select></label></div>
+      <label id="proj-slate-label" hidden>Sunday slate <select id="proj-slate"><option value="">All Sunday games</option><option value="intl">International (morning)</option><option value="early">Early (noon)</option><option value="late">Afternoon (3 pm)</option><option value="prime">Prime time</option></select></label></div>
     <div class="scroll"><table id="proj-table"></table></div>
   </section>
 
@@ -411,7 +411,10 @@ const jersey = (b) => { const j = jerseyOf(b); return j == null ? "" : el("span"
 // Slates in Edmonton time: early = kickoffs before noon (11 am, plus London games), afternoon = noon to 5 pm, prime time = 5 pm onward (incl. Thu/Mon night).
 const TZ = "Etc/GMT+6";   // Edmonton: Alberta Time is UTC-6 all year from 2026-11-01, and was UTC-6 (MDT) before it; a fixed offset so a browser with stale zone data cannot show kickoffs an hour early
 const localHour = (d) => Number(new Intl.DateTimeFormat("en-CA", { timeZone: TZ, hour: "numeric", hour12: false }).format(d));
-const slateOf = (d) => { if (!d || isNaN(d)) return ""; const h = localHour(d); return h < 12 ? "early" : h < 17 ? "late" : "prime"; };
+// Edmonton time (UTC-6 all year since 2026-11-01): the overseas games at 7:30 or 8:30 am, the early games at noon, the
+// afternoon games at 3:05 and 3:25 pm, prime time from 6:15 pm. The cut for "early" was 12 when the noon games were at
+// 11 am (UTC-7); from November it put them under "Afternoon".
+const slateOf = (d) => { if (!d || isNaN(d)) return ""; const h = localHour(d); return h < 10 ? "intl" : h < 14 ? "early" : h < 18 ? "late" : "prime"; };
 const kickoffLocal = (d) => (!d || isNaN(d)) ? "" : d.toLocaleString("en-CA", { timeZone: TZ, weekday: "short", hour: "numeric", minute: "2-digit" });
 const betKick = (b) => (b.commence_time ? new Date(b.commence_time) : null);
 // projections carry the nflverse gameday + Eastern gametime (two hours ahead of Edmonton; UTC-4 in daylight time, UTC-5 from November to mid-March)
