@@ -709,3 +709,6 @@ season,week,player,market,side,line,book,actual,graded_by,settled_at
 2026,10,David Bailey,player_assists,Over,2.5,DraftKings,1.0,live,20261115T212152Z
 2026,10,Kendal Daniels,player_tackles_assists,Under,8.5,theScore Bet,8.0,live,20261115T212152Z
 2026,10,Pete Werner,player_solo_tackles,Under,3.5,DraftKings,2.0,live,20261115T212152Z
+2026,10,Budda Baker,player_solo_tackles,Over,3.5,DraftKings,2.0,live,20261115T235337Z
+2026,10,Budda Baker,player_assists,Under,3.5,DraftKings,4.0,live,20261115T235337Z
+2026,10,Nate Landman,player_solo_tackles,Over,3.5,theScore Bet,1.0,live,20261115T235337Z
