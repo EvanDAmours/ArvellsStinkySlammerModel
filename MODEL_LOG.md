@@ -986,6 +986,9 @@ The owner meant the banner to show where the day ends up, not where it stands: e
   (that bet lost) and the right-now tile +$44.52 (that bet won), both matching the sums by hand. No script error, no
   overflow at 1,200 px and 390 px. Smoke test passes.
 - **Revert if** unwanted: swap the two figures back in `renderMine`.
+- **A red push, fixed.** The commit went out with one smoke check failing (an older check still looked for the "on
+  current pace" label, which the banner replaces); the command that pushed did not stop on the failed test. The check
+  now looks for the banner. Pitfall added.
 
 ### 2026-11-15, 12:35 pm (My board: "If every bet ended right now")
 
@@ -2207,6 +2210,9 @@ Never tested; each with what would justify it. Anything tested and dropped is in
 - **A copy of a pick goes stale.** My board stored a pick's grade when it was added; grades move between pulls until
   kickoff, so the board disagreed with the Plays tab. Anything copied from the board into the browser follows the
   board until the game starts.
+- **Never chain a push after the smoke test without stopping on its result.** On 2026-11-15 a commit was pushed with a
+  failing check because the test and the push ran in one command that did not test the exit code. Run the test, read
+  "ALL CHECKS PASSED", then commit and push.
 - **A replay shown on the site is a file, and a file goes stale.** `data/retro_five.json` and
   `data/replay_seasons.json` are written by hand-run tools, not by the daily. After any change to a pick rule, a
   grade or a stake, re-run them before the push, or the Track record tab reports the previous rules' replay.

@@ -501,7 +501,7 @@ check(all(k in _html for k in ("function customForm", "function addCustom", "fun
       "My board takes a custom bet (typed in, settled by hand, no line pulled): in the totals, the ledger and the backup code")
 check('<option value="intl">International (morning)</option>' in _html and 'h < 10 ? "intl" : h < 14 ? "early" : h < 18 ? "late" : "prime"' in _html,
       "the Plays and Projections tabs can show the international morning games on their own, and the noon games count as early (Edmonton is UTC-6)")
-check('"By grade, this week: "' in _html and all(k in _html for k in ("const statPanels", '["Results", "rc-live"', '["Right now", "rc-replay"', '["Money", "rc-money"', '"season record"', "on current pace · ", "can still be withdrawn", "to win if every started bet hits", "last live update")),
+check('"By grade, this week: "' in _html and all(k in _html for k in ("const statPanels", '["Results", "rc-live"', '["Right now", "rc-replay"', '["Money", "rc-money"', '"season record"', "Where today is heading", "can still be withdrawn", "to win if every started bet hits", "last live update")),
       "My board shows every number of its old strip, grouped in panels (results, right now, money), the ledger too")
 check(all(k in _html for k in ("function playRows", "plays-jump", "plays-grp-", 'id: "plays-locks"', "plays-view", 'foldNote("How locks are chosen"')),
       "the Plays tab groups picks by grade, one line each (a tap opens the card), with a jump bar and the long notes folded")
