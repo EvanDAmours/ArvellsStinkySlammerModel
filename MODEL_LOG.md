@@ -970,6 +970,22 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-15, 10:15 am (the Plays tab: picks grouped by grade, one line each, a jump bar)
+
+The owner found the Plays tab hard to scroll now that it carries locks, the parlay, sleepers and 80-odd picks.
+Site only; no rule changed and nothing was removed.
+
+- **What.** Under the filters, a "Jump to" row (Locks, Parlay, Sleepers, A, B, C, with counts). The picks are grouped
+  by grade in folds (A and B open, C folded when it has more than eight, leans and unpriced lines last), each with
+  its count and units staked, and shown one line per pick: grade (a star for a lock), player, team, opponent and
+  kickoff, the bet, the price and book, the win chance, the stake and "+ My board". A tap on a line opens its full
+  card in place; "Show full cards" brings back the old view and is remembered. The rules for locks fold under "How
+  locks are chosen"; a parlay that is not there yet is one line; the sleepers box starts folded. Sorting by
+  anything but grade gives one list in that order.
+- **Evidence.** On a synthetic board of 100 lines the page went from 14,680 px to about 3,000 px on a computer and
+  4,500 px on a phone; no script error, no page overflow. Smoke test passes.
+- **Revert if** unwanted: "Show full cards" restores the cards; the grouping is in `renderPlays`.
+
 ### 2026-11-15, 9:35 am (My board: the same numbers, grouped in three panels)
 
 The owner wants every number of the old strip kept, laid out better. Site only; no rule changed.

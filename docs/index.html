@@ -211,6 +211,19 @@ table.mine-compact tr.mine-expand td { white-space: normal; padding: 4px 0 10px;
 .legend summary { cursor: pointer; font: 700 1rem/1.4 var(--cond); }
 .legend table { margin: 8px 0; max-width: 100%; } .legend td, .legend th { padding: 4px 10px 4px 0; white-space: normal; }
 .legend p { margin: 6px 0; color: var(--muted); }
+.plays-jump { margin: 0 0 10px; align-items: center; } .plays-jump .muted { font-size: 0.85rem; margin-right: 2px; }
+.plays-grp { margin: 0 0 10px; } .plays-grp > summary .grade { margin-right: 4px; }
+table.plays-compact td:first-child { width: 48px; } table.plays-compact .star { color: #1f8a4c; margin-left: 4px; }
+table.plays-compact .over { color: var(--over); font-weight: 600; } table.plays-compact .under { color: var(--under); font-weight: 600; }
+table.plays-compact td small { font-size: 0.78rem; }
+table.plays-compact button.add { font: 600 0.75rem var(--cond); padding: 2px 8px; margin-left: 4px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); cursor: pointer; }
+table.plays-compact button.add.on { background: #1f8a4c; color: #fff; border-color: #1f8a4c; }
+.plays-jump button.reset { font: 600 0.85rem var(--cond); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; cursor: pointer; color: var(--ink); }
+.plays-jump { gap: 6px; flex-wrap: wrap; display: flex; }
+@media (max-width: 640px) { table.plays-compact .star { display: none; } table.plays-compact tr.is-lock { box-shadow: inset 4px 0 #1f8a4c; } }
+table.plays-compact tr.is-lock td:first-child { box-shadow: inset 4px 0 #1f8a4c; }
+.fold-note { margin: 0 0 8px; } .fold-note > summary { font-size: 0.85rem; color: var(--muted); }
+details.parlay-box > summary { cursor: pointer; } details.parlay-box > summary strong { font: 700 1.05rem var(--cond); }
 .five-box { border: 2px solid #1f8a4c; border-radius: 10px; padding: 10px 12px 2px; margin: 0 0 16px; }
 .five-box h3 { margin: 0 0 6px; font: 700 1.1rem/1.2 var(--cond); }
 .five-box .note { margin: 0 0 8px; }
@@ -700,21 +713,21 @@ function renderPlays() {
       const f = DATA.results?.summary?.five, g = DATA.meta?.grading?.locks || { single: 3, multi: 5 };
       const tally = f && f.bets ? ` · season ${f.wins}-${f.losses}${f.pushes ? "-" + f.pushes : ""}${f.hit == null ? "" : ` (${pct(f.hit)})`}` : "";
       const days = [...new Set(five.map((b) => slateName(slateDate(b))))].join(", ");
-      const fb = el("div", { class: "five-box" }, el("h3", {}, `Locks${days ? ` · ${days}` : ""}${tally}`), el("p", { class: "note" }, ENGINE().a_rule === "hole" ? `A picks only, the model's own chance at ${DATA.meta?.grading?.lock_min ?? 70}% or better: a solo Under on a line the book has set at ${pct(HOLE())} or more of its own combined line for him, that is also a sleeper, with a clear checklist. The highest model chances first, at most ${g.single} on a one-game day and ${g.multi} on a multi-game day, at most two of a kind. A thin board gets no lock rather than its best pick. Re-chosen at every line pull until kickoff. Open "Why this is a lock" on each.` : `A picks only: the model's own chance at ${DATA.meta?.grading?.lock_min ?? 70}% or better, a price that still pays with the model's view cut to a quarter (a cautious edge of 2% or more), and a clear checklist. The highest model chances first, at most ${g.single} on a one-game day and ${g.multi} on a multi-game day, at most two of a kind. A thin board gets no lock rather than its best pick. Re-chosen at every line pull until kickoff. Open "Why this is a lock" on each.`));
+      const fb = el("div", { class: "five-box", id: "plays-locks" }, el("h3", {}, `Locks${days ? ` · ${days}` : ""}${tally}`), foldNote("How locks are chosen", ENGINE().a_rule === "hole" ? `A picks only, the model's own chance at ${DATA.meta?.grading?.lock_min ?? 70}% or better: a solo Under on a line the book has set at ${pct(HOLE())} or more of its own combined line for him, that is also a sleeper, with a clear checklist. The highest model chances first, at most ${g.single} on a one-game day and ${g.multi} on a multi-game day, at most two of a kind. A thin board gets no lock rather than its best pick. Re-chosen at every line pull until kickoff. Open "Why this is a lock" on each.` : `A picks only: the model's own chance at ${DATA.meta?.grading?.lock_min ?? 70}% or better, a price that still pays with the model's view cut to a quarter (a cautious edge of 2% or more), and a clear checklist. The highest model chances first, at most ${g.single} on a one-game day and ${g.multi} on a multi-game day, at most two of a kind. A thin board gets no lock rather than its best pick. Re-chosen at every line pull until kickoff. Open "Why this is a lock" on each.`));
       five.sort((a, b) => (b.lock ?? 0) - (a.lock ?? 0)).forEach((b) => fb.append(card(b, true)));
       box.append(fb);
     } else if (all.some((b) => b.pick === "Over" || b.pick === "Under")) {
       const lm = DATA.meta?.grading?.lock_min ?? 70;
-      box.append(el("div", { class: "five-box" }, el("h3", {}, "Locks · none"), el("p", { class: "note" }, `No A pick has a model chance of ${lm}% or better yet${ENGINE().a_rule === "hole" ? " (an A is a solo Under on a line the book set high against its own combined line, also a sleeper, with a clear checklist)" : " (a cautious edge of 2% or more, a clear checklist)"}, so there is no lock: a lock is a pick the model strongly believes in, not the best of a thin board. Re-chosen at every line pull until kickoff.`)));
+      box.append(el("div", { class: "five-box", id: "plays-locks" }, el("h3", {}, "Locks · none"), el("p", { class: "note" }, `No A pick has a model chance of ${lm}% or better yet${ENGINE().a_rule === "hole" ? " (an A is a solo Under on a line the book set high against its own combined line, also a sleeper, with a clear checklist)" : " (a cautious edge of 2% or more, a clear checklist)"}, so there is no lock: a lock is a pick the model strongly believes in, not the best of a thin board. Re-chosen at every line pull until kickoff.`)));
     }
     // only open parlays belong on the board; a settled one lives on the Track record tab
     const over = (q) => q.finished || (q.first_kickoff && Date.now() > new Date(q.first_kickoff).getTime() + 4.5 * 3600 * 1000);
     const open = (DATA.parlays || []).filter((q) => !over(q));
-    for (const q of open) box.append(parlayBox(q));
-    const sl = sleeperBox(all); if (sl) box.append(sl);
+    for (const [i, q] of open.entries()) { const pb = parlayBox(q); if (!i) pb.id = "plays-parlay"; box.append(pb); }
+    const sl = sleeperBox(all); if (sl) { sl.id = "plays-sleepers"; if (!PLAY_OPEN.has("plays-sleepers")) sl.open = false; else sl.open = PLAY_OPEN.get("plays-sleepers"); sl.addEventListener("toggle", () => PLAY_OPEN.set("plays-sleepers", sl.open)); box.append(sl); }
     if (!open.length && all.length) {
       const m = DATA.meta || {}, nxt = m.next_pull ? when(m.next_pull) : "";
-      box.append(el("div", { class: "parlay-box" }, el("h3", {}, "Parlay"), el("p", { class: "note" }, `No open parlay yet. ${all.length} line${all.length === 1 ? "" : "s"} on the board${all.length < 40 ? " (the books post most Sunday tackle lines Saturday evening and Sunday morning)" : ""}; a parlay needs two combined-tackle legs on one slate day that are picks in their own right, lock-eligible, with the model's own chance at ${pct(DATA.meta?.grading?.parlay?.fallback ?? 0.56)} or better (solo-tackle legs are not allowed in a same-game parlay), chosen at every line pull until that day's first kickoff. A slate without two such legs gets no parlay rather than a thin one.${nxt ? ` Next pull ${nxt}.` : ""}`)));
+      box.append(el("details", { class: "parlay-box", id: "plays-parlay" }, el("summary", {}, el("strong", {}, "Parlay"), " · none open yet"), el("p", { class: "note" }, `No open parlay yet. ${all.length} line${all.length === 1 ? "" : "s"} on the board${all.length < 40 ? " (the books post most Sunday tackle lines Saturday evening and Sunday morning)" : ""}; a parlay needs two combined-tackle legs on one slate day that are picks in their own right, lock-eligible, with the model's own chance at ${pct(DATA.meta?.grading?.parlay?.fallback ?? 0.56)} or better (solo-tackle legs are not allowed in a same-game parlay), chosen at every line pull until that day's first kickoff. A slate without two such legs gets no parlay rather than a thin one.${nxt ? ` Next pull ${nxt}.` : ""}`)));
     }
   }
   const anyPick = all.some((b) => b.pick === "Over" || b.pick === "Under"), showAll = picksOnly && !anyPick;   // nothing clears the bar: show every live line with the model's read rather than an empty board
@@ -727,7 +740,52 @@ function renderPlays() {
   box.append(el("div", { class: "count" }, `${rows.length} shown of ${nPicks} picks${nLeans ? ` and ${nLeans} leans` : ""} on ${all.length} priced lines` + (unfiltered ? "" : " (filtered)") + `. Sorted by ${$("#sort").selectedOptions[0].textContent.toLowerCase()}.`));
   if (showAll) box.append(el("div", { class: "count" }, "No line is a pick yet, so every live line is shown with both opinions on it: the model's and the book's."));
   if (!rows.length) { box.append(el("div", { class: "empty" }, picksOnly ? "No line matches these filters." : "Nothing matches these filters.")); return; }
-  for (const b of rows) box.append(card(b, false));
+  // the list: grouped by grade when sorted by grade, one line per pick (a tap opens the full card) unless full cards are chosen
+  const compact = PLAY_VIEW !== "cards";
+  const vb = el("button", { type: "button", class: "reset" }, compact ? "Show full cards" : "One line per pick");
+  vb.onclick = () => { PLAY_VIEW = compact ? "cards" : "compact"; try { localStorage.setItem("plays-view", PLAY_VIEW); } catch (e) { /* fine */ } renderPlays(); };
+  const isP = (b) => b.pick === "Over" || b.pick === "Under";
+  const groups = sortBy === "grade" ? [["A", "A picks", rows.filter((b) => isP(b) && b.grade === "A")], ["B", "B picks", rows.filter((b) => isP(b) && b.grade === "B")], ["C", "C picks", rows.filter((b) => isP(b) && b.grade === "C")],
+    ["other", "Leans and other lines", rows.filter((b) => !(isP(b) && ["A", "B", "C"].includes(b.grade)))]].filter(([, , xs]) => xs.length) : [["all", "Every line shown", rows]];
+  // jump to any part of a long board
+  const jumps = [unfiltered && box.querySelector("#plays-locks") ? ["plays-locks", `Locks${five.length ? ` ${five.length}` : ""}`] : null, unfiltered && box.querySelector("#plays-parlay") ? ["plays-parlay", "Parlay"] : null,
+    unfiltered && box.querySelector("#plays-sleepers") ? ["plays-sleepers", "Sleepers"] : null, ...groups.map(([k, t, xs]) => [`plays-grp-${k}`, `${k.length === 1 ? k : t.split(" ")[0]} ${xs.length}`])].filter(Boolean);
+  const bar = el("div", { class: "chips plays-jump" }, el("span", { class: "muted" }, "Jump to"), ...jumps.map(([id, t]) => { const a = el("button", { type: "button", class: "reset" }, t);
+    a.onclick = () => { const d = document.getElementById(id); if (!d) return; if (d.tagName === "DETAILS") d.open = true; d.scrollIntoView({ behavior: "smooth", block: "start" }); }; return a; }), vb);
+  box.prepend(bar);
+  for (const [k, title, xs] of groups) {
+    const id = `plays-grp-${k}`, staked = xs.reduce((t, b) => t + (isP(b) && b.stake != null ? +b.stake : 0), 0);
+    const d = el("details", { class: "fold plays-grp", id }, el("summary", {}, k.length === 1 ? el("span", { class: `grade ${k}` }, k) : "", el("b", { class: "t" }, ` ${title}`),
+      el("span", { class: "s" }, ` · ${xs.length}${staked ? ` · ${num(staked, 2)}u staked` : ""}`)));
+    d.open = PLAY_OPEN.has(id) ? PLAY_OPEN.get(id) : k === "all" || k === "A" || k === "B" || xs.length <= 8;
+    d.addEventListener("toggle", () => PLAY_OPEN.set(id, d.open));
+    const body = el("div", { class: "fold-body" });
+    if (compact) body.append(playRows(xs)); else xs.forEach((b) => body.append(card(b, false)));
+    d.append(body); box.append(d);
+  }
+}
+// the Plays list, one line per pick: grade, who, the bet, the book and price, the win chance, the stake; a tap opens the card
+let PLAY_VIEW = null; try { PLAY_VIEW = localStorage.getItem("plays-view"); } catch (e) { /* fine */ }
+const PLAY_OPEN = new Map();
+const foldNote = (label, text) => el("details", { class: "legend fold-note" }, el("summary", {}, label), el("p", { class: "note" }, text));
+function playRows(xs) {
+  const t = el("table", { class: "mine-compact plays-compact" });
+  t.append(el("thead", {}, el("tr", {}, ...["", "Player", "Bet", "Book", "Win chance", "Stake"].map((h, i) => el("th", { class: i >= 4 ? "n" : "" }, h)))));
+  const tb = el("tbody", {});
+  for (const b of xs) {
+    const side = b.side || b.pick, price = side === "Under" ? b.under_odds : b.over_odds, isPick = b.pick === "Over" || b.pick === "Under", kick = betKick(b);
+    const row = el("tr", { class: b.five ? "is-lock" : "" },
+      el("td", {}, b.grade && isPick ? el("span", { class: `grade ${b.grade}` }, b.grade) : el("span", { class: "muted" }, b.tier === "lean" ? "lean" : "–"), b.five ? el("span", { class: "star", title: "Lock" }, "★") : ""),
+      el("td", {}, b.player, " ", el("small", { class: "muted" }, `${b.group || ""} ${b.team || ""}${b.opp ? ` vs ${b.opp}` : ""}${kick ? ` · ${kickoffLocal(kick)}` : ""}`)),
+      el("td", {}, el("span", { class: side === "Under" ? "under" : "over" }, `${side === "Under" ? "U" : "O"} ${num(b.line)}`), ` ${({ solo: "solo", assists: "ast" })[KIND_OF(b.market)] || "tkl"}`),
+      el("td", {}, `${odds(price)} `, el("small", { class: "muted" }, b.book || "")),
+      el("td", { class: "n" }, b.p_claim != null ? pct(b.p_claim) : ""),
+      el("td", { class: "n" }, isPick && b.stake != null ? `${(+b.stake).toFixed(2)}u ` : "", addButton(b)));
+    row.onclick = () => { const open = row.nextSibling && row.nextSibling.classList?.contains("mine-expand"); if (open) row.nextSibling.remove(); else row.after(el("tr", { class: "mine-expand" }, el("td", { colspan: "6" }, card(b, !!b.five)))); };
+    tb.append(row);
+  }
+  t.append(tb);
+  return el("div", { class: "scroll compact-wrap" }, t);
 }
 
 const slateDate = (b) => { const d = betKick(b); return !d || isNaN(d) ? "" : new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d); };

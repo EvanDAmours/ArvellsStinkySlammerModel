@@ -503,6 +503,8 @@ check('<option value="intl">International (morning)</option>' in _html and 'h < 
       "the Plays and Projections tabs can show the international morning games on their own, and the noon games count as early (Edmonton is UTC-6)")
 check('"By grade, this week: "' in _html and all(k in _html for k in ("const statPanels", '["Results", "rc-live"', '["Right now", "rc-replay"', '["Money", "rc-money"', '"season record"', "on current pace · ", "can still be withdrawn", "to win if every started bet hits", "last live update")),
       "My board shows every number of its old strip, grouped in panels (results, right now, money), the ledger too")
+check(all(k in _html for k in ("function playRows", "plays-jump", "plays-grp-", 'id: "plays-locks"', "plays-view", 'foldNote("How locks are chosen"')),
+      "the Plays tab groups picks by grade, one line each (a tap opens the card), with a jump bar and the long notes folded")
 from tools import bias_audit as _BA
 _bp = pd.DataFrame(dict(win=[1.0, 1.0, 0.0, 0.0, 1.0, 0.0], g=["a", "a", "b", "b", "c", "c"]))
 check(abs(_BA.pair_corr(_bp, "g") - 1 / 3) < 1e-9 and _BA.said_hit(pd.DataFrame(dict(p=[.55, .65], h=[1.0, 0.0])), "p", "h", [0, .6, 1]).count("\n") == 3,
