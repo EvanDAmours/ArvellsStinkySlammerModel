@@ -970,6 +970,13 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-15, 12:00 pm (Track record: the live card's units read "[object HTMLElement]")
+
+Once week 10 had results, the first Track record card printed "[object HTMLElement],u on 5.3 staked, · 75 pending":
+its sub-line was passed as one array, which the page turned into text. It is now passed as separate pieces, so it
+reads "+x.xu on 5.3 staked · 75 pending". Untested until now because the card had no live result before Thursday.
+Site only; smoke test passes.
+
 ### 2026-11-15, 10:45 am (My board: the season record in the ledger panel shown full size)
 
 The owner found the season record in the ledger's Season panel tiny and broken over three lines ("32", "-", "11").

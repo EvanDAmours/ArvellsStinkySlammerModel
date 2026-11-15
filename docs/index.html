@@ -1044,7 +1044,7 @@ function recCards(r, s, lw) {
   const card = (cls, title, big, ...sub) => el("div", { class: `rec-card ${cls}` }, el("h4", {}, title), el("div", { class: "big" }, ...big), el("div", { class: "sub" }, ...sub));
   return el("div", { class: "rec-cards" },
     card("rc-live", `The new model, live (week ${lw} on)`, liveN ? [wl(e.wins, e.losses, e.pushes), el("small", {}, pct(e.hit))] : ["No result yet"],
-      liveN ? [units(e.units_at_stake, 1), `u on ${num(e.staked, 1)} staked`, e.pending ? ` · ${e.pending} pending` : ""] : [`Its first picks are week ${lw}'s. This is the number that counts.`]),
+      ...(liveN ? [units(e.units_at_stake, 1), `u on ${num(e.staked, 1)} staked`, e.pending ? ` · ${e.pending} pending` : ""] : [`Its first picks are week ${lw}'s. This is the number that counts.`])),
     seasons.length ? card("rc-replay", "The new model, replayed on past lines", [wl(rw, rl), el("small", {}, rw + rl ? pct(rw / (rw + rl)) : "")],
       `${seasons.map((x) => x.season).join(", ")}: A `, el("b", {}, gr("A")), " · B ", el("b", {}, gr("B")), " · C ", el("b", {}, gr("C")), ". What it would have done, not what was bet.") : "",
     card("rc-old", `As bet before it (weeks ${[...new Set((r.picks || []).filter((p) => p.week < lw).map((p) => p.week))].sort((a, b) => a - b).join(", ") || "none"})`, [wl(old.wins, old.losses), el("small", {}, old.hit == null ? "" : pct(old.hit))],
