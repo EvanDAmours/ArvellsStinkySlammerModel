@@ -1884,6 +1884,7 @@ function renderMine() {
   else if (LIVE.error && !LIVE.events) box.append(el("div", { class: "warn" }, `ESPN's scoreboard is not answering (${LIVE.error}), so kickoff times and live tracking are unavailable for now. Official grading still settles every bet.`));
   if (!every.length) { box.append(el("div", { class: "empty" }, "Nothing on your board yet. Press \"+ My board\" on any card on the Plays tab and it is tracked here, live, with your stake. A bet the site does not price (a moneyline, a spread) goes in under \"Add a custom bet\" below."), ...mineTools(false), ledgerSection()); return; }
   let nowPL = 0, nowN = 0, nowW = 0, nowL = 0;   // every bet in play graded on its count right now
+  let projPL = 0, projN = 0, projW = 0, projL = 0;   // every bet in play graded on where its projection takes it by the final whistle
   let w = 0, l = 0, p = 0, onTrack = 0, live = 0, staked = 0, toWin = 0, settled = 0, pendingStake = 0, paced = 0, pacedN = 0, unstarted = 0, unstartedStake = 0, pendingWin = 0, pendingRisk = 0;
   const GR = { A: 0, B: 1, C: 2 };
   const sorted = [...list].sort((a, b) => (GR[a.grade] ?? 3) - (GR[b.grade] ?? 3) || (b.lock ?? 0) - (a.lock ?? 0) || String(a.commence_time || "").localeCompare(String(b.commence_time || "")));
@@ -1923,7 +1924,11 @@ function renderMine() {
       if (!status.startsWith("Final") && win != null) { pendingWin += win; pendingRisk += stake; }   // every bet not yet settled, started or not
       if (status.startsWith("Final")) { result = status.includes("Win") ? win : status.includes("Loss") ? -stake : 0; settled += result; paced += result; pacedN++; }
       else if (started) { pendingStake += stake; paced += cls.includes("good") ? (win ?? 0) : -stake; pacedN++;
-        if (have != null) { const r_ = have === +b.line ? 0 : (under ? have < +b.line : have > +b.line) ? (win ?? 0) : -stake; nowPL += r_; nowN++; if (r_ > 0) nowW++; else if (r_ < 0) nowL++; } } }
+        if (have != null) { const r_ = have === +b.line ? 0 : (under ? have < +b.line : have > +b.line) ? (win ?? 0) : -stake; nowPL += r_; nowN++; if (r_ > 0) nowW++; else if (r_ < 0) nowL++;
+          // the projected final: what he has plus his expected tackles for the time left (projectedFinal); an Under already past
+          // its line is lost and an Over already past it is won, whatever the projection
+          const fin = pace ?? have, pr_ = under ? (have > +b.line || fin > +b.line ? -stake : fin === +b.line ? 0 : (win ?? 0)) : (have > +b.line || fin > +b.line ? (win ?? 0) : fin === +b.line ? 0 : -stake);
+          projPL += pr_; projN++; if (pr_ > 0) projW++; else if (pr_ < 0) projL++; } } }
     if (status.startsWith("Final")) { if (status.includes("Win")) w++; else if (status.includes("Loss")) l++; else p++; }
     const stakeBox = el("label", { class: "stake" }, "$ ", (() => { const i = el("input", { type: "number", min: "0", step: "1", inputmode: "decimal", placeholder: "stake", value: stake == null ? "" : String(stake) }); i.addEventListener("change", () => setStake(b.key, i.value)); return i; })(),
       win != null ? el("small", {}, ` to win ${money(win)}`) : "", result != null ? el("b", { class: result > 0 ? "ok" : result < 0 ? "no" : "" }, ` ${result > 0 ? "+" : ""}${money(result)}`) : "");
@@ -1950,16 +1955,17 @@ function renderMine() {
   // every number the old strip had (the owner wants them all), grouped in three panels: how it has gone, what is on
   // now, and the money; custom bets counted
   const lastUp = LIVE.at ? new Date(LIVE.at).toLocaleTimeString([], { timeZone: TZ, hour: "numeric", minute: "2-digit" }) : "–";
-  // the ticker: what the week would pay if every game stopped this second, settled bets plus each bet in play at its count now
-  if (nowN || w + l + p) { const v = settled + nowPL;
-    box.append(el("div", { class: `now-ticker ${v > 0 ? "up" : v < 0 ? "down" : ""}`, title: "Settled results plus every bet in play graded on the tackles it has right now, as if its game ended this second. Bets not started are left out." },
-      el("span", { class: "lbl" }, "If every bet ended right now"), el("b", {}, dollars(v)),
-      el("span", { class: "sub" }, nowN ? `${money(settled) ? dollars(settled) + " settled · " : ""}${nowN} in play: ${nowW} winning, ${nowL} losing${nowN - nowW - nowL ? `, ${nowN - nowW - nowL} level` : ""} at the current count` : "every started bet is settled"))); }
+  // the ticker: where the day is heading. Settled results plus every bet in play graded on its projected final (what he has
+  // plus the model's expected tackles for the time left), as the owner asked on 2026-11-15; the count right now is a tile below
+  if (projN || w + l + p) { const v = settled + projPL;
+    box.append(el("div", { class: `now-ticker ${v > 0 ? "up" : v < 0 ? "down" : ""}`, title: "Settled results plus every bet in play graded on where its player is heading by the end of the game: his tackles so far plus the model's expected tackles for the time left. Bets not started are left out." },
+      el("span", { class: "lbl" }, "Where today is heading"), el("b", {}, dollars(v)),
+      el("span", { class: "sub" }, projN ? `${money(settled) ? dollars(settled) + " settled · " : ""}${projN} in play: ${projW} heading for a win, ${projL} for a loss${projN - projW - projL ? `, ${projN - projW - projL} for a push` : ""}, on each player's projection for the time left` : "every started bet is settled"))); }
   box.append(statPanels([
     ["Results", "rc-live", [
       tile(dollars(settled), `settled so far${pendingStake ? ` · ${money(pendingStake)} still riding` : ""}`, sign(settled), "", true),
       tile(`${w}-${l}${p ? `-${p}` : ""}`, "settled record", "", "", false, w + l ? meter(w, l, "w", "l") : ""),
-      tile(dollars(paced), `on current pace · ${pacedN} started bet${pacedN === 1 ? "" : "s"}`, sign(paced), "Settled results plus every bet in play finishing the way it is trending right now. Bets that have not kicked off are not counted.")]],
+      tile(dollars(settled + nowPL), `if every bet ended right now · ${nowN} in play: ${nowW} winning, ${nowL} losing`, sign(settled + nowPL), "Settled results plus every bet in play graded on the tackles it has this second, as if its game ended now. Bets not started are left out.")]],
     ["Right now", "rc-replay", [
       tile(String(every.length), `bet${every.length === 1 ? "" : "s"} this week${customs.length ? ` · ${customs.length} custom` : ""}`, "", "", true),
       tile(String(live), "in play"),

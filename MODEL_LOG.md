@@ -970,6 +970,23 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-15, 12:55 pm (My board: the banner shows where the day is heading, on each bet's projection)
+
+The owner meant the banner to show where the day ends up, not where it stands: early in a game nearly every Under is
+"winning", which says little. Site only; no rule changed.
+
+- **What.** The banner is now "Where today is heading": settled results plus every bet in play graded on its projected
+  final, his tackles so far plus the model's expected tackles for the time left (the same `projectedFinal` the cards
+  use: the projection for the rest of the game, nudged by today's rate with the weight of one game against four of
+  the projection). An Under already past its line is lost and an Over past it is won, whatever the projection. Green
+  when up, red when down; the line under it counts the bets heading for a win, a loss or a push. The count right now
+  ("if every bet ended right now") moved into the Results panel in place of "on current pace", which the banner
+  replaces.
+- **Evidence.** A simulated third quarter with an Under at 3 against 3.5 heading for 4.2: the banner read +$25.42
+  (that bet lost) and the right-now tile +$44.52 (that bet won), both matching the sums by hand. No script error, no
+  overflow at 1,200 px and 390 px. Smoke test passes.
+- **Revert if** unwanted: swap the two figures back in `renderMine`.
+
 ### 2026-11-15, 12:35 pm (My board: "If every bet ended right now")
 
 The owner asked for a running figure of what the week would pay if every bet closed this second, green when up and
