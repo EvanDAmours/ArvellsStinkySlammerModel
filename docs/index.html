@@ -1862,18 +1862,21 @@ function renderMine() {
     if (m.stake != null) { if (m.result) settled += m.profit || 0; else { pendingRisk += m.stake; if (dec) pendingWin += m.stake * (dec - 1); } } }
   const nCustomOpen = customs.filter((b) => !b.settled?.result).length;
   const dollars = (x) => (x > 0 ? "+" : "") + (money(x) || "$0"), sign = (x) => (x > 0 ? "pos" : x < 0 ? "neg" : "");
-  const mcard = (cls, title, big, ...sub) => el("div", { class: `rec-card ${cls}` }, el("h4", {}, title), el("div", { class: "big" }, ...big), el("div", { class: "sub" }, ...sub));
-  const nPre = groups.pre.length, nPost = groups.post.length;
-  box.append(el("div", { class: "rec-cards" },
-    mcard("rc-replay", "This week's board", [String(every.length), el("small", {}, every.length === 1 ? "bet" : "bets")],
-      [nPre ? `${nPre} to kick off` : "", live ? `${live} in play` : "", nPost ? `${nPost} settled` : "", customs.length ? `${customs.length} custom${nCustomOpen ? ` (${nCustomOpen} open)` : ""}` : ""].filter(Boolean).join(" · ") || "nothing started yet"),
-    w + l + p ? mcard(settled >= 0 ? "rc-live" : "rc-old", "Settled so far", [el("span", { class: sign(settled) }, dollars(settled)), el("small", {}, `${w}-${l}${p ? `-${p}` : ""}`)],
-      pendingStake ? `${money(pendingStake)} still riding on games in play.` : customs.some((b) => b.settled?.result) ? "From the bets whose games are final and the custom bets you settled." : "From the bets whose games are final.") : "",
-    live ? mcard("rc-live", "In play now", [`${onTrack} of ${live}`, el("small", {}, "on track")],
-      el("span", { title: "Settled results plus every bet in play finishing the way it is trending right now. Bets that have not kicked off are not counted." }, "On current pace: ", el("b", { class: sign(paced) }, dollars(paced)), ` over ${pacedN} started bet${pacedN === 1 ? "" : "s"}.`)) : "",
-    pendingRisk ? mcard("rc-replay", "If the rest all hit", [el("span", { class: "pos" }, dollars(settled + pendingWin))],
-      `${money(pendingWin)} to win on ${money(pendingRisk)} not settled yet${unstarted ? `; ${money(unstartedStake) || "$0"} of it on ${unstarted} bet${unstarted === 1 ? "" : "s"} that can still be withdrawn` : ""}.`) : ""));
-  if (live || LIVE.at) box.append(el("p", { class: "mine-note" }, `Live numbers from ESPN's box score, last updated ${LIVE.at ? new Date(LIVE.at).toLocaleTimeString([], { timeZone: TZ, hour: "numeric", minute: "2-digit" }) : "–"}${LIVE.error ? ` (${LIVE.error})` : ""}. ${money(staked) || "$0"} is on games that have kicked off, to win ${money(toWin) || "$0"}.`));
+  // the board's numbers in one strip, as the tab showed them before 2026-11-10 (the owner preferred it), custom bets counted
+  const stat = (big, label, cls, title) => el("div", title ? { title } : {}, el("b", cls ? { class: cls } : {}, big), el("span", {}, label));
+  box.append(el("div", { class: "mine-bar" },
+    stat(String(every.length), `bet${every.length === 1 ? "" : "s"} this week${customs.length ? ` (${customs.length} custom)` : ""}`),
+    stat(`${w}-${l}${p ? `-${p}` : ""}`, "settled"),
+    stat(String(live), "in play"),
+    stat(`${onTrack} of ${live}`, "trending right"),
+    stat(money(staked) || "$0", "in play or settled", "", "Stakes on games that have kicked off. A bet on a game that has not started can still be withdrawn, so it is not in yet."),
+    stat(money(toWin) || "$0", "to win if every started bet hits"),
+    pendingRisk ? stat(dollars(settled + pendingWin), `if every pending bet hits (${money(pendingWin)} on ${money(pendingRisk)} still to settle)`, "pos", "Profit if every bet that has not settled yet wins, whether its game has started or not, added to what has already settled") : "",
+    unstarted ? stat(money(unstartedStake) || "$0", `on ${unstarted} bet${unstarted === 1 ? "" : "s"} not started (can still be withdrawn)`) : "",
+    stat(dollars(settled), `settled so far${pendingStake ? ` (${money(pendingStake)} still riding)` : ""}`, sign(settled)),
+    stat(dollars(paced), `on current pace (${pacedN} started bet${pacedN === 1 ? "" : "s"})`, sign(paced), "Settled results plus every bet in play finishing the way it is trending right now. Bets that have not kicked off are not counted."),
+    stat(LIVE.at ? new Date(LIVE.at).toLocaleTimeString([], { timeZone: TZ, hour: "numeric", minute: "2-digit" }) : "–", LIVE.error ? `last update (${LIVE.error})` : "last update")));
+  box.append(el("div", { class: "chips" }, el("span", {}, "By grade, this week: "), gradeChips(every)));
   const openLinks = list.filter((b) => b.link && (!gameOf(b) || gameOf(b).state === "pre")).map((b) => b.link);
   const slip = tailLink(openLinks);
   if (slip && openLinks.length >= 2) box.append(el("div", { class: "tail" }, el("a", { class: "bet-link", href: slip.href, target: "_blank", rel: "noopener noreferrer" }, `Open every unstarted bet on this board at ${slip.book} in one slip (${openLinks.length}) ↗`), " The slip opens as one parlay; split it there if you want singles."));
@@ -2034,11 +2037,10 @@ function ledgerSection() {
     return { ...wk, w, l, p, st, pr, pend, closed };
   });
   const sgn = (x) => (x > 0 ? "pos" : x < 0 ? "neg" : ""), usd = (x) => (x > 0 ? "+" : "") + (money(x) || "$0");
-  const lcard = (cls, title, big, ...sub) => el("div", { class: `rec-card ${cls}` }, el("h4", {}, title), el("div", { class: "big" }, ...big), el("div", { class: "sub" }, ...sub));
-  sec.append(el("div", { class: "rec-cards" },
-    lcard(profit >= 0 ? "rc-live" : "rc-old", "Up or down, season", [el("span", { class: sgn(profit) }, usd(profit)), staked ? el("small", {}, signedPct(profit / staked)) : ""], `on ${money(staked) || "$0"} of settled stakes.`),
-    lcard("rc-replay", "Your record", [wl(W, L, P)], `${weeks.length} week${weeks.length === 1 ? "" : "s"} on this device.`)));
-  sec.append(el("div", { class: "chips" }, el("span", {}, "By grade: "), gradeChips(weeks.flatMap((w) => w.list))));
+  sec.append(el("div", { class: "mine-bar" }, el("div", {}, el("b", {}, `${W}-${L}${P ? `-${P}` : ""}`), el("span", {}, "season record")), el("div", {}, el("b", {}, money(staked) || "$0"), el("span", {}, "settled stakes")),
+    el("div", {}, el("b", { class: sgn(profit) }, usd(profit)), el("span", {}, "up or down")), el("div", {}, el("b", {}, staked ? signedPct(profit / staked) : "–"), el("span", {}, "return on stakes")),
+    el("div", {}, el("b", {}, String(weeks.length)), el("span", {}, `week${weeks.length === 1 ? "" : "s"} on this device`))));
+  sec.append(el("div", { class: "chips" }, el("span", {}, "By grade, season: "), gradeChips(weeks.flatMap((w) => w.list))));
   for (const r of rows) {
     const d = keepOpen(el("details", { class: "fold", id: `mine-ledger-${r.season}-wk${r.week}` }));
     d.append(el("summary", {}, el("b", { class: "t" }, `Week ${r.week}`),

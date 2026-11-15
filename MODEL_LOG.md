@@ -970,6 +970,21 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-15, 9:20 am (My board: the numbers strip back in place of the summary cards)
+
+The owner preferred how My board looked before the repackage of 2026-11-10 ("the data here is lacklustre"). Site
+only; no rule changed.
+
+- **What.** The board's summary is the strip of numbers it had before (bets this week, settled record, in play,
+  trending right, staked on started games, to win, if every pending bet hits, still withdrawable, settled so far, on
+  current pace, last update) in place of the three or four cards, with custom bets counted, and a "By grade, this
+  week" row under it. The season ledger's summary is its old strip too (record, settled stakes, up or down, return,
+  weeks). The folds, the custom bets, the backup and the rest of the repackage stay.
+- **Evidence.** Driven in a browser at 1,200 px and 390 px on a seeded board with custom bets added, settled,
+  flipped and removed: every figure moves as before, the backup code restores the bets identically, no script
+  error, no page overflow. Smoke test passes.
+- **Revert if** the owner wants the cards back: `git show 2bb6a04` has them.
+
 ### 2026-11-14, 6:20 pm (the Slate filter: an international morning slot, and the noon games back under "Early")
 
 The owner asked to filter the Plays tab to the international morning game (Patriots at Lions, 8:30 am Edmonton on

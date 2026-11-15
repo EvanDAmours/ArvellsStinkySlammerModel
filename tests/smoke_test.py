@@ -501,6 +501,8 @@ check(all(k in _html for k in ("function customForm", "function addCustom", "fun
       "My board takes a custom bet (typed in, settled by hand, no line pulled): in the totals, the ledger and the backup code")
 check('<option value="intl">International (morning)</option>' in _html and 'h < 10 ? "intl" : h < 14 ? "early" : h < 18 ? "late" : "prime"' in _html,
       "the Plays and Projections tabs can show the international morning games on their own, and the noon games count as early (Edmonton is UTC-6)")
+check('"By grade, this week: "' in _html and 'stat(dollars(paced), `on current pace' in _html and '"season record"' in _html,
+      "My board leads with its numbers strip (the owner's preference over the cards), the ledger too")
 from tools import bias_audit as _BA
 _bp = pd.DataFrame(dict(win=[1.0, 1.0, 0.0, 0.0, 1.0, 0.0], g=["a", "a", "b", "b", "c", "c"]))
 check(abs(_BA.pair_corr(_bp, "g") - 1 / 3) < 1e-9 and _BA.said_hit(pd.DataFrame(dict(p=[.55, .65], h=[1.0, 0.0])), "p", "h", [0, .6, 1]).count("\n") == 3,
