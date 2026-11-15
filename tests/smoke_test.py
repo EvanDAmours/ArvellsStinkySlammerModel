@@ -505,6 +505,7 @@ check('"By grade, this week: "' in _html and all(k in _html for k in ("const sta
       "My board shows every number of its old strip, grouped in panels (results, right now, money), the ledger too")
 check(all(k in _html for k in ("function playRows", "plays-jump", "plays-grp-", 'id: "plays-locks"', "plays-view", 'foldNote("How locks are chosen"')),
       "the Plays tab groups picks by grade, one line each (a tap opens the card), with a jump bar and the long notes folded")
+check("a bet's grade follows the board until its game kicks off" in _html, "My board keeps an unstarted bet's grade in step with the board")
 from tools import bias_audit as _BA
 _bp = pd.DataFrame(dict(win=[1.0, 1.0, 0.0, 0.0, 1.0, 0.0], g=["a", "a", "b", "b", "c", "c"]))
 check(abs(_BA.pair_corr(_bp, "g") - 1 / 3) < 1e-9 and _BA.said_hit(pd.DataFrame(dict(p=[.55, .65], h=[1.0, 0.0])), "p", "h", [0, .6, 1]).count("\n") == 3,

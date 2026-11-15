@@ -970,6 +970,21 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-15, 10:30 am (My board: a bet's grade follows the board until kickoff)
+
+The owner saw Shemar James as an A lock on the Plays tab and a B on My board. Two causes, one a defect:
+
+- **Two bets, two grades.** He has two solo Under lines: DraftKings 3.5 at +117 (an A and a lock) and theScore Bet
+  4.5 at -190 (a B). A grade belongs to a line at a book, not to a player. The B on the owner's board is most likely
+  the theScore 4.5.
+- **The defect.** My board copied a bet's grade when it was added and never updated it, and grades move between
+  pulls (the DraftKings 3.5 was a C at 5:30 pm Saturday and an A by Sunday morning). Now an unsettled bet whose game
+  has not kicked off takes the board's current grade and lock score at every render; after kickoff, or once
+  settled, it keeps what it had, so the ledger records the grade it was bet at kickoff.
+- **Evidence.** In a browser: a bet stored as C on a line now graded A shows A; after kickoff a stored grade stays.
+  Smoke test passes.
+- **Revert if** the owner wants the grade at the moment of adding: remove the block at the top of `renderMine`.
+
 ### 2026-11-15, 10:15 am (the Plays tab: picks grouped by grade, one line each, a jump bar)
 
 The owner found the Plays tab hard to scroll now that it carries locks, the parlay, sleepers and 80-odd picks.
@@ -2141,6 +2156,9 @@ Never tested; each with what would justify it. Anything tested and dropped is in
 - **A clock change moves every cut-off written in local hours.** Alberta went to UTC-6 all year on 2026-11-01; the
   Slate filter's noon cut had assumed UTC-7 and filed the noon games under "Afternoon" for two weeks before anyone
   noticed. When the offset changes, search the site and `run.py` for hours written as local times.
+- **A copy of a pick goes stale.** My board stored a pick's grade when it was added; grades move between pulls until
+  kickoff, so the board disagreed with the Plays tab. Anything copied from the board into the browser follows the
+  board until the game starts.
 - **A replay shown on the site is a file, and a file goes stale.** `data/retro_five.json` and
   `data/replay_seasons.json` are written by hand-run tools, not by the daily. After any change to a pick rule, a
   grade or a stake, re-run them before the push, or the Track record tab reports the previous rules' replay.

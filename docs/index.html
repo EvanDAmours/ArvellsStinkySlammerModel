@@ -1869,6 +1869,12 @@ const statPanels = (panels) => el("div", { class: "stat-panels" }, ...panels.map
 function renderMine() {
   const box = $("#mine-body"); if (!box) return; box.replaceChildren();
   const every = board(), list = every.filter((b) => !b.custom), customs = every.filter((b) => b.custom);
+  // a bet's grade follows the board until its game kicks off: grades can change between line pulls (a C at night can be an
+  // A by morning), and the board copied the grade of the moment it was added. After kickoff, or once settled, it stays.
+  { const cur = new Map((DATA.bets || []).filter((x) => x.pick === "Over" || x.pick === "Under").map((x) => [betKey({ ...x, side: x.pick }), x])); let moved = false;
+    for (const b of list) { if (b.settled) continue; const k = betKick(b); if (k && k.getTime() <= Date.now()) continue; const x = cur.get(b.key); if (!x) continue;
+      if ((x.grade || null) !== (b.grade ?? null) || (x.lock ?? null) !== (b.lock ?? null)) { b.grade = x.grade || null; b.lock = x.lock ?? null; moved = true; } }
+    if (moved) saveMine(mine()); }
   if (LIVE.error && (LIVE.events || []).some((g) => g.state === "in")) box.append(el("div", { class: "warn" }, `ESPN's live feed is not answering (${LIVE.error}). Live tackles and pace are paused; every bet is still settled from the official box score the morning after, and nothing on the ledger is lost.`));
   else if (LIVE.error && !LIVE.events) box.append(el("div", { class: "warn" }, `ESPN's scoreboard is not answering (${LIVE.error}), so kickoff times and live tracking are unavailable for now. Official grading still settles every bet.`));
   if (!every.length) { box.append(el("div", { class: "empty" }, "Nothing on your board yet. Press \"+ My board\" on any card on the Plays tab and it is tracked here, live, with your stake. A bet the site does not price (a moneyline, a spread) goes in under \"Add a custom bet\" below."), ...mineTools(false), ledgerSection()); return; }
