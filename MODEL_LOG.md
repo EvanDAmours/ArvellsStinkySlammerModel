@@ -970,6 +970,19 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-15, 9:35 am (My board: the same numbers, grouped in three panels)
+
+The owner wants every number of the old strip kept, laid out better. Site only; no rule changed.
+
+- **What.** The board's numbers sit in three panels with a coloured top edge: Results (settled so far, large; the
+  settled record with a win-loss bar; on current pace), Right now (bets this week, large; in play; trending right with
+  a bar; the last live update) and Money (if every pending bet hits, large; in play or settled; to win if every
+  started bet hits; still withdrawable). Three across on a computer, stacked on a phone. The season ledger's numbers
+  are one Season panel the same way. Nothing was dropped.
+- **Evidence.** Driven in a browser at 1,200 px and 390 px with custom bets added, settled, flipped and removed and
+  a backup restored: every figure moves as before, no script error, no page overflow. Smoke test passes.
+- **Revert if** unwanted: the strip is in the previous commit.
+
 ### 2026-11-15, 9:20 am (My board: the numbers strip back in place of the summary cards)
 
 The owner preferred how My board looked before the repackage of 2026-11-10 ("the data here is lacklustre"). Site

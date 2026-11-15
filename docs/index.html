@@ -223,6 +223,16 @@ table.mine-compact tr.mine-expand td { white-space: normal; padding: 4px 0 10px;
 .play .add.on, #mine-body .add.on { background: #1f8a4c; color: #fff; border-color: #1f8a4c; }
 #mine-body .add { font: 600 0.8rem var(--cond); padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); cursor: pointer; margin: 2px 6px 2px 0; }
 #mine-body input[type=search] { font: inherit; padding: 6px 10px; width: min(100%, 320px); margin: 4px 0 8px; }
+.stat-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin: 4px 0 12px; }
+.stat-panel { background: var(--panel); border: 1px solid var(--line); border-top: 4px solid var(--line); border-radius: 12px; padding: 10px 14px 12px; }
+.stat-panel.rc-live { border-top-color: #1f8a4c; } .stat-panel.rc-old { border-top-color: #c0392b; } .stat-panel.rc-replay { border-top-color: #2f6db5; } .stat-panel.rc-money { border-top-color: var(--flag); }
+.stat-panel h4 { font: 700 0.8rem/1 var(--cond); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 2px 0 8px; }
+.stat-panel .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+.stat-panel .tile { min-width: 0; } .stat-panel .tile.wide { grid-column: 1 / -1; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.stat-panel .tile b { display: block; font: 700 1.45rem/1.1 var(--cond); font-variant-numeric: tabular-nums; } .stat-panel .tile.wide b { font-size: 2.1rem; }
+.stat-panel .tile span { display: block; color: var(--muted); font-size: 0.82rem; line-height: 1.3; }
+.stat-panel .tile b.pos { color: #1f8a4c; } .stat-panel .tile b.neg { color: #c0392b; }
+.meter { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--line); margin-top: 5px; } .meter i { display: block; } .meter i.w { background: #1f8a4c; } .meter i.l { background: #c0392b; }
 .mine-bar { display: flex; flex-wrap: wrap; gap: 4px 22px; margin: 0 0 12px; font-variant-numeric: tabular-nums; }
 .mine-bar b { font: 700 1.4rem/1.1 var(--cond); display: block; } .mine-bar span { color: var(--muted); font-size: 0.85rem; }
 .live { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 10px; padding: 10px 14px; margin: 0 0 10px; }
@@ -1794,6 +1804,10 @@ function elapsedShare(g) {
   const [m, s] = String(g.clock || "0:00").split(":").map(Number); const left = (isNaN(m) ? 0 : m) + (isNaN(s) ? 0 : s) / 60;
   return Math.min(1, Math.max(0.02, ((Math.max(1, g.period || 1) - 1) * 15 + (15 - left)) / 60));
 }
+// My board's numbers: tiles grouped in panels. tile(big, label, cls, title, wide, extra); meter(a, b) a two-part bar
+const tile = (big, label, cls, title, wide, extra) => el("div", { class: "tile" + (wide ? " wide" : ""), ...(title ? { title } : {}) }, el("b", cls ? { class: cls } : {}, big), el("span", {}, label), extra || "");
+const meter = (a, b, ca, cb) => { const t = a + b || 1; return el("div", { class: "meter", "aria-hidden": "true" }, el("i", { class: ca, style: `width:${(100 * a / t).toFixed(1)}%` }), el("i", { class: cb, style: `width:${(100 * b / t).toFixed(1)}%` })); };
+const statPanels = (panels) => el("div", { class: "stat-panels" }, ...panels.map(([title, cls, tiles]) => el("section", { class: `stat-panel ${cls}` }, el("h4", {}, title), el("div", { class: "tiles" }, ...tiles.filter(Boolean)))));
 function renderMine() {
   const box = $("#mine-body"); if (!box) return; box.replaceChildren();
   const every = board(), list = every.filter((b) => !b.custom), customs = every.filter((b) => b.custom);
@@ -1862,20 +1876,24 @@ function renderMine() {
     if (m.stake != null) { if (m.result) settled += m.profit || 0; else { pendingRisk += m.stake; if (dec) pendingWin += m.stake * (dec - 1); } } }
   const nCustomOpen = customs.filter((b) => !b.settled?.result).length;
   const dollars = (x) => (x > 0 ? "+" : "") + (money(x) || "$0"), sign = (x) => (x > 0 ? "pos" : x < 0 ? "neg" : "");
-  // the board's numbers in one strip, as the tab showed them before 2026-11-10 (the owner preferred it), custom bets counted
-  const stat = (big, label, cls, title) => el("div", title ? { title } : {}, el("b", cls ? { class: cls } : {}, big), el("span", {}, label));
-  box.append(el("div", { class: "mine-bar" },
-    stat(String(every.length), `bet${every.length === 1 ? "" : "s"} this week${customs.length ? ` (${customs.length} custom)` : ""}`),
-    stat(`${w}-${l}${p ? `-${p}` : ""}`, "settled"),
-    stat(String(live), "in play"),
-    stat(`${onTrack} of ${live}`, "trending right"),
-    stat(money(staked) || "$0", "in play or settled", "", "Stakes on games that have kicked off. A bet on a game that has not started can still be withdrawn, so it is not in yet."),
-    stat(money(toWin) || "$0", "to win if every started bet hits"),
-    pendingRisk ? stat(dollars(settled + pendingWin), `if every pending bet hits (${money(pendingWin)} on ${money(pendingRisk)} still to settle)`, "pos", "Profit if every bet that has not settled yet wins, whether its game has started or not, added to what has already settled") : "",
-    unstarted ? stat(money(unstartedStake) || "$0", `on ${unstarted} bet${unstarted === 1 ? "" : "s"} not started (can still be withdrawn)`) : "",
-    stat(dollars(settled), `settled so far${pendingStake ? ` (${money(pendingStake)} still riding)` : ""}`, sign(settled)),
-    stat(dollars(paced), `on current pace (${pacedN} started bet${pacedN === 1 ? "" : "s"})`, sign(paced), "Settled results plus every bet in play finishing the way it is trending right now. Bets that have not kicked off are not counted."),
-    stat(LIVE.at ? new Date(LIVE.at).toLocaleTimeString([], { timeZone: TZ, hour: "numeric", minute: "2-digit" }) : "–", LIVE.error ? `last update (${LIVE.error})` : "last update")));
+  // every number the old strip had (the owner wants them all), grouped in three panels: how it has gone, what is on
+  // now, and the money; custom bets counted
+  const lastUp = LIVE.at ? new Date(LIVE.at).toLocaleTimeString([], { timeZone: TZ, hour: "numeric", minute: "2-digit" }) : "–";
+  box.append(statPanels([
+    ["Results", "rc-live", [
+      tile(dollars(settled), `settled so far${pendingStake ? ` · ${money(pendingStake)} still riding` : ""}`, sign(settled), "", true),
+      tile(`${w}-${l}${p ? `-${p}` : ""}`, "settled record", "", "", false, w + l ? meter(w, l, "w", "l") : ""),
+      tile(dollars(paced), `on current pace · ${pacedN} started bet${pacedN === 1 ? "" : "s"}`, sign(paced), "Settled results plus every bet in play finishing the way it is trending right now. Bets that have not kicked off are not counted.")]],
+    ["Right now", "rc-replay", [
+      tile(String(every.length), `bet${every.length === 1 ? "" : "s"} this week${customs.length ? ` · ${customs.length} custom` : ""}`, "", "", true),
+      tile(String(live), "in play"),
+      tile(`${onTrack} of ${live}`, "trending right", "", "", false, live ? meter(onTrack, live - onTrack, "w", "l") : ""),
+      tile(lastUp, LIVE.error ? `last update · ${LIVE.error}` : "last live update")]],
+    ["Money", "rc-money", [
+      pendingRisk ? tile(dollars(settled + pendingWin), `if every pending bet hits · ${money(pendingWin)} on ${money(pendingRisk)} still to settle`, "pos", "Profit if every bet that has not settled yet wins, whether its game has started or not, added to what has already settled", true) : tile("$0", "nothing left to settle", "", "", true),
+      tile(money(staked) || "$0", "in play or settled", "", "Stakes on games that have kicked off. A bet on a game that has not started can still be withdrawn, so it is not in yet."),
+      tile(money(toWin) || "$0", "to win if every started bet hits"),
+      unstarted ? tile(money(unstartedStake) || "$0", `on ${unstarted} bet${unstarted === 1 ? "" : "s"} not started · can still be withdrawn`) : tile("$0", "on bets not started")]]]));
   box.append(el("div", { class: "chips" }, el("span", {}, "By grade, this week: "), gradeChips(every)));
   const openLinks = list.filter((b) => b.link && (!gameOf(b) || gameOf(b).state === "pre")).map((b) => b.link);
   const slip = tailLink(openLinks);
@@ -2037,9 +2055,12 @@ function ledgerSection() {
     return { ...wk, w, l, p, st, pr, pend, closed };
   });
   const sgn = (x) => (x > 0 ? "pos" : x < 0 ? "neg" : ""), usd = (x) => (x > 0 ? "+" : "") + (money(x) || "$0");
-  sec.append(el("div", { class: "mine-bar" }, el("div", {}, el("b", {}, `${W}-${L}${P ? `-${P}` : ""}`), el("span", {}, "season record")), el("div", {}, el("b", {}, money(staked) || "$0"), el("span", {}, "settled stakes")),
-    el("div", {}, el("b", { class: sgn(profit) }, usd(profit)), el("span", {}, "up or down")), el("div", {}, el("b", {}, staked ? signedPct(profit / staked) : "–"), el("span", {}, "return on stakes")),
-    el("div", {}, el("b", {}, String(weeks.length)), el("span", {}, `week${weeks.length === 1 ? "" : "s"} on this device`))));
+  sec.append(statPanels([["Season", profit >= 0 ? "rc-live" : "rc-old", [
+    tile(usd(profit), "up or down", sgn(profit), "", true),
+    tile(wl(W, L, P), "season record", "", "", false, W + L ? meter(W, L, "w", "l") : ""),
+    tile(staked ? signedPct(profit / staked) : "–", "return on stakes", sgn(profit)),
+    tile(money(staked) || "$0", "settled stakes"),
+    tile(String(weeks.length), `week${weeks.length === 1 ? "" : "s"} on this device`)]]]));
   sec.append(el("div", { class: "chips" }, el("span", {}, "By grade, season: "), gradeChips(weeks.flatMap((w) => w.list))));
   for (const r of rows) {
     const d = keepOpen(el("details", { class: "fold", id: `mine-ledger-${r.season}-wk${r.week}` }));
