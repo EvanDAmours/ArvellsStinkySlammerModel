@@ -188,7 +188,7 @@ table.mine-compact tr.mine-expand td { white-space: normal; padding: 4px 0 10px;
   table.mine-compact td:nth-child(3) { grid-area: b; font-size: 0.85rem; } table.mine-compact td:nth-child(4) { grid-area: n; font-size: 0.85rem; color: var(--muted); }
   table.mine-compact td:nth-child(5) { grid-area: st; justify-self: end; } table.mine-compact td:nth-child(6) { grid-area: m; font-size: 0.85rem; justify-self: end; }
   table.mine-compact tr.mine-expand { display: block; padding: 0; } table.mine-compact tr.mine-expand td { display: block; }
-  table.mine-compact tr.st-good, table.mine-compact tr.st-won { box-shadow: inset 4px 0 #1f8a4c; } table.mine-compact tr.st-bad, table.mine-compact tr.st-lost { box-shadow: inset 4px 0 #c0392b; }
+  table.mine-compact tr.st-good, table.mine-compact tr.st-won { box-shadow: inset 4px 0 #1f8a4c; } table.mine-compact tr.st-bad { box-shadow: inset 4px 0 #e67e22; } table.mine-compact tr.st-lost { box-shadow: inset 4px 0 #c0392b; }
   table.mine-compact tr td:first-child { box-shadow: none !important; }
   .scroll.compact-wrap { overflow-x: visible; }
   .game-h { font-size: 0.85rem; }
@@ -254,7 +254,11 @@ details.parlay-box > summary { cursor: pointer; } details.parlay-box > summary s
 .mine-bar { display: flex; flex-wrap: wrap; gap: 4px 22px; margin: 0 0 12px; font-variant-numeric: tabular-nums; }
 .mine-bar b { font: 700 1.4rem/1.1 var(--cond); display: block; } .mine-bar span { color: var(--muted); font-size: 0.85rem; }
 .live { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 10px; padding: 10px 14px; margin: 0 0 10px; }
-.live.good { border-left-color: #1f8a4c; } .live.bad { border-left-color: #c0392b; } .live.done { opacity: 0.85; }
+.live.good { border-left-color: #1f8a4c; } .live.bad { border-left-color: #c0392b; } .live.behind { border-left-color: #e67e22; }
+.live .trend b.slow { color: #d35400; } .pill.slow { color: #d35400; border-color: #e67e22; }
+.live.lost { border-left-color: #c0392b; background: color-mix(in srgb, #c0392b 8%, var(--panel)); } .live.won { border-left-color: #1f8a4c; background: color-mix(in srgb, #1f8a4c 8%, var(--panel)); }
+.live .call { display: inline-block; font: 700 0.95rem/1 var(--cond); letter-spacing: 0.08em; color: #fff; border-radius: 6px; padding: 4px 9px; } .live .call.lost { background: #c0392b; } .live .call.won { background: #1f8a4c; }
+table.mine-compact tr.st-bad td:first-child { box-shadow: inset 4px 0 #e67e22; } .live.done { opacity: 0.85; }
 .live .who { font-weight: 600; } .live .who small { font-weight: 400; color: var(--muted); margin-left: 6px; }
 .live .now { grid-row: 1 / span 3; grid-column: 2; text-align: right; align-self: center; }
 .live .now b { display: block; font: 700 1.9rem/1 var(--cond); font-variant-numeric: tabular-nums; } .live .now span { font-size: 0.8rem; color: var(--muted); }
@@ -1854,6 +1858,7 @@ function liveLoop(now) {
 // error 4.3 this way against 14.0 for the old "so far / share of the game played", which turned one early tackle
 // into twelve. The weight barely matters between 4 and 8 games; a game's early tackles say little about the rest.
 const PACE_PRIOR_GAMES = 4;
+const CONFIRM_MIN = 10;   // minutes a bet must stay past its line before My board calls it LOST or WON (stat crews correct credits)
 function projectedFinal(b, have, share) {
   if (have == null || share <= 0) return null;
   if (share >= 1) return have;
@@ -1898,15 +1903,23 @@ function renderMine() {
     const kind = kindOf(b.market), solo = kind === "solo"; const have = st ? (solo ? st.solo : kind === "assists" ? Math.max(0, st.tot - st.solo) : st.tot) : (bx && g && g.state !== "pre" ? 0 : null);   // in the box score but no row yet means no tackles yet
     const share = elapsedShare(g); const pace = projectedFinal(b, have, share);
     const under = b.side === "Under";
-    let status, cls = "", verdict = "";
+    let status, cls = "", verdict = "", called = null;
     if (!g) status = LIVE.error ? `Live feed unavailable (${LIVE.error}); graded from the official box score tomorrow` : "Game not found on ESPN yet";
     else if (g.state === "pre") status = `Kicks off ${kickoffLocal(new Date(g.date))}`;
     else if (g.state === "in" && !bx) { live++; status = `Live feed unavailable${LIVE.error ? ` (${LIVE.error})` : ""}: tackles so far unknown; graded from the official box score tomorrow`; }
     else if (g.state === "post") { const hit = have == null ? null : have === b.line ? "Push" : (under ? have < b.line : have > b.line) ? "Win" : "Loss"; status = `Final · ${hit || "no box score"}`; cls = hit === "Win" ? " good done" : hit === "Loss" ? " bad done" : " done"; }
     else { live++; const ok = have != null && (under ? have < b.line && (pace == null || pace < b.line) : have > b.line || (pace != null && pace > b.line)); const clinched = have != null && (under ? false : have > b.line); const dead = have != null && under && have > b.line;
-      status = `${g.detail || `Q${g.period} ${g.clock}`} · ${g.teams[0]} ${g.score[g.teams[0]]}-${g.score[g.teams[1]]} ${g.teams[1]}`; cls = dead ? " bad" : clinched || ok ? " good" : " bad"; if (!dead && (clinched || ok)) onTrack++;
+      status = `${g.detail || `Q${g.period} ${g.clock}`} · ${g.teams[0]} ${g.score[g.teams[0]]}-${g.score[g.teams[1]]} ${g.teams[1]}`; cls = dead ? " bad" : clinched || ok ? " good" : " behind"; if (!dead && (clinched || ok)) onTrack++;
+      // a bet past its line is decided unless a stat correction takes the tackle back: it is called LOST (or WON) once it has
+      // stayed past the line for CONFIRM_MIN minutes; a count that drops back clears the call
+      const decidedNow = dead ? "lost" : clinched ? "won" : null;
+      if (decidedNow) { if (b.past_line?.kind !== decidedNow) { b.past_line = { kind: decidedNow, at: Date.now() }; changed = true; } } else if (b.past_line) { delete b.past_line; changed = true; }
+      const wait = b.past_line ? CONFIRM_MIN - (Date.now() - b.past_line.at) / 60000 : null;
+      called = b.past_line && wait <= 0 ? b.past_line.kind : null;
+      if (called) cls += ` ${called}`;
       const early = share < 0.25 ? "early, " : "";
-      verdict = dead ? `Lost: already past ${b.line}` : clinched ? `Won: past ${b.line}` : ok ? `On track (${early}heading for ${pace.toFixed(1)})` : `Behind (${early}heading for ${pace == null ? "?" : pace.toFixed(1)})`; }
+      verdict = dead ? (called ? "LOST" : `Past ${b.line}: confirming the count (${Math.ceil(wait)} min)`) : clinched ? (called ? "WON" : `Past ${b.line}: confirming the count (${Math.ceil(wait)} min)`)
+        : ok ? `On track (${early}heading for ${pace.toFixed(1)})` : `Behind (${early}heading for ${pace == null ? "?" : pace.toFixed(1)})`; }
     const stake = b.stake == null ? null : +b.stake, dec = toDec(b.odds), win = stake != null && dec ? stake * (dec - 1) : null;
     let result = null;
     // a final result is written on the bet once, so the ledger keeps it after the week closes: the official grade when
@@ -1916,6 +1929,7 @@ function renderMine() {
     if (off) { if (!b.settled || b.settled.source !== "official") { b.settled = { ...off, source: "official" }; changed = true; } if (g && g.state !== "post") status = `Final · ${off.result}`; cls = off.result === "Win" ? " good done" : off.result === "Loss" ? " bad done" : " done"; if (!status.startsWith("Final")) status = `Final · ${off.result}`; }
     else if (status.startsWith("Final") && have != null && !b.settled) { b.settled = { result: status.includes("Win") ? "Win" : status.includes("Loss") ? "Loss" : "Push", actual: have, source: "live", at: new Date().toISOString() }; changed = true; }
     else if (!g && b.settled && b.settled.result) { status = `Final · ${b.settled.result}`; cls = b.settled.result === "Win" ? " good done" : b.settled.result === "Loss" ? " bad done" : " done"; }
+    if (status.startsWith("Final") && /Win|Loss/.test(status)) { called = status.includes("Win") ? "won" : "lost"; verdict = called.toUpperCase(); if (!cls.includes(` ${called}`)) cls += ` ${called}`; }   // a final result reads as the same badge
     // money counts once the game has kicked off; before that a bet can still be withdrawn, so it sits in its own column
     const started = g && g.state !== "pre" && !(scratched && !b.settled);
     if (stake != null && !(scratched && !b.settled)) {
@@ -1936,11 +1950,11 @@ function renderMine() {
       el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}` }, b.grade) : "", b.player, " ", jersey(b), el("small", {}, [b.group, b.team, b.opp ? `vs ${b.opp}` : ""].filter(Boolean).join(" "))),
       el("div", { class: "now" }, el("b", {}, have == null ? "–" : String(have)), el("span", {}, kind === "solo" ? "solo so far" : kind === "assists" ? "assists so far" : "tackles so far")),
       el("div", { class: "bet" }, el("span", { class: under ? "under" : "over" }, `${b.side} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market || "").toLowerCase()}`, el("small", {}, ` · ${odds(b.odds)} at ${b.book}${b.proj != null ? ` · model ${num(b.proj)}` : ""} `), g && g.state === "pre" && b.link ? el("a", { class: "bet-link", href: b.link, target: "_blank", rel: "noopener noreferrer" }, `Open at ${b.book} ↗`) : ""),
-      el("div", { class: "trend" }, ...(verdict ? [el("b", { class: cls.includes("good") ? "ok" : "no" }, verdict), " · "] : []), status),
+      el("div", { class: "trend" }, ...(verdict ? [called ? el("span", { class: `call ${called}` }, verdict) : el("b", { class: cls.includes("good") ? "ok" : cls.includes("behind") ? "slow" : "no" }, verdict), " · "] : []), status),
       stakeBox,
       (() => { const r = el("button", { type: "button", class: "rm" }, "Remove"); r.onclick = () => toggleMine({ ...b, pick: b.side, side: b.side }); return r; })());
     const fin = status.startsWith("Final"), stateKey = fin ? "post" : !g || g.state === "pre" ? "pre" : "in";
-    const sk = fin ? (status.includes("Win") ? "won" : status.includes("Loss") ? "lost" : "other") : stateKey === "pre" ? (status.startsWith("Void") ? "other" : "pre") : cls.includes("good") ? "good" : "bad";
+    const sk = fin ? (status.includes("Win") ? "won" : status.includes("Loss") ? "lost" : "other") : stateKey === "pre" ? (status.startsWith("Void") ? "other" : "pre") : called ? called : cls.includes("good") ? "good" : "bad";
     c._m = { b, g, sk, have, pace, verdict, status, stake, win, result, kind, under, stateKey };
     groups[stateKey].push(c);
     return c;
@@ -2020,7 +2034,7 @@ function compactRows(items) {
   for (const c of items) {
     const m = c._m, b = m.b;
     const now = m.have == null ? "–" : `${m.have}${m.pace != null && m.stateKey === "in" ? ` (→ ${m.pace.toFixed(1)})` : ""}`;
-    const pill = { good: ["ok", "On track"], bad: ["no", "Behind"], won: ["ok", "Won"], lost: ["no", "Lost"], pre: ["", "Not started"], other: ["", m.status.split("·")[0].trim()] }[m.sk] || ["", ""];
+    const pill = { good: ["ok", "On track"], bad: [m.verdict.startsWith("Past") ? "no" : "slow", m.verdict.startsWith("Past") ? "Past line" : "Behind"], won: ["ok", "Won"], lost: ["no", "Lost"], pre: ["", "Not started"], other: ["", m.status.split("·")[0].trim()] }[m.sk] || ["", ""];
     const money_ = m.result != null ? el("b", { class: m.result > 0 ? "ok" : m.result < 0 ? "no" : "" }, `${m.result > 0 ? "+" : ""}${money(m.result)}`) : m.stake != null ? `${money(m.stake)}${m.win != null ? ` → ${money(m.win)}` : ""}` : "";
     const row = el("tr", { class: `st-${m.sk}`, title: `${m.verdict ? m.verdict + " · " : ""}${m.status}` },
       el("td", {}, b.grade ? el("span", { class: `grade ${b.grade}` }, b.grade) : ""),

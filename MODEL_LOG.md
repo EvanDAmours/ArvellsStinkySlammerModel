@@ -970,6 +970,23 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-15, 1:20 pm (My board: LOST in red, WON in green, once past the line for ten minutes; behind in orange)
+
+The owner asked for a decided bet to read as LOST in red, after a wait so a stat correction cannot flip it, and for a
+bet pacing to lose to show in orange. Site only; no rule changed.
+
+- **What.** An Under past its line (or an Over past it) shows "Past 2.5: confirming the count (n min)" for ten minutes
+  (`CONFIRM_MIN`), then a red LOST badge on a red-tinted card (a green WON badge for an Over). The first time the bet
+  is seen past its line is stored on the bet, so a reload keeps the clock; if the count drops back (a stat crew takes
+  a tackle away) the call clears and the bet is graded on its pace again. A bet still short of its line but heading
+  past it on its projection is orange ("Behind", an orange edge, an orange pill in the one-line view); on track stays
+  green. A final result shows the same LOST or WON badge. The money figures already counted a bet past its line as
+  decided; only the display changed.
+- **Evidence.** A simulated halftime with five bets: an Under at 3 against 2.5 read "confirming (10 min)", then LOST
+  after eleven minutes, then went back to orange "Behind" when its count was cut to 2; an Over at 3 against 2.5 read
+  WON; an Under heading for 4.7 against 3.5 read orange. No script error, no overflow at 1,200 px and 390 px.
+- **Revert if** unwanted: set `CONFIRM_MIN` to 0 to call at once, or drop the badge in `renderMine`.
+
 ### 2026-11-15, 12:55 pm (My board: the banner shows where the day is heading, on each bet's projection)
 
 The owner meant the banner to show where the day ends up, not where it stands: early in a game nearly every Under is
