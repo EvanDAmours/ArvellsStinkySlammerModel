@@ -420,7 +420,14 @@ _lg = pd.DataFrame(dict(season=2026, week=6, player=_wk.player.values, player_id
 _snap = pd.DataFrame(dict(event_id="B1", commence_time="2026-10-18T17:00:00Z", book="DraftKings", market="player_tackles_assists", player=_wk.player.values, line=np.where(_half, _wk.comb.values - 1.5, _wk.comb.values + 1.5), over_odds=-110, under_odds=-110, pulled_at="20261018T165500Z"))
 _old_log = _LL.LOG; _LL.LOG = tmp / "data" / "lines_log_test.csv"; _lg.to_csv(_LL.LOG, index=False)
 _snapdir = Path("data/odds/2026/wk06"); _snapdir.mkdir(parents=True, exist_ok=True); _snap.to_csv(_snapdir / "20261018T165500Z.csv", index=False)
-_cf = _EV.closing_frame(pw, 2026, weeks=[6]); _sb = _EV.scoreboard(_cf); _LL.LOG = _old_log
+_cf = _EV.closing_frame(pw, 2026, weeks=[6]); _sb = _EV.scoreboard(_cf)
+# a line only one book posts, which the model's own number puts beyond doubt, is not the player's: the pricing guard bars it
+# as a pick and the scoreboard leaves it out too (open issue 26); the same line posted by a second book stays
+_cf_all = _EV.closing_frame(pw, 2026, weeks=[6], keep_misfit=True)
+_own = np.clip([M.p_over(m, ph, l) for m, ph, l in zip(_cf_all.proj_model, _cf_all.phi, _cf_all.line)], 0.02, 0.98); _mis = int((np.fmax(_own, 1 - _own) >= C.ENGINE["misfit_model"]).sum())
+_snap2 = pd.concat([_snap, _snap.assign(book="theScore Bet")]).assign(pulled_at="20261018T165600Z"); _snap2.to_csv(_snapdir / "20261018T165600Z.csv", index=False)
+_cf_two = _EV.closing_frame(pw, 2026, weeks=[6]); (_snapdir / "20261018T165600Z.csv").unlink(); _LL.LOG = _old_log
+check(_mis >= 1 and len(_cf) == len(_cf_all) - _mis and len(_cf_two) == len(_cf_all), f"the scoreboard leaves out the lines the pricing guard bars as not the player's, and keeps them when a second book posts them ({_mis} of {len(_cf_all)} left out)")
 check(len(_cf) >= 30 and _sb and _sb["lines"] >= 30 and _sb["log_loss"]["engine"] < _sb["log_loss"]["market"] and abs(_sb["log_loss"]["market"] - np.log(2)) < 1e-6 and _sb["engine_minus_market"] > 0
       and _sb["se"] is None and _sb["t"] is None and len(_sb["by_week"]) == 1 and len(_sb["tiers"]) == 4 and _sb["tiers"][0]["lines"] > 0 and _sb["tiers"][0]["hit"] > 0.9 and _sb["calibration"],
       f"the scoreboard scores the engine against the book's fair close on every line, and says nothing about sureness from a single week (market {_sb.get('log_loss', {}).get('market')}, engine {_sb.get('log_loss', {}).get('engine')})")

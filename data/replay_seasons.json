@@ -3998,11 +3998,11 @@
    "worst_week": -1.637268313249158,
    "best_week": 9.123155508609152,
    "against_the_book": {
-    "lines": 4543,
-    "engine_minus_market": 0.005145977195561187,
-    "t": 2.215720309241893,
+    "lines": 4541,
+    "engine_minus_market": 0.005163095054687301,
+    "t": 2.2089619975259405,
     "weeks": 17,
-    "weeks_better": 12
+    "weeks_better": 11
    }
   },
   {
@@ -12202,9 +12202,9 @@
    "worst_week": 0.5378244382725179,
    "best_week": 11.210407678716683,
    "against_the_book": {
-    "lines": 2560,
-    "engine_minus_market": 0.0081,
-    "t": 2.7,
+    "lines": 2556,
+    "engine_minus_market": 0.006847015537465204,
+    "t": 2.7313434906694773,
     "weeks": 8,
     "weeks_better": 7
    }

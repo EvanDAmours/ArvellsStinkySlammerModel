@@ -26,9 +26,12 @@ from pipeline.model import american_to_decimal, engine_betas, engine_chance, fai
 from pipeline.sources import norm_name
 
 
-def closing_frame(pw_comb, season, weeks=None):
+def closing_frame(pw_comb, season, weeks=None, keep_misfit=False):
     """pw_comb: player-week rows with name_key, team, season, week, comb, solo_t (the official box scores). Only weeks with
-    logged numbers, two-way closing lines and box scores count. Empty frame when nothing is graded yet."""
+    logged numbers, two-way closing lines and box scores count. Empty frame when nothing is graded yet.
+    A line the pricing guard bars as not this player's (one book posts it and the model's own number puts it beyond
+    doubt: model.price_lines, `misfit`) is left out here too, unless `keep_misfit`: scored against the wrong man's box
+    score it moved the engine's margin (open issue 26, theScore's "Sam Williams" lines)."""
     cols = ["week", "kind", "line", "p_mkt", "over_dec", "under_dec", "proj_model", "phi", "actual", "books", "level"]
     if not LL.LOG.exists():
         return pd.DataFrame(columns=cols)
@@ -46,6 +49,7 @@ def closing_frame(pw_comb, season, weeks=None):
         st = pw_comb[(pw_comb.season == season) & (pw_comb.week == wk)]
         if cl is None or len(cl) == 0 or st.empty:
             continue
+        posted = cl.assign(name_key=cl.player.map(norm_name), kind=cl.market.map(C.market_kind)).groupby(["event_id", "name_key", "kind"]).book.nunique().rename("posted")   # how many books post this player and market at all, as the guard counts them
         cl = cl[cl.over_odds.notna() & cl.under_odds.notna()].copy()      # two-way prices only: a one-sided price holds an unknown vig
         if cl.empty:
             continue
@@ -68,6 +72,11 @@ def closing_frame(pw_comb, season, weeks=None):
         else:
             cons = cons.join(st.groupby("name_key").agg(comb=("comb", "sum"), solo=("solo_t", "sum")), on="name_key")
         cons = cons[cons.comb.notna()]
+        if not keep_misfit and len(cons):
+            own = np.array([p_over(m, ph, l) if pd.notna(m) and pd.notna(ph) else np.nan for m, ph, l in zip(cons.proj_model, cons.phi, cons.line)], dtype=float)
+            own = np.clip(own, 0.02, 0.98)
+            alone = cons.join(posted, on=keys).posted.fillna(0).values <= 1
+            cons = cons[~(alone & (np.fmax(own, 1 - own) >= C.ENGINE.get("misfit_model", 2.0)))]
         cons["actual"] = np.where(cons.kind == "solo", cons.solo, np.where(cons.kind == "assists", cons.comb - cons.solo, cons.comb))
         cons["week"] = int(wk)
         rows.append(cons[cols])

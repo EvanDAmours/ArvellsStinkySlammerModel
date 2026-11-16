@@ -539,7 +539,7 @@ and C9. What remains, and what the rebuild itself turned up:
    after every pricing rule was chosen on weeks 7 to 9 of 2026 (changelog, 11 am and 11:40 am). The engine against
    the book's fair closing price: 2025, 3,843 lines, +0.0143 of log-loss (t +5.5), better in 16 of 17 weeks, in solo
    (+0.0219), combined (+0.0114) and assists (+0.0098); 2026 weeks 2 to 6, +0.0075 (t +1.7); weeks 2 to 9, +0.0081
-   (t +2.7). The picks, replayed under the current rules: 2025 weeks 4 to 18, 726-422 (63%), +260.9 units at 1 a
+   (t +2.7; +0.0068 once the lines that are not the player's are left out, changelog 2026-11-16, 12:30 pm). The picks, replayed under the current rules: 2025 weeks 4 to 18, 726-422 (63%), +260.9 units at 1 a
    bet, +132.4 on 553 staked; 2026 weeks 4 to 9, 219-166, +44.0 and +10.7 on 166. A flat profit in 20 of the 21
    weeks; at DraftKings' prices alone 595-369. A picks 134-53 (72%) against B 433-283 and C 378-252 (60% each): A is
    above the rest, B is not above C. Stakes returned what flat bets did (+19.9% against +20%): they add nothing yet.
@@ -659,11 +659,8 @@ and C9. What remains, and what the rebuild itself turned up:
 25. **Closed 2026-11-16: "Rules on trial" showed S3 as "read it now" from the first graded pick.** `watch` now
     keeps a condition read after a week "running" until that week has no pick pending (post-mortem of week 10,
     point 9).
-26. **The scoreboard scores lines that are not the player's** (found 2026-11-16, standing post-mortem). The misfit
-    guard bars theScore's "Sam Williams" lines as picks, but `evaluate.closing_frame` still scores them against the
-    lineman's box score: in week 10 those two lines alone moved the margin since week 10 from -0.0020 to +0.0012
-    once his 0 reached the stats feed. E2 is read on this margin. Fix for the owner's session: leave out of the
-    scoreboard the lines the guard bars (one book, the model's own chance 93%+ either way).
+26. **Closed 2026-11-16: the scoreboard scored lines that are not the player's.** `evaluate.closing_frame` now leaves
+    out the lines the pricing guard bars (changelog, 12:30 pm). 13 lines this season, all theScore's "Sam Williams".
 27. **The recorded stakes exceed the caps** (found 2026-11-16, standing post-mortem). `grade.size_stakes` caps the
     picks on one pull's board; `grade.log_picks` keeps each pick's stake from the last board it was a pick on. So
     the logged stakes add up across boards: Sunday of week 10 31.3 units against 25 a day, Vikings at Packers 6.31
@@ -1127,6 +1124,37 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 ## Changelog
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
+
+### 2026-11-16, 12:30 pm (the scoreboard leaves out the lines the pricing guard bars: open issue 26)
+
+A defect in a measurement, found by the standing post-mortem and fixed at the owner's word. No pick, grade or stake
+changes. One number the model reads moves in the fourth decimal (the level, below).
+
+- **The defect.** theScore Bet posts "Sam Williams" lines (7.5 combined, 3.5 solo) that belong to another player
+  than the rotational lineman the model knows (2.4 combined). The pricing guard has barred them as picks since
+  2026-11-09 (one book posts the line and the model's own chance is 93% or more either way: `misfit`), but
+  `evaluate.closing_frame` still scored them against the lineman's box score. The model looked right about the
+  Under for the wrong reason, and the engine's margin over the book was credited with it.
+- **The fix.** `closing_frame` applies the guard's own test (the model's chance at the line from the logged number
+  and spread, the books posting that player and market at the close) and leaves those lines out;
+  `keep_misfit=True` keeps them for comparison. The frame feeds the scoreboard and the level for lined players, so
+  both are clean of them.
+- **What moved** (real data, scratch copy; 13 lines left out, weeks 3 to 6 and 8 to 10, every one a "Sam Williams"):
+  - Engine against the book, all weeks: +0.0072 on 2,922 lines became **+0.0058 on 2,909** (t +2.4, 9 weeks).
+  - Since week 10 (the live read, decision E2): +0.0012 on 355 became **-0.0020 on 353**.
+  - The replays' published figure (`data/replay_seasons.json`, recomputed from the stored replay lines): 2026 weeks
+    2 to 9, +0.0081 on 2,560 became **+0.0068 on 2,556** (t +2.7, 7 of 8 weeks); 2024, +0.0051 to +0.0052 (two
+    lines; 11 of 17 weeks better, was 12); 2025 unchanged (no such line). The records by grade are not touched.
+  - The level for lined players (combined): week 10, 1.0083 became 1.0088; week 11, 1.0063 became 1.0071. That is
+    0.005 of a tackle on a six-tackle projection. It is a projection input, moved by removing rows that were never
+    this model's players; too small to change a pick, and logged here because the freeze asks for it.
+- **Evidence.** Smoke test (a check added: lines one book posts beyond the model's doubt are left out, and stay when
+  a second book posts them); a real daily in a scratch copy (713 projections, level 1.0088, +0.0058 on 2,909 lines);
+  the Test workflow read after the push.
+- **Reading it.** The honest margin is smaller than the one published on 2026-11-10 and its sign since week 10 is
+  the standing post-mortem's first figure, not its second. Nothing is decided on it before week 13.
+- **Revert if** a real player's only line is being dropped (a book alone on a line, the model 93% sure): raise
+  `ENGINE["misfit_model"]`, which moves the guard and the scoreboard together.
 
 ### 2026-11-16, 11:40 am (My board syncs across devices through a private GitHub repo, as the owner's lifting app does)
 
