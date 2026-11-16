@@ -970,6 +970,13 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-16, 11 am (Plays tab: a card opened from the one-line list was squeezed into the grade column)
+
+On a phone, tapping a pick in the one-line Plays list opened its full card one word to a line: the style that keeps
+the grade column 48 px wide also applied to the opened card's cell, the first cell of its row. The opened card's
+cell now takes the full width and wraps normally. Checked in a browser: the card is 326 px wide on a 390 px screen
+(916 px on a computer), no overflow, no script error. Site only; smoke test passes.
+
 ### 2026-11-16, morning (the season ledger: each week opens to what was wagered and what was won)
 
 The owner wanted more than the week's net when opening a week of the ledger. Site only; no rule changed.

@@ -511,6 +511,7 @@ check("...(liveN ? [units(e.units_at_stake, 1)" in _html, "the live card's units
 check(all(k in _html for k in ("Where today is heading", "now-ticker", "projPL += pr_", "if every bet ended right now · ")), "My board leads with where the day is heading on each bet's projection, green or red, and keeps the count right now in a tile")
 check(all(k in _html for k in ("const CONFIRM_MIN = 10", "b.past_line = { kind: decidedNow", ".live.behind { border-left-color: #e67e22; }", ".live .call.lost { background: #c0392b; }")), "My board calls a bet LOST (red) or WON once past its line for ten minutes, and shows a bet pacing to lose in orange")
 check("function weekMoney" in _html and "weekMoney(r.list)" in _html and '"Wagered and won"' in _html, "each week of the ledger opens to what was wagered, paid back, won and lost")
+check("table.plays-compact tr.mine-expand td, table.plays-compact tr.mine-expand td:first-child { width: auto;" in _html, "a card opened from the one-line Plays list takes the full width, not the grade column's")
 from tools import bias_audit as _BA
 _bp = pd.DataFrame(dict(win=[1.0, 1.0, 0.0, 0.0, 1.0, 0.0], g=["a", "a", "b", "b", "c", "c"]))
 check(abs(_BA.pair_corr(_bp, "g") - 1 / 3) < 1e-9 and _BA.said_hit(pd.DataFrame(dict(p=[.55, .65], h=[1.0, 0.0])), "p", "h", [0, .6, 1]).count("\n") == 3,
