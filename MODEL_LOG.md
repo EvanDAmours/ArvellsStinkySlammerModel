@@ -131,9 +131,10 @@ does not describe his current role, or who may not play, can be a pick, never a 
 8. **Locks.** A picks only, highest model chance first, one per player, at most 3 on a one-game slate day and 5
    otherwise, at most two of a kind (side x market x position). A slate with no A has no lock.
 9. **Stakes** (`grade.size_stakes`, `config.STAKE`, mode "grade" since 2026-11-10; decision S3). The stake is the
-   grade's units: A 1, B 0.5, C 0.25. Stakes are scaled down together only to stay within 5 units a game, 20 a kind
-   (side x market) a slate day and 25 a slate day, which happens on about one slate day in nine. The quarter-Kelly
-   stake and the divisor for like picks remain in the code (mode "kelly").
+   grade's units: A 1, B 0.5, C 0.25, and nothing trims it. Until 2026-11-16 stakes were scaled down together to
+   stay within 5 units a game, 20 a kind (side x market) a slate day and 25 a slate day; the owner took the caps off
+   (S3). The caps remain in the code, set to None, as do the quarter-Kelly stake and the divisor for like picks
+   (mode "kelly").
 10. **Parlays.** One per slate day, 2 or 3 legs, combined tackles only (books refuse solo legs in a same-game
     parlay). A leg must be a pick, lock-eligible, with a model chance of 60%+ (56% if too few), at most two of a
     kind. The chance is the product of the legs' win chances times the same-defence correlation ratio. When two
@@ -300,8 +301,18 @@ in-sample. The full write-up is Research round 11.
 - **E8. Not a pick:** out, doubtful or on a reserve list; fewer than 3 games.
 
 **Stakes and parlays**
-- **S3. The stake is the grade's units: A 1, B 0.5, C 0.25,** with caps of 5 units a game, 20 a kind a slate day
-  and 25 a slate day as a safety net. Since 2026-11-10, noon (owner's go-ahead, as H1); it replaces S1 and S2. On 21
+- **S3. The stake is the grade's units: A 1, B 0.5, C 0.25, with no cap** (since 2026-11-16, the owner's decision:
+  "I don't want to ever miss a good pick because of caps"). Until then: caps of 5 units a game, 20 a kind a slate
+  day and 25 a slate day as a safety net. A cap never took a pick off the board; it cut every stake of a busy game
+  or day together, A picks included (week 10, Vikings at Packers: four A picks at 0.8 to 0.95 while ten C picks
+  stayed). What the caps did on the record: one game in 36 replayed weeks (2025 week 7, Raiders at Chiefs, 6.25
+  units held to 5), none in 2024 or 2026 weeks 4 to 9; 0.8 of 50 units on week 10's logged picks. Without them the
+  three replayed seasons read +179.8 units on 866.5 staked against +180.0 on 865.25 (20.7% against 20.8%). What is
+  given up is the limit on one game or one day going wrong together: week 10's Sunday carried 31.3 units as bet
+  (open issue 27), and a day like it now stands in full. S3's own test is unchanged and is now read on the ladder
+  alone. Raised with the owner, not restored without him, if one slate day loses more than 15 units; a cap is put
+  back by giving it a number in `config.STAKE`.
+  The ladder itself: since 2026-11-10, noon (owner's go-ahead, as H1); it replaces S1 and S2. On 21
   replayed weeks the Kelly stakes returned what one size did (+19.9% against +20% a unit) and lost on 2026 weeks 4
   to 6 where flat bets won; replayed with the ladder: +131.0 units on 560 staked (+23.4%) against +143.1 on 719
   (+19.9%), a worst week of -0.1 units against -4.5, +18.8% against +6.5% on the 2026 weeks, a staked profit in 20
@@ -332,7 +343,8 @@ in-sample. The full write-up is Research round 11.
   line. Lifted again by the owner at noon on 2026-11-10 ("take creative liberty... do whatever you think is best")
   for H1 and S3, with two seasons of past lines behind them and week 10 still without a line. It stands again
   from there: the weights, the pick test, the caps and the grades do not move before 2026-12-08 unless a defect
-  is found or a revert condition is met.
+  is found or a revert condition is met. Lifted once more by the owner on 2026-11-16, for the stake caps alone: he
+  asked for them to be removed (S3). It is his rule to lift; nothing else moved.
 - **R7. Changed 2026-11-09, 10 pm, at the owner's instruction** (they amend E2, E4 and E5 above; evidence in the
   changelog, all of it in-sample):
   - *E2:* the weight is 0.65 on solo lines and 0.35 on combined (assists 0.5); the cautious chance is half of it.
@@ -661,7 +673,10 @@ and C9. What remains, and what the rebuild itself turned up:
     point 9).
 26. **Closed 2026-11-16: the scoreboard scored lines that are not the player's.** `evaluate.closing_frame` now leaves
     out the lines the pricing guard bars (changelog, 12:30 pm). 13 lines this season, all theScore's "Sam Williams".
-27. **The recorded stakes exceed the caps** (found 2026-11-16, standing post-mortem). `grade.size_stakes` caps the
+27. **Closed 2026-11-16: the caps are gone, so no recorded stake exceeds one** (changelog, 3 pm). The owner chose to
+    remove the caps rather than have them repaired. Week 10's logged stakes stay as the site showed them at the
+    time (49.2 units over the 137 logged rows against 50.0 at the bare ladder: 20 rows had been trimmed, 0.8 units).
+    As found: **the recorded stakes exceed the caps** (2026-11-16, standing post-mortem). `grade.size_stakes` caps the
     picks on one pull's board; `grade.log_picks` keeps each pick's stake from the last board it was a pick on. So
     the logged stakes add up across boards: Sunday of week 10 31.3 units against 25 a day, Vikings at Packers 6.31
     against 5 a game. S3 is read on these stakes. Fix for the owner's session (the cap rule itself is frozen, the
@@ -889,7 +904,7 @@ C 34-37). One rule changed nothing; one display defect was fixed (point 9).
      +3.45 on 33.6 from 96.
    - Caution: one week. 16-6 has a likely range of 52% to 87%; the replay's 68% is the number to expect.
 7. **Proposals for the review of 2026-12-08** (not adopted; each needs its replay first): the game cap takes from C
-   before B before A; one counted bet a player a game; no pick on a "new role" player when the model is below the
+   before B before A (overtaken the same day: the owner removed the caps, S3); one counted bet a player a game; no pick on a "new role" player when the model is below the
    line by a quarter or more; A and B merged, or A redefined, if they have not separated at 30 A picks; the model's
    own chance capped at 75% when it chooses locks; the site lists a bet once, at its best book, with the price of
    the latest pull. For the site: no layout change on a game day unless the owner asks for it, and a browser test
@@ -1124,6 +1139,84 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 ## Changelog
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
+
+### 2026-11-16, 3 pm (the stake caps removed, at the owner's instruction)
+
+**What.** `config.STAKE`: `game_cap`, `kind_cap` and `slate_cap` are None, and `grade.size_stakes` skips a cap that
+is None. The stake on a pick is its grade's units (A 1, B 0.5, C 0.25) and nothing else. The site's legend and
+glossary say so. Decision S3 is rewritten; open issue 27 is closed by it.
+
+**Why.** The owner: "remove the daily cap of units. I don't want to ever miss a good pick because of caps." A cap
+never removed a pick, but it cut the stake of every pick in a busy game or day, the A picks with the rest. The
+frozen rules are his to lift, and he lifted this one; nothing else in ENGINE, STAKE, FACTORS or GBM moved. The
+per-game cap went with the two daily ones: it was the cap that had cut A picks (week 10, Vikings at Packers), and
+leaving it would have kept the thing he asked to be rid of.
+
+**Evidence.** The caps were nearly idle. Over 36 replayed weeks (2024 weeks 4 to 18, 2025 weeks 4 to 18, 2026 weeks
+4 to 9) one game was held: 2025 week 7, Raiders at Chiefs, 14 picks, 6.25 units to 5. `data/replay_seasons.json`
+restated for 2025 from the same replayed picks at the bare ladder (the picks, records and flat units are
+identical, as they must be): 426.25 staked for +105.30 against 425.0 for +105.53; three seasons +179.8 on 866.5
+(20.7%) against +180.0 on 865.25 (20.8%). `data/retro_five.json` is unchanged (no stake in its six weeks was
+trimmed). Week 10 live: 20 of 137 logged rows had been trimmed, 0.8 units of 50; they stay as recorded. This is not
+evidence that no cap is safer; it is evidence that the caps as set cost and saved almost nothing on the record. The
+day they were built for is one the record does not hold yet: week 10's Sunday carried 31.3 units as bet (the caps
+held board by board, not over the day) in a week that came out +3.45 at the stakes. A Sunday like it that goes the
+other way now loses in full.
+Smoke test: the stake check now asserts the ladder with no cap, and that a cap given a number is still applied.
+A real daily in a scratch copy: clean; week 10's board (Monday's game, 36 priced lines, 7 picks: 2 B and 5 C) carries
+each pick at its grade's units, the site's meta shows the three caps as none, and the record since the engine is
+unchanged (50-43, +3.45 at the stakes on 33.6).
+
+**Revert.** Give a cap its number back in `config.STAKE` (5, 20, 25 were the old ones). Raised with the owner, not
+done without him, if one slate day loses more than 15 units.
+
+### 2026-11-16, 2:45 pm (the site opens on My board, fast; a Ledger tab and a Sync tab; My board trimmed for a phone)
+
+Seven requests from the owner, one of them a complaint: on his phone the page sat blank for 5 to 10 seconds.
+
+**Why it was slow, measured.** (1) The nine sealed data files were 7.6 MB and were downloaded in full on every
+visit (`cache: "no-store"`). Encrypted bytes do not compress, and they were sealed as plain JSON. (2) Each file
+asked for the plain copy first, which is never there on the sealed site: nine wasted round trips before the real
+ones. (3) The key from the password takes 200,000 rounds; the cache of derived keys stored the key after the wait,
+so nine files asking at once each worked it out, for each of three password entries: up to 27 derivations where 2
+were needed (an entry that is tried last costs three per sealing run). (4) Nothing was drawn until all nine files were in and
+every tab had been built, the 400 KB Patch log and the Projections table included. (5) The font stylesheet blocked
+the first paint.
+
+**What changed.** `pipeline/seal.py` gzips a file before encrypting it (`z: 1` in the envelope; the page inflates
+it with DecompressionStream; files sealed the old way still open, so the page and the next pipeline run can land
+in either order). The page asks for the sealed copy first, lets the browser keep a copy and ask only whether it
+changed (`no-cache`), keeps the promise of a key so it is derived once, tries the entry that opened last time first,
+draws My board as soon as the three small files are in (meta, the board, the parlays) and loads the other six
+behind it, and builds a tab the first time it is opened. A line says "Opening the board…" in place of a blank
+page. On the smoke test's site, sealed with three passwords and opened on a simulated phone (4x slower processor,
+12 Mbit/s, 70 ms latency): 3.6 seconds to the first board before, 1.0 after; 3.1 MB of sealed data before, 0.42 MB
+after. The real files are about two and a half times that size, so expect the same ratio, not the same seconds. A browser older
+than Safari 16.4 cannot inflate the files and is told so.
+
+**The tabs.** In the owner's order: My board, Plays, Track record, Model check, Assists, Glossary, Patch log,
+Ledger, Sync; Projections, which his list left out, is kept at the end rather than dropped. The page always opens
+on My board, whatever tab the address names. The bar wraps (two rows of five on a phone) and never slides. The
+season ledger has its own tab; the sync and the backups have theirs, with a dot on the Sync button for the state
+(green in step, amber syncing, red not synced).
+
+**My board.** A custom bet moves to the Settled group once it has a result; an open one waits under "Custom bets".
+"Where today is heading" shows only while a bet of today's is open (in play, or waiting for a kickoff later today)
+and counts the bets of games that kick off today only: yesterday's result stays in the week's panels and is not
+carried into a new day. The three panels are one row each on a phone (title, lead number, one line) and open on a
+tap, 137 px tall together where they took more than a screen; a little smaller on a computer. "Money" is now
+named for the week ("Week 10") and shows the top line (every pending bet hits) and the bottom line (every pending
+bet loses) side by side. Every number of the old panels is still there.
+
+**Checked.** The browser test: the page opens on My board from a link to another tab; the tabs are in order and
+none is off the screen; the banner by hand on today's bets with a win from yesterday on the board; the week's two
+lines by hand; a custom bet moving to Settled; the banner gone when nothing is open; the ledger and the sync on
+their tabs; and a new part that seals the site with three passwords and opens it through the gate (a wrong
+password, the right one, three derivations on the first visit and one on the next). Four more deliberate breaks in
+`tests/browser_breaks.py`. Not seen: the owner's own phone, and GitHub's servers answering "not changed".
+
+**Revert.** Site and sealing only. The old page opens the new files' format only if `z` is honoured, so revert
+`pipeline/seal.py` before `docs/index.html`, never the page alone.
 
 ### 2026-11-16, 1:30 pm (sync: "cannot reach the repo" now says why)
 
@@ -2533,6 +2626,13 @@ Never tested; each with what would justify it. Anything tested and dropped is in
 - **A replay shown on the site is a file, and a file goes stale.** `data/retro_five.json` and
   `data/replay_seasons.json` are written by hand-run tools, not by the daily. After any change to a pick rule, a
   grade or a stake, re-run them before the push, or the Track record tab reports the previous rules' replay.
+- **Encrypted files do not compress, and a cache that stores the answer after the wait is no cache for callers that
+  arrive together.** The sealed site sent 7.6 MB on every visit because the files were encrypted as plain JSON
+  (gzip before sealing: a tenth), and nine files asking for the same key at once each derived it (store the
+  promise, not the result). Both were invisible on a computer and 5 to 10 seconds on a phone (2026-11-16).
+- **A page and the file format it reads change in two pushes.** The pipeline writes the data files on its own
+  schedule, so a page must read both the old and the new format before the writer changes, and a revert goes in
+  the other order.
 - **A line barred as a pick is still in every score that reads the line log.** The misfit guard kept theScore's
   "Sam Williams" off the board, and the scoreboard still scored his lines against the wrong player's box score
   (2026-11-16). A guard on picks must be applied, or deliberately not, in every measurement too.

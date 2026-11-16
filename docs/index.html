@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
 :root {
   --bg: #eef1f4; --panel: #ffffff; --ink: #13202e; --muted: #5b6b7b; --line: #d3dae1;
@@ -31,10 +31,17 @@ body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 var(-
 header h1 { font: 700 2.25rem/1.05 var(--cond); margin: 0; letter-spacing: 0.01em; }
 .meta { color: var(--muted); font-size: 0.9rem; margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 4px 16px; }
 .warn { background: var(--warn-bg); border-left: 4px solid var(--flag); padding: 10px 12px; margin: 14px 0 0; border-radius: 4px; }
-nav { display: flex; gap: 4px; margin: 20px 0 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+nav { display: flex; flex-wrap: wrap; gap: 0 4px; margin: 20px 0 16px; border-bottom: 1px solid var(--line); }   /* every tab in sight: the bar wraps, it never slides */
 nav button { font: 600 1.05rem var(--cond); background: none; border: 0; border-bottom: 3px solid transparent; color: var(--muted);
              padding: 8px 12px; cursor: pointer; white-space: nowrap; }
 nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+nav button[data-sync]::after { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-left: 5px; vertical-align: middle; background: var(--muted); }
+nav button[data-sync="ok"]::after { background: #1f8a4c; } nav button[data-sync="error"]::after { background: #c0392b; } nav button[data-sync="busy"]::after { background: #d98a1c; }
+@media (max-width: 640px) {   /* a phone: two rows of five, nothing off the edge */
+  nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin: 12px 0 12px; }
+  nav button { font-size: 0.86rem; line-height: 1.1; padding: 7px 2px; white-space: normal; min-height: 42px; }
+}
+#loading { margin: 8px 0; }
 button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-bottom: 12px; font-size: 0.95rem; }
 .controls label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
@@ -257,6 +264,24 @@ details.parlay-box > summary { cursor: pointer; } details.parlay-box > summary s
 .stat-panel .tile > b { display: block; font: 700 1.45rem/1.1 var(--cond); font-variant-numeric: tabular-nums; } .stat-panel .tile.wide > b { font-size: 2.1rem; } .stat-panel .tile > b b { font: inherit; }
 .stat-panel .tile > span { display: block; color: var(--muted); font-size: 0.82rem; line-height: 1.3; }
 .stat-panel .tile > b.pos { color: #1f8a4c; } .stat-panel .tile > b.neg { color: #c0392b; }
+.mine-panels { gap: 10px; }
+.mine-panels > .stat-panel { padding: 8px 14px 10px; }
+.mine-panels > details > summary { list-style: none; display: block; pointer-events: none; padding-bottom: 6px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+.mine-panels > details > summary::-webkit-details-marker { display: none; }
+.mine-panels > details > summary h4 { margin: 2px 0 6px; }
+.mine-panels > details > summary > b { display: block; font: 700 1.75rem/1.1 var(--cond); font-variant-numeric: tabular-nums; } .mine-panels > details > summary > b.pos { color: #1f8a4c; } .mine-panels > details > summary > b.neg { color: #c0392b; }
+.mine-panels > details > summary > .s { display: block; color: var(--muted); font-size: 0.82rem; line-height: 1.3; }
+.mine-panels .tiles { gap: 6px 14px; } .mine-panels .tile > b { font-size: 1.2rem; }
+@media (max-width: 640px) {   /* a phone: each panel is one row until it is tapped, so the bets are a thumb away */
+  .mine-panels { grid-template-columns: 1fr; gap: 6px; margin-bottom: 8px; }
+  .mine-panels > .stat-panel { padding: 0; border-top-width: 3px; }
+  .mine-panels > details > summary { pointer-events: auto; cursor: pointer; display: grid; grid-template-columns: 4.4rem auto 1fr auto; align-items: center; gap: 8px; padding: 6px 10px; margin: 0; border-bottom: 0; }
+  .mine-panels > details > summary::after { content: "\25B8"; color: var(--muted); } .mine-panels > details[open] > summary::after { content: "\25BE"; }
+  .mine-panels > details[open] > summary { border-bottom: 1px solid var(--line); }
+  .mine-panels > details > summary h4 { margin: 0; line-height: 1.15; } .mine-panels > details > summary > b { font-size: 1.3rem; white-space: nowrap; } .mine-panels > details > summary > .s { font-size: 0.76rem; line-height: 1.2; }
+  .mine-panels .tiles { padding: 8px 10px 10px; }
+  .now-ticker { padding: 7px 12px; margin-bottom: 8px; } .now-ticker b { font-size: 1.7rem; } .now-ticker .sub { font-size: 0.78rem; }
+}
 .meter { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--line); margin-top: 5px; } .meter i { display: block; } .meter i.w { background: #1f8a4c; } .meter i.l { background: #c0392b; }
 .mine-bar { display: flex; flex-wrap: wrap; gap: 4px 22px; margin: 0 0 12px; font-variant-numeric: tabular-nums; }
 .mine-bar b { font: 700 1.4rem/1.1 var(--cond); display: block; } .mine-bar span { color: var(--muted); font-size: 0.85rem; }
@@ -324,17 +349,20 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
     <div id="warnings"></div>
   </header>
   <nav role="tablist" aria-label="Sections">
-    <button role="tab" data-tab="plays" aria-selected="true">Plays</button>
-    <button role="tab" data-tab="proj" aria-selected="false">Projections</button>
+    <button role="tab" data-tab="mine" aria-selected="true">My board</button>
+    <button role="tab" data-tab="plays" aria-selected="false">Plays</button>
     <button role="tab" data-tab="record" aria-selected="false">Track record</button>
     <button role="tab" data-tab="check" aria-selected="false">Model check</button>
-    <button role="tab" data-tab="mine" aria-selected="false">My board</button>
-    <button role="tab" data-tab="patch" aria-selected="false">Patch log</button>
     <button role="tab" data-tab="ast" aria-selected="false">Assists</button>
     <button role="tab" data-tab="gloss" aria-selected="false">Glossary</button>
+    <button role="tab" data-tab="patch" aria-selected="false">Patch log</button>
+    <button role="tab" data-tab="ledger" aria-selected="false">Ledger</button>
+    <button role="tab" data-tab="sync" aria-selected="false">Sync</button>
+    <button role="tab" data-tab="proj" aria-selected="false">Projections</button>
   </nav>
+  <div id="loading" class="empty" role="status">Opening the board…</div>
 
-  <section id="plays">
+  <section id="plays" hidden>
     <div id="plays-top"></div>
     <div class="controls toolbar" id="plays-controls">
       <label>Position <select id="pos"><option value="">All</option><option value="LB">Linebackers</option><option value="S">Safeties</option><option value="CB">Corners</option><option value="DL">Defensive line</option></select></label>
@@ -365,8 +393,16 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
     <div id="check-body"></div>
   </section>
 
-  <section id="mine" hidden>
+  <section id="mine">
     <div id="mine-body"></div>
+  </section>
+
+  <section id="ledger" hidden>
+    <div id="ledger-body"></div>
+  </section>
+
+  <section id="sync" hidden>
+    <div id="sync-body"></div>
   </section>
 
   <section id="patch" hidden>
@@ -463,30 +499,43 @@ const when = (iso) => { if (!iso) return ""; const d = new Date(iso.length === 1
 
 // ---------------------------------------------------------------- the gate: sealed data files need the shared password
 const KEYS = {};   // derived key per salt, so one password derivation serves every file of a sealing run
-const GATE = { pw: null };
-try { GATE.pw = localStorage.getItem("site-pw"); } catch (e) { /* storage off: asked every visit */ }
+const GATE = { pw: null, slot: null };
+try { GATE.pw = localStorage.getItem("site-pw"); GATE.slot = localStorage.getItem("site-pw-slot"); } catch (e) { /* storage off: asked every visit */ }
 const b64 = (t) => Uint8Array.from(atob(t), (c) => c.charCodeAt(0));
 async function keyFor(pw, saltB64, iter) {
   const id = `${pw}|${saltB64}|${iter}`;   // a wrong password must not leave its key behind for the right one
-  if (!KEYS[id]) {
+  // the promise is kept, not the key: every file asks at once, and each used to work the key out for itself (up to 27
+  // derivations of 200,000 rounds on a phone before anything showed)
+  if (!KEYS[id]) KEYS[id] = (async () => {
     const raw = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
-    KEYS[id] = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b64(saltB64), iterations: iter, hash: "SHA-256" }, raw, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
-  }
+    return crypto.subtle.deriveKey({ name: "PBKDF2", salt: b64(saltB64), iterations: iter, hash: "SHA-256" }, raw, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+  })();
   return KEYS[id];
+}
+// a file sealed with z: 1 was gzipped before it was encrypted (a tenth of the download); older files are plain JSON
+async function opened(blob, buf) {
+  if (!blob.z) return JSON.parse(new TextDecoder().decode(buf));
+  if (typeof DecompressionStream === "undefined") { const e = new Error("This browser is too old to open the board. Update it (Safari 16.4 or later, or a current Chrome or Firefox)."); e.fatal = true; throw e; }
+  return JSON.parse(await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"))).text());
 }
 async function unseal(blob, pw) {
   if (blob.v === 1) {
     const key = await keyFor(pw, blob.salt, blob.iter || 200000);
-    return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(blob.iv) }, key, b64(blob.ct))));
+    return opened(blob, await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(blob.iv) }, key, b64(blob.ct)));
   }
-  // several passwords: the data key is wrapped once per password; the first wrapping this password opens is the one
-  for (const k of blob.keys || []) {
+  // several passwords: the data key is wrapped once per password; the first wrapping this password opens is the one.
+  // The entry that opened last time is tried first, so a returning device works one key out per sealing run, not three.
+  const keys = [...(blob.keys || [])].sort((a, b) => (b.label === GATE.slot) - (a.label === GATE.slot));
+  for (const k of keys) {
+    let buf;
     try {
       const wrapKey = await keyFor(pw, k.salt, blob.iter || 200000);
       const raw = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(k.iv) }, wrapKey, b64(k.wk));
       const dataKey = await crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, ["decrypt"]);
-      return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(blob.iv) }, dataKey, b64(blob.ct))));
-    } catch (e) { /* not this entry */ }
+      buf = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(blob.iv) }, dataKey, b64(blob.ct));
+    } catch (e) { continue; /* not this entry */ }
+    if (k.label && k.label !== GATE.slot) { GATE.slot = k.label; try { localStorage.setItem("site-pw-slot", k.label); } catch (e) { /* fine */ } }
+    return opened(blob, buf);
   }
   throw new Error("no key entry opens with this password");
 }
@@ -520,6 +569,7 @@ async function unlock(blob) {
       const g = $("#gate"); if (g) g.hidden = true;
       return out;
     } catch (err) {
+      if (err && err.fatal) { GATE.fatal = err.message; const g = $("#gate"); if (g) g.hidden = true; throw err; }   // the password was right: asking again would loop
       if (GATE.pw === pw) { GATE.pw = null; try { localStorage.removeItem("site-pw"); } catch (e2) { /* fine */ } }
       wrong = true;
     }
@@ -527,11 +577,13 @@ async function unlock(blob) {
 }
 async function load(name) {
   try {
-    const r = await fetch(`data/${name}.json`, { cache: "no-store" });
-    if (r.ok) return await r.json();
-    const e = await fetch(`data/${name}.json.enc`, { cache: "no-store" });
-    if (!e.ok) return null;
-    return await unlock(await e.json());
+    // the sealed copy first (the plain one is only there on an open site: asking for it first cost a wasted round trip
+    // per file). "no-cache" asks the server whether the copy this device holds is still current, so a file that has
+    // not changed since the last visit is not downloaded again and a changed one is never shown stale.
+    const e = await fetch(`data/${name}.json.enc`, { cache: "no-cache" });
+    if (e.ok) return await unlock(await e.json());
+    const r = await fetch(`data/${name}.json`, { cache: "no-cache" });
+    return r.ok ? await r.json() : null;
   } catch { return null; }
 }
 function lockSite() { try { localStorage.removeItem("site-pw"); } catch (e) { /* fine */ } location.reload(); }
@@ -837,7 +889,7 @@ function legend() {
     el("p", {}, "Tags on a card say what the model sees behind the number (hover one for the rule): a role change (New role, Reduced role, Promoted, Demoted, Back from absence, New team, Teammate gone), the injury report (Questionable, Opp QB out), the lineman's pressure profile (Run-stuffer, Interior, Pass rusher), Lean, and Model far from line. The Game logic row lists what moved his number by 3% or more, each measured by rebuilding the projection without it. The 'Why' box under each line shows every number behind it, the checklist, his game log, and an outside expert consensus (FantasyPros) for comparison only: it never prices, grades or chooses a pick."),
     el("p", {}, "Assists lines are priced the same way on their own tab: a trial market, logged and graded like every pick here but never an A, a lock or a parlay leg until its record earns it."),
     el("h4", {}, byGrade ? "Stakes: by grade" : "Stakes: the slate is one book"),
-    byGrade ? el("p", {}, `The stake is the grade: ${un.A} unit${un.A === 1 ? "" : "s"} on an A, ${un.B} on a B, ${un.C} on a C. A unit is whatever you choose it to be, about 1% of what you have set aside. On a very large day the stakes are scaled down together to stay within ${st.slate_cap ?? 25} units on the day, ${st.kind_cap ?? 20} on one kind of pick (side and market) and ${st.game_cap ?? 5} on one game; that happens on about one slate day in nine. Before 2026-11-10 the stake followed the size of the cautious edge; on 21 replayed weeks that returned exactly what one size for every pick did, and the ladder returned more with steadier weeks.`)
+    byGrade ? el("p", {}, `The stake is the grade: ${un.A} unit${un.A === 1 ? "" : "s"} on an A, ${un.B} on a B, ${un.C} on a C. A unit is whatever you choose it to be, about 1% of what you have set aside. ${st.slate_cap != null || st.kind_cap != null || st.game_cap != null ? `On a very large day the stakes are scaled down together to stay within ${st.slate_cap ?? "any number of"} units on the day, ${st.kind_cap ?? "any number"} on one kind of pick (side and market) and ${st.game_cap ?? "any number"} on one game.` : "Nothing trims it: however many picks a game or a day has, each is staked at its grade. Until 2026-11-16 a day was held to 25 units, one kind of pick to 20 and one game to 5, and a busy game's A picks were cut with the rest; the owner took the caps off. The picks of one game or one Sunday still win and lose together, so a busy day is a larger bet than its picks look one by one."} Before 2026-11-10 the stake followed the size of the cautious edge; on 21 replayed weeks that returned exactly what one size for every pick did, and the ladder returned more with steadier weeks.`)
       : el("p", {}, `Each pick starts at ${Math.round((st.kelly_fraction || 0.25) * 100)}% of the Kelly fraction of a ${st.bankroll || 100}-unit bankroll at its cautious chance, so a pick that only just survives the cautious test gets the minimum (${st.min ?? 0.1} units) and nothing gets more than ${st.max ?? 3}. Then the slate is sized together, because its picks are not independent bets: the solo Unders of one Sunday rise and fall as a group (in week 9 nearly 60 of 100 units were out on one Sunday, almost all on solo Unders). Each stake is divided by 1 + (N - 1) x ${e.rho} for the N picks of its kind (side and market) that day, and stakes are scaled down together to stay within ${st.game_cap ?? 4} units on one game, ${st.kind_cap ?? 10} on one kind a day and ${st.slate_cap ?? 15} on a day.`),
     el("p", {}, `Stakes are a guide, not a promise. The rules above were set on 2026-11-10 from two seasons of past lines and are frozen until ${g.frozen_until || "four weeks are graded"} so they can be measured on live weeks; the Track record tab ("Rules on trial") counts each of them from week 10.`),
     el("h4", {}, "Beating the closing line"),
@@ -1883,8 +1935,26 @@ function elapsedShare(g) {
 const tile = (big, label, cls, title, wide, extra) => el("div", { class: "tile" + (wide ? " wide" : ""), ...(title ? { title } : {}) }, el("b", cls ? { class: cls } : {}, big), el("span", {}, label), extra || "");
 const meter = (a, b, ca, cb) => { const t = a + b || 1; return el("div", { class: "meter", "aria-hidden": "true" }, el("i", { class: ca, style: `width:${(100 * a / t).toFixed(1)}%` }), el("i", { class: cb, style: `width:${(100 * b / t).toFixed(1)}%` })); };
 const statPanels = (panels) => el("div", { class: "stat-panels" }, ...panels.map(([title, cls, tiles]) => el("section", { class: `stat-panel ${cls}` }, el("h4", {}, title), el("div", { class: "tiles" }, ...tiles.filter(Boolean)))));
+// My board's three panels. Each leads with its title, one number and one line; on a phone that is all that shows until
+// it is tapped (three short rows, not three screens), and the choice is remembered. On a computer they stay open.
+const PANEL_OPEN = new Set(); try { for (const x of JSON.parse(localStorage.getItem("mine-panels") || "[]")) PANEL_OPEN.add(x); } catch (e) { /* fine */ }
+function minePanels(panels) {
+  const phone = typeof matchMedia === "function" && matchMedia("(max-width: 640px)").matches;
+  return el("div", { class: "stat-panels mine-panels" }, ...panels.map(([id, title, cls, big, bigCls, label, tiles]) => {
+    const d = el("details", { class: `stat-panel ${cls}`, id: `mine-p-${id}` },
+      el("summary", {}, el("h4", {}, title), el("b", bigCls ? { class: bigCls } : {}, big), el("span", { class: "s" }, label)), el("div", { class: "tiles" }, ...tiles.filter(Boolean)));
+    if (!phone || PANEL_OPEN.has(id)) d.open = true;
+    d.addEventListener("toggle", () => { if (!matchMedia("(max-width: 640px)").matches) return; if (d.open) PANEL_OPEN.add(id); else PANEL_OPEN.delete(id); try { localStorage.setItem("mine-panels", JSON.stringify([...PANEL_OPEN])); } catch (e) { /* fine */ } });
+    return d;
+  }));
+}
+const YMD = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" });
+const ymd = (d) => (!d || isNaN(d) ? "" : YMD.format(d));     // the calendar day in Edmonton
+function renderLedger() { const box = $("#ledger-body"); if (box) box.replaceChildren(ledgerSection()); }
+function renderSyncTab() { const box = $("#sync-body"); if (!box) return; const bk = backupBox(); bk.id = "mine-backup"; box.replaceChildren(syncBox(), bk); refreshSyncBox(); }
 function renderMine() {
   const box = $("#mine-body"); if (!box) return; box.replaceChildren();
+  if ($("#ledger") && !$("#ledger").hidden) renderLedger(); else if (typeof DIRTY !== "undefined") DIRTY.add("ledger");     // the Ledger tab reads the same bets
   const every = board(), list = every.filter((b) => !b.custom), customs = every.filter((b) => b.custom);
   // a bet's grade follows the board until its game kicks off: grades can change between line pulls (a C at night can be an
   // A by morning), and the board copied the grade of the moment it was added. After kickoff, or once settled, it stays.
@@ -1894,9 +1964,10 @@ function renderMine() {
     if (moved) saveMine(mine()); }
   if (LIVE.error && (LIVE.events || []).some((g) => g.state === "in")) box.append(el("div", { class: "warn" }, `ESPN's live feed is not answering (${LIVE.error}). Live tackles and pace are paused; every bet is still settled from the official box score the morning after, and nothing on the ledger is lost.`));
   else if (LIVE.error && !LIVE.events) box.append(el("div", { class: "warn" }, `ESPN's scoreboard is not answering (${LIVE.error}), so kickoff times and live tracking are unavailable for now. Official grading still settles every bet.`));
-  if (!every.length) { box.append(el("div", { class: "empty" }, "Nothing on your board yet. Press \"+ My board\" on any card on the Plays tab and it is tracked here, live, with your stake. A bet the site does not price (a moneyline, a spread) goes in under \"Add a custom bet\" below."), ...mineTools(false), ledgerSection()); return; }
+  if (!every.length) { box.append(el("div", { class: "empty" }, "Nothing on your board yet. Press \"+ My board\" on any card on the Plays tab and it is tracked here, live, with your stake. A bet the site does not price (a moneyline, a spread) goes in under \"Add a custom bet\" below."), ...mineTools(false)); return; }
   let nowPL = 0, nowN = 0, nowW = 0, nowL = 0;   // every bet in play graded on its count right now
   let projPL = 0, projN = 0, projW = 0, projL = 0;   // every bet in play graded on where its projection takes it by the final whistle
+  const today = ymd(new Date()); let daySettled = 0, dayN = 0, dayPre = 0;   // the banner is today's only: bets on games that kick off today
   let w = 0, l = 0, p = 0, onTrack = 0, live = 0, staked = 0, toWin = 0, settled = 0, pendingStake = 0, paced = 0, pacedN = 0, unstarted = 0, unstartedStake = 0, pendingWin = 0, pendingRisk = 0;
   const GR = { A: 0, B: 1, C: 2 };
   const sorted = [...list].sort((a, b) => (GR[a.grade] ?? 3) - (GR[b.grade] ?? 3) || (b.lock ?? 0) - (a.lock ?? 0) || String(a.commence_time || "").localeCompare(String(b.commence_time || "")));
@@ -1939,11 +2010,12 @@ function renderMine() {
     if (status.startsWith("Final") && /Win|Loss/.test(status)) { called = status.includes("Win") ? "won" : "lost"; verdict = called.toUpperCase(); if (!cls.includes(` ${called}`)) cls += ` ${called}`; }   // a final result reads as the same badge
     // money counts once the game has kicked off; before that a bet can still be withdrawn, so it sits in its own column
     const started = g && g.state !== "pre" && !(scratched && !b.settled);
+    const isToday = ymd(g ? new Date(g.date) : betKick(b)) === today;
     if (stake != null && !(scratched && !b.settled)) {
       if (started) { staked += stake; if (win != null) toWin += win; }
-      else { unstarted++; unstartedStake += stake; }
+      else { unstarted++; unstartedStake += stake; if (isToday && !status.startsWith("Final")) dayPre++; }
       if (!status.startsWith("Final") && win != null) { pendingWin += win; pendingRisk += stake; }   // every bet not yet settled, started or not
-      if (status.startsWith("Final")) { result = status.includes("Win") ? win : status.includes("Loss") ? -stake : 0; settled += result; paced += result; pacedN++; }
+      if (status.startsWith("Final")) { result = status.includes("Win") ? win : status.includes("Loss") ? -stake : 0; settled += result; paced += result; pacedN++; if (isToday) { daySettled += result; dayN++; } }
       else if (started) { pendingStake += stake; paced += cls.includes("good") ? (win ?? 0) : -stake; pacedN++;
         if (have != null) { const r_ = have === +b.line ? 0 : (under ? have < +b.line : have > +b.line) ? (win ?? 0) : -stake; nowPL += r_; nowN++; if (r_ > 0) nowW++; else if (r_ < 0) nowL++;
           // the projected final: what he has plus his expected tackles for the time left (projectedFinal); an Under already past
@@ -1968,32 +2040,41 @@ function renderMine() {
   });
   if (changed) saveMine(mine());
   // custom bets: settled by hand, counted in the same totals
+  // custom bets: settled by hand, counted in the same totals. Once settled one moves to the Settled group with the rest;
+  // an open one waits under "Custom bets" for its result
+  const customOpen = [];
   for (const b of customs) { const m = betMoney(b), dec = toDec(b.odds);
     if (m.result === "Win") w++; else if (m.result === "Loss") l++; else if (m.result === "Push") p++;
-    if (m.stake != null) { if (m.result) { settled += m.profit || 0; paced += m.profit || 0; } else { pendingRisk += m.stake; if (dec) pendingWin += m.stake * (dec - 1); } } }
-  const nCustomOpen = customs.filter((b) => !b.settled?.result).length;
+    if (m.stake != null) { if (m.result) { settled += m.profit || 0; paced += m.profit || 0; if (ymd(new Date(b.settled?.at || 0)) === today) { daySettled += m.profit || 0; dayN++; } } else { pendingRisk += m.stake; if (dec) pendingWin += m.stake * (dec - 1); } }
+    const c = customCard(b);
+    if (!m.result) { customOpen.push(c); continue; }
+    c._m = { b, g: null, sk: m.result === "Win" ? "won" : m.result === "Loss" ? "lost" : "other", have: null, pace: null, verdict: "", status: `${m.result} · settled by you`, stake: m.stake, win: null, result: m.stake != null && m.profit != null ? m.profit : null, kind: "custom", under: false, stateKey: "post" };
+    groups.post.push(c); }
   const dollars = (x) => (x > 0 ? "+" : "") + (money(x) || "$0"), sign = (x) => (x > 0 ? "pos" : x < 0 ? "neg" : "");
   // every number the old strip had (the owner wants them all), grouped in three panels: how it has gone, what is on
   // now, and the money; custom bets counted
   const lastUp = LIVE.at ? new Date(LIVE.at).toLocaleTimeString([], { timeZone: TZ, hour: "numeric", minute: "2-digit" }) : "–";
-  // the ticker: where the day is heading. Settled results plus every bet in play graded on its projected final (what he has
-  // plus the model's expected tackles for the time left), as the owner asked on 2026-11-15; the count right now is a tile below
-  if (projN || w + l + p) { const v = settled + projPL;
-    box.append(el("div", { class: `now-ticker ${v > 0 ? "up" : v < 0 ? "down" : ""}`, title: "Settled results plus every bet in play graded on where its player is heading by the end of the game: his tackles so far plus the model's expected tackles for the time left. Bets not started are left out." },
+  // the ticker: where today is heading. Today's settled results plus every bet in play graded on its projected final (what
+  // he has plus the model's expected tackles for the time left). It shows only while a bet of today's is still open (in
+  // play, or waiting for a kickoff later today) and it counts today's bets only: yesterday's result is in the panels, not
+  // carried into a new day (the owner, 2026-11-16).
+  if (projN || dayPre) { const v = daySettled + projPL;
+    box.append(el("div", { class: `now-ticker ${v > 0 ? "up" : v < 0 ? "down" : ""}`, title: "Today's bets only. Settled results plus every bet in play graded on where its player is heading by the end of the game: his tackles so far plus the model's expected tackles for the time left. Bets not started count for nothing yet." },
       el("span", { class: "lbl" }, "Where today is heading"), el("b", {}, dollars(v)),
-      el("span", { class: "sub" }, projN ? `${money(settled) ? dollars(settled) + " settled · " : ""}${projN} in play: ${projW} heading for a win, ${projL} for a loss${projN - projW - projL ? `, ${projN - projW - projL} for a push` : ""}, on each player's projection for the time left` : "every started bet is settled"))); }
-  box.append(statPanels([
-    ["Results", "rc-live", [
-      tile(dollars(settled), `settled so far${pendingStake ? ` · ${money(pendingStake)} still riding` : ""}`, sign(settled), "", true),
-      tile(`${w}-${l}${p ? `-${p}` : ""}`, "settled record", "", "", false, w + l ? meter(w, l, "w", "l") : ""),
+      el("span", { class: "sub" }, [dayN ? `${dollars(daySettled)} settled today` : "", projN ? `${projN} in play: ${projW} heading for a win, ${projL} for a loss${projN - projW - projL ? `, ${projN - projW - projL} for a push` : ""}, on each player's projection for the time left` : "", dayPre ? `${dayPre} still to kick off today` : ""].filter(Boolean).join(" · ")))); }
+  const wkNo = DATA.meta?.week, rec = `${w}-${l}${p ? `-${p}` : ""}`, floor = settled - pendingRisk;
+  box.append(minePanels([
+    ["results", "Results", "rc-live", dollars(settled), sign(settled), `settled so far · ${rec}${pendingStake ? ` · ${money(pendingStake)} still riding` : ""}`, [
+      tile(rec, "settled record", "", "", false, w + l ? meter(w, l, "w", "l") : ""),
       tile(dollars(settled + nowPL), `if every bet ended right now · ${nowN} in play: ${nowW} winning, ${nowL} losing`, sign(settled + nowPL), "Settled results plus every bet in play graded on the tackles it has this second, as if its game ended now. Bets not started are left out.")]],
-    ["Right now", "rc-replay", [
-      tile(String(every.length), `bet${every.length === 1 ? "" : "s"} this week${customs.length ? ` · ${customs.length} custom` : ""}`, "", "", true),
-      tile(String(live), "in play"),
+    ["now", "Right now", "rc-replay", String(live), "", `in play${live ? ` · ${onTrack} of ${live} trending right` : ""}`, [
+      tile(String(every.length), `bet${every.length === 1 ? "" : "s"} this week${customs.length ? ` · ${customs.length} custom` : ""}`),
       tile(`${onTrack} of ${live}`, "trending right", "", "", false, live ? meter(onTrack, live - onTrack, "w", "l") : ""),
       tile(lastUp, LIVE.error ? `last update · ${LIVE.error}` : "last live update")]],
-    ["Money", "rc-money", [
-      pendingRisk ? tile(dollars(settled + pendingWin), `if every pending bet hits · ${money(pendingWin)} on ${money(pendingRisk)} still to settle`, "pos", "Profit if every bet that has not settled yet wins, whether its game has started or not, added to what has already settled", true) : tile("$0", "nothing left to settle", "", "", true),
+    ["week", wkNo ? `Week ${wkNo}` : "This week", "rc-money", dollars(pendingRisk ? settled + pendingWin : settled), sign(pendingRisk ? settled + pendingWin : settled),
+      pendingRisk ? `if every pending bet hits · ${dollars(floor)} if every one loses` : "the week so far · nothing left to settle", [
+      pendingRisk ? tile(dollars(floor), "if every pending bet loses", sign(floor), "What has already settled, less every stake still open, whether its game has started or not: the bottom line for the week. The top line is the number above it.") : null,
+      pendingRisk ? tile(money(pendingWin) || "$0", `to win on ${money(pendingRisk)} still to settle`, "", "Every bet that has not settled yet, whether its game has started or not") : null,
       tile(money(staked) || "$0", "in play or settled", "", "Stakes on games that have kicked off. A bet on a game that has not started can still be withdrawn, so it is not in yet."),
       tile(money(toWin) || "$0", "to win if every started bet hits"),
       unstarted ? tile(money(unstartedStake) || "$0", `on ${unstarted} bet${unstarted === 1 ? "" : "s"} not started · can still be withdrawn`) : tile("$0", "on bets not started")]]]));
@@ -2001,27 +2082,26 @@ function renderMine() {
   const openLinks = list.filter((b) => b.link && (!gameOf(b) || gameOf(b).state === "pre")).map((b) => b.link);
   const slip = tailLink(openLinks);
   if (slip && openLinks.length >= 2) box.append(el("div", { class: "tail" }, el("a", { class: "bet-link", href: slip.href, target: "_blank", rel: "noopener noreferrer" }, `Open every unstarted bet on this board at ${slip.book} in one slip (${openLinks.length}) ↗`), " The slip opens as one parlay; split it there if you want singles."));
-  if (cards.length) renderMineSections(box, groups, cards.length);
-  if (customs.length) {
-    const net = customs.reduce((t, b) => t + (betMoney(b).result ? betMoney(b).profit || 0 : 0), 0), cw = customs.filter((b) => b.settled?.result === "Win").length, cl = customs.filter((b) => b.settled?.result === "Loss").length;
-    box.append(el("h3", { class: "mine-h", id: "mine-custom" }, `Custom bets · ${customs.length}`, el("small", {}, ` settled by you${cw + cl ? ` · ${cw}-${cl} · ` : ""}`, cw + cl ? el("b", { class: sign(net) }, dollars(net)) : "")));
-    for (const b of customs) box.append(customCard(b));
+  const nShown = cards.length + customs.length - customOpen.length;
+  if (nShown) renderMineSections(box, groups, nShown);
+  if (customOpen.length) {
+    box.append(el("h3", { class: "mine-h", id: "mine-custom" }, `Custom bets · ${customOpen.length} open`, el("small", {}, " set the result and the bet moves to Settled")));
+    for (const c of customOpen) box.append(c);
   }
   for (const t of mineTools(true)) box.append(t);
-  box.append(ledgerSection());
 }
 
 function mineTools(hasBets) {
   const add = addPicker(); add.id = "mine-add";
   const how = el("div", { class: "section", id: "mine-how" }, el("h3", {}, "How My board works"),
-    el("p", { class: "lead" }, "The bets you took, tracked live, with your stakes. Press \"+ My board\" on any card on the Plays tab; it is kept in this browser, and on your other devices too once \"Sync across devices\" is connected. While a game is on, each bet refreshes from ESPN's box score every minute: tackles so far, the pace for the full game, and whether the bet is trending the right way. The official box score the books settle on can differ by a tackle from the live feed, and the official one is what the ledger keeps. A custom bet is one you type in and settle yourself; it is counted in the same totals."));
+    el("p", { class: "lead" }, "The bets you took, tracked live, with your stakes. Press \"+ My board\" on any card on the Plays tab; it is kept in this browser, and on your other devices too once the Sync tab is connected. Every week's board is kept on the Ledger tab. While a game is on, each bet refreshes from ESPN's box score every minute: tackles so far, the pace for the full game, and whether the bet is trending the right way. The official box score the books settle on can differ by a tackle from the live feed, and the official one is what the ledger keeps. A custom bet is one you type in and settle yourself; it is counted in the same totals."));
   if (hasBets) {
     const clr = el("button", { type: "button", class: "reset danger", title: "Takes every bet off the live board; the season ledger keeps them with their results" }, "Clear this week's board (the ledger keeps it)");
     clr.onclick = () => { if (confirm("Take every bet off this week's board? They stay in the season ledger with their results.")) { const all = mine(); all.forEach((b) => { b.archived = true; touch(b); }); saveMine(all); renderPlays(); renderMine(); } };
     how.append(clr);
   }
   const cust = customForm(); cust.id = "mine-custom-add";
-  return [foldOf(syncBox(), [syncLine()]), foldOf(cust, ["a moneyline, a spread, anything the site does not price"]), foldOf(add, [(DATA.week_lines || []).length ? "find any line pulled this week" : "no lines pulled this week yet"]), foldOf(how, ["and how to clear the week"])];
+  return [foldOf(cust, ["a moneyline, a spread, anything the site does not price"]), foldOf(add, [(DATA.week_lines || []).length ? "find any line pulled this week" : "no lines pulled this week yet"]), foldOf(how, ["and how to clear the week"])];
 }
 
 // My board with many bets: filter by state, group the live ones by game, and a compact one-line-per-bet view
@@ -2044,9 +2124,9 @@ function compactRows(items) {
     const pill = { good: ["ok", "On track"], bad: [m.verdict.startsWith("Past") ? "no" : "slow", m.verdict.startsWith("Past") ? "Past line" : "Behind"], won: ["ok", "Won"], lost: ["no", "Lost"], pre: ["", "Not started"], other: ["", m.status.split("·")[0].trim()] }[m.sk] || ["", ""];
     const money_ = m.result != null ? el("b", { class: m.result > 0 ? "ok" : m.result < 0 ? "no" : "" }, `${m.result > 0 ? "+" : ""}${money(m.result)}`) : m.stake != null ? `${money(m.stake)}${m.win != null ? ` → ${money(m.win)}` : ""}` : "";
     const row = el("tr", { class: `st-${m.sk}`, title: `${m.verdict ? m.verdict + " · " : ""}${m.status}` },
-      el("td", {}, b.grade ? el("span", { class: `grade ${b.grade}` }, b.grade) : ""),
-      el("td", {}, b.player, " ", jersey(b)),
-      el("td", {}, el("span", { class: m.under ? "under" : "over" }, `${b.side === "Under" ? "U" : "O"} ${num(b.line)}`), ` ${({ solo: "solo", assists: "ast" })[m.kind] || "tkl"}`),
+      el("td", {}, b.custom ? el("span", { class: "muted", title: "A custom bet: typed in and settled by you" }, "✎") : b.grade ? el("span", { class: `grade ${b.grade}` }, b.grade) : ""),
+      b.custom ? el("td", {}, b.desc) : el("td", {}, b.player, " ", jersey(b)),
+      b.custom ? el("td", {}, odds(b.odds) || "custom") : el("td", {}, el("span", { class: m.under ? "under" : "over" }, `${b.side === "Under" ? "U" : "O"} ${num(b.line)}`), ` ${({ solo: "solo", assists: "ast" })[m.kind] || "tkl"}`),
       el("td", { class: "n" }, now),
       el("td", {}, el("span", { class: `pill ${pill[0]}` }, pill[1])),
       el("td", { class: "n" }, money_));
@@ -2164,8 +2244,8 @@ function weekMoney(list) {
 }
 function ledgerSection() {
   const weeks = allWeeks(); const cur = { season: DATA.meta?.season, week: DATA.meta?.week };
-  const sec = el("div", { class: "section", id: "ledger" }, el("h3", {}, "Season ledger"), el("p", { class: "lead" }, "Every week's board, kept on this device, with the official result written on each bet once it is final. Each week opens to its bets."));
-  if (!weeks.length) { sec.append(el("div", { class: "empty" }, "No weeks yet.")); const bk0 = backupBox(); bk0.id = "mine-backup"; sec.append(foldOf(bk0, ["restore a ledger from another device"])); return sec; }
+  const sec = el("div", { class: "section", id: "ledger-sec" }, el("h3", {}, "Season ledger"), el("p", { class: "lead" }, "Every week's board, kept on this device, with the official result written on each bet once it is final. Each week opens to its bets. Backups and syncing with your other devices are on the Sync tab."));
+  if (!weeks.length) { sec.append(el("div", { class: "empty" }, "No weeks yet. A bet added on the Plays tab or My board starts the ledger; one kept on another device comes over from the Sync tab.")); return sec; }
   let W = 0, L = 0, P = 0, staked = 0, profit = 0, open = 0;
   const rows = weeks.map((wk) => {
     // older weeks settle from the grader's official results too, written on the bet once
@@ -2204,8 +2284,6 @@ function ledgerSection() {
     d.append(el("div", { class: "fold-body" }, weekMoney(r.list), el("div", { class: "chips", style: "margin-top:8px" }, gradeChips(r.list)), el("div", { class: "scroll" }, tb), rmw));
     sec.append(d);
   }
-  const bk = backupBox(); bk.id = "mine-backup";
-  sec.append(foldOf(bk, ["a file, a code or a link to another device"]));
   return sec;
 }
 // ---- backup and transfer: a file, a code, or a link that imports on another device
@@ -2453,7 +2531,7 @@ function syncBox() {
   const fail = (e) => { err.textContent = e && e.sync ? e.msg : "Something went wrong reaching GitHub. Try again."; };
   if (SYNC.cfg) {
     const now = el("button", { type: "button", class: "reset" }, "Sync now"); now.onclick = () => runSync();
-    const off = el("button", { type: "button", class: "reset danger" }, "Disconnect this device"); off.onclick = () => { if (confirm("Stop syncing on this device? Your board stays here and in the repo.")) { disconnectSync(); renderMine(); } };
+    const off = el("button", { type: "button", class: "reset danger" }, "Disconnect this device"); off.onclick = () => { if (confirm("Stop syncing on this device? Your board stays here and in the repo.")) { disconnectSync(); renderSyncTab(); renderMine(); } };
     wrap.append(el("p", { class: "lead", id: "sync-status" }, `My board is ${syncLine()}.`),
       el("p", { class: "note" }, "Bets, stakes, results, custom bets and removals sync after every change, when you open the site and when you come back to it. Each device keeps its own copy and a sync merges them, so one device can never wipe another."),
       el("div", { class: "chips" }, now, off));
@@ -2462,7 +2540,7 @@ function syncBox() {
   const repo = el("input", { type: "text", id: "sync-repo", placeholder: "yourname/slammer-board", autocomplete: "off", autocapitalize: "none", spellcheck: "false", "aria-label": "Private repo, as owner/name" });
   const token = el("input", { type: "password", id: "sync-token", placeholder: "github_pat_...", autocomplete: "off", autocapitalize: "none", spellcheck: "false", "aria-label": "Access token" });
   const go = el("button", { type: "button", class: "reset" }, "Connect");
-  const connect = (r, t) => { err.textContent = "Checking the repo and token."; go.disabled = true; connectSync(r, t).then(() => renderMine(), (e) => { go.disabled = false; fail(e); }); };
+  const connect = (r, t) => { err.textContent = "Checking the repo and token."; go.disabled = true; connectSync(r, t).then(() => { renderSyncTab(); renderMine(); }, (e) => { go.disabled = false; fail(e); }); };
   go.onclick = () => connect(repo.value, token.value);
   const lift = liftingCfg();
   wrap.append(el("p", { class: "lead" }, "Keep the same board on your phone, your computer and any new device, in a private GitHub repo only you can see. It needs a free GitHub account and about five minutes, once."));
@@ -2480,7 +2558,11 @@ function syncBox() {
     el("p", { class: "note" }, "The token is stored only in this browser and is sent only to GitHub. It is never in a backup file, code or link."));
   return wrap;
 }
-function refreshSyncBox() { const s = document.querySelector("#sync-status"); if (s) s.textContent = `My board is ${syncLine()}.`; const f = document.querySelector("details#mine-sync > summary .s"); if (f) f.textContent = syncLine(); }
+function refreshSyncBox() {
+  const s = document.querySelector("#sync-status"); if (s) s.textContent = `My board is ${syncLine()}.`;
+  // the Sync tab's own button carries the state as a dot: green in step, amber syncing, red not synced, none when off
+  const nb = document.querySelector('nav button[data-tab="sync"]'); if (nb) { if (SYNC.cfg) { nb.dataset.sync = SYNC.state || "idle"; nb.title = `Sync: ${syncLine()}`; } else { delete nb.dataset.sync; nb.removeAttribute("title"); } }
+}
 function backupBox() {
   const wrap = el("div", { class: "section" }, el("h3", {}, "Back up or move this ledger"), el("p", { class: "lead" }, "The ledger lives in this browser only. Back it up as a file, copy it as a code, or send a transfer link to another device; opening the link there imports every week into that device's ledger (merging, never duplicating). A backup is the only way to keep it if this browser's storage is cleared."));
   const out = el("textarea", { class: "code", rows: "3", readonly: "", placeholder: "Press one of the buttons", "aria-label": "Backup code or link" });
@@ -2702,7 +2784,7 @@ function glossTerms() {
       ["Lock", "A pick the model strongly believes in: an A, highest model chance first. There are at most a few per slate day, and a day with no A has no lock, because a lock is never the best of a thin board. Locks are the green-edged cards and the 'Locks' record on the Track record tab."],
       ["Lock-eligible, the checklist", "The situations in which the model is biased or blind, so a pick can never be a lock, an A or a parlay leg whatever its numbers: a new or reduced role, the next man up when a regular is out (and his Under is not a pick at all when the model does not expect him to play much), back from absence, first game for a new team, fewer than three games in his current role, listed questionable, missing snap counts, or an Over. Each is a tag on the card; the pick can still be played at its grade."],
       ["An A in yellow", "A card's left edge is yellow when it is a pick and green when it is a lock. An A-grade pick with a yellow edge is an A that is not a lock: the slate already has its allowed number of locks, or two of its kind."],
-      ["Stake, slate sizing", "Each pick starts at a quarter of the Kelly stake at its cautious chance, so a pick that only just passes gets the minimum. Then the day's picks are sized as one book, because they are not independent bets: the solo Unders of one Sunday win and lose as a group. Stakes are divided for the number of picks of the same kind that day and scaled to stay under a cap per game, per kind and per day."],
+      ["Stake, slate sizing", "The stake is the grade: 1 unit on an A, half a unit on a B, a quarter on a C. Nothing trims it: since 2026-11-16 there is no cap on a game or a day, so a busy day is staked in full. Its picks are not independent bets (the solo Unders of one Sunday win and lose as a group), so such a day swings further than its picks suggest one by one. Until 2026-11-10 each pick started at a quarter of the Kelly stake at its cautious chance and the day was sized as one book, under a cap per game, per kind and per day."],
       ["Kelly stake", "The stake that grows a bankroll fastest for a known edge: the edge divided by what a win pays. Because the edge is never known exactly, a fraction of it is used (here a quarter, at the cautious chance)."],
       ["Consistency", "How often he has landed on this side of this line in his games this season, read at the snap share he is expected to play. Shown on the card for the eye. It is in no score: once the projection is known it adds nothing to the chance (tested on every closing line of weeks 7 to 9)."],
       ["Thin", "Fewer than three games of data. A thin line is never a pick."],
@@ -2731,7 +2813,9 @@ function glossTerms() {
       ["Live and official", "While a game is on, a bet on My board is tracked from ESPN's live box score; the morning after, the official stat line confirms it. The two can differ by an assist here and there. The site's own record settles a pick once, on the first final box score (see Settled once)."],
       ["On current pace (heading for)", "Where his total is headed: what he has so far plus the model's expected tackles for the part of the game left (the projection already counts the snaps he should play), nudged a little by his rate today. Early tackles say little about the rest of a game, so one tackle in the first quarter moves the estimate by about a tackle, not to twelve. With the money that would mean. A read, not a promise: a player hurt mid-game keeps his estimate until the box score shows it."],
       ["In play", "Money counts toward the day's total only once the game has kicked off, because a bet can still be withdrawn before then. The unstarted column shows what is queued."],
-      ["Ledger", "Every week's board kept on this device, with the official result and the grade on each bet, and the running total for the season. Closed weeks fold away; clearing the board archives the week, it never deletes it. Back it up: the ledger lives in the browser only."]]]];
+      ["Ledger", "Every week's board kept on this device, with the official result and the grade on each bet, and the running total for the season. Closed weeks fold away; clearing the board archives the week, it never deletes it. It has its own tab. Sync it or back it up from the Sync tab: without one of the two it lives in this browser only."],
+      ["Where today is heading", "The banner on My board while a bet of today's is still open. Today's settled results plus every bet in play, each graded on where its player is heading by the final whistle. It counts the games that kick off today only and starts from nothing each day; the week's running result is in the panels under it."],
+      ["Top line, bottom line", "In the week's panel on My board: where the week ends if every bet still open wins, and where it ends if every one loses. The truth lands between them."]]]];
 }
 let GLOSS_Q = "";
 function renderGloss() {
@@ -2757,26 +2841,52 @@ function renderGloss() {
   box.append(wrap);
 }
 
+// ---------------------------------------------------------------- tabs and start-up
+// The page opens on My board. It needs three small files (meta, the board, the parlays), so those are waited for and the
+// board is drawn; the six larger ones load behind it. A tab is drawn the first time it is opened, not at start-up.
+const TABS = ["mine", "plays", "record", "check", "ast", "gloss", "patch", "ledger", "sync", "proj"];
+const RENDER = { mine: () => renderMine(), plays: () => renderPlays(), record: () => renderRecord(), check: () => renderCheck(), ast: () => renderAssists(), gloss: () => renderGloss(),
+  patch: () => renderPatch(), ledger: () => renderLedger(), sync: () => renderSyncTab(), proj: () => { renderDaybar(); renderProj(); } };
+const WAITS = new Set(["record", "check", "ast", "patch", "proj"]);   // tabs that are nothing without the larger files
+const BOOT = { first: false, rest: false }, DIRTY = new Set(TABS);
+let TAB = "mine";
+function draw(id) { if (BOOT.first && DIRTY.has(id) && (BOOT.rest || !WAITS.has(id))) { DIRTY.delete(id); RENDER[id](); } }
+function loadingNote() {
+  const n = $("#loading"); if (!n) return;
+  n.hidden = !GATE.fatal && BOOT.first && (BOOT.rest || !WAITS.has(TAB));
+  n.textContent = GATE.fatal || (BOOT.first ? "Loading this tab…" : "Opening the board…");
+}
 function show(id) {
-  for (const s of ["plays", "proj", "record", "check", "mine", "patch", "gloss", "ast"]) { $("#" + s).hidden = s !== id; }
-  if (id === "mine") renderMine();
+  if (!TABS.includes(id)) id = "mine";
+  TAB = id;
+  for (const s of TABS) $("#" + s).hidden = s !== id;
+  if (id === "mine" && BOOT.first && !DIRTY.has("mine")) renderMine(); else draw(id);
   document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === id)));
+  loadingNote();
   history.replaceState(null, "", "#" + id);
 }
 
 (async () => {
-  [DATA.meta, DATA.bets, DATA.proj, DATA.results, DATA.backtest, DATA.parlays, DATA.week_lines, DATA.patch, DATA.actuals] = await Promise.all(["meta", "bets", "projections", "results", "backtest", "parlays", "lines_week", "patchlog", "actuals"].map(load));
-  renderMeta(); renderPlays(); renderDaybar(); renderProj(); renderRecord(); renderCheck(); renderPatch(); renderGloss(); renderAssists();
+  document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => show(b.dataset.tab)));
   ["#ast-book", "#ast-side", "#ast-sort", "#ast-picks-only", "#ast-best-only"].forEach((s) => $(s).addEventListener("change", renderAssists));
   ["#picks-only", "#market", "#best-only", "#slate", "#pos", "#side", "#sort", "#book"].forEach((s) => $(s).addEventListener("change", renderPlays));
   $("#q").addEventListener("input", renderProj);
   $("#proj-slate").addEventListener("change", renderProj);
-  document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => show(b.dataset.tab)));
-  if (location.hash.startsWith("#import=")) { await importFromHash(); show("mine"); }
-  const h = location.hash.slice(1); if (["plays", "proj", "record", "check", "mine", "patch", "gloss", "ast"].includes(h)) show(h);
-  loadSyncCfg(); renderMine(); liveLoop();
+  loadSyncCfg();
+  const rest = Promise.all(["projections", "results", "backtest", "lines_week", "patchlog", "actuals"].map(load));
+  [DATA.meta, DATA.bets, DATA.parlays] = await Promise.all(["meta", "bets", "parlays"].map(load));
+  BOOT.first = true;
+  renderMeta();
+  if (location.hash.startsWith("#import=")) await importFromHash();
+  show("mine");                 // always My board, whatever tab the last visit ended on
+  liveLoop();
   if (SYNC.cfg) runSync();
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && SYNC.cfg) runSync(); });
+  [DATA.proj, DATA.results, DATA.backtest, DATA.week_lines, DATA.patch, DATA.actuals] = await rest;
+  BOOT.rest = true;
+  for (const t of TABS) if (t !== "sync") DIRTY.add(t);     // the board and the plays read the larger files too (records, jersey numbers, official results)
+  if (TAB === "mine") { DIRTY.delete("mine"); renderMine(); } else draw(TAB);
+  loadingNote();
 })();
 </script>
 </body>

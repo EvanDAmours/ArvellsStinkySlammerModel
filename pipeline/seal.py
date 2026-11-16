@@ -4,8 +4,13 @@ GitHub Pages serves every file to anyone with the link, so each JSON the jobs wr
 from the password by PBKDF2-SHA256) and the plaintext removed; the page asks for the password once per device and
 decrypts in the browser. Several passwords: one random data key encrypts the files and is wrapped once per password,
 so a person is removed by deleting their line. No password set: the site stays open.
+
+Each file is gzipped before it is encrypted (`z: 1` in the envelope). Encrypted bytes do not compress, so a file sealed
+plain travels at full size: the nine files were 7.6 MB on every visit, about a tenth of that gzipped. The page inflates
+them in the browser (DecompressionStream); files sealed before 2026-11-16 carry no `z` and still open.
 """
 import base64
+import gzip
 import json
 import os
 import secrets
@@ -60,7 +65,8 @@ def seal_bytes(data, pws, data_key=None, keys=None):
     data_key = data_key or secrets.token_bytes(32)
     keys = keys or wrap_keys(data_key, pws)
     iv = secrets.token_bytes(12)
-    return json.dumps(dict(v=2, kdf="pbkdf2-sha256", iter=ITER, keys=keys, iv=_b64(iv), ct=_b64(AESGCM(data_key).encrypt(iv, data, None))))
+    packed = gzip.compress(data, compresslevel=6, mtime=0)
+    return json.dumps(dict(v=2, kdf="pbkdf2-sha256", iter=ITER, z=1, keys=keys, iv=_b64(iv), ct=_b64(AESGCM(data_key).encrypt(iv, packed, None))))
 
 
 def unseal_bytes(blob, password):
@@ -74,7 +80,8 @@ def unseal_bytes(blob, password):
             data_key = AESGCM(_key(password, b64(k["salt"]))).decrypt(b64(k["iv"]), b64(k["wk"]), None)
         except Exception:  # noqa: BLE001
             continue
-        return AESGCM(data_key).decrypt(b64(d["iv"]), b64(d["ct"]), None)
+        out = AESGCM(data_key).decrypt(b64(d["iv"]), b64(d["ct"]), None)
+        return gzip.decompress(out) if d.get("z") else out
     raise ValueError("no key entry opens with this password")
 
 

@@ -227,7 +227,7 @@ MIN_GAMES_FOR_PICK = 3
 # The lock score is the model's own chance of the pick's side, out of 100: the model's evidence and nothing else. It ranks the locks.
 LOCK_MIN_SCORE = 100 * ENGINE["a_model"]
 GRADE_BARS = dict(A=LOCK_MIN_SCORE, B=None)      # kept for the site's legend: an A needs this score (and the cautious edge and the checklist)
-GRADE_UNITS = dict(A=1.0, B=0.5, C=0.25)   # the grade ladder: the stake on a pick since 2026-11-10 (STAKE["mode"] == "grade"), before the caps
+GRADE_UNITS = dict(A=1.0, B=0.5, C=0.25)   # the grade ladder: the stake on a pick since 2026-11-10 (STAKE["mode"] == "grade"); nothing trims it since 2026-11-16
 # Stake per pick: a quarter of the Kelly fraction of a 100-unit bankroll AT THE CAUTIOUS CHANCE, so a pick that only just survives the
 # cautious test gets the minimum. Then the slate is sized as one book, because its picks are not independent (week 9: 59.9 of 100 units
 # were out on one Sunday, 86% of them on solo Unders, each sized as if alone): every stake is divided by 1 + (N - 1) x rho for the N picks
@@ -239,7 +239,14 @@ GRADE_UNITS = dict(A=1.0, B=0.5, C=0.25)   # the grade ladder: the stake on a pi
 # +20%): the cautious edge did not order picks. The grade does (75%, 66%, 59%): replayed with the ladder, +131.0 on 560 units (+23.4%)
 # against +143.1 on 719 (+19.9%), a worst week of -0.1 units against -4.5, and +18.8% against +6.5% on the 2026 weeks. Back to "kelly" if the ladder's return per unit over weeks 10 to 13
 # is under the same picks' return at one size (Rules on trial, S3).
-STAKE = dict(mode="grade", bankroll=100.0, kelly_fraction=0.25, min=0.1, max=3.0, game_cap=5.0, kind_cap=20.0, slate_cap=25.0)
+# Since 2026-11-16 (owner's decision, ahead of the 2026-12-08 freeze date): no cap. A cap never took a pick off the board, but it cut the
+# stake on every pick of a busy game or day, A picks included (week 10: Vikings at Packers held to 5 units, its A picks at 0.79), and the
+# owner wants every good pick at its full stake. A cap of None is not applied; put a number back to restore one (5 a game, 20 a kind and
+# 25 a slate day until then). What the caps did on the record: one game in 36 replayed weeks (2025 week 7, 6.25 units held to 5), none in
+# 2024 or 2026 weeks 4 to 9, and 0.8 of 50 units on week 10's logged picks. The exposure they limited is real: the picks of one game or
+# one Sunday win and lose together (rho), so a bad day now costs its full ladder. The owner's rule: it is raised with him, not restored on
+# its own, if one slate day loses more than 15 units.
+STAKE = dict(mode="grade", bankroll=100.0, kelly_fraction=0.25, min=0.1, max=3.0, game_cap=None, kind_cap=None, slate_cap=None)
 # Closing-line value: among picks whose closing number differed from ours, the share that moved our way. Below
 # ~52% is indistinguishable from noise over a few hundred bets (standard error ~3% at 300); sharp bettors sustain
 # 55-60% and 60%+ is rare. Shown in the site legend.

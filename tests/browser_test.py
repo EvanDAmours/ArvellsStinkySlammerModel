@@ -94,6 +94,9 @@ def prepare(src):
     return dst
 
 
+READY = "typeof BOOT !== 'undefined' && BOOT.rest"        # every data file is in and the open tab is drawn
+
+
 def launch(p):
     exe = os.environ.get("CHROMIUM_PATH") or ("/opt/pw-browsers/chromium" if Path("/opt/pw-browsers/chromium").exists() else None)
     return p.chromium.launch(executable_path=exe) if exe else p.chromium.launch()
@@ -105,9 +108,13 @@ def run_width(browser, name, width):
     errors = []
     pg.on("pageerror", lambda e: errors.append(str(e)))
     pg.route("**/site.api.espn.com/**", lambda r: r.abort())          # the live feed is simulated below; no network in the test
-    pg.goto(f"http://localhost:{PORT}/")
-    pg.wait_for_function("typeof DATA !== 'undefined' && DATA.meta && document.querySelector('#plays-list') && document.querySelector('#plays-list').children.length > 0", timeout=20000)
+    pg.goto(f"http://localhost:{PORT}/#record")              # a link to another tab: the page still opens on My board
+    pg.wait_for_function("typeof BOOT !== 'undefined' && BOOT.first", timeout=20000)
     at = f"at {name} width ({width}px)"
+    first = pg.evaluate("({ tab: TAB, mine: !document.querySelector('#mine').hidden, others: [...document.querySelectorAll('.wrap > section, body > section, section')].filter((x) => x.id && TABS.includes(x.id) && !x.hidden).map((x) => x.id) })")
+    check(first["tab"] == "mine" and first["mine"] and first["others"] == ["mine"], f"the page opens on My board {at} ({first})")
+    pg.wait_for_function(READY, timeout=20000)
+    check(pg.evaluate("document.querySelector('#loading').hidden"), f"the loading note goes once every file is in {at}")
 
     def probe(scope, what, prose=False):
         """`prose`: the Patch log prints MODEL_LOG, which may quote "[object HTMLElement]" when it describes a past defect."""
@@ -119,7 +126,9 @@ def run_width(browser, name, width):
 
     # ---- every tab as it opens, then with every dropdown open
     tabs = pg.evaluate("[...document.querySelectorAll('nav button')].map((b) => b.dataset.tab)")
-    check(len(tabs) >= 8, f"the page has its tabs {at} ({tabs})")
+    check(tabs == ["mine", "plays", "record", "check", "ast", "gloss", "patch", "ledger", "sync", "proj"], f"the tabs are in the owner's order, My board first {at} ({tabs})")
+    nav = pg.evaluate("(() => { const n = document.querySelector('nav'), bs = [...n.querySelectorAll('button')].map((b) => b.getBoundingClientRect()); return { slides: n.scrollWidth > n.clientWidth + 1, out: bs.filter((r) => r.left < -1 || r.right > innerWidth + 1 || r.width < 30).length, rows: new Set(bs.map((r) => Math.round(r.top))).size }; })()")
+    check(not nav["slides"] and nav["out"] == 0 and nav["rows"] <= 2, f"every tab is in sight without sliding the bar {at} ({nav})")
     for t in tabs:
         pg.click(f'nav button[data-tab="{t}"]')
         pg.wait_for_timeout(350)
@@ -130,7 +139,7 @@ def run_width(browser, name, width):
 
     # ---- Plays: the jump bar, a pick opened from the one-line list, the full-card view, the slots
     pg.reload()
-    pg.wait_for_function("typeof DATA !== 'undefined' && DATA.meta && document.querySelector('#plays-list').children.length > 0", timeout=20000)
+    pg.wait_for_function(READY, timeout=20000)
     pg.click('nav button[data-tab="plays"]')
     pg.evaluate("(() => { try { localStorage.removeItem('plays-view'); } catch (e) {} PLAY_VIEW = null; renderPlays(); })()")
     jumps = pg.locator(".plays-jump button").count()
@@ -206,8 +215,12 @@ def run_width(browser, name, width):
         const mk = (player, side, line, odds) => ({ key: `t|${player}|${side}`, player, team: 'MIN', opp: 'GB', market: 'player_solo_tackles', side, line, book: 'DraftKings', odds, stake: 10, grade: 'A',
           season: DATA.meta.season, week: DATA.meta.week, commence_time: g.date, proj: 3 });
         const keep = mine().filter((b) => b.custom);
-        MINE = [...keep, mk('Past Line', 'Under', 2.5, -150), mk('Heading Past', 'Under', 3.5, -125), mk('On Track', 'Under', 4.5, -110), mk('Over Cleared', 'Over', 2.5, 104)];
-        saveMine(MINE); LIVE.events = [g]; LIVE.at = Date.now(); LIVE.error = null;
+        // yesterday's game, final: a win that belongs to the week, not to today
+        const g0 = { id: 'g0', date: new Date(Date.now() - 26 * 3600e3).toISOString(), state: 'post', detail: 'Final', clock: '0:00', period: 4, teams: ['DAL', 'NYG'], score: { DAL: 20, NYG: 17 } };
+        const old = Object.assign(mk('Yesterday Win', 'Under', 4.5, -110), { team: 'DAL', opp: 'NYG', commence_time: g0.date });
+        MINE = [...keep, old, mk('Past Line', 'Under', 2.5, -150), mk('Heading Past', 'Under', 3.5, -125), mk('On Track', 'Under', 4.5, -110), mk('Over Cleared', 'Over', 2.5, 104)];
+        saveMine(MINE); LIVE.events = [g0, g]; LIVE.at = Date.now(); LIVE.error = null;
+        LIVE.box.g0 = { final: true, at: Date.now(), players: { [normName('Yesterday Win')]: { tot: 3, solo: 1 } } };
         LIVE.box.g1 = { final: false, at: Date.now(), players: { [normName('Past Line')]: { tot: 4, solo: 3 }, [normName('Heading Past')]: { tot: 5, solo: 3 }, [normName('On Track')]: { tot: 2, solo: 1 }, [normName('Over Cleared')]: { tot: 4, solo: 3 } } };
         MINE_VIEW = 'cards'; renderMine(); })()""")
     read = "Object.fromEntries([...document.querySelectorAll('#mine-body .live:not(.custom)')].map((c) => [c.querySelector('.who').childNodes[1].textContent.trim(), c.className + ' | ' + c.querySelector('.trend').innerText.split(' · ')[0]]))"
@@ -218,17 +231,38 @@ def run_width(browser, name, width):
     check(s2.get("Past Line", "").endswith("LOST") and " lost" in s2["Past Line"] and s2.get("Over Cleared", "").endswith("WON"), f"past the line for ten minutes reads LOST, and an Over past it WON {at}")
     tick = pg.evaluate("(() => { const t = document.querySelector('.now-ticker'); return t ? { cls: t.className, text: t.innerText.replace(/\\n/g, ' ') } : null; })()")
     # by hand: Past Line lost (-10), Heading Past heads for a loss (-10), On Track wins (10 at -110 = +9.09), Over Cleared wins (10 at +104 = +10.40): -0.51
-    check(bool(tick) and "-$0.51" in tick["text"] and "down" in tick["cls"] and "2 heading for a win, 2 for a loss" in tick["text"], f"'Where today is heading' adds up by hand and is red when down {at} ({tick})")
-    now = pg.evaluate("[...document.querySelectorAll('#mine-body .tile')].find((t) => /ended right now/.test(t.innerText))?.innerText.replace(/\\n/g, ' ')")
-    # right now: Past Line lost, the other two Unders are under their lines (+8 and +9.09), the Over is past its line (+10.40): +17.49
-    check(bool(now) and "+$17.49" in now, f"'if every bet ended right now' adds up by hand {at} ({now})")
+    # yesterday's settled win (+9.09) is the week's, not today's: the banner starts each day from nothing
+    check(bool(tick) and "-$0.51" in tick["text"] and "down" in tick["cls"] and "2 heading for a win, 2 for a loss" in tick["text"] and "settled today" not in tick["text"],
+          f"'Where today is heading' adds up by hand on today's bets only, and is red when down {at} ({tick})")
+    now = pg.evaluate("[...document.querySelectorAll('#mine-body .tile')].find((t) => /ended right now/.test(t.textContent))?.textContent.replace(/\\n/g, ' ')")
+    # right now: yesterday's win is settled (+9.09), Past Line lost, the other two Unders are under their lines (+8 and +9.09), the Over is past its line (+10.40): +26.58
+    check(bool(now) and "+$26.58" in now, f"'if every bet ended right now' adds up by hand {at} ({now})")
     pg.evaluate("(() => { LIVE.box.g1.players[normName('Past Line')].solo = 2; renderMine(); })()")
     check("LOST" not in pg.evaluate(read).get("Past Line", "LOST"), f"a stat correction back under the line clears LOST {at}")
     check(pg.locator("#mine-body > .stat-panels .stat-panel").count() == 3, f"My board shows its three panels {at}")
+    # the week's panel: the top line (every pending bet hits) and the bottom line (every one loses). Settled +9.09; open
+    # stakes 4 x $10 and the $25 custom bet: 9.09 - 65 = -55.91. To win: 6.67 + 8 + 9.09 + 10.40 + 22.73 = 56.89, so +65.98
+    week_p = pg.evaluate("(() => { const d = document.querySelector('#mine-p-week'); d.open = true; return d.innerText.replace(/\\n/g, ' '); })()")
+    check(f"WEEK {wk}" in week_p.upper() and "+$65.98" in week_p and "-$55.91" in week_p and "if every pending bet loses" in week_p, f"the week's panel is named for the week and shows its top and bottom line by hand {at} ({week_p[:120]})")
+    pg.evaluate("(() => { try { localStorage.removeItem('mine-panels'); } catch (e) {} PANEL_OPEN.clear(); renderMine(); })()")
+    tall = pg.evaluate("document.querySelector('#mine-body .mine-panels').getBoundingClientRect().height")
+    check(tall < (190 if width <= 640 else 330), f"the three panels leave room for the bets {at} ({round(tall)}px tall)")
     probe("#mine", "My board with a game in play")
+    # a custom bet waits under 'Custom bets' until it has a result, then sits with the settled bets
+    moved = pg.evaluate("""(() => { const c = mine().find((b) => b.custom); const before = !!document.querySelector('#mine-custom') && !document.querySelector('details.mine-settled .live.custom');
+        setCustomResult(MINE_KEY(), c.key, 'Win'); const inSettled = document.querySelectorAll('details.mine-settled .live.custom').length, head = document.querySelector('details.mine-settled summary').innerText;
+        const out = { before, inSettled, open: !!document.querySelector('#mine-custom'), head }; setCustomResult(MINE_KEY(), c.key, ''); return out; })()""")
+    check(moved["before"] and moved["inSettled"] == 1 and not moved["open"] and "Settled · 2" in moved["head"], f"a custom bet moves to Settled once it has a result {at} ({moved})")
+    # every game final: nothing is open today, so the banner goes; the week's result is in the panels
+    gone = pg.evaluate("""(() => { const g = LIVE.events.find((e) => e.id === 'g1'), was = JSON.stringify(MINE); g.state = 'post'; renderMine(); const none = !document.querySelector('.now-ticker');
+        g.state = 'in'; MINE = JSON.parse(was); saveMine(MINE); renderMine(); return { none, back: !!document.querySelector('.now-ticker') }; })()""")
+    check(gone["none"] and gone["back"], f"'Where today is heading' shows only while a bet of today's is open {at} ({gone})")
     pg.evaluate("(() => { MINE_VIEW = 'compact'; renderMine(); })()")
     probe("#mine", "My board, one line a bet")
-    # the ledger: the season record on one line at the panel's size, last week's fold with what was wagered and won
+    # the ledger, on its own tab: the season record on one line at the panel's size, last week's fold with what was wagered and won
+    pg.click('nav button[data-tab="ledger"]')
+    pg.wait_for_timeout(250)
+    check(pg.evaluate("!document.querySelector('#mine #ledger-sec') && !!document.querySelector('#ledger #ledger-sec') && !document.querySelector('#mine #mine-sync') && !document.querySelector('#mine #mine-backup')"), f"the ledger, the sync and the backups are off My board, on their own tabs {at}")
     rec = pg.evaluate("""(() => { const t = [...document.querySelectorAll('#ledger .tile')].find((x) => x.textContent.includes('season record')); if (!t) return null; const b = t.querySelector(':scope > b');
         return { text: b.textContent, size: parseFloat(getComputedStyle(b).fontSize), height: b.getBoundingClientRect().height }; })()""")
     check(bool(rec) and rec["size"] >= 20 and rec["height"] < 2 * rec["size"], f"the season record sits on one line at full size {at} ({rec})")
@@ -240,9 +274,18 @@ def run_width(browser, name, width):
         const got = JSON.stringify(allWeeks().map((w) => [w.key, w.list.filter((b) => b.custom).map((b) => [b.key, b.desc, b.odds, b.stake, b.settled?.result || null])]));
         renderMine(); return { same: want === got, added: first.added, again: again.added }; })()""")
     check(back["same"] and back["added"] >= 2 and back["again"] == 0, f"a backup code restores the ledger and a second restore adds nothing {at} ({back})")
+    pg.evaluate("document.querySelectorAll('#ledger details').forEach((d) => { d.open = true; })")
+    pg.wait_for_timeout(250)
+    probe("#ledger", "the Ledger tab with every week open")
+    pg.click('nav button[data-tab="sync"]')
+    pg.wait_for_timeout(250)
+    check(pg.locator("#sync #mine-sync").count() == 1 and pg.locator("#sync #mine-backup").count() == 1, f"the Sync tab holds the sync and the backups {at}")
+    pg.evaluate("document.querySelectorAll('#sync details').forEach((d) => { d.open = true; })")
+    probe("#sync", "the Sync tab with its steps open")
+    pg.click('nav button[data-tab="mine"]')
     pg.evaluate("document.querySelectorAll('#mine details').forEach((d) => { d.open = true; })")
     pg.wait_for_timeout(250)
-    probe("#mine", "My board with the ledger and every dropdown open")
+    probe("#mine", "My board with every dropdown open")
     ctx.close()
 
 
@@ -296,8 +339,8 @@ def run_sync(browser):
         pg.on("pageerror", lambda e: pg.errors.append(str(e)))
         pg.route("**/site.api.espn.com/**", lambda r: r.abort())
         pg.route("**/api.github.com/**", hub.handle)
-        pg.goto(f"http://localhost:{PORT}/#mine")
-        pg.wait_for_function("typeof DATA !== 'undefined' && DATA.meta && document.querySelector('#mine-sync')", timeout=20000)
+        pg.goto(f"http://localhost:{PORT}/")
+        pg.wait_for_function(READY, timeout=20000)
         return ctx, pg
 
     def sync(pg):
@@ -322,7 +365,7 @@ def run_sync(browser):
     msg = a.evaluate(f"connectSync('me/lifting-data', '{hub.TOKEN}').then(() => 'connected', (e) => e.msg)")
     check("cannot see any private repo" in msg and "Only select repositories" in msg and a.evaluate("SYNC.cfg") is None, f"a token left on public repositories is told so ({msg[:70]})")
     hub.visible = [{"full_name": "me/board-data", "private": True, "permissions": {"push": True}}, {"full_name": "me/open-repo", "private": False, "permissions": {"push": True}}]
-    a.evaluate("renderMine(); document.querySelector('#mine-sync').open = true")
+    a.click('nav button[data-tab="sync"]')
     a.fill("#sync-repo", "https://github.com/me/board-data")
     a.fill("#sync-token", hub.TOKEN)
     a.locator("#mine-sync button", has_text="Connect").click()
@@ -330,7 +373,8 @@ def run_sync(browser):
     saved = json.loads(hub.file)
     check(hub.puts == 1 and saved["app"] == "slammer-board" and len(saved["weeks"][f"mine-{a.evaluate('DATA.meta.season')}-wk{wk}"]) == 3 and hub.TOKEN not in hub.file and "past_line" not in hub.file,
           f"connecting through the form writes the board to the repo, without the token ({hub.puts} save, {len(hub.file)} characters)")
-    check("in step with me/board-data" in a.locator("#mine-sync").inner_text(), "the sync box says the board is in step with the repo")
+    check("in step with me/board-data" in a.locator("#mine-sync").inner_text() and a.evaluate("document.querySelector('nav button[data-tab=\"sync\"]').dataset.sync") == "ok",
+          "the Sync tab says the board is in step with the repo, and its button shows it")
     check(hub.TOKEN not in a.evaluate("JSON.stringify(ledgerExport()) + JSON.stringify(ledgerShort())"), "the token is in no backup file or code")
     # device B: empty, connects, receives everything
     cb, b = device()
@@ -366,7 +410,7 @@ def run_sync(browser):
     sync(b)
     had = b.evaluate("allWeeks().length")
     a.on("dialog", lambda d: d.accept())
-    a.evaluate(f"(() => {{ renderMine(); const d = [...document.querySelectorAll('#ledger details.fold')].find((x) => x.id.endsWith('wk{wk - 1}')); d.open = true; [...d.querySelectorAll('button')].find((x) => /Delete week/.test(x.textContent)).click(); }})()")
+    a.evaluate(f"(() => {{ renderLedger(); const d = [...document.querySelectorAll('#ledger details.fold')].find((x) => x.id.endsWith('wk{wk - 1}')); d.open = true; [...d.querySelectorAll('button')].find((x) => /Delete week/.test(x.textContent)).click(); }})()")
     sync(a)
     sync(b)
     check(had == 2 and b.evaluate("allWeeks().length") == 1 and a.evaluate("allWeeks().length") == 1, "a week deleted on one device is deleted on the other")
@@ -398,7 +442,8 @@ def run_sync(browser):
     # the lifting app's connection, held by this browser under the same site, is offered and works
     cc, c = device()
     c.evaluate(f"localStorage.setItem('liftledger.sync.v1', JSON.stringify({{ repo: 'me/board-data', token: '{hub.TOKEN}' }}))")
-    c.evaluate("renderMine(); document.querySelector('#mine-sync').open = true")
+    c.click('nav button[data-tab="sync"]')
+    c.evaluate("renderSyncTab()")
     c.locator("#sync-use-lifting").click()
     c.wait_for_function("SYNC.state === 'ok'", timeout=10000)
     check(c.evaluate(board) == a.evaluate(board), "'Use my lifting app's connection' connects a new device in one tap")
@@ -406,10 +451,56 @@ def run_sync(browser):
     c.locator("#mine-sync button", has_text="Disconnect this device").click()
     check(c.evaluate("SYNC.cfg") is None and c.evaluate("localStorage.getItem('slammer.sync.v1')") is None and c.evaluate("board().length") >= 3, "disconnecting forgets the token and keeps the board")
     for pg in (a, b, c):
-        r = pg.evaluate(PROBE, "#mine")
-        check(not pg.errors and not r["bad"] and not r["overflow"], f"My board with sync on is clean on a phone ({pg.errors[:1]} {r['bad']} {r['wide']})")
+        for tab in ("mine", "sync"):
+            pg.click(f'nav button[data-tab="{tab}"]')
+            r = pg.evaluate(PROBE, f"#{tab}")
+            check(not pg.errors and not r["bad"] and not r["overflow"], f"the '{tab}' tab with sync on is clean on a phone ({pg.errors[:1]} {r['bad']} {r['wide']})")
     for ctx in (ca, cb, cc):
         ctx.close()
+
+
+def run_sealed(browser, docs):
+    """The site as it is published: every data file sealed behind a password. The gate, the wrong password, the right
+    one, and how much work the page does to open: one key derivation per password entry, not one per file."""
+    sys.path.insert(0, str(ROOT))
+    from pipeline import seal
+    site = Path(tempfile.mkdtemp()) / "docs"
+    shutil.copytree(docs, site)
+    plain = sum(f.stat().st_size for f in (site / "data").glob("*.json"))
+    seal.seal_dir(site / "data", [("evan", "second-pw"), ("friend", "third-pw"), ("main", "owner-pw")])
+    sealed = sum(f.stat().st_size for f in (site / "data").glob("*.json.enc"))
+    check(not list((site / "data").glob("*.json")) and sealed < 0.5 * plain, f"the sealed files are compressed before they are encrypted ({plain:,} bytes of data travel as {sealed:,})")
+    srv = subprocess.Popen([sys.executable, "-m", "http.server", "--directory", str(site), str(PORT + 1)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    time.sleep(1.2)
+    try:
+        ctx = browser.new_context(viewport={"width": 390, "height": 900})
+        pg = ctx.new_page()
+        errors = []
+        pg.on("pageerror", lambda e: errors.append(str(e)))
+        pg.route("**/site.api.espn.com/**", lambda r: r.abort())
+        pg.add_init_script("window.__derived = 0; const __d = crypto.subtle.deriveKey.bind(crypto.subtle); crypto.subtle.deriveKey = (...a) => { window.__derived++; return __d(...a); };")
+        pg.goto(f"http://localhost:{PORT + 1}/")
+        pg.wait_for_selector("#gate-pw", timeout=20000)
+        check(pg.evaluate("!BOOT.first && !document.querySelector('#loading').hidden"), "a sealed site asks for the password and shows it is opening, not a blank page")
+        pg.fill("#gate-pw", "not-the-password")
+        pg.click("#gate button[type=submit]")
+        pg.wait_for_function("document.querySelector('#gate-err').textContent.length > 0", timeout=20000)
+        check(pg.evaluate("!BOOT.first"), "a wrong password opens nothing")
+        pg.evaluate("window.__derived = 0")
+        pg.fill("#gate-pw", "owner-pw")
+        pg.click("#gate button[type=submit]")
+        pg.wait_for_function(READY, timeout=20000)
+        first = pg.evaluate("({ week: DATA.meta && DATA.meta.week, files: [DATA.meta, DATA.bets, DATA.proj, DATA.results, DATA.backtest, DATA.week_lines, DATA.patch, DATA.actuals].filter(Boolean).length, derived: window.__derived, slot: localStorage.getItem('site-pw-slot'), gate: document.querySelector('#gate').hidden })")
+        check(first["week"] and first["files"] == 8 and first["gate"] and first["slot"] == "main" and first["derived"] <= 3 and not errors,
+              f"the right password opens every sealed file, working the key out once per entry and not once per file ({first}, {errors[:1]})")
+        pg.reload()
+        pg.wait_for_function(READY, timeout=20000)
+        again = pg.evaluate("({ derived: window.__derived, gate: !!document.querySelector('#gate') && !document.querySelector('#gate').hidden, tab: TAB })")
+        check(again["derived"] == 1 and not again["gate"] and again["tab"] == "mine" and not errors, f"a returning device opens without the gate on one key derivation ({again}, {errors[:1]})")
+        ctx.close()
+    finally:
+        srv.terminate()
+        shutil.rmtree(site.parent, ignore_errors=True)
 
 
 def main():
@@ -422,6 +513,7 @@ def main():
             for name, width in WIDTHS:
                 run_width(browser, name, width)
             run_sync(browser)
+            run_sealed(browser, docs)
             browser.close()
     finally:
         srv.terminate()

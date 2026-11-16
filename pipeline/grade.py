@@ -22,7 +22,8 @@ def size_stakes(bets):
     divided by 1 + (N - 1) x rho for the N of them; (2) at most game_cap units on one game, kind_cap on one kind a slate day
     and slate_cap on a slate day, the stakes concerned scaled down together; (3) nothing falls under the minimum. Every
     other row of the same bet (another book, another line) is scaled by the same factor. `stake_raw` keeps each row's stake
-    before sizing and `slate_n` the N."""
+    before sizing and `slate_n` the N. A cap set to None is not applied: since 2026-11-16 all three are None (the owner's
+    decision), so under the grade ladder a pick's stake is its grade's units and nothing else."""
     if bets is None or len(bets) == 0 or "stake" not in bets.columns or "event_id" not in bets.columns:
         return bets
     b = bets.copy()
@@ -41,7 +42,9 @@ def size_stakes(bets):
     # by grade (config.STAKE["mode"] == "grade"): the ladder is the stake and only the caps touch it; else the Kelly stake,
     # divided for the picks of its kind on the slate
     st = main.stake.astype(float) if c.get("mode") == "grade" else main.stake.astype(float) / (1 + (n_kind - 1) * rho)
-    for keys, cap in ((main.event_id.astype(str), c["game_cap"]), ([slate, kind], c["kind_cap"]), (slate, c["slate_cap"])):
+    for keys, cap in ((main.event_id.astype(str), c.get("game_cap")), ([slate, kind], c.get("kind_cap")), (slate, c.get("slate_cap"))):
+        if cap is None:                                   # no cap of this kind
+            continue
         tot = st.groupby(keys).transform("sum")
         st = st * (cap / tot).clip(upper=1.0)
     st = st.clip(lower=c["min"])

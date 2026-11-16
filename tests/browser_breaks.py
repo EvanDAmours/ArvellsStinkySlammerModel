@@ -26,6 +26,10 @@ M_ALL = {
    ("  .play .why-box table, .play .why-box tbody { display: block; } .play .why-box thead { display: none; }", ""), ("  .play .why-box tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--line); }", ""),
    ("  .play .why-box tbody td { padding: 0; border: 0; color: var(--ink); } .play .why-box tbody td:nth-child(3) { grid-column: 1 / -1; color: var(--muted); font-size: 0.82rem; }", "")],
  "a long file name pushing the Patch log off a phone": [(".patch-body code { overflow-wrap: anywhere; }", "")],
+ "the tab bar sliding off a phone again": [("  nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin: 12px 0 12px; }", "  nav { display: flex; flex-wrap: nowrap; overflow-x: auto; margin: 12px 0 12px; }")],
+ "yesterday's result carried into today's banner": [("if (isToday) { daySettled += result; dayN++; }", "{ daySettled += result; dayN++; }")],
+ "the page opening on the last tab, not My board": [('  show("mine");                 // always My board, whatever tab the last visit ended on', '  show(location.hash.slice(1));')],
+ "a settled custom bet left out of Settled": [("    groups.post.push(c); }", "    customOpen.push(c); }")],
 }
 M = {k: v for k, v in M_ALL.items() if len(sys.argv) < 3 or sys.argv[2] in k}
 ok = True

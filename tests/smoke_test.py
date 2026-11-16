@@ -385,16 +385,22 @@ _byg, _bys, _byk = {}, {}, {}
 for b in _bets_once.values():
     _sl8 = G.slate_of(b["commence_time"]); _kd = b["side"] + " " + C.market_kind(b["market"])
     _byg[b["event_id"]] = _byg.get(b["event_id"], 0) + b["stake"]; _bys[_sl8] = _bys.get(_sl8, 0) + b["stake"]; _byk[(_sl8, _kd)] = _byk.get((_sl8, _kd), 0) + b["stake"]
-_slack = C.STAKE["min"] * len(_bets_once)                   # the floor of 0.1u a pick can lift a capped total a little
-check(_byg and max(_byg.values()) <= C.STAKE["game_cap"] + _slack and max(_bys.values()) <= C.STAKE["slate_cap"] + _slack and max(_byk.values()) <= C.STAKE["kind_cap"] + _slack
-      and all(b.get("stake_raw") is not None and b["stake"] <= b["stake_raw"] + 1e-9 and (b.get("slate_n") or 0) >= 1 for b in _pk)
-      and C.STAKE.get("mode") == "grade" and all(abs(b["stake_raw"] - C.GRADE_UNITS[b["grade"]]) < 1e-9 for b in _pk if b.get("grade")),
-      f"the stake is the grade's units, held to the caps per game, per kind and per slate day (most on a game {max(_byg.values()) if _byg else 0:.2f}u, a kind {max(_byk.values()) if _byk else 0:.2f}u, a day {max(_bys.values()) if _bys else 0:.2f}u over {len(_bets_once)} bets)")
+check(_byg and all(C.STAKE.get(k) is None for k in ("game_cap", "kind_cap", "slate_cap"))
+      and all(b.get("stake_raw") is not None and abs(b["stake"] - b["stake_raw"]) < 1e-9 and (b.get("slate_n") or 0) >= 1 for b in _pk)
+      and C.STAKE.get("mode") == "grade" and all(abs(b["stake"] - C.GRADE_UNITS[b["grade"]]) < 1e-9 for b in _pk if b.get("grade")),
+      f"the stake is the grade's units and no cap trims it (most on a game {max(_byg.values()) if _byg else 0:.2f}u, a kind {max(_byk.values()) if _byk else 0:.2f}u, a day {max(_bys.values()) if _bys else 0:.2f}u over {len(_bets_once)} bets)")
 _one = pd.DataFrame([dict(player=f"P{i}", market="player_solo_tackles", side="Under", pick="Under", stake=2.0, edge_low=0.03, event_id=f"G{i // 2}", commence_time="2099-01-03T18:00:00Z", best_price=True) for i in range(12)])
-_sz = G.size_stakes(_one)
-check(abs(_sz.stake.sum() - C.STAKE["kind_cap"]) < 1e-6 and _sz.groupby("event_id").stake.sum().max() <= C.STAKE["game_cap"] + 1e-9 and (_sz.slate_n == 12).all() and (_sz.stake_raw == 2.0).all()
+_free = G.size_stakes(_one)                                 # no cap (config.STAKE since 2026-11-16): every pick keeps its stake
+_stake_was = C.STAKE
+try:                                                        # a cap put back is applied: the mechanism stays, switched off
+    C.STAKE = dict(_stake_was, game_cap=5.0, kind_cap=20.0, slate_cap=25.0)
+    _sz = G.size_stakes(_one)
+finally:
+    C.STAKE = _stake_was
+check(abs(_free.stake.sum() - 24.0) < 1e-9 and (_free.stake == _free.stake_raw).all() and (_free.slate_n == 12).all()
+      and abs(_sz.stake.sum() - 20.0) < 1e-6 and _sz.groupby("event_id").stake.sum().max() <= 5.0 + 1e-9 and (_sz.stake_raw == 2.0).all()
       and abs(G.size_stakes(_one.head(1)).stake.iloc[0] - 2.0) < 1e-9,
-      f"twelve like picks on one slate are held to the cap for one kind ({_sz.stake.sum():.2f}u in all); a lone pick keeps its stake")
+      f"twelve like picks on one slate keep their stakes with no cap ({_free.stake.sum():.2f}u), and a cap put back holds them ({_sz.stake.sum():.2f}u)")
 check(abs(M.kelly_stake(0.553, 1.909) - min(C.STAKE["max"], max(C.STAKE["min"], C.STAKE["kelly_fraction"] * ((0.553 * 0.909 - 0.447) / 0.909) * 100))) < 1e-9 and M.kelly_stake(0.45, 1.909) is None
       and abs(M.kelly_stake(1 / 1.909, 1.909) - C.STAKE["min"]) < 1e-9, "the older Kelly stake still computes (a quarter of Kelly at the cautious chance: the minimum when it only breaks even there, none below)")
 _lo, _hi = G.hit_interval(10, 4, 3); _lo2, _hi2 = G.hit_interval(100, 40, 3); _lo3, _hi3 = G.hit_interval(100, 40, 140)
@@ -509,8 +515,17 @@ check(all(k in _html for k in ("function customForm", "function addCustom", "fun
       "My board takes a custom bet (typed in, settled by hand, no line pulled): in the totals, the ledger and the backup code")
 check('<option value="intl">International (morning)</option>' in _html and 'h < 10 ? "intl" : h < 14 ? "early" : h < 18 ? "late" : "prime"' in _html,
       "the Plays and Projections tabs can show the international morning games on their own, and the noon games count as early (Edmonton is UTC-6)")
-check('"By grade, this week: "' in _html and all(k in _html for k in ("const statPanels", '["Results", "rc-live"', '["Right now", "rc-replay"', '["Money", "rc-money"', '"season record"', "Where today is heading", "can still be withdrawn", "to win if every started bet hits", "last live update")),
-      "My board shows every number of its old strip, grouped in panels (results, right now, money), the ledger too")
+check('"By grade, this week: "' in _html and all(k in _html for k in ("function minePanels", '["results", "Results", "rc-live"', '["now", "Right now", "rc-replay"', '`Week ${wkNo}`', '"season record"', "Where today is heading", "can still be withdrawn",
+                                                                      "to win if every started bet hits", "last live update", "if every pending bet loses", "if every pending bet hits")),
+      "My board shows every number of its old strip in three panels (results, right now, the week with its top and bottom line), the ledger too")
+check(all(k in _html for k in ('const TABS = ["mine", "plays", "record", "check", "ast", "gloss", "patch", "ledger", "sync", "proj"]', '<section id="ledger" hidden>', '<section id="sync" hidden>', "function renderLedger", "function renderSyncTab",
+                               'show("mine");', "flex-wrap: wrap", "grid-template-columns: repeat(5, 1fr)")) and "overflow-x: auto; }\nnav button" not in _html and '<section id="mine">' in _html and '<section id="plays" hidden>' in _html,
+      "the site opens on My board, with the tabs in the owner's order, a Ledger and a Sync tab, and a tab bar that wraps and never slides")
+check(all(k in _html for k in ("if (!KEYS[id]) KEYS[id] = (async () =>", 'new DecompressionStream("gzip")', '{ cache: "no-cache" }', "const WAITS = new Set(", 'await Promise.all(["meta", "bets", "parlays"].map(load))', "site-pw-slot")) and '.json.enc`, { cache: "no-store" }' not in _html
+      and 'rel="stylesheet" media="print" onload=' in _html,
+      "the page opens on three small files, loads the rest behind them, works one key out per password entry, inflates gzipped files and never waits on the font sheet")
+check("if (projN || dayPre) {" in _html and "daySettled + projPL" in _html and "groups.post.push(c);" in _html and "set the result and the bet moves to Settled" in _html,
+      "'Where today is heading' shows only while a bet of today's is open and counts today only; a settled custom bet joins the Settled group")
 check(all(k in _html for k in ("function playRows", "plays-jump", "plays-grp-", 'id: "plays-locks"', "plays-view", 'foldNote("How locks are chosen"')),
       "the Plays tab groups picks by grade, one line each (a tap opens the card), with a jump bar and the long notes folded")
 check("a bet's grade follows the board until its game kicks off" in _html, "My board keeps an unstarted bet's grade in step with the board")
@@ -520,7 +535,7 @@ check(all(k in _html for k in ("Where today is heading", "now-ticker", "projPL +
 check(all(k in _html for k in ("const CONFIRM_MIN = 10", "b.past_line = { kind: decidedNow", ".live.behind { border-left-color: #e67e22; }", ".live .call.lost { background: #c0392b; }")), "My board calls a bet LOST (red) or WON once past its line for ten minutes, and shows a bet pacing to lose in orange")
 check("function weekMoney" in _html and "weekMoney(r.list)" in _html and '"Wagered and won"' in _html, "each week of the ledger opens to what was wagered, paid back, won and lost")
 check("table.plays-compact > tbody > tr.mine-expand > td, table.plays-compact > tbody > tr.mine-expand > td:first-child { width: auto;" in _html and "table.mine-compact tr {" not in _html, "a card opened from the one-line Plays list takes the full width, not the grade column's")
-check(all(k in _html for k in ("function mergeBoards", "function connectSync", 'SYNC_FILE = "slammer-board.json"', "That repo is public", "function tombstone", "foldOf(syncBox()")) and not __import__("re").search(r"github_pat_[A-Za-z0-9_]{20,}|ghp_[A-Za-z0-9]{20,}", _html),
+check(all(k in _html for k in ("function mergeBoards", "function connectSync", 'SYNC_FILE = "slammer-board.json"', "That repo is public", "function tombstone", "box.replaceChildren(syncBox(), bk)")) and not __import__("re").search(r"github_pat_[A-Za-z0-9_]{20,}|ghp_[A-Za-z0-9]{20,}", _html),
       "My board can sync through a private GitHub repo: merged, never replaced, a public repo refused, no token in the page")
 from tools import bias_audit as _BA
 _bp = pd.DataFrame(dict(win=[1.0, 1.0, 0.0, 0.0, 1.0, 0.0], g=["a", "a", "b", "b", "c", "c"]))
@@ -613,6 +628,15 @@ except Exception:
     pass
 _meta2 = json.loads(_SEAL.unseal_bytes((tmp / "docs/data/meta.json.enc").read_text(), "third-pw"))
 check(_meta_back.get("week") == 7 and _meta2.get("week") == 7 and _bad and "for 3 passwords" in _r.stdout, "sealed meta opens with any of the three passwords and not with another")
+_env7 = json.loads((tmp / "docs/data/bets.json.enc").read_text())
+_old7 = json.loads(_SEAL.seal_bytes(b'{"week": 7}', "smoke-pw")); _old7.pop("z"); _key7 = _old7      # a file sealed before 2026-11-16: no z, plain JSON inside
+import base64 as _b64m, gzip as _gzm
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM as _AES
+_dk7 = _AES(_SEAL._key("smoke-pw", _b64m.b64decode(_key7["keys"][0]["salt"]))).decrypt(_b64m.b64decode(_key7["keys"][0]["iv"]), _b64m.b64decode(_key7["keys"][0]["wk"]), None)
+_iv7 = b"\x00" * 12; _key7["iv"] = _b64m.b64encode(_iv7).decode(); _key7["ct"] = _b64m.b64encode(_AES(_dk7).encrypt(_iv7, b'{"week": 7}', None)).decode()
+check(_env7.get("z") == 1 and len(_env7["ct"]) < 0.5 * len(json.dumps(json.loads(_SEAL.unseal_bytes(json.dumps(_env7), "smoke-pw"))))
+      and json.loads(_SEAL.unseal_bytes(json.dumps(_key7), "smoke-pw")) == {"week": 7},
+      f"a sealed file is gzipped before it is encrypted ({len(_env7['ct']):,} characters for the board), and a file sealed the old way still opens")
 _r2 = subprocess.run([sys.executable, "run.py", "odds"], cwd=tmp, env=dict(env, SITE_PASSWORD="smoke-pw"), capture_output=True, text=True)
 _m2 = json.loads((tmp / "docs/data/meta.json").read_text()) if (tmp / "docs/data/meta.json").exists() else {}
 check(_r2.returncode == 0 and _m2.get("week") == 7 and _m2.get("lines_pulled"), "a pull after sealing still reads the sealed meta and writes the board")
