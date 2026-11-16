@@ -60,6 +60,15 @@ select, input[type="search"] { font: inherit; padding: 6px 8px; border: 1px soli
 .play .ev b { display: block; font: 700 1.9rem/1 var(--cond); font-variant-numeric: tabular-nums; }
 .grade { display: inline-block; min-width: 1.6em; padding: 2px 7px; border-radius: 6px; font: 700 0.95rem/1.3 var(--cond); text-align: center; color: #fff; background: #8a8f98; vertical-align: middle; margin-right: 6px; }
 .grade.A { background: #1f8a4c; } .grade.B { background: #c98a1b; } .grade.C { background: #8a8f98; }
+.grade.sl, .grade.sl.A, .grade.sl.B, .grade.sl.C { background: #7a4bc4; }   /* a sleeper's own grade: purple, so it is never read as a pick's grade */
+/* the book a bet was placed at: a small pill that opens the list of books */
+.bookpick { position: relative; display: inline-flex; align-items: center; gap: 3px; padding: 1px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); font-size: 0.82rem; line-height: 1.5; white-space: nowrap; vertical-align: middle; cursor: pointer; }
+.bookpick::after { content: "\25BE"; color: var(--muted); font-size: 0.8em; }
+.bookpick.unset { color: var(--muted); border-style: dashed; }
+.bookpick select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; }
+.bookpick .short { display: none; }
+@media (max-width: 640px) { table.mine-compact .bookpick .full { display: none; } table.mine-compact .bookpick .short { display: inline; } table.mine-compact .bookpick { padding: 0 6px; margin-left: 4px; } }
+.mine-filter .reset.on, .book-chips .reset.on { background: var(--ink); color: var(--panel); border-color: var(--ink); }
 .lock { color: var(--muted); font-size: 0.85rem; }
 .w { color: #1f8a4c; } .l { color: #c0392b; } .pos { color: #1f8a4c; } .neg { color: #c0392b; }
 td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weight: 600; }
@@ -700,7 +709,7 @@ function sleeperBox(all) {
   const counts = ["A", "B", "C"].map((g) => [g, rows.filter((b) => b.sleeper_grade === g).length]).filter(([, n]) => n);
   const wrap = el("details", { class: "parlay-box sleepers", open: rows.length ? "" : null },
     el("summary", {}, el("strong", {}, `Sleepers · ${rows.length} open`), counts.length ? ` (${counts.map(([g, n]) => `${n} ${g}`).join(", ")})` : "", sum && sum.all && sum.all.bets ? ` · record ${rec(sum.all)}` : ""));
-  const byG = sum && sum.by_grade ? ["A", "B", "C"].filter((g) => sum.by_grade[g]).map((g) => el("span", { class: "gchip" }, el("span", { class: `grade ${g}` }, g), rec(sum.by_grade[g]))) : [];
+  const byG = sum && sum.by_grade ? ["A", "B", "C"].filter((g) => sum.by_grade[g]).map((g) => el("span", { class: "gchip" }, el("span", { class: `grade sl ${g}` }, g), rec(sum.by_grade[g]))) : [];
   if (byG.length) wrap.append(el("div", { class: "grade-chips note" }, "Record by grade: ", ...byG));
   wrap.append(el("p", { class: "note" }, "A second, simpler test kept on its own record: lines where the model's own number disagrees with the book's line by a margin that held in every week tracked (solo tackles with the model half a tackle or more under the line and his own season within a tackle of it; combined tackles with the model half a tackle to a tackle over). The sleeper grade comes from the model's own evidence and never looks at the price, so a sleeper can be a likely hit at a price that is not worth betting: each one says what the pricing engine makes of it at its price. The rules are frozen so the record can judge them. Never a lock; tracked at 1 unit each. In weeks 7 to 9 at the close: A 21-3, B 35-12, C 33-17 (chosen on those same weeks, so expect less)."));
   wrap.append(sleeperMath());
@@ -710,14 +719,14 @@ function sleeperBox(all) {
     const w = settled.filter((r) => r.result === "Win").length, l = settled.filter((r) => r.result === "Loss").length;
     const sd = el("details", { class: "legend" }, el("summary", {}, `Settled this week: ${w}-${l}`));
     for (const r of settled.sort((a, b) => (gOrd[a.sleeper_grade] ?? 3) - (gOrd[b.sleeper_grade] ?? 3)))
-      sd.append(el("div", { class: "note" }, el("span", { class: `grade ${r.sleeper_grade || "C"}` }, r.sleeper_grade || "?"),
+      sd.append(el("div", { class: "note" }, el("span", { class: `grade sl ${r.sleeper_grade || "C"}` }, r.sleeper_grade || "?"),
         `${r.player} ${r.side} ${num(r.line)} ${(MARKET[r.market] || "").toLowerCase()} (${odds(r.odds)}): ${r.actual == null ? "" : num(r.actual, 0)} · `, el("strong", { class: r.result === "Win" ? "ok" : r.result === "Loss" ? "no" : "" }, r.result)));
     wrap.append(sd);
   }
   for (const b of rows) {
     const side = b.sleeper, o = side === "Over" ? b.over_odds : b.under_odds, isPick = b.pick === side;
     wrap.append(el("div", { class: "sleeper-row" },
-      el("div", {}, el("span", { class: `grade ${b.sleeper_grade || "C"}`, title: "Sleeper grade" }, b.sleeper_grade || "?"), el("strong", {}, `${b.player}${b.jersey != null ? ` #${b.jersey}` : ""}`), ` ${b.team || ""}${b.opp ? " vs " + b.opp : ""} · `, el("strong", {}, `${side} ${num(b.line)} ${(MARKET[b.market] || "").toLowerCase()}`), ` ${odds(o)} at ${b.book}`),
+      el("div", {}, el("span", { class: `grade sl ${b.sleeper_grade || "C"}`, title: "Sleeper grade" }, b.sleeper_grade || "?"), el("strong", {}, `${b.player}${b.jersey != null ? ` #${b.jersey}` : ""}`), ` ${b.team || ""}${b.opp ? " vs " + b.opp : ""} · `, el("strong", {}, `${side} ${num(b.line)} ${(MARKET[b.market] || "").toLowerCase()}`), ` ${odds(o)} at ${b.book}`),
       el("div", { class: "note sleeper-sum" }, b.sleeper_note || `Model ${num(b.proj_model, 1)} vs line ${num(b.line)}.`),
       (() => {   // the price check: the chance this price needs to break even, against the model's own chance (shown, never part of the grade)
         const be = toDec(o) ? 1 / toDec(o) : null, short = be != null && b.sleeper_p != null && b.sleeper_p < be;
@@ -1419,7 +1428,7 @@ function renderRecord() {
         [...ss.by_week].reverse().map((w) => [`Week ${w.week}`, w.bets, recCell(w), units(w.units, 2)]))) : null,
       rows.length ? more(`Every sleeper (${rows.length})`, el("div", { class: "scroll" }, table([["Week"], ["Sleeper"], ["Grade"], ["Price", "n"], ["Book"], ["Model's chance", "n"], ["Actual", "n"], ["Result"]],
         [...rows].sort((a, b) => (b.week - a.week) || ((gOrd[a.sleeper_grade] ?? 3) - (gOrd[b.sleeper_grade] ?? 3))).map((x) => [`Week ${x.week}`, `${x.player} ${x.side} ${num(x.line)} ${(MARKET[x.market] || x.market).toLowerCase()}`,
-          x.sleeper_grade ? el("span", { class: `grade ${x.sleeper_grade}` }, x.sleeper_grade) : "", odds(x.odds), x.book || "", x.sleeper_p == null ? "" : pct(x.sleeper_p), x.actual == null ? "" : num(x.actual, 0), x.result])))) : null);
+          x.sleeper_grade ? el("span", { class: `grade sl ${x.sleeper_grade}` }, x.sleeper_grade) : "", odds(x.odds), x.book || "", x.sleeper_p == null ? "" : pct(x.sleeper_p), x.actual == null ? "" : num(x.actual, 0), x.result])))) : null);
     sec.id = "rec-sleepers"; parts.sleepers = sec; }
 
   // 4. by grade
@@ -1767,6 +1776,48 @@ function saveMine(list) { try { localStorage.setItem(MINE_KEY(), JSON.stringify(
 let MINE = null;
 const mine = () => (MINE ??= loadMine());
 const board = () => mine().filter((b) => !b.archived);     // the live board; a cleared bet stays in the ledger as archived
+// ---- a sleeper's grade on the board. A bet taken off the sleepers' list is not a pick of the pricing engine, so it has
+// no grade of that kind; it carries the sleeper's own grade (bets.json `sleeper_grade`) and shows it in a purple box.
+// `sg` is read off the board until kickoff, like the grade; older bets without it are looked up in the graded sleepers.
+function sleeperGradeOf(b) {
+  if (!b || b.custom) return null;
+  if (b.sg !== undefined) return b.sg || null;
+  const wk = b.week || DATA.meta?.week, nk = normName(b.player);
+  const hit = (DATA.results?.sleepers || []).find((r) => r.week === wk && normName(r.player) === nk && r.market === b.market && r.side === b.side && +r.line === +b.line);
+  return hit?.sleeper_grade || null;
+}
+function gradeBox(b, extraTitle) {
+  if (b.grade) return el("span", { class: `grade ${b.grade}`, ...(extraTitle ? { title: extraTitle } : {}) }, b.grade);
+  const sg = sleeperGradeOf(b);
+  return sg ? el("span", { class: `grade sl ${sg}`, title: `Sleeper grade ${sg}: from the sleepers' list, not a pick of the pricing engine` }, sg) : "";
+}
+// ---- the book a bet was placed at. The bet is added at the book with the best price; where it was actually placed is
+// the owner's to say (`placed`), and the board can be read book by book.
+const BOOK_SHORT = { DraftKings: "DK", FanDuel: "FD", "theScore Bet": "tSB", BetMGM: "MGM", bet365: "365", Caesars: "CZR", BetRivers: "BR", "Sports Interaction": "SIA", PlayAlberta: "PA", "Bally Bet": "Bally", Pinnacle: "PIN", PointsBet: "PB", Other: "other" };
+const bookShort = (name) => (!name ? "book" : BOOK_SHORT[name] || String(name).slice(0, 5));
+const placedOf = (b) => b.placed || (b.custom ? "" : b.book || "");
+function bookChoices() {
+  const seen = new Set();
+  for (const x of DATA.bets || []) if (x.book) seen.add(x.book);
+  for (const x of DATA.week_lines || []) if (x.book) seen.add(x.book);
+  for (const x of mine()) { if (x.book) seen.add(x.book); if (x.placed) seen.add(x.placed); }
+  for (const x of ["DraftKings", "FanDuel", "theScore Bet", "BetMGM", "BetRivers", "Sports Interaction", "bet365", "PlayAlberta", "Other"]) seen.add(x);
+  return [...seen];
+}
+function setPlaced(weekKey, key, v) {
+  const list = weekList(weekKey), b = list.find((x) => x.key === key); if (!b) return;
+  if (v) b.placed = v; else delete b.placed;
+  touch(b); saveWeek(weekKey, list); renderMine();
+}
+function bookPick(b, weekKey) {
+  const cur = placedOf(b), names = bookChoices(); if (cur && !names.includes(cur)) names.unshift(cur);
+  const sel = el("select", { "aria-label": `Book for ${b.custom ? b.desc : b.player}` }, ...(b.custom || !cur ? [el("option", { value: "" }, "No book")] : []), ...names.map((n) => { const o = el("option", { value: n }, n); if (n === cur) o.selected = true; return o; }));
+  if (!cur) sel.value = "";
+  sel.addEventListener("change", () => setPlaced(weekKey || MINE_KEY(), b.key, sel.value));
+  const pill = el("span", { class: "bookpick" + (cur ? "" : " unset"), title: "The book this bet is at. Change it to where you placed it." }, el("span", { class: "full" }, cur || "book"), el("span", { class: "short" }, bookShort(cur)), sel);
+  pill.addEventListener("click", (e) => e.stopPropagation());       // inside a one-line row: choosing a book must not open the card
+  return pill;
+}
 const tracked = () => board().filter((b) => !b.custom);    // the tackle bets, followed live; a custom bet is settled by hand
 
 // ---- custom bets: anything the site does not price (a moneyline, a spread, a bet at another book), typed in and
@@ -1809,7 +1860,7 @@ function customCard(b) {
     win != null && !r ? el("small", {}, ` to win ${money(win)}`) : "", m.profit != null && r ? el("b", { class: m.profit > 0 ? "ok" : m.profit < 0 ? "no" : "" }, ` ${m.profit > 0 ? "+" : ""}${money(m.profit) || "$0"}`) : "");
   const rm = el("button", { type: "button", class: "rm" }, "Remove"); rm.onclick = () => removeCustom(MINE_KEY(), b.key);
   return el("div", { class: "live custom" + (r === "Win" ? " good done" : r === "Loss" ? " bad done" : r ? " done" : "") },
-    el("div", { class: "who" }, b.desc, el("small", {}, "custom bet")),
+    el("div", { class: "who" }, b.desc, el("small", {}, "custom bet · ", bookPick(b))),
     el("div", { class: "now" }, el("b", {}, odds(b.odds)), el("span", {}, "price")),
     el("div", { class: "trend" }, el("label", {}, "Result ", customSelect(b, MINE_KEY())), " · you settle this one: the site pulls no line for it"),
     stakeBox, rm);
@@ -1841,7 +1892,7 @@ function toggleMine(b) {
   else if (i >= 0) { list.splice(i, 1); tombstone(MINE_KEY(), k); }
   else list.push({ key: k, player: b.player, team: b.team, opp: b.opp, group: b.group, market: b.market, side: b.side || b.pick, line: b.line, book: b.book,
                    odds: (b.side || b.pick) === "Under" ? b.under_odds : b.over_odds, proj: b.proj, model_p: (b.side || b.pick) === "Under" ? 1 - b.model_over : b.model_over,
-                   grade: b.grade, lock: b.lock, commence_time: b.commence_time, link: sideLink(b, b.side || b.pick), season: DATA.meta?.season, week: DATA.meta?.week, jersey: b.jersey ?? null,
+                   grade: b.grade, lock: b.lock, sg: b.sleeper && b.sleeper === (b.side || b.pick) ? b.sleeper_grade || null : null, commence_time: b.commence_time, link: sideLink(b, b.side || b.pick), season: DATA.meta?.season, week: DATA.meta?.week, jersey: b.jersey ?? null,
                    player_id: b.player_id ?? null, espn_id: b.espn_id ?? null, added: new Date().toISOString(), u: Date.now() });
   saveMine(list); renderPlays(); renderMine(); liveLoop(true);
 }
@@ -1959,8 +2010,14 @@ function renderMine() {
   // a bet's grade follows the board until its game kicks off: grades can change between line pulls (a C at night can be an
   // A by morning), and the board copied the grade of the moment it was added. After kickoff, or once settled, it stays.
   { const cur = new Map((DATA.bets || []).filter((x) => x.pick === "Over" || x.pick === "Under").map((x) => [betKey({ ...x, side: x.pick }), x])); let moved = false;
-    for (const b of list) { if (b.settled) continue; const k = betKick(b); if (k && k.getTime() <= Date.now()) continue; const x = cur.get(b.key); if (!x) continue;
-      if ((x.grade || null) !== (b.grade ?? null) || (x.lock ?? null) !== (b.lock ?? null)) { b.grade = x.grade || null; b.lock = x.lock ?? null; b.gu = Date.now(); moved = true; } }
+    const slp = new Map((DATA.bets || []).filter((x) => x.sleeper).map((x) => [betKey({ ...x, side: x.sleeper }), x.sleeper_grade || null]));
+    const priced = new Set((DATA.bets || []).flatMap((x) => [betKey({ ...x, side: "Over" }), betKey({ ...x, side: "Under" })]));     // every line on the board now, either side
+    for (const b of list) { if (b.settled || !(DATA.bets || []).length) continue; const k = betKick(b); if (k && k.getTime() <= Date.now()) continue;
+      const x = cur.get(b.key);
+      if (x && ((x.grade || null) !== (b.grade ?? null) || (x.lock ?? null) !== (b.lock ?? null))) { b.grade = x.grade || null; b.lock = x.lock ?? null; b.gu = Date.now(); moved = true; }
+      // the sleeper's grade is read off the same board: set while the line is on it, kept when the book takes the line down
+      const sg = slp.get(b.key) ?? null;
+      if (priced.has(b.key) && (b.sg === undefined ? sg !== null : (b.sg ?? null) !== sg)) { b.sg = sg; b.gu = Date.now(); moved = true; } }
     if (moved) saveMine(mine()); }
   if (LIVE.error && (LIVE.events || []).some((g) => g.state === "in")) box.append(el("div", { class: "warn" }, `ESPN's live feed is not answering (${LIVE.error}). Live tackles and pace are paused; every bet is still settled from the official box score the morning after, and nothing on the ledger is lost.`));
   else if (LIVE.error && !LIVE.events) box.append(el("div", { class: "warn" }, `ESPN's scoreboard is not answering (${LIVE.error}), so kickoff times and live tracking are unavailable for now. Official grading still settles every bet.`));
@@ -1970,7 +2027,8 @@ function renderMine() {
   const today = ymd(new Date()); let daySettled = 0, dayN = 0, dayPre = 0;   // the banner is today's only: bets on games that kick off today
   let w = 0, l = 0, p = 0, onTrack = 0, live = 0, staked = 0, toWin = 0, settled = 0, pendingStake = 0, paced = 0, pacedN = 0, unstarted = 0, unstartedStake = 0, pendingWin = 0, pendingRisk = 0;
   const GR = { A: 0, B: 1, C: 2 };
-  const sorted = [...list].sort((a, b) => (GR[a.grade] ?? 3) - (GR[b.grade] ?? 3) || (b.lock ?? 0) - (a.lock ?? 0) || String(a.commence_time || "").localeCompare(String(b.commence_time || "")));
+  const rank = (b) => GR[b.grade] ?? (3 + (GR[sleeperGradeOf(b)] ?? 3));
+  const sorted = [...list].sort((a, b) => rank(a) - rank(b) || (b.lock ?? 0) - (a.lock ?? 0) || String(a.commence_time || "").localeCompare(String(b.commence_time || "")));
   const groups = { in: [], pre: [], post: [] };
   let changed = false;
   const cards = sorted.map((b) => {
@@ -2026,9 +2084,9 @@ function renderMine() {
     const stakeBox = el("label", { class: "stake" }, "$ ", (() => { const i = el("input", { type: "number", min: "0", step: "1", inputmode: "decimal", placeholder: "stake", value: stake == null ? "" : String(stake) }); i.addEventListener("change", () => setStake(b.key, i.value)); return i; })(),
       win != null ? el("small", {}, ` to win ${money(win)}`) : "", result != null ? el("b", { class: result > 0 ? "ok" : result < 0 ? "no" : "" }, ` ${result > 0 ? "+" : ""}${money(result)}`) : "");
     const c = el("div", { class: "live" + cls },
-      el("div", { class: "who" }, b.grade ? el("span", { class: `grade ${b.grade}` }, b.grade) : "", b.player, " ", jersey(b), el("small", {}, [b.group, b.team, b.opp ? `vs ${b.opp}` : ""].filter(Boolean).join(" "))),
+      el("div", { class: "who" }, gradeBox(b), b.player, " ", jersey(b), el("small", {}, [b.group, b.team, b.opp ? `vs ${b.opp}` : ""].filter(Boolean).join(" "))),
       el("div", { class: "now" }, el("b", {}, have == null ? "–" : String(have)), el("span", {}, kind === "solo" ? "solo so far" : kind === "assists" ? "assists so far" : "tackles so far")),
-      el("div", { class: "bet" }, el("span", { class: under ? "under" : "over" }, `${b.side} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market || "").toLowerCase()}`, el("small", {}, ` · ${odds(b.odds)} at ${b.book}${b.proj != null ? ` · model ${num(b.proj)}` : ""} `), g && g.state === "pre" && b.link ? el("a", { class: "bet-link", href: b.link, target: "_blank", rel: "noopener noreferrer" }, `Open at ${b.book} ↗`) : ""),
+      el("div", { class: "bet" }, el("span", { class: under ? "under" : "over" }, `${b.side} ${num(b.line)}`), ` ${(MARKET[b.market] || b.market || "").toLowerCase()}`, el("small", {}, ` · ${odds(b.odds)} at `, bookPick(b), `${b.proj != null ? ` · model ${num(b.proj)}` : ""} `), g && g.state === "pre" && b.link ? el("a", { class: "bet-link", href: b.link, target: "_blank", rel: "noopener noreferrer" }, `Open at ${b.book} ↗`) : ""),
       el("div", { class: "trend" }, ...(verdict ? [called ? el("span", { class: `call ${called}` }, verdict) : el("b", { class: cls.includes("good") ? "ok" : cls.includes("behind") ? "slow" : "no" }, verdict), " · "] : []), status),
       stakeBox,
       (() => { const r = el("button", { type: "button", class: "rm" }, "Remove"); r.onclick = () => toggleMine({ ...b, pick: b.side, side: b.side }); return r; })());
@@ -2046,7 +2104,7 @@ function renderMine() {
   for (const b of customs) { const m = betMoney(b), dec = toDec(b.odds);
     if (m.result === "Win") w++; else if (m.result === "Loss") l++; else if (m.result === "Push") p++;
     if (m.stake != null) { if (m.result) { settled += m.profit || 0; paced += m.profit || 0; if (ymd(new Date(b.settled?.at || 0)) === today) { daySettled += m.profit || 0; dayN++; } } else { pendingRisk += m.stake; if (dec) pendingWin += m.stake * (dec - 1); } }
-    const c = customCard(b);
+    const c = customCard(b); c._b = b;
     if (!m.result) { customOpen.push(c); continue; }
     c._m = { b, g: null, sk: m.result === "Win" ? "won" : m.result === "Loss" ? "lost" : "other", have: null, pace: null, verdict: "", status: `${m.result} · settled by you`, stake: m.stake, win: null, result: m.stake != null && m.profit != null ? m.profit : null, kind: "custom", under: false, stateKey: "post" };
     groups.post.push(c); }
@@ -2079,6 +2137,15 @@ function renderMine() {
       tile(money(toWin) || "$0", "to win if every started bet hits"),
       unstarted ? tile(money(unstartedStake) || "$0", `on ${unstarted} bet${unstarted === 1 ? "" : "s"} not started · can still be withdrawn`) : tile("$0", "on bets not started")]]]));
   box.append(el("div", { class: "chips" }, el("span", {}, "By grade, this week: "), gradeChips(every)));
+  { // where the bets are: each book's bets and the stakes still open there; a tap shows that book's bets only
+    const by = new Map();
+    for (const b of every) { const n = placedOf(b) || "No book"; const m = betMoney(b); const x = by.get(n) || { n: 0, open: 0, openN: 0 }; x.n++; if (!m.result) { x.openN++; x.open += m.stake || 0; } by.set(n, x); }
+    if (MINE_BOOK && !by.has(MINE_BOOK)) MINE_BOOK = "";
+    if (by.size) { const row = el("div", { class: "chips book-chips" }, el("span", {}, "By book: "));
+      for (const [n, x] of [...by.entries()].sort((a, b) => b[1].n - a[1].n || a[0].localeCompare(b[0]))) {
+        const bt = el("button", { type: "button", class: "reset" + (MINE_BOOK === n ? " on" : ""), title: MINE_BOOK === n ? "Show every book again" : `Show only the bets at ${n}` }, `${n} ${x.n}${x.openN ? ` · ${money(x.open) || "$0"} open` : ""}`);
+        bt.onclick = () => { MINE_BOOK = MINE_BOOK === n ? "" : n; renderMine(); }; row.append(bt); }
+      box.append(row); } }
   const openLinks = list.filter((b) => b.link && (!gameOf(b) || gameOf(b).state === "pre")).map((b) => b.link);
   const slip = tailLink(openLinks);
   if (slip && openLinks.length >= 2) box.append(el("div", { class: "tail" }, el("a", { class: "bet-link", href: slip.href, target: "_blank", rel: "noopener noreferrer" }, `Open every unstarted bet on this board at ${slip.book} in one slip (${openLinks.length}) ↗`), " The slip opens as one parlay; split it there if you want singles."));
@@ -2086,7 +2153,7 @@ function renderMine() {
   if (nShown) renderMineSections(box, groups, nShown);
   if (customOpen.length) {
     box.append(el("h3", { class: "mine-h", id: "mine-custom" }, `Custom bets · ${customOpen.length} open`, el("small", {}, " set the result and the bet moves to Settled")));
-    for (const c of customOpen) box.append(c);
+    for (const c of customOpen) if (!MINE_BOOK || (placedOf(c._b) || "No book") === MINE_BOOK) box.append(c);
   }
   for (const t of mineTools(true)) box.append(t);
 }
@@ -2105,7 +2172,7 @@ function mineTools(hasBets) {
 }
 
 // My board with many bets: filter by state, group the live ones by game, and a compact one-line-per-bet view
-let MINE_F = "all", MINE_VIEW = null;
+let MINE_F = "all", MINE_VIEW = null, MINE_BOOK = "";
 try { MINE_VIEW = localStorage.getItem("mine-view"); } catch (e) { /* fine */ }
 const MINE_KINDS = [["all", "All"], ["good", "Trending right"], ["bad", "Behind"], ["pre", "Not started"], ["won", "Won"], ["lost", "Lost"]];
 function gameHead(g, items) {
@@ -2124,9 +2191,9 @@ function compactRows(items) {
     const pill = { good: ["ok", "On track"], bad: [m.verdict.startsWith("Past") ? "no" : "slow", m.verdict.startsWith("Past") ? "Past line" : "Behind"], won: ["ok", "Won"], lost: ["no", "Lost"], pre: ["", "Not started"], other: ["", m.status.split("·")[0].trim()] }[m.sk] || ["", ""];
     const money_ = m.result != null ? el("b", { class: m.result > 0 ? "ok" : m.result < 0 ? "no" : "" }, `${m.result > 0 ? "+" : ""}${money(m.result)}`) : m.stake != null ? `${money(m.stake)}${m.win != null ? ` → ${money(m.win)}` : ""}` : "";
     const row = el("tr", { class: `st-${m.sk}`, title: `${m.verdict ? m.verdict + " · " : ""}${m.status}` },
-      el("td", {}, b.custom ? el("span", { class: "muted", title: "A custom bet: typed in and settled by you" }, "✎") : b.grade ? el("span", { class: `grade ${b.grade}` }, b.grade) : ""),
+      el("td", {}, b.custom ? el("span", { class: "muted", title: "A custom bet: typed in and settled by you" }, "✎") : gradeBox(b)),
       b.custom ? el("td", {}, b.desc) : el("td", {}, b.player, " ", jersey(b)),
-      b.custom ? el("td", {}, odds(b.odds) || "custom") : el("td", {}, el("span", { class: m.under ? "under" : "over" }, `${b.side === "Under" ? "U" : "O"} ${num(b.line)}`), ` ${({ solo: "solo", assists: "ast" })[m.kind] || "tkl"}`),
+      b.custom ? el("td", {}, odds(b.odds) || "custom", " ", bookPick(b)) : el("td", {}, el("span", { class: m.under ? "under" : "over" }, `${b.side === "Under" ? "U" : "O"} ${num(b.line)}`), ` ${({ solo: "solo", assists: "ast" })[m.kind] || "tkl"} `, bookPick(b)),
       el("td", { class: "n" }, now),
       el("td", {}, el("span", { class: `pill ${pill[0]}` }, pill[1])),
       el("td", { class: "n" }, money_));
@@ -2149,7 +2216,7 @@ function renderMineSections(box, groups, total) {
   vb.onclick = () => { MINE_VIEW = compact ? "cards" : "compact"; try { localStorage.setItem("mine-view", MINE_VIEW); } catch (e) { /* fine */ } renderMine(); };
   bar.append(vb);
   box.append(bar);
-  const keep = (c) => MINE_F === "all" || c._m.sk === MINE_F;
+  const keep = (c) => (MINE_F === "all" || c._m.sk === MINE_F) && (!MINE_BOOK || (placedOf(c._m.b) || "No book") === MINE_BOOK);
   const show = (items) => (compact ? [compactRows(items)] : items);
   // in play: one block per game, games in kickoff order, the bets in each by grade
   const live = groups.in.filter(keep);
@@ -2212,11 +2279,11 @@ const GRADE_ORDER = { A: 0, B: 1, C: 2 };
 function gradeChips(list) {
   // record and profit by grade for a list of bets: how the model's own confidence has paid on your board
   const out = el("span", { class: "grade-chips" });
-  for (const g of ["A", "B", "C", "none", "custom"]) {
-    const sub = list.filter((b) => (g === "custom" ? b.custom : g === "none" ? !b.grade && !b.custom : b.grade === g)); if (!sub.length) continue;
+  for (const g of ["A", "B", "C", "sA", "sB", "sC", "none", "custom"]) {
+    const sub = list.filter((b) => (g === "custom" ? b.custom : g === "none" ? !b.grade && !b.custom && !sleeperGradeOf(b) : g[0] === "s" ? !b.grade && !b.custom && sleeperGradeOf(b) === g[1] : b.grade === g)); if (!sub.length) continue;
     let w = 0, l = 0, pr = 0, st = 0;
     for (const b of sub) { const m = betMoney(b); if (m.result === "Win") w++; else if (m.result === "Loss") l++; if (m.stake != null && m.result) { st += m.stake; pr += m.profit; } }
-    out.append(el("span", { class: "gchip" }, g === "custom" ? el("span", { class: "muted" }, "custom") : g === "none" ? el("span", { class: "muted" }, "no grade") : el("span", { class: `grade ${g}` }, g), ` ${w}-${l}`, st ? el("b", { class: pr > 0 ? "pos" : pr < 0 ? "neg" : "" }, ` ${pr > 0 ? "+" : ""}${money(pr)}`) : ""));
+    out.append(el("span", { class: "gchip" }, g === "custom" ? el("span", { class: "muted" }, "custom") : g === "none" ? el("span", { class: "muted" }, "no grade") : g[0] === "s" ? el("span", { class: `grade sl ${g[1]}`, title: `Sleepers graded ${g[1]}` }, g[1]) : el("span", { class: `grade ${g}` }, g), ` ${w}-${l}`, st ? el("b", { class: pr > 0 ? "pos" : pr < 0 ? "neg" : "" }, ` ${pr > 0 ? "+" : ""}${money(pr)}`) : ""));
   }
   return out;
 }
@@ -2273,11 +2340,11 @@ function ledgerSection() {
       el("span", { class: "s" }, wl(r.w, r.l, r.p), r.st ? " · " : "", r.st ? el("b", { class: sgn(r.pr) }, usd(r.pr)) : "", ` · ${r.list.length} bet${r.list.length === 1 ? "" : "s"}${r.pend ? `, ${r.pend} pending` : ""}${r.closed ? "" : " · this week"}`)));
     const tb = table([[""], ["Bet"], ["Result"], ["Had", "n"], ["Profit", "n"]], [...r.list].sort((a, b) => (GRADE_ORDER[a.grade] ?? 3) - (GRADE_ORDER[b.grade] ?? 3) || String(a.commence_time || "").localeCompare(String(b.commence_time || ""))).map((b) => { const m = betMoney(b);
       if (b.custom) { const rm = el("button", { type: "button", class: "rm-link" }, "remove"); rm.onclick = () => removeCustom(r.key, b.key);
-        return [el("span", { class: "muted", title: "A custom bet: typed in and settled by you" }, "✎"), el("span", {}, `${b.desc} `, el("small", {}, [odds(b.odds), m.stake == null ? "no stake" : money(m.stake), "custom"].filter(Boolean).join(" · "), " · ", rm)),
+        return [el("span", { class: "muted", title: "A custom bet: typed in and settled by you" }, "✎"), el("span", {}, `${b.desc} `, el("small", {}, [odds(b.odds), m.stake == null ? "no stake" : money(m.stake), b.placed || "", "custom"].filter(Boolean).join(" · "), " · ", rm)),
           customSelect(b, r.key), "", m.profit == null || !m.result ? "" : el("b", { class: sgn(m.profit) }, usd(m.profit))]; }
-      return [b.grade ? el("span", { class: `grade ${b.grade}`, title: b.lock != null ? `Lock score ${Math.round(b.lock)}` : "" }, b.grade) : "",
+      return [gradeBox(b, b.lock != null ? `Lock score ${Math.round(b.lock)}` : ""),
         el("span", { title: b.settled ? (b.settled.source === "official" ? "Settled on the official box score" : "Settled on the live feed; the official box score replaces it") : "" }, `${b.player} `, el("b", { class: b.side === "Under" ? "under" : "over" }, `${b.side === "Under" ? "U" : "O"} ${num(b.line)}`), ` ${({ solo: "solo", assists: "assists" })[kindOf(b.market)] || "tackles"}`,
-          el("small", {}, [odds(b.odds), m.stake == null ? "no stake" : money(m.stake), b.book || ""].filter(Boolean).join(" · "))),
+          el("small", {}, [odds(b.odds), m.stake == null ? "no stake" : money(m.stake), placedOf(b)].filter(Boolean).join(" · "))),
         m.result || "Pending", b.settled?.actual == null ? "" : num(b.settled.actual, 0), m.profit == null ? "" : el("b", { class: sgn(m.profit) }, usd(m.profit))]; }));
     tb.classList.add("ledger-t");
     const rmw = el("button", { type: "button", class: "reset danger", title: "Removes the week from the ledger on this device for good" }, SYNC.cfg ? `Delete week ${r.week} (on every synced device)` : `Delete week ${r.week} from this device`); rmw.onclick = () => { if (confirm(SYNC.cfg ? `Delete week ${r.week}'s board on every synced device?` : `Delete week ${r.week}'s board from this device?`)) { for (const b of r.list) tombstone(r.key, b.key); try { localStorage.removeItem(r.key); } catch (e) { /* fine */ } if (r.key === MINE_KEY()) MINE = null; syncSoon(); renderPlays(); renderMine(); } };
@@ -2311,11 +2378,11 @@ function ledgerShort() {
   for (const wk of allWeeks()) {
     const m = wk.key.match(WEEK_RE); if (!m) continue;
     w[`${m[1]}-${m[2]}`] = wk.list.map((b) => {
-      if (b.custom) return ["~", b.desc, b.odds ?? null, b.stake ?? null, b.settled?.result ? b.settled.result[0] : null, b.archived ? 1 : null, String(b.key).slice(7)];
+      if (b.custom) return ["~", b.desc, b.odds ?? null, b.stake ?? null, b.settled?.result ? b.settled.result[0] : null, b.archived ? 1 : null, String(b.key).slice(7), ...(b.placed ? [b.placed] : [])];
       const t = b.commence_time ? Math.round(new Date(b.commence_time).getTime() / 60000 - SHORT_T0) : null;
       const r = b.settled?.result ? (b.settled.source === "official" ? b.settled.result[0] : b.settled.result[0].toLowerCase()) : null;
       const row = [b.player, b.team || "", b.opp || "", b.group || "", shortIdx(SHORT_MK, b.market), (b.side || b.pick) === "Under" ? 1 : 0, +b.line, shortIdx(SHORT_BK, b.book),
-                   b.odds ?? null, b.stake ?? null, b.grade || null, b.lock == null ? null : Math.round(b.lock), t, b.jersey ?? null, r, b.settled?.actual ?? null, b.archived ? 1 : null];
+                   b.odds ?? null, b.stake ?? null, b.grade || null, b.lock == null ? null : Math.round(b.lock), t, b.jersey ?? null, r, b.settled?.actual ?? null, b.archived ? 1 : null, b.sg || null, b.placed ? shortIdx(SHORT_BK, b.placed) : null];
       while (row.length && row[row.length - 1] == null) row.pop();     // trailing blanks cost nothing
       return row;
     });
@@ -2328,13 +2395,15 @@ function ledgerFromShort(o) {
     const [season, week] = sw.split("-").map(Number);
     weeks[`mine-${season}-wk${week}`] = rows.map((r) => {
       if (r[0] === "~") { const c = { key: `custom|${r[6]}`, custom: true, desc: r[1], odds: r[2] ?? null, stake: r[3] ?? null, season, week };
-        if (r[4]) c.settled = { result: RES[r[4]] || r[4], source: "manual" }; if (r[5]) c.archived = true; return c; }
-      const [player, team, opp, group, mk, under, line, bk, odds, stake, grade, lock, t, jersey, res, actual, arch] = r;
+        if (r[4]) c.settled = { result: RES[r[4]] || r[4], source: "manual" }; if (r[5]) c.archived = true; if (r[7]) c.placed = r[7]; return c; }
+      const [player, team, opp, group, mk, under, line, bk, odds, stake, grade, lock, t, jersey, res, actual, arch, sg, placed] = r;
       const b = { player, team, opp, group, market: typeof mk === "number" ? SHORT_MK[mk] : mk, side: under ? "Under" : "Over", line, book: typeof bk === "number" ? SHORT_BK[bk] : bk,
                   odds: odds ?? null, stake: stake ?? null, grade: grade ?? null, lock: lock ?? null, season, week, jersey: jersey ?? null,
                   commence_time: t == null ? null : new Date((t + SHORT_T0) * 60000).toISOString() };
       if (res) b.settled = { result: RES[res.toUpperCase()] || res, actual: actual ?? null, source: res === res.toUpperCase() ? "official" : "live" };
       if (arch) b.archived = true;
+      if (sg) b.sg = sg;
+      if (placed != null) b.placed = typeof placed === "number" ? SHORT_BK[placed] : placed;
       b.key = betKey(b);
       return b;
     });
@@ -2383,7 +2452,7 @@ const betStarted = (b) => !!b.settled || (b.commence_time && new Date(b.commence
 // one fixed text form of a bet. Left out: what only this device knows (the clock on a bet past its line), and the grade
 // of a bet that has not kicked off (each device follows its own board until then; after kickoff it is fixed and synced)
 function canonBet(b) {
-  const o = {}; for (const k of Object.keys(b).sort()) { if (k === "past_line" || b[k] === undefined) continue; if (!betStarted(b) && (k === "grade" || k === "lock" || k === "gu")) continue; o[k] = b[k]; }
+  const o = {}; for (const k of Object.keys(b).sort()) { if (k === "past_line" || b[k] === undefined) continue; if (!betStarted(b) && (k === "grade" || k === "lock" || k === "gu" || k === "sg")) continue; o[k] = b[k]; }
   return JSON.stringify(o);
 }
 const settledRank = (s) => (!s || !s.result ? 0 : s.source === "official" ? 3 : s.source === "live" ? 2 : 1);
@@ -2394,7 +2463,7 @@ function mergeBet(a, b) {            // a: this device's copy, b: the other. The
     const ro = settledRank(other.settled), rb = settledRank(out.settled);
     if (ro > rb || (ro === rb && ro > 0 && String(other.settled.at || "") < String(out.settled.at || ""))) out.settled = other.settled;
     const g = (other.gu || 0) > (out.gu || 0) ? other : out;            // the grade as last read off a board before kickoff
-    if (g !== out) { out.grade = g.grade ?? null; out.lock = g.lock ?? null; out.gu = g.gu; }
+    if (g !== out) { out.grade = g.grade ?? null; out.lock = g.lock ?? null; out.gu = g.gu; if (g.sg !== undefined) out.sg = g.sg; else delete out.sg; }
   }
   if (a.past_line) out.past_line = a.past_line; else delete out.past_line;
   return out;

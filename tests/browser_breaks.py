@@ -30,6 +30,8 @@ M_ALL = {
  "yesterday's result carried into today's banner": [("if (isToday) { daySettled += result; dayN++; }", "{ daySettled += result; dayN++; }")],
  "the page opening on the last tab, not My board": [('  show("mine");                 // always My board, whatever tab the last visit ended on', '  show(location.hash.slice(1));')],
  "a settled custom bet left out of Settled": [("    groups.post.push(c); }", "    customOpen.push(c); }")],
+ "a sleeper shown with no grade on My board": [("  return sg ? el(\"span\", { class: `grade sl ${sg}`,", "  return false ? el(\"span\", { class: `grade sl ${sg}`,")],
+ "choosing a book opening the card": [("  pill.addEventListener(\"click\", (e) => e.stopPropagation());", "")],
 }
 M = {k: v for k, v in M_ALL.items() if len(sys.argv) < 3 or sys.argv[2] in k}
 ok = True

@@ -253,6 +253,35 @@ def run_width(browser, name, width):
         setCustomResult(MINE_KEY(), c.key, 'Win'); const inSettled = document.querySelectorAll('details.mine-settled .live.custom').length, head = document.querySelector('details.mine-settled summary').innerText;
         const out = { before, inSettled, open: !!document.querySelector('#mine-custom'), head }; setCustomResult(MINE_KEY(), c.key, ''); return out; })()""")
     check(moved["before"] and moved["inSettled"] == 1 and not moved["open"] and "Settled · 2" in moved["head"], f"a custom bet moves to Settled once it has a result {at} ({moved})")
+    # the book a bet is at: chosen on the card, counted by book, and the board read one book at a time
+    books = pg.evaluate("""(() => { const find = (name) => [...document.querySelectorAll('#mine-body .live:not(.custom)')].find((c) => c.querySelector('.who').textContent.includes(name));
+        const names = () => [...document.querySelectorAll('#mine-body .live:not(.custom)')].map((c) => c.querySelector('.who').childNodes[1].textContent.trim());
+        const chip = (n) => [...document.querySelectorAll('.book-chips button')].find((x) => x.textContent.startsWith(n));
+        const key = mine().find((x) => x.player === 'On Track').key, sel = find('On Track').querySelector('.bookpick select'), had = sel.value;
+        sel.value = 'FanDuel'; sel.dispatchEvent(new Event('change'));
+        const chips = [...document.querySelectorAll('.book-chips button')].map((x) => x.textContent); chip('FanDuel').click(); const only = names(); chip('FanDuel').click();
+        const b = mine().find((x) => x.player === 'On Track'), back = ledgerFromShort(ledgerShort()).weeks[MINE_KEY()].find((x) => x.player === 'On Track');
+        return { had, placed: b.placed, sameKey: b.key === key, book: b.book, chips, only, all: names().length, shown: find('On Track').querySelector('.bookpick .full').textContent, code: back.placed }; })()""")
+    check(books["had"] == "DraftKings" and books["placed"] == "FanDuel" and books["sameKey"] and books["book"] == "DraftKings" and "FanDuel 1 · $10 open" in books["chips"]
+          and books["only"] == ["On Track"] and books["all"] == 5 and books["shown"] == "FanDuel" and books["code"] == "FanDuel",
+          f"a bet's book is chosen on its card, counted under 'By book', filters the board, and travels in a backup code {at} ({books['chips']})")
+    row = pg.evaluate("""(() => { MINE_VIEW = 'compact'; renderMine(); const tr = [...document.querySelectorAll('table.mine-compact > tbody > tr')].find((r) => r.textContent.includes('On Track')), pill = tr.querySelector('.bookpick');
+        pill.click(); const vis = (q) => getComputedStyle(pill.querySelector(q)).display !== 'none';
+        const out = { opened: !!document.querySelector('table.mine-compact tr.mine-expand'), full: vis('.full'), short: vis('.short'), text: pill.querySelector('.short').textContent }; MINE_VIEW = 'cards'; renderMine(); return out; })()""")
+    check(not row["opened"] and row["text"] == "FD" and (row["short"] and not row["full"] if width <= 640 else row["full"] and not row["short"]), f"the one-line view shows the book too, short on a phone, and choosing it does not open the card {at} ({row})")
+    # a bet from the sleepers' list is not a pick: it carries the sleeper's grade in a purple box, not an empty one
+    sl = pg.evaluate("""(() => { const x = DATA.bets.find((y) => y.under_odds != null && !mine().some((m) => m.key === betKey({ ...y, side: 'Under' })));
+        Object.assign(x, { sleeper: 'Under', sleeper_grade: 'B', pick: '', grade: null, commence_time: new Date(Date.now() + 3 * 3600e3).toISOString() });
+        toggleMine({ ...x, side: 'Under' }); const k = betKey({ ...x, side: 'Under' }), get = () => mine().find((m) => m.key === k);
+        const box = () => { const c = [...document.querySelectorAll('#mine-body .live:not(.custom)')].find((c) => c.querySelector('.who').textContent.includes(x.player)); const g = c && c.querySelector('.who .grade'); return g ? { cls: g.className, text: g.textContent, bg: getComputedStyle(g).backgroundColor } : null; };
+        const added = { sg: get().sg, grade: get().grade ?? null, box: box() };
+        delete get().sg; saveMine(mine()); renderMine(); const old = { sg: get().sg, box: box() };                     // a bet added before today: read off the board
+        const chipSl = !!document.querySelector('#mine-body .grade-chips .grade.sl'), code = ledgerFromShort(ledgerShort()).weeks[MINE_KEY()].find((b) => b.player === x.player && b.side === 'Under').sg;
+        x.sleeper_grade = 'A'; renderMine(); const moved = get().sg; toggleMine({ ...x, side: 'Under' });
+        return { added, old, chipSl, code, moved, left: mine().some((m) => m.key === k) }; })()""")
+    check(sl["added"]["sg"] == "B" and sl["added"]["grade"] is None and sl["added"]["box"] and sl["added"]["box"]["text"] == "B" and "sl" in sl["added"]["box"]["cls"].split() and sl["added"]["box"]["bg"] == "rgb(122, 75, 196)"
+          and sl["old"]["sg"] == "B" and sl["old"]["box"] and sl["chipSl"] and sl["code"] == "B" and sl["moved"] == "A" and not sl["left"],
+          f"a sleeper on My board shows its sleeper grade in a purple box, an older bet picks it up from the board, and it follows the board until kickoff {at} ({sl['added']['box']})")
     # every game final: nothing is open today, so the banner goes; the week's result is in the panels
     gone = pg.evaluate("""(() => { const g = LIVE.events.find((e) => e.id === 'g1'), was = JSON.stringify(MINE); g.state = 'post'; renderMine(); const none = !document.querySelector('.now-ticker');
         g.state = 'in'; MINE = JSON.parse(was); saveMine(MINE); renderMine(); return { none, back: !!document.querySelector('.now-ticker') }; })()""")
@@ -388,7 +417,7 @@ def run_sync(browser):
     sync(a)
     got = a.evaluate("(() => { const t = mine().filter((x) => !x.custom && !x.archived), c = mine().find((x) => x.custom); return { n: t.length, stake: t[0] && t[0].stake, custom: c && c.settled && c.settled.result }; })()")
     check(got == {"n": 1, "stake": 55, "custom": "Win"} and a.evaluate(board) == b.evaluate(board), f"a stake change, a removal and a settled custom bet on one device reach the other ({got})")
-    check(a.locator(".live.custom").count() == 1 and "Won" in a.locator(".live.custom select").evaluate("(s) => s.selectedOptions[0].textContent"), "the page redraws with what arrived")
+    check(a.locator(".live.custom").count() == 1 and "Won" in a.locator(".live.custom .trend select").evaluate("(s) => s.selectedOptions[0].textContent"), "the page redraws with what arrived")
     # they settle: more syncs write nothing, and a removed pick stays removed
     before = hub.puts
     for _ in range(2):

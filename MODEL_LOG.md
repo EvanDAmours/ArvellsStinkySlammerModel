@@ -1140,6 +1140,32 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-16, 3:40 pm (My board: the book each bet is at; a sleeper's grade in a purple box)
+
+Two requests from the owner, on a screenshot of the one-line view.
+
+**The book.** Every bet on My board carries a small pill with its book (the full name on a computer, a short code
+such as DK or FD in the one-line view on a phone). It opens the list of books; choosing one records where the bet
+was placed (`placed` on the bet; the line's own book and the bet's key do not change, so the grade still follows
+the board). Under "By grade" a "By book" row counts the bets at each book with the stakes still open there; a tap
+shows that book's bets only. A custom bet can be given a book too. The choice syncs like a stake, shows in the
+ledger and travels in a backup code. The price is not changed by the choice: a bet moved to another book keeps the
+price it was added at.
+
+**Sleepers.** A bet taken from the sleepers' list is not a pick of the pricing engine, so it showed no grade box at
+all. It now shows the sleeper's own grade (A, B or C) in a purple box, in the card, the one-line view, the "By
+grade" chips and the ledger. The sleeper grade is stored on the bet when it is added (`sg`) and, like the pick's
+grade, is read off the board until kickoff; a bet added before today picks it up from the board while its line is
+still up, and a settled one from the graded sleepers. A bet that is both a pick and a sleeper keeps its pick grade.
+The sleepers' own lists (Plays, Track record) use the same purple, so a green A always means a pick's grade and a
+purple A a sleeper's. Purple is not a stake: the grade ladder is for picks, and a sleeper's units are the owner's.
+
+**Checked.** Browser test, both widths: a book chosen on a card, counted, filtering the board and restored from a
+backup code; the pill in the one-line view not opening the card; a sleeper's purple box by its computed colour, on
+a new bet and on an older one, following the board. Two more deliberate breaks. Site only.
+
+**Revert.** Site only; `placed` and `sg` on stored bets are ignored by an older page.
+
 ### 2026-11-16, 3 pm (the stake caps removed, at the owner's instruction)
 
 **What.** `config.STAKE`: `game_cap`, `kind_cap` and `slate_cap` are None, and `grade.size_stakes` skips a cap that

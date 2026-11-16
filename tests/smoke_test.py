@@ -524,6 +524,8 @@ check(all(k in _html for k in ('const TABS = ["mine", "plays", "record", "check"
 check(all(k in _html for k in ("if (!KEYS[id]) KEYS[id] = (async () =>", 'new DecompressionStream("gzip")', '{ cache: "no-cache" }', "const WAITS = new Set(", 'await Promise.all(["meta", "bets", "parlays"].map(load))', "site-pw-slot")) and '.json.enc`, { cache: "no-store" }' not in _html
       and 'rel="stylesheet" media="print" onload=' in _html,
       "the page opens on three small files, loads the rest behind them, works one key out per password entry, inflates gzipped files and never waits on the font sheet")
+check(all(k in _html for k in ("function bookPick", "function setPlaced", "const placedOf = ", '"By book: "', "function sleeperGradeOf", "function gradeBox", ".grade.sl, .grade.sl.A", "sg: b.sleeper && b.sleeper === (b.side || b.pick)", 'k === "gu" || k === "sg"')),
+      "My board: each bet's book can be chosen and the board read by book; a sleeper carries its sleeper grade in a purple box")
 check("if (projN || dayPre) {" in _html and "daySettled + projPL" in _html and "groups.post.push(c);" in _html and "set the result and the bet moves to Settled" in _html,
       "'Where today is heading' shows only while a bet of today's is open and counts today only; a settled custom bet joins the Settled group")
 check(all(k in _html for k in ("function playRows", "plays-jump", "plays-grp-", 'id: "plays-locks"', "plays-view", 'foldNote("How locks are chosen"')),
