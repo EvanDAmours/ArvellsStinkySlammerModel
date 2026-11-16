@@ -2133,6 +2133,28 @@ function gradeChips(list) {
   }
   return out;
 }
+// a week's money, opened from the ledger: what went in, what came back, and how the wins and losses made it up
+function weekMoney(list) {
+  let wag = 0, back = 0, wonAmt = 0, lostAmt = 0, pend = 0, pendWin = 0, nW = 0, nL = 0, nP = 0, best = null, worst = null;
+  for (const b of list) { const m = betMoney(b), dec = toDec(b.odds); if (m.stake == null) continue;
+    if (!m.result) { pend += m.stake; if (dec) pendWin += m.stake * (dec - 1); continue; }
+    if (m.result === "Void") continue;                               // refunded: neither wagered nor won
+    wag += m.stake; back += m.stake + m.profit;
+    if (m.result === "Win") { nW++; wonAmt += m.profit; if (!best || m.profit > best.p) best = { p: m.profit, b }; }
+    else if (m.result === "Loss") { nL++; lostAmt += m.stake; if (!worst || m.stake > worst.p) worst = { p: m.stake, b }; }
+    else nP++; }
+  if (!wag && !pend) return "";
+  const net = back - wag, sgn = (x) => (x > 0 ? "pos" : x < 0 ? "neg" : ""), usd = (x) => (x > 0 ? "+" : "") + (money(x) || "$0");
+  const who = (x) => x ? (x.b.custom ? x.b.desc : `${x.b.player} ${x.b.side === "Under" ? "U" : "O"} ${num(x.b.line)}`) : "";
+  return statPanels([["Wagered and won", net > 0 ? "rc-live" : net < 0 ? "rc-old" : "rc-replay", [
+    tile(usd(net), `net on ${money(wag) || "$0"} wagered${wag ? ` · ${signedPct(net / wag)} return` : ""}`, sgn(net), "", true),
+    tile(money(wag) || "$0", `wagered on ${nW + nL + nP} settled bet${nW + nL + nP === 1 ? "" : "s"}`),
+    tile(money(back) || "$0", "paid back (stakes returned plus winnings)", back > wag ? "pos" : back < wag ? "neg" : ""),
+    tile(usd(wonAmt), `won on ${nW} winning bet${nW === 1 ? "" : "s"}${best ? ` · best ${who(best)} ${usd(best.p)}` : ""}`, wonAmt ? "pos" : ""),
+    tile(usd(-lostAmt), `lost on ${nL} losing bet${nL === 1 ? "" : "s"}${worst ? ` · biggest ${who(worst)} -${money(worst.p)}` : ""}`, lostAmt ? "neg" : ""),
+    pend ? tile(money(pend) || "$0", `still pending · ${money(pendWin) || "$0"} to win`) : null,
+    nP ? tile(String(nP), `push${nP === 1 ? "" : "es"} (stake returned)`) : null]]]);
+}
 function ledgerSection() {
   const weeks = allWeeks(); const cur = { season: DATA.meta?.season, week: DATA.meta?.week };
   const sec = el("div", { class: "section", id: "ledger" }, el("h3", {}, "Season ledger"), el("p", { class: "lead" }, "Every week's board, kept on this device, with the official result written on each bet once it is final. Each week opens to its bets."));
@@ -2172,7 +2194,7 @@ function ledgerSection() {
         m.result || "Pending", b.settled?.actual == null ? "" : num(b.settled.actual, 0), m.profit == null ? "" : el("b", { class: sgn(m.profit) }, usd(m.profit))]; }));
     tb.classList.add("ledger-t");
     const rmw = el("button", { type: "button", class: "reset danger", title: "Removes the week from the ledger on this device for good" }, `Delete week ${r.week} from this device`); rmw.onclick = () => { if (confirm(`Delete week ${r.week}'s board from this device?`)) { try { localStorage.removeItem(r.key); } catch (e) { /* fine */ } if (r.key === MINE_KEY()) MINE = null; renderPlays(); renderMine(); } };
-    d.append(el("div", { class: "fold-body" }, el("div", { class: "chips", style: "margin-top:8px" }, gradeChips(r.list)), el("div", { class: "scroll" }, tb), rmw));
+    d.append(el("div", { class: "fold-body" }, weekMoney(r.list), el("div", { class: "chips", style: "margin-top:8px" }, gradeChips(r.list)), el("div", { class: "scroll" }, tb), rmw));
     sec.append(d);
   }
   const bk = backupBox(); bk.id = "mine-backup";

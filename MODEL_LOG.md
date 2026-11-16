@@ -970,6 +970,18 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-16, morning (the season ledger: each week opens to what was wagered and what was won)
+
+The owner wanted more than the week's net when opening a week of the ledger. Site only; no rule changed.
+
+- **What.** Each week's fold opens with a "Wagered and won" panel: the net and the return on stakes (large), the
+  amount wagered on settled bets, the amount paid back (stakes returned plus winnings), what the winning bets made
+  (with the best of them), what the losing bets cost (with the biggest), the stake still pending and what it would
+  win, and the pushes. A voided bet is refunded, so it counts as neither wagered nor won. Custom bets count.
+- **Evidence.** On a seeded week 9 with a custom win added: $205 wagered, $309.97 paid back, +$104.97 net, +$164.97
+  on 9 wins, -$60 on 5 losses, the same as a count by hand. No script error, no overflow at 1,200 px and 390 px.
+- **Revert if** unwanted: drop `weekMoney(r.list)` from the week's fold.
+
 ### 2026-11-15, 1:20 pm (My board: LOST in red, WON in green, once past the line for ten minutes; behind in orange)
 
 The owner asked for a decided bet to read as LOST in red, after a wait so a stat correction cannot flip it, and for a
