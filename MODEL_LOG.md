@@ -546,8 +546,9 @@ and C9. What remains, and what the rebuild itself turned up:
    hour before kickoff with the final injury report, the projection's constants were tuned with 2025 in the data,
    and the best price is taken across three books of which Alberta has one or two. Weeks 10 to 13 are still the
    live test, and the record as bet before the engine is still 200-183.
-   Live so far (week 10 through Thursday, one game): the engine worse than the book by 0.0295 on 30 lines, picks
-   2-4, on a board whose Overs won 60% to 69%. No information yet.
+   Live so far (week 10 through Sunday): the engine worse than the book by 0.0020 on 353 lines (solo -0.0050,
+   combined +0.0005, assists -0.0015), picks 50-43, the flagged solo Unders 16-6 and the rest 34-37. No
+   information yet on the engine; the flag held.
 2. **The model sits below the book, in both markets, every week.** Mean gap -0.19 (combined) and -0.21 (solo) in
    log-odds: the model gives the Over 45% where the book gives 49.6%. On solo the book was the one that was wrong in
    weeks 7 and 8 (Overs hit 33% and 39%) and right in week 9 (50%). On combined the model was wrong all three weeks
@@ -656,6 +657,16 @@ and C9. What remains, and what the rebuild itself turned up:
 25. **Closed 2026-11-16: "Rules on trial" showed S3 as "read it now" from the first graded pick.** `watch` now
     keeps a condition read after a week "running" until that week has no pick pending (post-mortem of week 10,
     point 9).
+26. **The scoreboard scores lines that are not the player's** (found 2026-11-16, standing post-mortem). The misfit
+    guard bars theScore's "Sam Williams" lines as picks, but `evaluate.closing_frame` still scores them against the
+    lineman's box score: in week 10 those two lines alone moved the margin since week 10 from -0.0020 to +0.0012
+    once his 0 reached the stats feed. E2 is read on this margin. Fix for the owner's session: leave out of the
+    scoreboard the lines the guard bars (one book, the model's own chance 93%+ either way).
+27. **The recorded stakes exceed the caps** (found 2026-11-16, standing post-mortem). `grade.size_stakes` caps the
+    picks on one pull's board; `grade.log_picks` keeps each pick's stake from the last board it was a pick on. So
+    the logged stakes add up across boards: Sunday of week 10 31.3 units against 25 a day, Vikings at Packers 6.31
+    against 5 a game. S3 is read on these stakes. Fix for the owner's session (the cap rule itself is frozen, the
+    arithmetic is not): cap against the slate day's picks already logged, and say in S3 which stakes it is read on.
 14. **Smaller.** The proportional no-vig split is off by about a point at very short and long prices. The solo
     share's own uncertainty is not in the solo spread. A same-game parlay's price is our estimate, not the book's.
     The regime-robust solo price (archive, 2026-11-08) has not been tried as the solo model. ESPN spells 9 of 528
@@ -891,6 +902,76 @@ C 34-37). One rule changed nothing; one display defect was fixed (point 9).
    its first graded pick; `watch` in `grade.engine_era` now keeps a condition read after a week "running" until
    that week has no pick pending (smoke check added). Display only. The standing post-mortem closes the week on
    Tuesday with Monday's game.
+
+**Checked and added by the standing post-mortem (Monday 2026-11-16, 8:35 am MST; measures only, nothing changed).**
+Grading had landed: `data/weekly_five.md` generated 2026-11-16 10:16 UTC, nine hours after the last Sunday kickoff
+(Steelers at Bengals, 01:20 UTC). The entry above was checked against `data/picks.csv`, the weekly log and a scratch
+daily (results.json, backtest.json): the record, the grades, the kinds of pick and the conditions all match. Two of
+its numbers are not the daily's: the margin over the book (+0.0006 on 368 lines above; the daily reads -0.0020 on
+353 decided lines, a push is not scored) and the whole board (above, the Under won 59%, 54%, 51%; the daily's
+closing lines give 56% combined, 53% solo, 54% assists). The daily's numbers are the ones the register reads. What
+the entry lacked, in the task's order:
+
+1. **Scoreboard since week 10** (one week, no give or take): 353 lines, book 0.6815, model alone 0.6968, engine
+   0.6835: **-0.0020**; solo -0.0050 (114), combined +0.0005 (117), assists -0.0015 (122). Not distinguishable from
+   nothing. **A defect in the count** (open issue 26): the scratch daily four hours later read +0.0012 on 355
+   lines. The whole difference is two lines: theScore's "Sam Williams" 7.5 combined and 3.5 solo, the mis-posted
+   lines the misfit guard already bars as picks (model 2.4 and 1.1, one book), scored against the Browns lineman's
+   box score of 0 once it reached the stats feed. Without them the margin is -0.0020 again, to the fourth decimal.
+   Background, in-sample: all weeks +0.0068 (give or take 0.0029; t +2.4) on 2,920 lines.
+2. **Sunday's slate alone** (counted bets): 48-39, +6.29 units at 1 a bet, +3.61 on 31.3 staked. A 6-4, B 9-2, C
+   33-33. Solo Unders on a flagged line 15-6 (+3.57 at the stakes), on an unflagged line 10-10 (+0.05). Combined
+   Unders 9-3, assists Unders 3-7, assists Overs 6-6, solo Overs 2-4, combined Overs 3-3. By position CB 12-3, LB
+   25-22, DL 4-4, S 7-10. Locks 4-0. Parlay 1-0 (+0.27 on 0.1); parlays to date 2-2, +0.42. **Sleepers, their own
+   record:** week 10 20-16 (-1.07 units), all since frozen 23-18 (-0.63): A 9-3, B 5-10, C 9-5; solo Unders 12-8,
+   combined Overs 11-10. The sleeper B is the worst grade and the C the best. R1: solo Unders 20 of 40 at 60%,
+   combined Overs 21 of 40 at 52% (under the 55% bar so far, running), A sleepers 12 of 20 at 75%.
+   **The assists trial, on its own:** 9-14 since the engine (Unders 3-8, Overs 6-6), -4.50 at 1 a bet.
+3. **Calibration since the engine** (93 bets): the win chance said 48% / 53% / 58% / 62% / 67% / 71% and hit 29% /
+   61% / 71% / 50% / 57% / 50% (17 / 23 / 17 / 20 / 14 / 2 bets); overall said 57%, hit 54%. The model's own chance
+   said 51% / 58% / 62% / 67% / 74% / 83% and hit 32% / 54% / 69% / 55% / 62% / 0% (19 / 13 / 16 / 20 / 24 / 1);
+   overall said 64%, hit 54%. Every range is wide; above 70% the model's own chance again hits less than it says
+   (open issue 24a).
+4. **Luck or skill** (the luck table, week 10): Unders 68 picks hit 56% on a board where 54% of 374 lines went
+   Under, lift +2, beat the close 56%; Overs 25 picks hit 48% against 46%, lift +2, beat the close 65%. The board,
+   no model: the Over won 44% on combined (the book's fair chance 50%), 47% on solo (49%), 46% on assists (48%).
+   So the week's Unders were mostly the market's level (two to six points); the picks as a whole added two points.
+   The one kind where lift and the record agree is the flagged solo Under (64% of every flagged solo line, 73% of
+   the engine's picks among them, above), and that is the book's own share, not the model's chances: the engine
+   was level with the book. The close cannot be read until open issue 12 is settled.
+5. **Conditions on trial:** as point 8 above; none reached its count. In the scratch daily S3 now reads "running"
+   (the fix of this morning works); E2's note reads +0.0012 there for the reason in point 1.
+6. **Candidates in the shadow, since week 10** (353 lines, one week): the flat weight 0.5 +0.0004, the combined gap
+   centred on the week's mean -0.0013, the solo level for lined players -0.0002. None is adopted before 2026-12-08
+   (R6).
+7. **The misses** (Sunday's 39 counted losses; box score, snap counts, `data/cache/projections.csv`): 17 lost by one
+   tackle, 16 by two, 6 by three or more. The six: Foyesade Oluokun solo Under 4.5 (9; 100% of 57 snaps, expected
+   82%), Caleb Downs assists Under 2.5 (8; 100% of 65, expected 92%), Eric Wilson solo Under 3.5 (6; 100% of 55,
+   expected 92%), Demetrius Knight Jr. solo Under 3.5 (6; 84% of 61, expected 75%), Minkah Fitzpatrick combined Over
+   6.5 (2; 100% of 57: no snap cause), Nate Landman solo Over 3.5 (1; 20 snaps, 57%, expected 75%: the Rams' defence
+   was on the field for 35 snaps against 67.6 expected, the plays-faced noise the pitfalls name). The four Unders
+   are all players on the field every snap, the audit's 24b; nothing else can be shown. All six A and B losses were
+   by one or two tackles; Andrew Van Ginkel's A (questionable, 65% of the snaps) was no longer a pick at the
+   last pull and counts as bet, as the rules say.
+8. **Internal validation** (scratch daily, 32,029 games): no flag. Final projection against the factor model by
+   fold, deviance: 2024 1.4032 against 1.4412, 2025 1.3396 against 1.3920, 2026 1.3266 against 1.3883; overall
+   -0.0484 (t -11.5), regulars -0.0161 (t -3.0). Regulars' bias +0.021 overall, +0.145 in 2026. No factor "hurts";
+   none out of the model is a "candidate" (nearest: role shift on regulars t -1.6). Tails 5.6% below the 5th
+   percentile, 4.6% above the 95th.
+9. **Open issues 1 to 6:** (1) the edge on live weeks: -0.0020, one week, nothing yet. (2) the model below the
+   book: the board went Under this week (Overs 44% to 47%), so the lean cost nothing; the 2026 regulars' bias is
+   still +0.14 a game. (3) grade order: A 7-4, B 9-2, C 34-37; A and B overlap entirely, both above C. (4) the
+   linemen pocket: DL 4-4 since the engine. (5) next man up: no pick; 941 games now, 12% low. (6) Overs: 12-13,
+   25 of 40.
+10. **What changed:** nothing; frozen until 2026-12-08. For the owner: two defects, both in the measurement and
+    neither in a pick: (a) the scoreboard scores lines the misfit guard bars (open issue 26); (b) **the stakes as
+    recorded exceed the caps** (open issue 27): Sunday's counted bets carry 31.3 units against the 25-a-day cap,
+    and Vikings at Packers 6.31 against the 5-a-game cap (5.63 on the 12 bets first logged at the Saturday-night
+    pull). A
+    logged pick keeps the stake of the last board it was a pick on, and each board caps only what is on it, so
+    the caps hold board by board and not over the slate day as bet. The +3.45 at the stakes is therefore on 33.6
+    units the caps would not have allowed. The odds key ends on 2026-12-10 (open issue 7). Monday night (Chargers
+    at Ravens) carries three pending bets (one B, two C); Tuesday's run closes the week.
 
 ### Week 10, opened Friday 2026-11-13 with Thursday's slate (standing post-mortem, 8:59 am MST; measures only, nothing changed)
 
@@ -2327,3 +2408,6 @@ Never tested; each with what would justify it. Anything tested and dropped is in
 - **A replay shown on the site is a file, and a file goes stale.** `data/retro_five.json` and
   `data/replay_seasons.json` are written by hand-run tools, not by the daily. After any change to a pick rule, a
   grade or a stake, re-run them before the push, or the Track record tab reports the previous rules' replay.
+- **A line barred as a pick is still in every score that reads the line log.** The misfit guard kept theScore's
+  "Sam Williams" off the board, and the scoreboard still scored his lines against the wrong player's box score
+  (2026-11-16). A guard on picks must be applied, or deliberately not, in every measurement too.
