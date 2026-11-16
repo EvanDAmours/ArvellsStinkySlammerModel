@@ -61,6 +61,8 @@ select, input[type="search"] { font: inherit; padding: 6px 8px; border: 1px soli
 .grade { display: inline-block; min-width: 1.6em; padding: 2px 7px; border-radius: 6px; font: 700 0.95rem/1.3 var(--cond); text-align: center; color: #fff; background: #8a8f98; vertical-align: middle; margin-right: 6px; }
 .grade.A { background: #1f8a4c; } .grade.B { background: #c98a1b; } .grade.C { background: #8a8f98; }
 .grade.sl, .grade.sl.A, .grade.sl.B, .grade.sl.C { background: #7a4bc4; }   /* a sleeper's own grade: purple, so it is never read as a pick's grade */
+.grades { display: inline-flex; gap: 3px; align-items: center; vertical-align: middle; margin-right: 6px; white-space: nowrap; } .grades .grade { margin-right: 0; }
+@media (max-width: 640px) { table.mine-compact .grades { flex-direction: column; gap: 2px; margin-right: 0; } table.mine-compact .grades .grade { min-width: 1.5em; padding: 1px 5px; line-height: 1.2; } }
 /* the book a bet was placed at: a small pill that opens the list of books */
 .bookpick { position: relative; display: inline-flex; align-items: center; gap: 3px; padding: 1px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); font-size: 0.82rem; line-height: 1.5; white-space: nowrap; vertical-align: middle; cursor: pointer; }
 .bookpick::after { content: "\25BE"; color: var(--muted); font-size: 0.8em; }
@@ -734,7 +736,9 @@ function sleeperBox(all) {
           short ? el("strong", { class: "no" }, " · the price is too short for this chance: a likely hit, a losing bet") : "",
           `${isPick ? ` · also a ${b.grade || ""} pick on the board` : b.tier === "lean" && b.side === side ? " · a lean on the board (not staked)" : " · not a pick on the board"}${betKick(b) ? ` · ${when(b.commence_time)}` : ""}`);
       })(),
-      el("div", { class: "tail" }, betLink(b, side), addButton(b))));
+      // the sleeper's own side goes on the board. A row's `side` and `pick` are the pricing engine's side of the line, which
+      // can be the other one: until 2026-11-16 the button added that side (a sleeper Over went on the board as an Under).
+      el("div", { class: "tail" }, betLink(b, side), addButton({ ...b, side, pick: side, grade: isPick ? b.grade : null, lock: isPick ? b.lock : null }))));
   }
   return wrap;
 }
@@ -1787,9 +1791,11 @@ function sleeperGradeOf(b) {
   return hit?.sleeper_grade || null;
 }
 function gradeBox(b, extraTitle) {
-  if (b.grade) return el("span", { class: `grade ${b.grade}`, ...(extraTitle ? { title: extraTitle } : {}) }, b.grade);
-  const sg = sleeperGradeOf(b);
-  return sg ? el("span", { class: `grade sl ${sg}`, title: `Sleeper grade ${sg}: from the sleepers' list, not a pick of the pricing engine` }, sg) : "";
+  // the pick's grade and, beside it in purple, the sleeper's: a C pick that is an A sleeper shows both (the owner, 2026-11-16)
+  const sg = sleeperGradeOf(b), out = el("span", { class: "grades" });
+  if (b.grade) out.append(el("span", { class: `grade ${b.grade}`, title: extraTitle || `Grade ${b.grade}: the pricing engine's pick` }, b.grade));
+  if (sg) out.append(el("span", { class: `grade sl ${sg}`, title: b.grade ? `Also on the sleepers' list, sleeper grade ${sg}` : `Sleeper grade ${sg}: from the sleepers' list, not a pick of the pricing engine` }, sg));
+  return out.children.length ? out : "";
 }
 // ---- the book a bet was placed at. The bet is added at the book with the best price; where it was actually placed is
 // the owner's to say (`placed`), and the board can be read book by book.

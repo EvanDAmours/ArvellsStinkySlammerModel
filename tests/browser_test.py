@@ -265,7 +265,7 @@ def run_width(browser, name, width):
     check(books["had"] == "DraftKings" and books["placed"] == "FanDuel" and books["sameKey"] and books["book"] == "DraftKings" and "FanDuel 1 · $10 open" in books["chips"]
           and books["only"] == ["On Track"] and books["all"] == 5 and books["shown"] == "FanDuel" and books["code"] == "FanDuel",
           f"a bet's book is chosen on its card, counted under 'By book', filters the board, and travels in a backup code {at} ({books['chips']})")
-    row = pg.evaluate("""(() => { MINE_VIEW = 'compact'; renderMine(); const tr = [...document.querySelectorAll('table.mine-compact > tbody > tr')].find((r) => r.textContent.includes('On Track')), pill = tr.querySelector('.bookpick');
+    row = pg.evaluate("""(() => { MINE_VIEW = 'compact'; renderMine(); const tr = [...document.querySelectorAll('#mine-body table.mine-compact > tbody > tr')].find((r) => r.textContent.includes('On Track')), pill = tr.querySelector('.bookpick');
         pill.click(); const vis = (q) => getComputedStyle(pill.querySelector(q)).display !== 'none';
         const out = { opened: !!document.querySelector('table.mine-compact tr.mine-expand'), full: vis('.full'), short: vis('.short'), text: pill.querySelector('.short').textContent }; MINE_VIEW = 'cards'; renderMine(); return out; })()""")
     check(not row["opened"] and row["text"] == "FD" and (row["short"] and not row["full"] if width <= 640 else row["full"] and not row["short"]), f"the one-line view shows the book too, short on a phone, and choosing it does not open the card {at} ({row})")
@@ -282,6 +282,30 @@ def run_width(browser, name, width):
     check(sl["added"]["sg"] == "B" and sl["added"]["grade"] is None and sl["added"]["box"] and sl["added"]["box"]["text"] == "B" and "sl" in sl["added"]["box"]["cls"].split() and sl["added"]["box"]["bg"] == "rgb(122, 75, 196)"
           and sl["old"]["sg"] == "B" and sl["old"]["box"] and sl["chipSl"] and sl["code"] == "B" and sl["moved"] == "A" and not sl["left"],
           f"a sleeper on My board shows its sleeper grade in a purple box, an older bet picks it up from the board, and it follows the board until kickoff {at} ({sl['added']['box']})")
+    # a pick that is also a sleeper shows both boxes; and '+ My board' on a sleeper adds the sleeper's side, whatever side
+    # the pricing engine leans to on that line
+    both = pg.evaluate("""(() => { const free = (y) => !mine().some((m) => m.player === y.player) && y.under_odds != null && y.over_odds != null;
+        const x = DATA.bets.find(free), soon = new Date(Date.now() + 3 * 3600e3).toISOString();
+        Object.assign(x, { sleeper: 'Under', sleeper_grade: 'A', pick: 'Under', side: 'Under', grade: 'C', commence_time: soon });
+        toggleMine({ ...x }); const k = betKey({ ...x, side: 'Under' });
+        const card = [...document.querySelectorAll('#mine-body .live:not(.custom)')].find((c) => c.querySelector('.who').textContent.includes(x.player));
+        const boxes = [...card.querySelectorAll('.who .grade')].map((g) => [g.textContent, g.classList.contains('sl'), getComputedStyle(g).backgroundColor]);
+        MINE_VIEW = 'compact'; renderMine(); const tr = [...document.querySelectorAll('#mine-body table.mine-compact > tbody > tr')].find((r) => r.textContent.includes(x.player));
+        const line = [...tr.querySelectorAll('td:first-child .grade')].map((g) => g.textContent).join('+'), w = tr.querySelector('td:first-child').getBoundingClientRect().width; MINE_VIEW = 'cards';
+        toggleMine({ ...x });
+        // a sleeper on the Over where the engine's side of the line is the Under
+        const y = DATA.bets.find((z) => free(z) && z.player !== x.player);
+        Object.assign(y, { sleeper: 'Over', sleeper_grade: 'C', pick: 'Pass', side: 'Under', grade: null, over_odds: -150, under_odds: 115, commence_time: soon });
+        for (const z of DATA.bets) if (z !== y && z.player === y.player && z.market === y.market) z.sleeper = '';
+        renderPlays(); const rowS = [...document.querySelectorAll('.sleeper-row')].find((r) => r.textContent.includes(y.player)); rowS.querySelector('button.add').click();
+        const got = mine().find((m) => m.player === y.player && m.market === y.market), out = got && { side: got.side, odds: got.odds, sg: got.sg, grade: got.grade ?? null };
+        const on = [...document.querySelectorAll('.sleeper-row')].find((r) => r.textContent.includes(y.player)).querySelector('button.add').textContent;
+        if (got) toggleMine({ ...y, side: got.side, pick: got.side }); renderPlays();
+        return { boxes, line, w, sleeper: out, on, left: mine().some((m) => m.player === y.player || m.player === x.player) }; })()""")
+    check(both["boxes"] == [["C", False, "rgb(138, 143, 152)"], ["A", True, "rgb(122, 75, 196)"]] and both["line"] == "C+A" and both["w"] < (40 if width <= 640 else 200),     # on a phone the two boxes stack inside the 30px grade column
+          f"a pick that is also a sleeper shows its grey C and its purple A, in the card and in the one-line view {at} ({both["boxes"]}, {both["line"]}, {round(both["w"])}px)")
+    check(both["sleeper"] == {"side": "Over", "odds": -150, "sg": "C", "grade": None} and "✓" in both["on"] and not both["left"],
+          f"'+ My board' on a sleeper adds the sleeper's side at its price, not the engine's side of the line {at} ({both['sleeper']})")
     # every game final: nothing is open today, so the banner goes; the week's result is in the panels
     gone = pg.evaluate("""(() => { const g = LIVE.events.find((e) => e.id === 'g1'), was = JSON.stringify(MINE); g.state = 'post'; renderMine(); const none = !document.querySelector('.now-ticker');
         g.state = 'in'; MINE = JSON.parse(was); saveMine(MINE); renderMine(); return { none, back: !!document.querySelector('.now-ticker') }; })()""")

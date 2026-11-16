@@ -1140,6 +1140,32 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-16, 4:15 pm (a defect: "+ My board" on a sleeper added the other side of the line; both grade boxes shown)
+
+The owner, on his board before Monday's game: Daiyan Henley showed a grey C and no purple A, and Roquan Smith
+showed no box at all, "but he's a purple sleeper".
+
+**Henley** is a C pick and an A sleeper on the same bet (solo Under 3.5). The box showed the pick's grade alone.
+A bet that is both now shows both: the pick's grade, then the sleeper's in purple (stacked in the one-line view on
+a phone).
+
+**Smith is a defect, and an old one.** The sleeper is Roquan Smith **Over** 7.5 combined at theScore Bet (-150; the
+model has 8.2). The board holds **Under** 7.5 at +115. The "+ My board" button on a sleeper's row passed the row as
+it stands, and a row's `side` and `pick` are the pricing engine's side of that line, not the sleeper's; where the
+two differ the button put the engine's side on the board, at that side's price. It has done so since sleepers got
+the button. A sleeper that is also the engine's side (Henley) was added correctly; a sleeper against the engine's
+lean was added backwards. The site's own sleeper record is not touched by this (it is graded by the pipeline from
+`data/sleepers.csv`); what is wrong is any such bet on a device's board and ledger, which then tracked, settled and
+paid the wrong side. The button now adds the sleeper's side, with no pick grade unless the engine picks that side
+too. Bets already stored are not changed: the page cannot know which side was really bet (a bet can also be added
+from the line picker on either side), so the owner checks his slip and re-adds.
+
+**Checked.** Browser test, both widths: a row with the sleeper on the Over and the engine's side on the Under goes
+on the board as the Over at the Over's price with the sleeper's grade; a pick that is also a sleeper shows C and a
+purple A in the card and in the one-line view. Two more deliberate breaks. Site only.
+
+**Revert.** None wanted for the button. The second box: show the sleeper's grade only when there is no pick grade.
+
 ### 2026-11-16, 3:40 pm (My board: the book each bet is at; a sleeper's grade in a purple box)
 
 Two requests from the owner, on a screenshot of the one-line view.
@@ -2659,6 +2685,10 @@ Never tested; each with what would justify it. Anything tested and dropped is in
 - **A page and the file format it reads change in two pushes.** The pipeline writes the data files on its own
   schedule, so a page must read both the old and the new format before the writer changes, and a revert goes in
   the other order.
+- **A row of the board has one `side`, and it is the pricing engine's.** `bets.json` rows carry `side` and `pick`
+  for the engine's side of the line and `sleeper` for the sleeper's, which can be the other one. Anything built from
+  a sleeper (a button, a link, a key) must name the sleeper's side itself; "+ My board" on a sleeper added the
+  engine's side until 2026-11-16.
 - **A line barred as a pick is still in every score that reads the line log.** The misfit guard kept theScore's
   "Sam Williams" off the board, and the scoreboard still scored his lines against the wrong player's box score
   (2026-11-16). A guard on picks must be applied, or deliberately not, in every measurement too.
