@@ -1,7 +1,7 @@
 # Locks and parlays: running tally
 
 The locks: the highest-confidence picks of each slate day (3 on a one-game day, 5 on a multi-game day), named before kickoff and tracked here. Target: 70% hits. Then the recommended parlay for each slate day.
-Generated 2026-11-16 00:08 UTC by the daily job. Do not edit by hand.
+Generated 2026-11-16 00:22 UTC by the daily job. Do not edit by hand.
 
 **Locks record: 13-4 (76%), +5.24 units, 2 pending.**
 
@@ -126,6 +126,96 @@ Every closing line of the week: how often the Over won, against the chance the b
 
 | Week | Market | Lines | Over won | Book's fair chance of the Over |
 | --- | --- | --- | --- | --- |
+| 2024 wk 1 | combined | 174 | 44% | 50% |
+| 2024 wk 1 | solo | 137 | 42% | 50% |
+| 2024 wk 2 | combined | 170 | 48% | 50% |
+| 2024 wk 2 | solo | 166 | 50% | 51% |
+| 2024 wk 3 | combined | 169 | 43% | 50% |
+| 2024 wk 3 | solo | 169 | 46% | 50% |
+| 2024 wk 4 | combined | 177 | 44% | 50% |
+| 2024 wk 4 | solo | 172 | 46% | 50% |
+| 2024 wk 5 | combined | 137 | 45% | 49% |
+| 2024 wk 5 | solo | 108 | 44% | 50% |
+| 2024 wk 6 | combined | 131 | 39% | 50% |
+| 2024 wk 6 | solo | 115 | 36% | 50% |
+| 2024 wk 7 | combined | 149 | 43% | 50% |
+| 2024 wk 7 | solo | 116 | 39% | 49% |
+| 2024 wk 8 | combined | 145 | 51% | 50% |
+| 2024 wk 8 | solo | 107 | 43% | 49% |
+| 2024 wk 9 | combined | 146 | 47% | 49% |
+| 2024 wk 9 | solo | 111 | 42% | 49% |
+| 2024 wk 10 | combined | 154 | 52% | 50% |
+| 2024 wk 10 | solo | 127 | 41% | 49% |
+| 2024 wk 11 | combined | 152 | 52% | 50% |
+| 2024 wk 11 | solo | 129 | 43% | 50% |
+| 2024 wk 12 | combined | 121 | 45% | 50% |
+| 2024 wk 12 | solo | 102 | 41% | 50% |
+| 2024 wk 13 | combined | 163 | 52% | 50% |
+| 2024 wk 13 | solo | 135 | 47% | 50% |
+| 2024 wk 14 | combined | 135 | 55% | 50% |
+| 2024 wk 14 | solo | 116 | 46% | 50% |
+| 2024 wk 15 | combined | 154 | 51% | 50% |
+| 2024 wk 15 | solo | 134 | 42% | 50% |
+| 2024 wk 16 | combined | 158 | 44% | 50% |
+| 2024 wk 16 | solo | 140 | 42% | 50% |
+| 2024 wk 17 | combined | 140 | 46% | 50% |
+| 2024 wk 17 | solo | 127 | 48% | 50% |
+| 2024 wk 18 | combined | 64 | 47% | 50% |
+| 2024 wk 18 | solo | 62 | 40% | 50% |
+| 2025 wk 1 | assists | 130 | 57% | 49% |
+| 2025 wk 1 | combined | 131 | 53% | 51% |
+| 2025 wk 1 | solo | 132 | 45% | 50% |
+| 2025 wk 2 | assists | 165 | 48% | 49% |
+| 2025 wk 2 | combined | 172 | 45% | 50% |
+| 2025 wk 2 | solo | 180 | 46% | 50% |
+| 2025 wk 3 | assists | 90 | 48% | 49% |
+| 2025 wk 3 | combined | 123 | 38% | 50% |
+| 2025 wk 3 | solo | 89 | 39% | 50% |
+| 2025 wk 4 | assists | 97 | 48% | 49% |
+| 2025 wk 4 | combined | 102 | 45% | 51% |
+| 2025 wk 4 | solo | 97 | 37% | 50% |
+| 2025 wk 5 | assists | 71 | 48% | 50% |
+| 2025 wk 5 | combined | 87 | 45% | 49% |
+| 2025 wk 5 | solo | 77 | 34% | 51% |
+| 2025 wk 6 | assists | 88 | 58% | 50% |
+| 2025 wk 6 | combined | 96 | 45% | 50% |
+| 2025 wk 6 | solo | 94 | 37% | 50% |
+| 2025 wk 7 | assists | 111 | 46% | 49% |
+| 2025 wk 7 | combined | 125 | 40% | 50% |
+| 2025 wk 7 | solo | 119 | 36% | 50% |
+| 2025 wk 8 | assists | 75 | 52% | 49% |
+| 2025 wk 8 | combined | 88 | 39% | 50% |
+| 2025 wk 8 | solo | 77 | 27% | 50% |
+| 2025 wk 9 | assists | 73 | 75% | 50% |
+| 2025 wk 9 | combined | 89 | 62% | 50% |
+| 2025 wk 9 | solo | 73 | 53% | 51% |
+| 2025 wk 10 | assists | 76 | 57% | 49% |
+| 2025 wk 10 | combined | 140 | 49% | 50% |
+| 2025 wk 10 | solo | 76 | 38% | 50% |
+| 2025 wk 11 | assists | 88 | 60% | 49% |
+| 2025 wk 11 | combined | 97 | 39% | 50% |
+| 2025 wk 11 | solo | 87 | 40% | 50% |
+| 2025 wk 12 | assists | 82 | 45% | 51% |
+| 2025 wk 12 | combined | 88 | 43% | 50% |
+| 2025 wk 12 | solo | 82 | 44% | 49% |
+| 2025 wk 13 | assists | 94 | 53% | 50% |
+| 2025 wk 13 | combined | 101 | 44% | 50% |
+| 2025 wk 13 | solo | 93 | 47% | 50% |
+| 2025 wk 14 | assists | 90 | 48% | 51% |
+| 2025 wk 14 | combined | 92 | 39% | 50% |
+| 2025 wk 14 | solo | 88 | 41% | 50% |
+| 2025 wk 15 | assists | 110 | 48% | 50% |
+| 2025 wk 15 | combined | 125 | 50% | 50% |
+| 2025 wk 15 | solo | 110 | 47% | 49% |
+| 2025 wk 16 | assists | 91 | 46% | 49% |
+| 2025 wk 16 | combined | 92 | 51% | 50% |
+| 2025 wk 16 | solo | 90 | 47% | 49% |
+| 2025 wk 17 | assists | 125 | 48% | 50% |
+| 2025 wk 17 | combined | 125 | 45% | 51% |
+| 2025 wk 17 | solo | 125 | 47% | 50% |
+| 2025 wk 18 | assists | 45 | 24% | 48% |
+| 2025 wk 18 | combined | 45 | 27% | 50% |
+| 2025 wk 18 | solo | 45 | 38% | 49% |
 | 2026 wk 1 | assists | 103 | 45% | 49% |
 | 2026 wk 1 | combined | 108 | 44% | 49% |
 | 2026 wk 1 | solo | 103 | 45% | 50% |
