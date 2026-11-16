@@ -520,7 +520,7 @@ check(all(k in _html for k in ("Where today is heading", "now-ticker", "projPL +
 check(all(k in _html for k in ("const CONFIRM_MIN = 10", "b.past_line = { kind: decidedNow", ".live.behind { border-left-color: #e67e22; }", ".live .call.lost { background: #c0392b; }")), "My board calls a bet LOST (red) or WON once past its line for ten minutes, and shows a bet pacing to lose in orange")
 check("function weekMoney" in _html and "weekMoney(r.list)" in _html and '"Wagered and won"' in _html, "each week of the ledger opens to what was wagered, paid back, won and lost")
 check("table.plays-compact > tbody > tr.mine-expand > td, table.plays-compact > tbody > tr.mine-expand > td:first-child { width: auto;" in _html and "table.mine-compact tr {" not in _html, "a card opened from the one-line Plays list takes the full width, not the grade column's")
-check(all(k in _html for k in ("function mergeBoards", "function connectSync", 'SYNC_FILE = "slammer-board.json"', "That repo is public", "function tombstone", "foldOf(syncBox()")) and "github_pat_" not in _html.replace('placeholder: "github_pat_..."', "").replace("It starts with github_pat_.", ""),
+check(all(k in _html for k in ("function mergeBoards", "function connectSync", 'SYNC_FILE = "slammer-board.json"', "That repo is public", "function tombstone", "foldOf(syncBox()")) and not __import__("re").search(r"github_pat_[A-Za-z0-9_]{20,}|ghp_[A-Za-z0-9]{20,}", _html),
       "My board can sync through a private GitHub repo: merged, never replaced, a public repo refused, no token in the page")
 from tools import bias_audit as _BA
 _bp = pd.DataFrame(dict(win=[1.0, 1.0, 0.0, 0.0, 1.0, 0.0], g=["a", "a", "b", "b", "c", "c"]))

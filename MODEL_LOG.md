@@ -1125,6 +1125,15 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-16, 1 pm (sync: the setup steps written for anyone, not only the owner)
+
+The owner no longer has the lifting token and wants to send the setup to someone else. The box's steps named the
+lifting app, which means nothing to another visitor. They now stand alone: a private repo at github.com/new (with
+a README, so the repo is not empty), a fine-grained token for that repo with Contents read and write, the repo and
+token pasted here, the same step on each other device; the two GitHub pages are links. The one-tap lifting button
+still shows only in a browser that holds that connection. Each visitor syncs to a repo of their own: nothing is
+shared between visitors. Site only; smoke test and browser test pass.
+
 ### 2026-11-16, 12:30 pm (the scoreboard leaves out the lines the pricing guard bars: open issue 26)
 
 A defect in a measurement, found by the standing post-mortem and fixed at the owner's word. No pick, grade or stake

@@ -163,6 +163,7 @@ table .tot td { font-weight: 700; border-top: 2px solid var(--line); }
 .patch-e > summary { grid-template-columns: 1fr; } .patch-e.res > summary { border-left-color: #2c5aa0; }
 .patch-e .kind { font: 700 0.72rem var(--cond); padding: 2px 7px; border-radius: 999px; background: #8a8f98; color: #fff; margin-right: 6px; vertical-align: middle; }
 .patch-e .kind.change { background: #1f8a4c; } .patch-e .kind.research { background: #2c5aa0; } .patch-e .kind.post-mortem { background: #c98a1b; }
+.sync-steps { margin: 6px 0 10px 20px; padding: 0; } .sync-steps li { margin: 6px 0; } .sync-steps a { overflow-wrap: anywhere; }
 .patch-body code { overflow-wrap: anywhere; } .patch-body .scroll table { min-width: 560px; }   /* a long file name wraps; a table scrolls sideways on a phone and keeps its columns readable */
 .patch-body { background: var(--panel); border: 1px solid var(--line); border-top: none; border-radius: 0 0 8px 8px; padding: 10px 14px; font-size: 0.92rem; line-height: 1.5; }
 .md p { margin: 6px 0; max-width: 90ch; } .md ul, .md ol { margin: 6px 0 6px 20px; padding: 0; } .md li { margin: 3px 0; max-width: 88ch; } .md h4 { margin: 10px 0 4px; font: 700 1rem var(--cond); }
@@ -2417,7 +2418,7 @@ function syncSoon() { if (!SYNC.cfg || SYNC.quiet) return; clearTimeout(SYNC.tim
 const parseRepo = (v) => { const m = String(v || "").trim().replace(/\.git$/, "").match(/(?:github\.com[/:])?([\w.-]+)\/([\w.-]+)\/?$/); return m ? `${m[1]}/${m[2]}` : ""; };
 async function connectSync(repoIn, tokenIn) {
   const repo = parseRepo(repoIn), token = String(tokenIn || "").trim();
-  if (!repo) throw syncErr("input", "Enter the repo as owner/name, for example yourname/lifting-data.");
+  if (!repo) throw syncErr("input", "Enter the repo as owner/name, for example yourname/slammer-board.");
   if (token.length < 20 || /\s/.test(token)) throw syncErr("input", "Paste the whole access token. It starts with github_pat_.");
   const cfg = { repo, token };
   let r; try { r = await gh(cfg, `/repos/${repo}`); } catch (e) { throw syncErr("net", "No connection to GitHub right now. Try again when you have signal."); }
@@ -2444,18 +2445,21 @@ function syncBox() {
       el("div", { class: "chips" }, now, off));
     return wrap;
   }
-  const repo = el("input", { type: "text", id: "sync-repo", placeholder: "yourname/lifting-data", autocomplete: "off", autocapitalize: "none", spellcheck: "false", "aria-label": "Private repo, as owner/name" });
+  const repo = el("input", { type: "text", id: "sync-repo", placeholder: "yourname/slammer-board", autocomplete: "off", autocapitalize: "none", spellcheck: "false", "aria-label": "Private repo, as owner/name" });
   const token = el("input", { type: "password", id: "sync-token", placeholder: "github_pat_...", autocomplete: "off", autocapitalize: "none", spellcheck: "false", "aria-label": "Access token" });
   const go = el("button", { type: "button", class: "reset" }, "Connect");
   const connect = (r, t) => { err.textContent = "Checking the repo and token."; go.disabled = true; connectSync(r, t).then(() => renderMine(), (e) => { go.disabled = false; fail(e); }); };
   go.onclick = () => connect(repo.value, token.value);
   const lift = liftingCfg();
-  wrap.append(el("p", { class: "lead" }, "Keep the same board on your phone, your computer and any new device, in a private GitHub repo only you can see: the way your lifting app does it. The same repo and token work here; My board uses its own file in it."));
+  wrap.append(el("p", { class: "lead" }, "Keep the same board on your phone, your computer and any new device, in a private GitHub repo only you can see. It needs a free GitHub account and about five minutes, once."));
   if (lift) { const use = el("button", { type: "button", class: "reset", id: "sync-use-lifting" }, `Use my lifting app's connection (${lift.repo})`); use.onclick = () => connect(lift.repo, lift.token);
-    wrap.append(el("div", { class: "chips" }, use), el("p", { class: "note" }, "This browser already holds the lifting app's connection. One tap uses the same repo and token; do the same on each device.")); }
-  const steps = el("ol", {}, el("li", {}, "A private repo: the one your lifting app uses, or a new one at github.com/new (choose Private)."),
-    el("li", {}, "A token at github.com/settings/personal-access-tokens/new: Repository access, Only select repositories, that repo; Permissions, Contents, Read and write. The lifting app's token already has this."),
-    el("li", {}, "Paste both here and press Connect. On every other device, do just this step."));
+    wrap.append(el("div", { class: "chips" }, use), el("p", { class: "note" }, "This browser already holds the lifting app's connection. One tap uses the same repo and token (My board keeps its own file in it); do the same on each device.")); }
+  const out = (href, text) => el("a", { href, target: "_blank", rel: "noopener noreferrer" }, text);
+  const steps = el("ol", { class: "sync-steps" },
+    el("li", {}, "Make a private repo at ", out("https://github.com/new", "github.com/new"), ": any name (for example ", el("b", {}, "slammer-board"), "), choose ", el("b", {}, "Private"), ", tick ", el("b", {}, "Add a README"), ", press Create repository. A private repo you already have works too."),
+    el("li", {}, "Make a token at ", out("https://github.com/settings/personal-access-tokens/new", "github.com/settings/personal-access-tokens/new"), ". Give it a name and the longest expiry offered. Under Repository access choose ", el("b", {}, "Only select repositories"), " and pick that repo. Under Permissions, Repository permissions, set ", el("b", {}, "Contents"), " to ", el("b", {}, "Read and write"), ". Press Generate token and copy it: it starts with github_pat_ and GitHub shows it once."),
+    el("li", {}, "Here, type the repo as ", el("b", {}, "yourname/slammer-board"), ", paste the token, press Connect. When the box says \"in step\", this device is done."),
+    el("li", {}, "On every other device, open this page and do step 3 only, with the same repo and token. Keep the token somewhere safe (a password manager) for the next device."));
   const form = el("div", { class: "wi-form custom-form" }, el("label", { class: "wide" }, "Repo ", repo), el("label", { class: "wide" }, "Token ", token), go);
   if (lift) wrap.append(more("Or connect another repo or token", steps, form)); else wrap.append(more("How to set it up", steps), form);
   wrap.append(err,
