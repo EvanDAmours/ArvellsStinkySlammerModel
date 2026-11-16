@@ -252,6 +252,7 @@ class FakeGitHub:
 
     def __init__(self):
         self.file, self.sha, self.puts, self.gets, self.conflict_once = None, 0, 0, 0, False
+        self.visible = [{"full_name": "me/board-data", "private": True, "permissions": {"push": True}}, {"full_name": "me/open-repo", "private": False, "permissions": {"push": True}}]   # what the token may see
 
     def handle(self, route):
         import base64
@@ -263,6 +264,8 @@ class FakeGitHub:
             return route.fulfill(status=204, headers={"access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "GET, PUT"})
         if req.headers.get("authorization") != f"Bearer {self.TOKEN}":
             return answer(401, {"message": "Bad credentials"})
+        if path == "/user/repos":
+            return answer(200, self.visible)
         if path == "/repos/me/open-repo":
             return answer(200, {"private": False, "permissions": {"push": True}})
         if path == "/repos/me/board-data":
@@ -310,6 +313,15 @@ def run_sync(browser):
     check("public" in msg and a.evaluate("SYNC.cfg") is None, f"sync refuses a public repo ({msg[:60]})")
     msg = a.evaluate("connectSync('me/board-data', 'github_pat_' + 'y'.repeat(40)).then(() => 'connected', (e) => e.msg)")
     check("rejected the token" in msg, f"sync says so when GitHub rejects the token ({msg[:50]})")
+    # a repo the token cannot see: the message names what the token can reach, or says its access is the trouble
+    msg = a.evaluate(f"connectSync('me/lifting-data', '{hub.TOKEN}').then(() => 'connected', (e) => e.msg)")
+    check("cannot see me/lifting-data" in msg and "It can reach: me/board-data" in msg, f"a repo the token cannot see is answered with the repos it can ({msg[:90]})")
+    msg = a.evaluate(f"connectSync('someone/Board-Data', '{hub.TOKEN}').then(() => 'connected', (e) => e.msg)")
+    check("Type the repo as me/board-data" in msg, f"a wrong owner is answered with the right name ({msg[:70]})")
+    hub.visible = [x for x in hub.visible if not x["private"]]
+    msg = a.evaluate(f"connectSync('me/lifting-data', '{hub.TOKEN}').then(() => 'connected', (e) => e.msg)")
+    check("cannot see any private repo" in msg and "Only select repositories" in msg and a.evaluate("SYNC.cfg") is None, f"a token left on public repositories is told so ({msg[:70]})")
+    hub.visible = [{"full_name": "me/board-data", "private": True, "permissions": {"push": True}}, {"full_name": "me/open-repo", "private": False, "permissions": {"push": True}}]
     a.evaluate("renderMine(); document.querySelector('#mine-sync').open = true")
     a.fill("#sync-repo", "https://github.com/me/board-data")
     a.fill("#sync-token", hub.TOKEN)

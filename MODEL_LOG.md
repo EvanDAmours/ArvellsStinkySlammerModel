@@ -1125,6 +1125,16 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-16, 1:30 pm (sync: "cannot reach the repo" now says why)
+
+The owner's first real connection answered "That token cannot reach the repo" (he then fixed it himself). GitHub
+gives the same "not found" for a repo that does not exist and for one the token may not see, and the message left
+him to guess. On that answer the page now asks GitHub which repos the token can write to and says which case it is:
+the right name when only the owner or the spelling is off; the private repos the token can reach when the one typed
+is not among them; or that the token sees no private repo at all (left on "Public repositories"), with where to
+edit its Repository access. If that second question fails it falls back to a plain message. Checked in the browser
+test against the simulated GitHub (three more checks); not seen against the real one. Site only; both tests pass.
+
 ### 2026-11-16, 1 pm (sync: the setup steps written for anyone, not only the owner)
 
 The owner no longer has the lifting token and wants to send the setup to someone else. The box's steps named the

@@ -2422,6 +2422,7 @@ async function connectSync(repoIn, tokenIn) {
   if (token.length < 20 || /\s/.test(token)) throw syncErr("input", "Paste the whole access token. It starts with github_pat_.");
   const cfg = { repo, token };
   let r; try { r = await gh(cfg, `/repos/${repo}`); } catch (e) { throw syncErr("net", "No connection to GitHub right now. Try again when you have signal."); }
+  if (r.status === 403 || r.status === 404) throw await whyNoRepo(cfg);
   if (!r.ok) throw httpErr(r);
   const j = await r.json();
   if (j && j.private === false) throw syncErr("public", "That repo is public, so your bets would be visible to anyone. Use a private repo, then connect again.");
@@ -2429,6 +2430,19 @@ async function connectSync(repoIn, tokenIn) {
   try { localStorage.setItem(SYNC_KEY, JSON.stringify(cfg)); } catch (e) { throw syncErr("store", "This browser would not save the connection."); }
   SYNC.cfg = cfg; SYNC.state = "idle";
   return runSync();
+}
+// GitHub answers "not found" both for a repo that does not exist and for one the token may not see. Ask what the token
+// can see, and say which it is: the name, or the token's Repository access.
+async function whyNoRepo(cfg) {
+  const name = cfg.repo.split("/")[1], edit = "Open github.com/settings/personal-access-tokens, click the token, and under Repository access choose Only select repositories and pick it (Contents: Read and write); then Connect again.";
+  let list = null;
+  try { const r = await gh(cfg, "/user/repos?per_page=100&sort=pushed"); if (r.status === 401) return httpErr(r); if (r.ok) list = await r.json(); } catch (e) { /* fall through to the plain message */ }
+  if (!Array.isArray(list)) return syncErr("access", `GitHub says there is no repo ${cfg.repo} that this token can see. Check the spelling (it is owner/name), and that the token's Repository access includes it.`);
+  const can = list.filter((x) => x && x.permissions && x.permissions.push).map((x) => ({ full: x.full_name, priv: x.private })), priv = can.filter((x) => x.priv).map((x) => x.full);
+  const close = can.find((x) => x.full.toLowerCase().split("/")[1] === name.toLowerCase());
+  if (close && close.full.toLowerCase() !== cfg.repo.toLowerCase()) return syncErr("access", `There is no ${cfg.repo}, but this token can reach ${close.full}. Type the repo as ${close.full}.`);
+  if (priv.length) return syncErr("access", `This token works, but it cannot see ${cfg.repo}. It can reach: ${priv.slice(0, 5).join(", ")}. Either type one of those, or add ${name} to the token. ${edit}`);
+  return syncErr("access", `This token works, but it cannot see any private repo, so it cannot see ${cfg.repo}. A token left on "Public repositories" cannot. ${edit} If ${name} does not exist yet, make it first at github.com/new (Private, with a README).`);
 }
 function disconnectSync() { try { localStorage.removeItem(SYNC_KEY); } catch (e) { /* fine */ } clearTimeout(SYNC.timer); SYNC.cfg = null; SYNC.again = false; setSync("off"); }
 // the lifting app on this same site keeps its own connection in this browser: offer it, never take it unasked
