@@ -1128,6 +1128,40 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-16, 11:40 am (My board syncs across devices through a private GitHub repo, as the owner's lifting app does)
+
+The owner asked for My board on the phone and the computer without sending links back and forth, the way his
+lifting app does it with a GitHub token. Site only; no rule changed, no credit spent, nothing of the owner's bets is
+written to this (public) repository.
+
+- **What.** "Sync across devices" on My board. The ledger is one file, `slammer-board.json`, in a private repo of the
+  owner's, read and written from the browser with a fine-grained token (Contents, read and write, that repo only).
+  It is the lifting app's mechanism (`EvanDAmours/Lifting`, read for this), so the same repo and token work: the
+  file has its own name. Where this browser already holds the lifting app's connection (both apps are served from
+  the same site, so they share its storage), one button uses it. A public repo is refused.
+- **How it merges.** Each device keeps its own copy; a sync reads the file, merges, and writes only if something
+  differs. Bets match by key; the later change wins (a time is put on a bet when it is added, its stake changes, it
+  is cleared or brought back, a custom bet is settled); a removal is a tombstone, so it carries across and a bet
+  added again later comes back; a tackle bet's result is the best either device has (official, then live, the
+  earlier of two alike); a deleted week is deleted everywhere. The clock on a bet past its line stays on its device.
+  A bet's grade is left out until kickoff, because each device reads it off its own board until then. The merge
+  gives the same board whichever device runs it, so two devices cannot overwrite each other in turns.
+- **When.** After every change (a second and a half later), when the site opens, and when the page comes back to
+  the front. A save that collides with another device's is read again and merged, up to four times.
+- **The token.** Stored in this browser only, sent only to api.github.com, in no backup file, code or link.
+  Disconnecting forgets it and keeps the board. For the owner to know: browser storage is shared by every page
+  under evandamours.github.io, so any of his projects served there (forks of other people's code among them) could
+  read a token kept this way, by either app. The token reaches one private repo and nothing else, which is the
+  right limit to keep.
+- **Evidence.** `tests/browser_test.py` now runs two devices against a simulated GitHub (18 more checks): a public
+  repo refused, a bad token named, the form connecting, a second device receiving the board with nothing written
+  back, a stake change, a removal and a settled custom bet crossing, four further syncs writing nothing, changes
+  made apart both kept, a colliding save retried, a week deleted on both, a removed pick added again, the lifting
+  connection in one tap, disconnecting; and the merge checked for giving the same answer either way round. Smoke
+  test and browser test pass; the Test workflow read after the push. Not tested against the real GitHub from here:
+  the first real connection is the owner's.
+- **Revert if** unwanted: remove `syncBox()` from `mineTools`; boards stay where they are, the file stays in the repo.
+
 ### 2026-11-16, 10:30 am (a browser test in the Test workflow; three phone defects it found on its first run)
 
 The post-mortem of week 10 named the cause of five site defects in one weekend: the smoke test reads the page's
@@ -2446,6 +2480,9 @@ Never tested; each with what would justify it. Anything tested and dropped is in
   (`table.x > tbody > tr > td`). A class name shared with a general style (`warn`, `live`) picks that style up too.
 - **Chromium keeps the layout of a closed dropdown.** `getBoundingClientRect` has a size inside a closed
   `<details>`; a test that asks "is it visible" must use `checkVisibility()`.
+- **Two copies that each "win a tie" overwrite each other for ever.** A sync that lets this device win when two
+  changes carry the same time writes its version, the other device writes its own back, and so on. Break ties on the
+  content, not on who is asking, and leave out of the comparison whatever each device recomputes for itself.
 - **A replay shown on the site is a file, and a file goes stale.** `data/retro_five.json` and
   `data/replay_seasons.json` are written by hand-run tools, not by the daily. After any change to a pick rule, a
   grade or a stake, re-run them before the push, or the Track record tab reports the previous rules' replay.

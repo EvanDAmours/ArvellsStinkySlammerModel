@@ -246,6 +246,160 @@ def run_width(browser, name, width):
     ctx.close()
 
 
+class FakeGitHub:
+    """One private repo and one public one, in memory: the calls My board's sync makes, answered as GitHub answers them."""
+    TOKEN = "github_pat_" + "x" * 40
+
+    def __init__(self):
+        self.file, self.sha, self.puts, self.gets, self.conflict_once = None, 0, 0, 0, False
+
+    def handle(self, route):
+        import base64
+        req = route.request
+        path = req.url.split("api.github.com", 1)[1].split("?")[0]
+        def answer(status, body):
+            route.fulfill(status=status, content_type="application/json", body=json.dumps(body), headers={"access-control-allow-origin": "*"})
+        if req.method == "OPTIONS":
+            return route.fulfill(status=204, headers={"access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "GET, PUT"})
+        if req.headers.get("authorization") != f"Bearer {self.TOKEN}":
+            return answer(401, {"message": "Bad credentials"})
+        if path == "/repos/me/open-repo":
+            return answer(200, {"private": False, "permissions": {"push": True}})
+        if path == "/repos/me/board-data":
+            return answer(200, {"private": True, "permissions": {"push": True}})
+        if path == "/repos/me/board-data/contents/slammer-board.json":
+            if req.method == "GET":
+                self.gets += 1
+                if self.file is None:
+                    return answer(404, {"message": "Not Found"})
+                return answer(200, {"sha": f"sha{self.sha}", "content": base64.b64encode(self.file.encode()).decode()})
+            body = json.loads(req.post_data)
+            if self.conflict_once or (self.file is not None and body.get("sha") != f"sha{self.sha}"):
+                self.conflict_once = False
+                return answer(409, {"message": "is at a different sha"})
+            self.file, self.sha, self.puts = base64.b64decode(body["content"]).decode(), self.sha + 1, self.puts + 1
+            return answer(200, {"content": {"sha": f"sha{self.sha}"}})
+        return answer(404, {"message": "Not Found"})
+
+
+def run_sync(browser):
+    """Two devices and one private repo: what one does reaches the other, nothing is wiped, and they settle."""
+    hub = FakeGitHub()
+
+    def device():
+        ctx = browser.new_context(viewport={"width": 390, "height": 900})
+        pg = ctx.new_page()
+        pg.errors = []
+        pg.on("pageerror", lambda e: pg.errors.append(str(e)))
+        pg.route("**/site.api.espn.com/**", lambda r: r.abort())
+        pg.route("**/api.github.com/**", hub.handle)
+        pg.goto(f"http://localhost:{PORT}/#mine")
+        pg.wait_for_function("typeof DATA !== 'undefined' && DATA.meta && document.querySelector('#mine-sync')", timeout=20000)
+        return ctx, pg
+
+    def sync(pg):
+        pg.evaluate("(async () => { clearTimeout(SYNC.timer); await runSync(); await new Promise((r) => setTimeout(r, 50)); if (SYNC.busy) await SYNC.p; })()")
+
+    board = "JSON.stringify(allWeeks().map((w) => [w.key, w.list.map((b) => [b.key, b.stake ?? null, b.settled?.result || null, !!b.archived]).sort()]).sort())"
+    ca, a = device()
+    wk = a.evaluate("DATA.meta.week")
+    # device A: two picks with stakes and a custom bet, then connect
+    a.evaluate("""(() => { const ps = DATA.bets.filter((b) => b.pick === 'Over' || b.pick === 'Under').slice(0, 2); for (const p of ps) toggleMine({ ...p, side: p.pick });
+        setStake(mine()[0].key, '10'); setStake(mine()[1].key, '20'); addCustom({ desc: 'Giants moneyline', odds: 150, stake: 20, result: null, week: DATA.meta.week }); renderMine(); })()""")
+    msg = a.evaluate(f"connectSync('me/open-repo', '{hub.TOKEN}').then(() => 'connected', (e) => e.msg)")
+    check("public" in msg and a.evaluate("SYNC.cfg") is None, f"sync refuses a public repo ({msg[:60]})")
+    msg = a.evaluate("connectSync('me/board-data', 'github_pat_' + 'y'.repeat(40)).then(() => 'connected', (e) => e.msg)")
+    check("rejected the token" in msg, f"sync says so when GitHub rejects the token ({msg[:50]})")
+    a.evaluate("renderMine(); document.querySelector('#mine-sync').open = true")
+    a.fill("#sync-repo", "https://github.com/me/board-data")
+    a.fill("#sync-token", hub.TOKEN)
+    a.locator("#mine-sync button", has_text="Connect").click()
+    a.wait_for_function("SYNC.state === 'ok'", timeout=10000)
+    saved = json.loads(hub.file)
+    check(hub.puts == 1 and saved["app"] == "slammer-board" and len(saved["weeks"][f"mine-{a.evaluate('DATA.meta.season')}-wk{wk}"]) == 3 and hub.TOKEN not in hub.file and "past_line" not in hub.file,
+          f"connecting through the form writes the board to the repo, without the token ({hub.puts} save, {len(hub.file)} characters)")
+    check("in step with me/board-data" in a.locator("#mine-sync").inner_text(), "the sync box says the board is in step with the repo")
+    check(hub.TOKEN not in a.evaluate("JSON.stringify(ledgerExport()) + JSON.stringify(ledgerShort())"), "the token is in no backup file or code")
+    # device B: empty, connects, receives everything
+    cb, b = device()
+    b.evaluate(f"connectSync('me/board-data', '{hub.TOKEN}')")
+    b.wait_for_function("SYNC.state === 'ok'", timeout=10000)
+    check(b.evaluate(board) == a.evaluate(board) and b.evaluate("board().length") == 3 and hub.puts == 1, "a second device connects and has the same board, with nothing written back")
+    # B changes a stake, removes a pick, settles the custom bet; A receives all three
+    b.evaluate("""(() => { const t = mine().filter((x) => !x.custom); setStake(t[0].key, '55'); toggleMine({ ...t[1], pick: t[1].side });
+        const c = mine().find((x) => x.custom); setCustomResult(MINE_KEY(), c.key, 'Win'); })()""")
+    sync(b)
+    sync(a)
+    got = a.evaluate("(() => { const t = mine().filter((x) => !x.custom && !x.archived), c = mine().find((x) => x.custom); return { n: t.length, stake: t[0] && t[0].stake, custom: c && c.settled && c.settled.result }; })()")
+    check(got == {"n": 1, "stake": 55, "custom": "Win"} and a.evaluate(board) == b.evaluate(board), f"a stake change, a removal and a settled custom bet on one device reach the other ({got})")
+    check(a.locator(".live.custom").count() == 1 and "Won" in a.locator(".live.custom select").evaluate("(s) => s.selectedOptions[0].textContent"), "the page redraws with what arrived")
+    # they settle: more syncs write nothing, and a removed pick stays removed
+    before = hub.puts
+    for _ in range(2):
+        sync(a)
+        sync(b)
+    check(hub.puts == before and a.evaluate(board) == b.evaluate(board), f"two devices in step stop writing ({hub.puts - before} saves in four more syncs)")
+    # both change different things while apart; then a save that collides is retried
+    a.evaluate("addCustom({ desc: 'Chiefs -6.5', odds: -110, stake: 25, result: null, week: DATA.meta.week })")
+    b.evaluate("(() => { const t = mine().find((x) => !x.custom); setStake(t.key, '60'); })()")
+    sync(a)
+    hub.conflict_once = True
+    sync(b)
+    sync(a)
+    got = a.evaluate("({ customs: mine().filter((x) => x.custom).length, stake: mine().find((x) => !x.custom).stake })")
+    check(got == {"customs": 2, "stake": 60} and a.evaluate(board) == b.evaluate(board) and b.evaluate("SYNC.state") == "ok", f"changes made apart are both kept, and a save that collides is retried ({got})")
+    # a week deleted on one device goes on the other; a bet added again after a removal comes back
+    a.evaluate("addCustom({ desc: 'Old bet', odds: -110, stake: 5, result: 'Loss', week: DATA.meta.week - 1 })")
+    sync(a)
+    sync(b)
+    had = b.evaluate("allWeeks().length")
+    a.on("dialog", lambda d: d.accept())
+    a.evaluate(f"(() => {{ renderMine(); const d = [...document.querySelectorAll('#ledger details.fold')].find((x) => x.id.endsWith('wk{wk - 1}')); d.open = true; [...d.querySelectorAll('button')].find((x) => /Delete week/.test(x.textContent)).click(); }})()")
+    sync(a)
+    sync(b)
+    check(had == 2 and b.evaluate("allWeeks().length") == 1 and a.evaluate("allWeeks().length") == 1, "a week deleted on one device is deleted on the other")
+    b.evaluate("(() => { const p = DATA.bets.filter((x) => x.pick === 'Over' || x.pick === 'Under')[1]; toggleMine({ ...p, side: p.pick }); })()")
+    sync(b)
+    sync(a)
+    check(a.evaluate("mine().filter((x) => !x.custom).length") == 2 and a.evaluate(board) == b.evaluate(board), "a pick removed earlier and added again comes back on both")
+    # the merge itself: the same answer whichever device runs it, and nothing more to do once it has run
+    order = a.evaluate("""(() => {
+        const past = '2026-01-01T00:00:00Z', future = new Date(Date.now() + 864e5).toISOString(), wk = 'mine-2026-wk10';
+        const bet = (o) => Object.assign({ key: 'k1', player: 'P', market: 'player_solo_tackles', side: 'Under', line: 3.5, book: 'DraftKings', odds: -110, added: past, commence_time: past }, o);
+        const pairs = [
+          [bet({ stake: 10 }), bet({ stake: 15 })],                                                                    // the same moment, two stakes
+          [bet({ stake: 10, u: 5 }), bet({ stake: 15, u: 9 })],                                                        // the later change
+          [bet({ settled: { result: 'Win', actual: 2, source: 'live', at: '2026-01-02T00:00:05Z' } }), bet({ settled: { result: 'Win', actual: 2, source: 'live', at: '2026-01-02T00:00:09Z' } })],
+          [bet({ settled: { result: 'Loss', actual: 4, source: 'live', at: 'x' } }), bet({ settled: { result: 'Win', actual: 3, source: 'official' } })],
+          [bet({ grade: 'A', lock: 71, gu: 3 }), bet({ grade: 'C', lock: 55, gu: 8 })],                                // two readings of the board, after kickoff
+          [bet({ grade: 'A', gu: 3, commence_time: future }), bet({ grade: 'C', gu: 8, commence_time: future, past_line: { kind: 'lost', at: 1 } })],
+          [bet({ key: 'custom|a', custom: true, desc: 'ML', u: 4, settled: { result: 'Win', source: 'manual', at: 'a' } }), bet({ key: 'custom|a', custom: true, desc: 'ML', u: 7 })]];
+        const same = pairs.every(([x, y]) => canonBet(mergeBet(x, y)) === canonBet(mergeBet(y, x)));
+        const A = { weeks: { [wk]: pairs.map((p, i) => ({ ...p[0], key: 'k' + i })) }, deleted: { [wk + '|k1']: 7 } }, B = { weeks: { [wk]: pairs.map((p, i) => ({ ...p[1], key: 'k' + i })) }, deleted: {} };
+        const ab = mergeBoards(A, B), ba = mergeBoards(B, A);
+        return { same, boards: canonBoard(ab) === canonBoard(ba), settled: canonBoard(mergeBoards(ab, B)) === canonBoard(ab) && canonBoard(mergeBoards(ab, A)) === canonBoard(ab),
+                 later: mergeBet(pairs[1][0], pairs[1][1]).stake, official: mergeBet(pairs[3][0], pairs[3][1]).settled.source, earlier: mergeBet(pairs[2][1], pairs[2][0]).settled.at.slice(-3),
+                 grade: mergeBet(pairs[4][0], pairs[4][1]).grade, cleared: mergeBet(pairs[6][0], pairs[6][1]).settled === undefined, tomb: ab.weeks[wk].some((x) => x.key === 'k1') }; })()""")
+    check(order["same"] and order["boards"] and order["settled"], f"a merge gives the same board whichever device runs it, and merging again changes nothing ({order})")
+    check(order["later"] == 15 and order["official"] == "official" and order["earlier"] == "05Z" and order["grade"] == "C" and order["cleared"] and order["tomb"],
+          "the later change wins, an official result beats a live one, and a removal older than the bet does not delete it")
+    # the lifting app's connection, held by this browser under the same site, is offered and works
+    cc, c = device()
+    c.evaluate(f"localStorage.setItem('liftledger.sync.v1', JSON.stringify({{ repo: 'me/board-data', token: '{hub.TOKEN}' }}))")
+    c.evaluate("renderMine(); document.querySelector('#mine-sync').open = true")
+    c.locator("#sync-use-lifting").click()
+    c.wait_for_function("SYNC.state === 'ok'", timeout=10000)
+    check(c.evaluate(board) == a.evaluate(board), "'Use my lifting app's connection' connects a new device in one tap")
+    c.on("dialog", lambda d: d.accept())
+    c.locator("#mine-sync button", has_text="Disconnect this device").click()
+    check(c.evaluate("SYNC.cfg") is None and c.evaluate("localStorage.getItem('slammer.sync.v1')") is None and c.evaluate("board().length") >= 3, "disconnecting forgets the token and keeps the board")
+    for pg in (a, b, c):
+        r = pg.evaluate(PROBE, "#mine")
+        check(not pg.errors and not r["bad"] and not r["overflow"], f"My board with sync on is clean on a phone ({pg.errors[:1]} {r['bad']} {r['wide']})")
+    for ctx in (ca, cb, cc):
+        ctx.close()
+
+
 def main():
     docs = prepare(site_dir())
     srv = subprocess.Popen([sys.executable, "-m", "http.server", "--directory", str(docs), str(PORT)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -255,6 +409,7 @@ def main():
             browser = launch(p)
             for name, width in WIDTHS:
                 run_width(browser, name, width)
+            run_sync(browser)
             browser.close()
     finally:
         srv.terminate()

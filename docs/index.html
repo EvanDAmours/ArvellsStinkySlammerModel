@@ -1710,7 +1710,7 @@ const normName = (n) => String(n || "").toLowerCase().replace(/\./g, " ").replac
 const ESPN_TEAM = { WSH: "WAS", LAR: "LA", JAC: "JAX" };
 const betKey = (b) => [b.player, b.team, b.market, b.side || b.pick, b.line, b.book].join("|");
 function loadMine() { try { return JSON.parse(localStorage.getItem(MINE_KEY()) || "[]"); } catch (e) { return []; } }
-function saveMine(list) { try { localStorage.setItem(MINE_KEY(), JSON.stringify(list)); } catch (e) { /* private window or storage off: the board lives for this page view only */ } }
+function saveMine(list) { try { localStorage.setItem(MINE_KEY(), JSON.stringify(list)); } catch (e) { /* private window or storage off: the board lives for this page view only */ } syncSoon(); }
 let MINE = null;
 const mine = () => (MINE ??= loadMine());
 const board = () => mine().filter((b) => !b.archived);     // the live board; a cleared bet stays in the ledger as archived
@@ -1721,7 +1721,7 @@ const tracked = () => board().filter((b) => !b.custom);    // the tackle bets, f
 const CUSTOM_RESULTS = [["", "Pending"], ["Win", "Won"], ["Loss", "Lost"], ["Push", "Push"], ["Void", "Void"]];
 const weekKeyOf = (season, week) => `mine-${season || ""}-wk${week || ""}`;
 function weekList(key) { if (key === MINE_KEY()) return mine(); try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) { return []; } }
-function saveWeek(key, list) { if (key === MINE_KEY()) { MINE = list; saveMine(list); } else { try { localStorage.setItem(key, JSON.stringify(list)); } catch (e) { /* fine */ } } }
+function saveWeek(key, list) { if (key === MINE_KEY()) { MINE = list; saveMine(list); } else { try { localStorage.setItem(key, JSON.stringify(list)); } catch (e) { /* fine */ } syncSoon(); } }
 // American odds as typed (-110, +150, 150); a decimal price (1.91, 2.5) is turned into American
 function parseOdds(t) {
   const v = parseFloat(String(t ?? "").replace(/[^0-9.+-]/g, "")); if (!isFinite(v)) return null;
@@ -1731,19 +1731,19 @@ function parseOdds(t) {
 }
 function addCustom({ desc, odds: price, stake, result, week }) {
   const season = DATA.meta?.season, key = weekKeyOf(season, week), list = weekList(key), now = new Date().toISOString();
-  const b = { key: `custom|${Date.now().toString(36)}`, custom: true, desc, odds: price, stake: stake ?? null, season, week, added: now };
+  const b = { key: `custom|${Date.now().toString(36)}`, custom: true, desc, odds: price, stake: stake ?? null, season, week, added: now, u: Date.now() };
   if (result) b.settled = { result, source: "manual", at: now };
   list.push(b); saveWeek(key, list);
 }
 function setCustomResult(weekKey, key, result) {
   const list = weekList(weekKey), b = list.find((x) => x.key === key); if (!b) return;
   if (result) b.settled = { result, source: "manual", at: new Date().toISOString() }; else delete b.settled;
-  saveWeek(weekKey, list); renderMine();
+  touch(b); saveWeek(weekKey, list); renderMine();
 }
 function removeCustom(weekKey, key) {
   const list = weekList(weekKey), i = list.findIndex((x) => x.key === key); if (i < 0) return;
   if (!confirm(`Remove "${list[i].desc}" for good?`)) return;
-  list.splice(i, 1); saveWeek(weekKey, list); renderMine();
+  tombstone(weekKey, list[i].key); list.splice(i, 1); saveWeek(weekKey, list); renderMine();
 }
 function customSelect(b, weekKey) {
   const s = el("select", { "aria-label": `Result of ${b.desc}` }, ...CUSTOM_RESULTS.map(([v, t]) => { const o = el("option", { value: v }, t); if ((b.settled?.result || "") === v) o.selected = true; return o; }));
@@ -1784,12 +1784,12 @@ function customForm() {
 }
 function toggleMine(b) {
   const list = mine(), k = betKey(b), i = list.findIndex((x) => x.key === k);
-  if (i >= 0 && list[i].archived) { list[i].archived = false; }            // cleared earlier: back onto the board, history kept
-  else if (i >= 0) list.splice(i, 1);
+  if (i >= 0 && list[i].archived) { list[i].archived = false; touch(list[i]); }            // cleared earlier: back onto the board, history kept
+  else if (i >= 0) { list.splice(i, 1); tombstone(MINE_KEY(), k); }
   else list.push({ key: k, player: b.player, team: b.team, opp: b.opp, group: b.group, market: b.market, side: b.side || b.pick, line: b.line, book: b.book,
                    odds: (b.side || b.pick) === "Under" ? b.under_odds : b.over_odds, proj: b.proj, model_p: (b.side || b.pick) === "Under" ? 1 - b.model_over : b.model_over,
                    grade: b.grade, lock: b.lock, commence_time: b.commence_time, link: sideLink(b, b.side || b.pick), season: DATA.meta?.season, week: DATA.meta?.week, jersey: b.jersey ?? null,
-                   player_id: b.player_id ?? null, espn_id: b.espn_id ?? null, added: new Date().toISOString() });
+                   player_id: b.player_id ?? null, espn_id: b.espn_id ?? null, added: new Date().toISOString(), u: Date.now() });
   saveMine(list); renderPlays(); renderMine(); liveLoop(true);
 }
 // the book's own bet-slip link for a side, when The Odds API passed one through (DraftKings and FanDuel do)
@@ -1821,7 +1821,7 @@ function addButton(b) {
 }
 const LIVE = { events: null, box: {}, at: null, error: null, timer: null };
 const money = (x) => (x == null || isNaN(x) ? "" : (x < 0 ? "-$" : "$") + Math.abs(x).toFixed(2).replace(/\.00$/, ""));
-function setStake(key, v) { const list = mine(), b = list.find((x) => x.key === key); if (!b) return; b.stake = v === "" || isNaN(+v) ? null : Math.max(0, +v); saveMine(list); renderMine(); }
+function setStake(key, v) { const list = mine(), b = list.find((x) => x.key === key); if (!b) return; b.stake = v === "" || isNaN(+v) ? null : Math.max(0, +v); touch(b); saveMine(list); renderMine(); }
 async function espn(url) { const r = await fetch(url, { cache: "no-store" }); if (!r.ok) throw new Error(`ESPN ${r.status}`); return r.json(); }
 function gameOf(bet) {
   const want = new Set([bet.team, bet.opp].filter(Boolean));
@@ -1889,7 +1889,7 @@ function renderMine() {
   // A by morning), and the board copied the grade of the moment it was added. After kickoff, or once settled, it stays.
   { const cur = new Map((DATA.bets || []).filter((x) => x.pick === "Over" || x.pick === "Under").map((x) => [betKey({ ...x, side: x.pick }), x])); let moved = false;
     for (const b of list) { if (b.settled) continue; const k = betKick(b); if (k && k.getTime() <= Date.now()) continue; const x = cur.get(b.key); if (!x) continue;
-      if ((x.grade || null) !== (b.grade ?? null) || (x.lock ?? null) !== (b.lock ?? null)) { b.grade = x.grade || null; b.lock = x.lock ?? null; moved = true; } }
+      if ((x.grade || null) !== (b.grade ?? null) || (x.lock ?? null) !== (b.lock ?? null)) { b.grade = x.grade || null; b.lock = x.lock ?? null; b.gu = Date.now(); moved = true; } }
     if (moved) saveMine(mine()); }
   if (LIVE.error && (LIVE.events || []).some((g) => g.state === "in")) box.append(el("div", { class: "warn" }, `ESPN's live feed is not answering (${LIVE.error}). Live tackles and pace are paused; every bet is still settled from the official box score the morning after, and nothing on the ledger is lost.`));
   else if (LIVE.error && !LIVE.events) box.append(el("div", { class: "warn" }, `ESPN's scoreboard is not answering (${LIVE.error}), so kickoff times and live tracking are unavailable for now. Official grading still settles every bet.`));
@@ -2013,14 +2013,14 @@ function renderMine() {
 function mineTools(hasBets) {
   const add = addPicker(); add.id = "mine-add";
   const how = el("div", { class: "section", id: "mine-how" }, el("h3", {}, "How My board works"),
-    el("p", { class: "lead" }, "The bets you took, tracked live, with your stakes. Press \"+ My board\" on any card on the Plays tab; it is kept in this browser only. While a game is on, each bet refreshes from ESPN's box score every minute: tackles so far, the pace for the full game, and whether the bet is trending the right way. The official box score the books settle on can differ by a tackle from the live feed, and the official one is what the ledger keeps. A custom bet is one you type in and settle yourself; it is counted in the same totals."));
+    el("p", { class: "lead" }, "The bets you took, tracked live, with your stakes. Press \"+ My board\" on any card on the Plays tab; it is kept in this browser, and on your other devices too once \"Sync across devices\" is connected. While a game is on, each bet refreshes from ESPN's box score every minute: tackles so far, the pace for the full game, and whether the bet is trending the right way. The official box score the books settle on can differ by a tackle from the live feed, and the official one is what the ledger keeps. A custom bet is one you type in and settle yourself; it is counted in the same totals."));
   if (hasBets) {
     const clr = el("button", { type: "button", class: "reset danger", title: "Takes every bet off the live board; the season ledger keeps them with their results" }, "Clear this week's board (the ledger keeps it)");
-    clr.onclick = () => { if (confirm("Take every bet off this week's board? They stay in the season ledger with their results.")) { const all = mine(); all.forEach((b) => { b.archived = true; }); saveMine(all); renderPlays(); renderMine(); } };
+    clr.onclick = () => { if (confirm("Take every bet off this week's board? They stay in the season ledger with their results.")) { const all = mine(); all.forEach((b) => { b.archived = true; touch(b); }); saveMine(all); renderPlays(); renderMine(); } };
     how.append(clr);
   }
   const cust = customForm(); cust.id = "mine-custom-add";
-  return [foldOf(cust, ["a moneyline, a spread, anything the site does not price"]), foldOf(add, [(DATA.week_lines || []).length ? "find any line pulled this week" : "no lines pulled this week yet"]), foldOf(how, ["and how to clear the week"])];
+  return [foldOf(syncBox(), [syncLine()]), foldOf(cust, ["a moneyline, a spread, anything the site does not price"]), foldOf(add, [(DATA.week_lines || []).length ? "find any line pulled this week" : "no lines pulled this week yet"]), foldOf(how, ["and how to clear the week"])];
 }
 
 // My board with many bets: filter by state, group the live ones by game, and a compact one-line-per-bet view
@@ -2170,7 +2170,7 @@ function ledgerSection() {
     // older weeks settle from the grader's official results too, written on the bet once
     let dirty = false;
     for (const b of wk.list) { if (!b.week) { b.week = wk.week; b.season = wk.season; dirty = true; } if (!b.settled || b.settled.source !== "official") { const off = officialGrade(b, wk.week); if (off) { b.settled = { ...off, source: "official" }; dirty = true; } } }
-    if (dirty) { try { localStorage.setItem(wk.key, JSON.stringify(wk.list)); } catch (e) { /* fine */ } if (wk.key === MINE_KEY()) MINE = wk.list; }
+    if (dirty) { try { localStorage.setItem(wk.key, JSON.stringify(wk.list)); } catch (e) { /* fine */ } if (wk.key === MINE_KEY()) MINE = wk.list; syncSoon(); }
     let w = 0, l = 0, p = 0, st = 0, pr = 0, pend = 0;
     for (const b of wk.list) { const m = betMoney(b); if (m.result === "Win") w++; else if (m.result === "Loss") l++; else if (m.result === "Push") p++; else if (m.result !== "Void") pend++; if (m.stake != null && m.result) { st += m.stake; pr += m.profit; } }
     W += w; L += l; P += p; staked += st; profit += pr;
@@ -2199,7 +2199,7 @@ function ledgerSection() {
           el("small", {}, [odds(b.odds), m.stake == null ? "no stake" : money(m.stake), b.book || ""].filter(Boolean).join(" · "))),
         m.result || "Pending", b.settled?.actual == null ? "" : num(b.settled.actual, 0), m.profit == null ? "" : el("b", { class: sgn(m.profit) }, usd(m.profit))]; }));
     tb.classList.add("ledger-t");
-    const rmw = el("button", { type: "button", class: "reset danger", title: "Removes the week from the ledger on this device for good" }, `Delete week ${r.week} from this device`); rmw.onclick = () => { if (confirm(`Delete week ${r.week}'s board from this device?`)) { try { localStorage.removeItem(r.key); } catch (e) { /* fine */ } if (r.key === MINE_KEY()) MINE = null; renderPlays(); renderMine(); } };
+    const rmw = el("button", { type: "button", class: "reset danger", title: "Removes the week from the ledger on this device for good" }, SYNC.cfg ? `Delete week ${r.week} (on every synced device)` : `Delete week ${r.week} from this device`); rmw.onclick = () => { if (confirm(SYNC.cfg ? `Delete week ${r.week}'s board on every synced device?` : `Delete week ${r.week}'s board from this device?`)) { for (const b of r.list) tombstone(r.key, b.key); try { localStorage.removeItem(r.key); } catch (e) { /* fine */ } if (r.key === MINE_KEY()) MINE = null; syncSoon(); renderPlays(); renderMine(); } };
     d.append(el("div", { class: "fold-body" }, weekMoney(r.list), el("div", { class: "chips", style: "margin-top:8px" }, gradeChips(r.list)), el("div", { class: "scroll" }, tb), rmw));
     sec.append(d);
   }
@@ -2273,8 +2273,196 @@ function ledgerImport(obj) {
     for (const b of list) { if (!b || !b.key) continue; const mine = have.get(b.key); if (!mine) { cur.push(b); added++; } else { if (mine.stake == null && b.stake != null) mine.stake = b.stake; if (!mine.settled && b.settled) mine.settled = b.settled; } }
     try { localStorage.setItem(k, JSON.stringify(cur)); weeks++; } catch (e) { /* fine */ }
   }
-  MINE = null; return { added, weeks };
+  MINE = null; syncSoon(); return { added, weeks };
 }
+// ---------------------------------------------------------------- sync across devices (optional): My board in a private GitHub repo
+// The whole ledger is one JSON file in a private repo of the owner's, as in his lifting app (the same repo and token
+// work: the file has its own name). Every device keeps its own copy and a sync merges the two: bets are matched by
+// key, the later change wins, removals carry across as tombstones. Nothing is replaced wholesale, so no device can
+// wipe another. The merge gives the same answer whichever device runs it, so two devices cannot overwrite each other
+// in turns. The token lives in this browser only and is sent only to api.github.com.
+const SYNC_KEY = "slammer.sync.v1", SYNC_FILE = "slammer-board.json", GH_API = "https://api.github.com", DEL_KEY = "mine-deleted";
+const SYNC = { cfg: null, busy: false, again: false, timer: null, state: "off", msg: "", at: 0, p: null };
+const touch = (b) => { b.u = Date.now(); return b; };                     // the owner changed this bet now
+const betStamp = (b) => b.u || Date.parse(b.added || "") || 0;
+function loadDeleted() { try { const d = JSON.parse(localStorage.getItem(DEL_KEY) || "{}"); return d && typeof d === "object" ? d : {}; } catch (e) { return {}; } }
+function tombstone(weekKey, key) { const d = loadDeleted(); d[`${weekKey}|${key}`] = Date.now(); try { localStorage.setItem(DEL_KEY, JSON.stringify(d)); } catch (e) { /* fine */ } }
+function loadSyncCfg() {
+  let c = null; try { c = JSON.parse(localStorage.getItem(SYNC_KEY) || "null"); } catch (e) { /* fine */ }
+  SYNC.cfg = c && typeof c.repo === "string" && /^[\w.-]+\/[\w.-]+$/.test(c.repo) && typeof c.token === "string" && c.token.length > 10 ? { repo: c.repo, token: c.token } : null;
+  if (!SYNC.cfg) { SYNC.state = "off"; SYNC.msg = ""; } else if (SYNC.state === "off") SYNC.state = "idle";
+}
+function gh(cfg, path, method, body) {
+  const h = { Authorization: `Bearer ${cfg.token}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
+  if (body) h["Content-Type"] = "application/json";
+  return fetch(GH_API + path, { method: method || "GET", headers: h, body: body ? JSON.stringify(body) : undefined, cache: "no-store" });
+}
+const b64utf8 = { enc: (str) => { const b = new TextEncoder().encode(str); let s = ""; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); },
+                  dec: (t) => new TextDecoder().decode(Uint8Array.from(atob(String(t).replace(/\s/g, "")), (c) => c.charCodeAt(0))) };
+// ---- the merge
+const betStarted = (b) => !!b.settled || (b.commence_time && new Date(b.commence_time).getTime() <= Date.now());
+// one fixed text form of a bet. Left out: what only this device knows (the clock on a bet past its line), and the grade
+// of a bet that has not kicked off (each device follows its own board until then; after kickoff it is fixed and synced)
+function canonBet(b) {
+  const o = {}; for (const k of Object.keys(b).sort()) { if (k === "past_line" || b[k] === undefined) continue; if (!betStarted(b) && (k === "grade" || k === "lock" || k === "gu")) continue; o[k] = b[k]; }
+  return JSON.stringify(o);
+}
+const settledRank = (s) => (!s || !s.result ? 0 : s.source === "official" ? 3 : s.source === "live" ? 2 : 1);
+function mergeBet(a, b) {            // a: this device's copy, b: the other. The result does not depend on which is which.
+  const sa = betStamp(a), sb = betStamp(b), base = sa !== sb ? (sb > sa ? b : a) : (canonBet(b) > canonBet(a) ? b : a), other = base === a ? b : a, out = { ...base };
+  if (out.stake == null && other.stake != null) out.stake = other.stake;
+  if (!out.custom) {                 // a tackle bet's result is the best one either device has: official, then live; the earlier of two alike
+    const ro = settledRank(other.settled), rb = settledRank(out.settled);
+    if (ro > rb || (ro === rb && ro > 0 && String(other.settled.at || "") < String(out.settled.at || ""))) out.settled = other.settled;
+    const g = (other.gu || 0) > (out.gu || 0) ? other : out;            // the grade as last read off a board before kickoff
+    if (g !== out) { out.grade = g.grade ?? null; out.lock = g.lock ?? null; out.gu = g.gu; }
+  }
+  if (a.past_line) out.past_line = a.past_line; else delete out.past_line;
+  return out;
+}
+function mergeBoards(a, b) {         // a: this device, b: the file. { weeks: { key: [bets] }, deleted: { "week|bet": time } }
+  const deleted = {}, cutoff = Date.now() - 200 * 86400000;
+  for (const d of [a.deleted || {}, b.deleted || {}]) for (const [k, t] of Object.entries(d)) if (t > cutoff) deleted[k] = Math.max(deleted[k] || 0, t);
+  const weeks = {};
+  for (const wk of new Set([...Object.keys(a.weeks || {}), ...Object.keys(b.weeks || {})])) {
+    if (!WEEK_RE.test(wk)) continue;
+    const by = new Map();
+    for (const x of (b.weeks || {})[wk] || []) if (x && x.key) by.set(x.key, x);
+    for (const x of (a.weeks || {})[wk] || []) if (x && x.key) by.set(x.key, by.has(x.key) ? mergeBet(x, by.get(x.key)) : x);
+    const list = [...by.values()].filter((x) => !((deleted[`${wk}|${x.key}`] || 0) >= betStamp(x)));
+    if (list.length) weeks[wk] = list;
+  }
+  return { weeks, deleted };
+}
+function canonBoard(st) {
+  const del = Object.keys(st.deleted || {}).sort().map((k) => [k, st.deleted[k]]);
+  return JSON.stringify({ deleted: del, weeks: Object.keys(st.weeks || {}).sort().map((k) => [k, st.weeks[k].map(canonBet).sort()]) });
+}
+const localBoard = () => ({ weeks: Object.fromEntries(allWeeks().map((w) => [w.key, w.list])), deleted: loadDeleted() });
+function applyBoard(st) {
+  try {
+    for (const w of allWeeks()) if (!st.weeks[w.key]) localStorage.removeItem(w.key);
+    for (const [k, list] of Object.entries(st.weeks)) localStorage.setItem(k, JSON.stringify(list));
+    localStorage.setItem(DEL_KEY, JSON.stringify(st.deleted));
+  } catch (e) { /* storage off: nothing to keep */ }
+  MINE = null;
+}
+// ---- the file
+const syncErr = (code, msg) => ({ sync: true, code, msg });
+function httpErr(r) {
+  if (r.status === 401) return syncErr("auth", "GitHub rejected the token. It may have expired. Make a new one and connect again.");
+  if (r.status === 403 || r.status === 404) return syncErr("access", "That token cannot reach the repo. Check the repo name and that the token has Contents read and write for it.");
+  if (r.status === 429) return syncErr("rate", "GitHub is rate-limiting requests. It will retry later.");
+  return syncErr("http", `GitHub answered with an error (${r.status}). It will retry later.`);
+}
+async function readRemote(cfg) {
+  const r = await gh(cfg, `/repos/${cfg.repo}/contents/${SYNC_FILE}`);
+  if (r.status === 404) return { sha: null, text: null };                // no file yet, or an empty repo
+  if (!r.ok) throw httpErr(r);
+  const j = await r.json();
+  if (j && j.content) return { sha: j.sha, text: b64utf8.dec(j.content) };
+  const r2 = await gh(cfg, `/repos/${cfg.repo}/git/blobs/${j.sha}`); if (!r2.ok) throw httpErr(r2);      // a file over 1 MB
+  return { sha: j.sha, text: b64utf8.dec((await r2.json()).content) };
+}
+async function writeRemote(cfg, st, sha) {
+  const weeks = Object.fromEntries(Object.entries(st.weeks).map(([k, list]) => [k, list.map((b) => { const o = { ...b }; delete o.past_line; return o; })]));
+  const body = { message: "Update My board", content: b64utf8.enc(JSON.stringify({ app: "slammer-board", v: 1, saved: new Date().toISOString(), weeks, deleted: st.deleted }, null, 1)) };
+  if (sha) body.sha = sha;
+  const r = await gh(cfg, `/repos/${cfg.repo}/contents/${SYNC_FILE}`, "PUT", body);
+  if (r.status === 409 || r.status === 422) return "conflict";           // another device saved in between: read again and merge
+  if (!r.ok) throw httpErr(r);
+  return "ok";
+}
+function setSync(state, msg) { SYNC.state = state; SYNC.msg = msg || ""; refreshSyncBox(); }
+function syncLine() {
+  if (!SYNC.cfg) return "off";
+  if (SYNC.state === "busy") return `syncing with ${SYNC.cfg.repo}`;
+  if (SYNC.state === "error") return `not synced: ${SYNC.msg} Your board is safe on this device.`;
+  if (SYNC.state === "ok") return `in step with ${SYNC.cfg.repo}, last checked ${new Date(SYNC.at).toLocaleTimeString([], { timeZone: TZ, hour: "numeric", minute: "2-digit" })}`;
+  return `connected to ${SYNC.cfg.repo}`;
+}
+function runSync() {
+  if (!SYNC.cfg) return Promise.resolve();
+  if (SYNC.busy) { SYNC.again = true; return SYNC.p; }
+  SYNC.busy = true; setSync("busy");
+  const cfg = SYNC.cfg; let tries = 0, pulled = false;
+  const attempt = async () => {
+    tries++;
+    const rem = await readRemote(cfg);
+    let remote = null;
+    if (rem.text != null) {
+      let d = null; try { d = JSON.parse(rem.text); } catch (e) { /* not ours */ }
+      if (!d || d.app !== "slammer-board" || typeof d.weeks !== "object") throw syncErr("badfile", `The file ${SYNC_FILE} in that repo is not a My board ledger, so it was left untouched.`);
+      remote = { weeks: d.weeks || {}, deleted: d.deleted || {} };
+    }
+    const local = localBoard(), merged = mergeBoards(local, remote || { weeks: {}, deleted: {} }), cm = canonBoard(merged);
+    if (cm !== canonBoard(local)) { applyBoard(merged); pulled = true; }
+    if (remote && cm === canonBoard(mergeBoards(remote, { weeks: {}, deleted: {} }))) return;
+    if (!remote && !Object.keys(merged.weeks).length && !Object.keys(merged.deleted).length) return;       // nothing worth creating a file for
+    const res = await writeRemote(cfg, merged, rem.sha);
+    if (res !== "conflict") return;
+    if (tries < 4) return attempt();
+    throw syncErr("conflict", "Another device kept saving at the same moment. It will retry.");
+  };
+  SYNC.p = attempt().then(() => { SYNC.at = Date.now(); SYNC.busy = false; if (SYNC.cfg === cfg) setSync("ok"); },
+    (e) => { SYNC.busy = false; if (SYNC.cfg === cfg) setSync("error", e && e.sync ? e.msg : "No connection to GitHub right now. It will retry."); })
+    .then(() => {
+      if (pulled) { SYNC.quiet = true; try { renderPlays(); renderMine(); liveLoop(true); } finally { SYNC.quiet = false; } }     // something arrived from another device
+      if (SYNC.again && SYNC.cfg) { SYNC.again = false; return runSync(); }
+      SYNC.again = false;
+    });
+  return SYNC.p;
+}
+function syncSoon() { if (!SYNC.cfg || SYNC.quiet) return; clearTimeout(SYNC.timer); SYNC.timer = setTimeout(runSync, 1500); }
+const parseRepo = (v) => { const m = String(v || "").trim().replace(/\.git$/, "").match(/(?:github\.com[/:])?([\w.-]+)\/([\w.-]+)\/?$/); return m ? `${m[1]}/${m[2]}` : ""; };
+async function connectSync(repoIn, tokenIn) {
+  const repo = parseRepo(repoIn), token = String(tokenIn || "").trim();
+  if (!repo) throw syncErr("input", "Enter the repo as owner/name, for example yourname/lifting-data.");
+  if (token.length < 20 || /\s/.test(token)) throw syncErr("input", "Paste the whole access token. It starts with github_pat_.");
+  const cfg = { repo, token };
+  let r; try { r = await gh(cfg, `/repos/${repo}`); } catch (e) { throw syncErr("net", "No connection to GitHub right now. Try again when you have signal."); }
+  if (!r.ok) throw httpErr(r);
+  const j = await r.json();
+  if (j && j.private === false) throw syncErr("public", "That repo is public, so your bets would be visible to anyone. Use a private repo, then connect again.");
+  if (j && j.permissions && j.permissions.push === false) throw syncErr("readonly", "That token can read the repo but not write to it. Give it Contents: Read and write.");
+  try { localStorage.setItem(SYNC_KEY, JSON.stringify(cfg)); } catch (e) { throw syncErr("store", "This browser would not save the connection."); }
+  SYNC.cfg = cfg; SYNC.state = "idle";
+  return runSync();
+}
+function disconnectSync() { try { localStorage.removeItem(SYNC_KEY); } catch (e) { /* fine */ } clearTimeout(SYNC.timer); SYNC.cfg = null; SYNC.again = false; setSync("off"); }
+// the lifting app on this same site keeps its own connection in this browser: offer it, never take it unasked
+function liftingCfg() { try { const c = JSON.parse(localStorage.getItem("liftledger.sync.v1") || "null"); return c && typeof c.repo === "string" && typeof c.token === "string" && c.token.length > 10 ? c : null; } catch (e) { return null; } }
+function syncBox() {
+  const wrap = el("div", { class: "section", id: "mine-sync" }, el("h3", {}, "Sync across devices"));
+  const err = el("p", { class: "muted", id: "sync-error", role: "alert" });
+  const fail = (e) => { err.textContent = e && e.sync ? e.msg : "Something went wrong reaching GitHub. Try again."; };
+  if (SYNC.cfg) {
+    const now = el("button", { type: "button", class: "reset" }, "Sync now"); now.onclick = () => runSync();
+    const off = el("button", { type: "button", class: "reset danger" }, "Disconnect this device"); off.onclick = () => { if (confirm("Stop syncing on this device? Your board stays here and in the repo.")) { disconnectSync(); renderMine(); } };
+    wrap.append(el("p", { class: "lead", id: "sync-status" }, `My board is ${syncLine()}.`),
+      el("p", { class: "note" }, "Bets, stakes, results, custom bets and removals sync after every change, when you open the site and when you come back to it. Each device keeps its own copy and a sync merges them, so one device can never wipe another."),
+      el("div", { class: "chips" }, now, off));
+    return wrap;
+  }
+  const repo = el("input", { type: "text", id: "sync-repo", placeholder: "yourname/lifting-data", autocomplete: "off", autocapitalize: "none", spellcheck: "false", "aria-label": "Private repo, as owner/name" });
+  const token = el("input", { type: "password", id: "sync-token", placeholder: "github_pat_...", autocomplete: "off", autocapitalize: "none", spellcheck: "false", "aria-label": "Access token" });
+  const go = el("button", { type: "button", class: "reset" }, "Connect");
+  const connect = (r, t) => { err.textContent = "Checking the repo and token."; go.disabled = true; connectSync(r, t).then(() => renderMine(), (e) => { go.disabled = false; fail(e); }); };
+  go.onclick = () => connect(repo.value, token.value);
+  const lift = liftingCfg();
+  wrap.append(el("p", { class: "lead" }, "Keep the same board on your phone, your computer and any new device, in a private GitHub repo only you can see: the way your lifting app does it. The same repo and token work here; My board uses its own file in it."));
+  if (lift) { const use = el("button", { type: "button", class: "reset", id: "sync-use-lifting" }, `Use my lifting app's connection (${lift.repo})`); use.onclick = () => connect(lift.repo, lift.token);
+    wrap.append(el("div", { class: "chips" }, use), el("p", { class: "note" }, "This browser already holds the lifting app's connection. One tap uses the same repo and token; do the same on each device.")); }
+  const steps = el("ol", {}, el("li", {}, "A private repo: the one your lifting app uses, or a new one at github.com/new (choose Private)."),
+    el("li", {}, "A token at github.com/settings/personal-access-tokens/new: Repository access, Only select repositories, that repo; Permissions, Contents, Read and write. The lifting app's token already has this."),
+    el("li", {}, "Paste both here and press Connect. On every other device, do just this step."));
+  const form = el("div", { class: "wi-form custom-form" }, el("label", { class: "wide" }, "Repo ", repo), el("label", { class: "wide" }, "Token ", token), go);
+  if (lift) wrap.append(more("Or connect another repo or token", steps, form)); else wrap.append(more("How to set it up", steps), form);
+  wrap.append(err,
+    el("p", { class: "note" }, "The token is stored only in this browser and is sent only to GitHub. It is never in a backup file, code or link."));
+  return wrap;
+}
+function refreshSyncBox() { const s = document.querySelector("#sync-status"); if (s) s.textContent = `My board is ${syncLine()}.`; const f = document.querySelector("details#mine-sync > summary .s"); if (f) f.textContent = syncLine(); }
 function backupBox() {
   const wrap = el("div", { class: "section" }, el("h3", {}, "Back up or move this ledger"), el("p", { class: "lead" }, "The ledger lives in this browser only. Back it up as a file, copy it as a code, or send a transfer link to another device; opening the link there imports every week into that device's ledger (merging, never duplicating). A backup is the only way to keep it if this browser's storage is cleared."));
   const out = el("textarea", { class: "code", rows: "3", readonly: "", placeholder: "Press one of the buttons", "aria-label": "Backup code or link" });
@@ -2568,7 +2756,9 @@ function show(id) {
   document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => show(b.dataset.tab)));
   if (location.hash.startsWith("#import=")) { await importFromHash(); show("mine"); }
   const h = location.hash.slice(1); if (["plays", "proj", "record", "check", "mine", "patch", "gloss", "ast"].includes(h)) show(h);
-  renderMine(); liveLoop();
+  loadSyncCfg(); renderMine(); liveLoop();
+  if (SYNC.cfg) runSync();
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && SYNC.cfg) runSync(); });
 })();
 </script>
 </body>
