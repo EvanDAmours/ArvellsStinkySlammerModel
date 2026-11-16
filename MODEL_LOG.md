@@ -653,10 +653,9 @@ and C9. What remains, and what the rebuild itself turned up:
 13. **Role news is untested.** The rebuild at pull time (R7) is a mechanism with no record: watch the first Sunday
     for a rebuild in the ticker's log and what it changed. The same goes for lines that do not fit the player:
     count how many the guard removes a week.
-25. **"Rules on trial" shows S3 as "read it now" from the first graded pick** (found 2026-11-13 by the standing
-    post-mortem; display only). `watch` in `grade.engine_era` (`pipeline/grade.py`, line 684) gives that state to a
-    condition with no count and no bar; S3 is read after week 13. Fix for the owner's session: keep it "running"
-    until week 13 is graded (a week count, as E2 has). No pick, grade or stake reads the state.
+25. **Closed 2026-11-16: "Rules on trial" showed S3 as "read it now" from the first graded pick.** `watch` now
+    keeps a condition read after a week "running" until that week has no pick pending (post-mortem of week 10,
+    point 9).
 14. **Smaller.** The proportional no-vig split is off by about a point at very short and long prices. The solo
     share's own uncertainty is not in the solo spread. A same-game parlay's price is our estimate, not the book's.
     The regime-robust solo price (archive, 2026-11-08) has not been tried as the solo model. ESPN spells 9 of 528
@@ -816,6 +815,82 @@ the record is the week evidence about the model.
 Post-mortems of weeks 7 and 8 are in the archive. From week 10 a post-mortem starts from the scoreboard (Track
 record, "Against the market") and the luck table, reads every record with its likely range, and changes nothing
 inside the freeze unless it finds a defect.
+
+### Week 10 through Sunday: the owner's post-mortem of the first live week (written Monday 2026-11-16, 8:30 am MST; Monday's game pending)
+
+Asked for by the owner: where the week went right, where it went wrong, what to play. Thirteen games graded
+(Thursday and Sunday), three picks pending on Monday night. Every figure is from `data/picks.csv`, `data/settled.csv`
+and the official box score of week 10, rebuilt by hand and matching `data/weekly_five.md` (50-43; A 7-4, B 9-2,
+C 34-37). One rule changed nothing; one display defect was fixed (point 9).
+
+1. **The record: 50-43 (54%, range 37% to 70%), +3.76 units at 1 a bet, +3.45 on 33.6 staked (+10%).** The win
+   chance said 57%. 96 bets counted from 133 logged rows (37 were the same bet at a second book or line).
+2. **Where the money came from: the flag, and nothing else.**
+
+   | Kind of pick | Record | Hit | Said | Units at the stakes | Staked |
+   | --- | --- | --- | --- | --- | --- |
+   | Solo Under on a flagged line (the A and B picks) | 16-6 | 73% | 63% | +4.20 | 16.0 |
+   | Combined Under (C) | 9-4 | 69% | 59% | +1.08 | 3.2 |
+   | Solo Under on an unflagged line (C) | 10-12 | 45% | 55% | -0.45 | 5.4 |
+   | Any Over (C) | 12-13 | 48% | 53% | -0.07 | 6.1 |
+   | Assists Under (C, the trial market) | 3-8 | 27% | 59% | -1.32 | 2.7 |
+
+   The A and B picks are 24% of the bets, 48% of the stakes and 122% of the profit. The other 71 bets lost 0.75
+   units between them. A and B with the combined Unders: 25-10, +5.28 on 19.2 (+27%).
+3. **Skill or the level of the market.** The flag worked with no model at all: of every solo closing line (123),
+   the Under hit 64% on the 50 flagged and 47% on the 73 unflagged. The model's choice among the flagged lines added
+   to that (73% on the 22 it picked). On probabilities the engine was level with the book: +0.0006 on 368 two-way
+   closing lines (combined +0.0035, solo +0.0003, assists -0.0021), and the model alone was worse than the book in
+   all three markets. So the week's profit was the structural hole, not sharper chances, and the C picks, which rest
+   on the engine alone, did what a level engine does: lose the vig. The whole board: the Under won 59% on combined,
+   54% on solo, 51% on assists.
+4. **What went right.**
+   - The flag, live for the first time: 16-6 against a replay rate of 68%. Locks 5-0. The parlay won (+271).
+   - The ladder: +10% on the stakes where the same picks at one size made +4%.
+   - Settlement: ESPN's finals matched the official box score on all 93 graded bets, no flip.
+   - Operations: all eleven scheduled pulls ran, the rebuild on role news fired when it should, pulls by hand
+     landed in a minute.
+5. **What went wrong.**
+   - **C picks as a whole: 34-37.** 71 of 100 on their trial; at this rate they fail the 52.4% bar when it is read,
+     probably after week 11.
+   - **Solo Unders off the flag: 10-12 live, 48-54 on this season's replayed weeks.** 58-66 on 2026: the one kind
+     with a losing record both replayed and live.
+   - **The model's sureness, again (open issue 24a).** Picks where the model alone said 75% or more: 4-6. Picks on
+     a "new role" player: 7-7, and Micah McFadden's three Unders (model 6.4 combined, he made 10) all lost on
+     Thursday: one opinion staked three times, on a player the checklist had flagged.
+   - **Overs priced under 50%: 3-9.** All Overs 12-13.
+   - **A did not beat B** (7-4 against 9-2; the ranges overlap entirely). Four of the six A and B losses played 94%
+     or more of the snaps (Elliss, Pitre, Lloyd, Emmanwori), as the audit said an Under's losses do.
+   - **The game cap cut the wrong picks.** Vikings at Packers: 15 bets, the four A picks trimmed to 0.8 to 0.95
+     while ten C picks stayed and went 4-6. Cutting the C picks first: +1.59 against the +1.20 it made.
+   - **Volume.** 96 bets is more than anyone places by hand; 37 rows were duplicates the site showed as separate.
+   - **The site, on a live weekend.** Five defects reached the owner (a card printing "[object HTMLElement]", the
+     noon games filed under "Afternoon", a stale grade on My board, a card squeezed to one word a line on a phone,
+     the season record shrunk) and one push went out red. Cause: some twenty site changes shipped during the
+     slate, and a smoke test that reads the page's text, never its rendering.
+6. **What the owner should play** (advice for the owner's own bets; the model's rules stay frozen to 2026-12-08):
+   - **Play, at the ladder:** every solo Under on a flagged line, A and B alike. One per player: where two books
+     list him, the better price; where two lines, the one the model grades higher.
+   - **Play small:** combined Unders (C, 0.25), not on a player already bet.
+   - **Leave out until their trials read:** solo Unders off the flag; Overs, above all at plus money and on corners
+     and linemen; assists Unders (62% replayed, 3-8 live: likely noise, not yet worth a stake); a second or third
+     bet on one player; any pick tagged "new role" or where the model alone says 75% or more.
+   - What that would have made this week: 25-10, +5.28 units on 19.2 staked, from 35 bets where the full board made
+     +3.45 on 33.6 from 96.
+   - Caution: one week. 16-6 has a likely range of 52% to 87%; the replay's 68% is the number to expect.
+7. **Proposals for the review of 2026-12-08** (not adopted; each needs its replay first): the game cap takes from C
+   before B before A; one counted bet a player a game; no pick on a "new role" player when the model is below the
+   line by a quarter or more; A and B merged, or A redefined, if they have not separated at 30 A picks; the model's
+   own chance capped at 75% when it chooses locks; the site lists a bet once, at its best book, with the price of
+   the latest pull. For the site: no layout change on a game day unless the owner asks for it, and a browser test
+   in the Test workflow that opens every tab at phone width.
+8. **Conditions on trial** (weekly log): H1 A 11 of 30, 7-4. H1 B 11 of 40, 9-2. H1 C 71 of 100, 34-37. E4 the old
+   A rule 12 of 30, 8-4. E6 Overs 25 of 40, 12-13. H1 solo Unders off the flag 22 of 40, 10-12. E5 locks 5-0. E2
+   the engine's weight, margin -0.0020 on the log's count, 1 of 4 weeks. None reached its count.
+9. **What changed:** nothing in the rules. Open issue 25 closed: "Rules on trial" showed S3 as "read it now" from
+   its first graded pick; `watch` in `grade.engine_era` now keeps a condition read after a week "running" until
+   that week has no pick pending (smoke check added). Display only. The standing post-mortem closes the week on
+   Tuesday with Monday's game.
 
 ### Week 10, opened Friday 2026-11-13 with Thursday's slate (standing post-mortem, 8:59 am MST; measures only, nothing changed)
 

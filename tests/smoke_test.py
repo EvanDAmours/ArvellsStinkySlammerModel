@@ -484,7 +484,8 @@ check(_era["bets"] == 4 and _era["wins"] == 2 and _era["losses"] == 2 and _era["
       and _wt["B picks"]["n"] == 1 and _wt["B picks"]["wins"] == 1 and _wt["C picks"]["n"] == 1 and _wt["Over picks"]["n"] == 1 and _wt["Locks"]["wins"] == 1 and _wt["Locks"]["losses"] == 1 and _wt["Locks"]["state"] == "running"
       and _era["locks"]["bets"] == 2 and {g["grade"] for g in _era["by_grade"]} == {"A", "B", "C"} and sum(c["bets"] for c in _era["calibration"]) == 4
       and _none["bets"] == 0 and len(_none["watches"]) == 8 and all(w["state"] == "running" for w in _none["watches"])
-      and _wt["Solo Under picks on an unflagged line"]["n"] == 0 and _wt["Stakes by grade"]["n"] == 4,
+      and _wt["Solo Under picks on an unflagged line"]["n"] == 0 and _wt["Stakes by grade"]["n"] == 4 and _wt["Stakes by grade"]["state"] == "running"
+      and {w["name"]: w for w in G.engine_era(_ep.assign(week=[9, 10, 11, 12, 13, 13], result=["Win", "Win", "Loss", "Win", "Loss", "Win"]))["watches"]}["Stakes by grade"]["state"] == "read it now",
       f"the record since the engine leaves out the weeks before it and counts each condition of the decision register ({_era['wins']}-{_era['losses']}, {len(_era['watches'])} conditions)")
 _evd = "\n".join(G._evidence_sections(dict(scoreboard=_sb_live, era=_era, bets=5, wins=3, losses=2, pushes=0, units=0.8, hit_lo=0.2, hit_hi=0.9, by_grade=G.record_by_grade(_ep), by_side_market=[])))
 check(all(k in _evd for k in ("## Against the market", "(out of sample)", "### Candidates in the shadow", "## Since the engine", "Conditions of the decision register on trial", "| E2 The engine's weight (0.65 solo, 0.35 combined) |", "| H1 A picks |", "## All plays to date"))
