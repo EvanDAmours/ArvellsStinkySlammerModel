@@ -13,4 +13,10 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - run: python tests/smoke_test.py
+      - name: Smoke test (also writes the synthetic site the browser test opens)
+        run: SMOKE_SITE_OUT="$RUNNER_TEMP/site" python tests/smoke_test.py
+      - name: Browser test (every tab at a phone's width and a computer's)
+        run: |
+          pip install -r tests/requirements-browser.txt
+          python -m playwright install --with-deps chromium
+          python tests/browser_test.py "$RUNNER_TEMP/site"

@@ -1,0 +1,3 @@
+# The browser test's one extra library (tests/browser_test.py). Kept out of requirements.txt so the pipeline's own
+# jobs do not install a browser driver they never use; the Test workflow installs this file and Chromium.
+playwright==1.64.1

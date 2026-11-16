@@ -23,7 +23,9 @@
    the engine only (`config.ENGINE_LIVE`, "Since the engine" in `data/weekly_five.md`): the rules were chosen on
    past lines through week 9 (the 2025 season and weeks 1 to 9 of 2026).
 5. `python tests/smoke_test.py` must pass before every push. `TACKLE_FAKE_DATA=1 TACKLE_FAKE_ODDS=1` run the
-   pipeline on synthetic data.
+   pipeline on synthetic data. A change to `docs/index.html` also needs `python tests/browser_test.py SITE`
+   to pass (SITE is the folder the smoke test writes when `SMOKE_SITE_OUT` is set): it opens every tab in a real
+   browser at a phone's width and a computer's. Read the test's result before committing; never chain the push to it.
 6. Secrets: `ODDS_API_KEY` and `PARLAY_API_KEY` are GitHub Actions secrets. Never print or commit their values.
 7. Schedules are in UTC in `.github/workflows/*.yml`; the user is in Edmonton (UTC-6 all year since 2026-11-01).
 8. After every push, read the result of the Test workflow on GitHub: it runs the smoke test on a clean machine

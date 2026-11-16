@@ -512,7 +512,7 @@ check("...(liveN ? [units(e.units_at_stake, 1)" in _html, "the live card's units
 check(all(k in _html for k in ("Where today is heading", "now-ticker", "projPL += pr_", "if every bet ended right now · ")), "My board leads with where the day is heading on each bet's projection, green or red, and keeps the count right now in a tile")
 check(all(k in _html for k in ("const CONFIRM_MIN = 10", "b.past_line = { kind: decidedNow", ".live.behind { border-left-color: #e67e22; }", ".live .call.lost { background: #c0392b; }")), "My board calls a bet LOST (red) or WON once past its line for ten minutes, and shows a bet pacing to lose in orange")
 check("function weekMoney" in _html and "weekMoney(r.list)" in _html and '"Wagered and won"' in _html, "each week of the ledger opens to what was wagered, paid back, won and lost")
-check("table.plays-compact tr.mine-expand td, table.plays-compact tr.mine-expand td:first-child { width: auto;" in _html, "a card opened from the one-line Plays list takes the full width, not the grade column's")
+check("table.plays-compact > tbody > tr.mine-expand > td, table.plays-compact > tbody > tr.mine-expand > td:first-child { width: auto;" in _html and "table.mine-compact tr {" not in _html, "a card opened from the one-line Plays list takes the full width, not the grade column's")
 from tools import bias_audit as _BA
 _bp = pd.DataFrame(dict(win=[1.0, 1.0, 0.0, 0.0, 1.0, 0.0], g=["a", "a", "b", "b", "c", "c"]))
 check(abs(_BA.pair_corr(_bp, "g") - 1 / 3) < 1e-9 and _BA.said_hit(pd.DataFrame(dict(p=[.55, .65], h=[1.0, 0.0])), "p", "h", [0, .6, 1]).count("\n") == 3,
@@ -564,7 +564,7 @@ check("Locks record: 1-1" in log and "| 2026 wk 6 | 2 | 1-1 |" in log and "Parla
 # library that happens to be on the machine the test is written on hides the gap (cryptography on 2026-11-02; PyYAML from
 # 2026-11-03 to 2026-11-09, when this test failed on GitHub on every push and passed everywhere else)
 import ast as _pyast
-_req = {l.split("==")[0].strip().lower() for l in (ROOT / "requirements.txt").read_text().splitlines() if l.strip() and not l.lstrip().startswith("#")}
+_req = {l.split("==")[0].strip().lower() for f in ("requirements.txt", "tests/requirements-browser.txt") for l in (ROOT / f).read_text().splitlines() if l.strip() and not l.lstrip().startswith("#")}   # the browser test's library is pinned in its own file
 _dist_name = {"yaml": "pyyaml", "sklearn": "scikit-learn"}                 # import name -> the name it is installed under
 _own = {p.stem for p in ROOT.glob("*.py")} | {p.name for p in ROOT.iterdir() if p.is_dir()}
 _libs = set()
@@ -587,6 +587,10 @@ for _wf in sorted((ROOT / ".github/workflows").glob("*.yml")):
         _ok = False
     check(_ok, f"workflow {_wf.name} is valid YAML with its triggers")
 
+# the site as it stands now, unsealed, for tests/browser_test.py (which opens it in a real browser)
+if os.environ.get("SMOKE_SITE_OUT"):
+    shutil.rmtree(os.environ["SMOKE_SITE_OUT"], ignore_errors=True)
+    shutil.copytree(tmp / "docs", os.environ["SMOKE_SITE_OUT"], ignore=shutil.ignore_patterns("*.enc"))
 # the gate: sealing the site behind a password, and a pull that still reads the sealed meta
 _r = subprocess.run([sys.executable, "run.py", "seal"], cwd=tmp, env=dict(env, SITE_PASSWORD="smoke-pw", SITE_PASSWORDS="evan: second-pw\n# a comment\nfriend: third-pw"), capture_output=True, text=True)
 _enc = sorted(p.name for p in (tmp / "docs/data").glob("*.json.enc")); _plain = sorted(p.name for p in (tmp / "docs/data").glob("*.json"))

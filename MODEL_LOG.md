@@ -200,7 +200,9 @@ Rules of evidence (2026-11-09; they bind every change after this date):
 
 Protocol before pushing a change to the model, pricing, bars, stakes, schedule or data sources:
 
-1. `python tests/smoke_test.py` passes.
+1. `python tests/smoke_test.py` passes. For a change to `docs/index.html`, `python tests/browser_test.py SITE` passes too (the
+   site in a real browser at a phone's width and a computer's; SITE is what the smoke test writes with
+   `SMOKE_SITE_OUT` set). Both results are read before the commit.
 2. A projection change: the full test. The final projection walk-forward by season, corrector retrained, deviance,
    paired by season-week, on regulars and on everyone (the pattern is in Research round 11; `backtest.walk_forward_final`
    and `backtest.paired` are the pieces). The daily `factor_tests` table is the standing version at the factor-model
@@ -1125,6 +1127,40 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 ## Changelog
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
+
+### 2026-11-16, 10:30 am (a browser test in the Test workflow; three phone defects it found on its first run)
+
+The post-mortem of week 10 named the cause of five site defects in one weekend: the smoke test reads the page's
+text, never its rendering. The owner asked for the test that does. No rule, grade or stake is touched.
+
+- **What.** `tests/browser_test.py` opens the synthetic site the smoke test writes (`SMOKE_SITE_OUT`) in Chromium
+  at 390 px and 1,200 px. It visits every tab, then opens every dropdown, and fails on a script error, a page wider
+  than the screen, garbled text ("[object", "undefined", "NaN"; the Patch log is exempt, it quotes the log), or
+  text squeezed to about a word a line (counted on the words themselves). It then drives what has broken before:
+  a pick opened from the one-line list and its "Why" table, the full-card view, the kickoff slots in Edmonton
+  time, the live card with a result in it, the calculator's two stake choices, "Then and now", "+ My board", a
+  stale grade, a custom bet through the form, a simulated third quarter (confirming, LOST, WON, behind, a stat
+  correction; both money figures summed by hand), the season record's size, a week of the ledger, a backup code.
+  88 checks. The Test workflow runs it after the smoke test (Playwright is pinned in
+  `tests/requirements-browser.txt`, kept out of `requirements.txt` so the pipeline's jobs do not install it).
+- **Does it catch what it is for?** `tests/browser_breaks.py` puts back seven defects that reached the owner, one
+  at a time, in a copy of the page: the "[object HTMLElement]" card, the pick squeezed into the grade column, the
+  season record stacked small, the noon games under "Afternoon", the stale grade, the mangled "Why" table, the
+  Patch log wider than a phone. The browser test fails on all seven.
+- **Three defects it found on its first run, fixed here** (all on a phone):
+  1. The "Why" table inside a pick opened from the one-line list was mangled: the list's phone styles (a grid of
+     30 px columns, block cells) reached every table nested in an opened card. The list's styles now apply to its
+     own rows and cells only (`table.mine-compact > tbody > tr > td`), on My board's list too.
+  2. The "Why" table's label column ran a word a line at 80 px. On a phone each row is now the label and its
+     number on one line with "where it comes from" under them.
+  3. The Patch log ran 23 px past the screen with a dropdown open (a long file name in code type does not wrap)
+     and its tables squeezed their columns. Code wraps anywhere; a table keeps 560 px and scrolls sideways.
+- **Evidence.** Smoke test and browser test both pass (the smoke test's library check reads the browser test's
+  pin from its own file); the seven breaks are caught; the Test workflow on GitHub read after the push.
+- **Standing rule** (CLAUDE.md rule 5, protocol step 1): a change to the page needs the browser test to pass, and
+  its result is read before the commit.
+- **Revert if** the browser step makes the Test workflow unreliable (a browser that will not install): drop the
+  step from `.github/workflows/test.yml` and run the test by hand.
 
 ### 2026-11-16, 11 am (Plays tab: a card opened from the one-line list was squeezed into the grade column)
 
@@ -2405,6 +2441,11 @@ Never tested; each with what would justify it. Anything tested and dropped is in
 - **Never chain a push after the smoke test without stopping on its result.** On 2026-11-15 a commit was pushed with a
   failing check because the test and the push ran in one command that did not test the exit code. Run the test, read
   "ALL CHECKS PASSED", then commit and push.
+- **A style written for a table reaches the tables inside it.** `table.x td` matches every cell of any table
+  nested in a cell of `x` (a card opened inside the one-line list): write list styles with child selectors
+  (`table.x > tbody > tr > td`). A class name shared with a general style (`warn`, `live`) picks that style up too.
+- **Chromium keeps the layout of a closed dropdown.** `getBoundingClientRect` has a size inside a closed
+  `<details>`; a test that asks "is it visible" must use `checkVisibility()`.
 - **A replay shown on the site is a file, and a file goes stale.** `data/retro_five.json` and
   `data/replay_seasons.json` are written by hand-run tools, not by the daily. After any change to a pick rule, a
   grade or a stake, re-run them before the push, or the Track record tab reports the previous rules' replay.
