@@ -1,7 +1,7 @@
 # Locks and parlays: running tally
 
 The locks: the highest-confidence picks of each slate day (3 on a one-game day, 5 on a multi-game day), named before kickoff and tracked here. Target: 70% hits. Then the recommended parlay for each slate day.
-Generated 2026-11-19 10:16 UTC by the daily job. Do not edit by hand.
+Generated 2026-11-19 19:01 UTC by the daily job. Do not edit by hand.
 
 **Locks record: 15-4 (79%), +7.38 units, 0 pending.**
 
@@ -249,18 +249,19 @@ Every closing line of the week: how often the Over won, against the chance the b
 
 The picks the current rules chose, one bet per player, market and side. The decision register's conditions are read on these alone.
 
-**Record 52-46 (53%, likely range 37% to 69%), +2.46 units at 1 a bet, +3.12 on 34.8 units at the stakes; win chance said 57%.**
+**Record 52-46 (1 pending) (53%, likely range 37% to 69%), +2.46 units at 1 a bet, +3.12 on 34.8 units at the stakes; win chance said 57%.**
 Locks: 5-0 (100%, likely range 55% to 100%).
 
 | Week | Record | Hit | Win chance said | Units at 1 a bet | Staked | Units at the stakes |
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026 wk 10 | 52-46 | 53% | 57% | +2.46 | 34.8 | +3.12 |
+| 2026 wk 11 | 0-0 (1 pending) |  |  | +0.00 | 0.0 | +0.00 |
 
 | Grade | Record | Hit | Likely range | Win chance said | Units at 1 a bet |
 | --- | --- | --- | --- | --- | --- |
 | A | 7-4 | 64% | 33% to 86% | 65% | +1.38 |
 | B | 9-2 | 82% | 49% to 95% | 61% | +5.64 |
-| C | 36-40 | 47% | 31% to 64% | 56% | -4.56 |
+| C | 36-40 (1 pending) | 47% | 31% to 64% | 56% | -4.56 |
 
 | Side and market | Record | Hit | Likely range | Units at 1 a bet |
 | --- | --- | --- | --- | --- |
@@ -268,13 +269,13 @@ Locks: 5-0 (100%, likely range 55% to 100%).
 | Over solo | 4-5 | 44% | 18% to 75% | -1.24 |
 | Over assists | 6-6 | 50% | 24% to 76% | +0.81 |
 | Under combined | 9-4 | 69% | 40% to 89% | +4.50 |
-| Under solo | 26-20 | 57% | 37% to 74% | +3.16 |
+| Under solo | 26-20 (1 pending) | 57% | 37% to 74% | +3.16 |
 | Under assists | 4-8 | 33% | 13% to 63% | -4.70 |
 
 | Position | Record | Hit | Likely range | Units at 1 a bet |
 | --- | --- | --- | --- | --- |
 | DL | 4-4 | 50% | 20% to 80% | -0.08 |
-| LB | 27-27 | 50% | 32% to 68% | -1.42 |
+| LB | 27-27 (1 pending) | 50% | 32% to 68% | -1.42 |
 | S | 8-12 | 40% | 20% to 65% | -3.71 |
 | CB | 13-3 | 81% | 53% to 94% | +7.67 |
 
@@ -298,13 +299,13 @@ Conditions of the decision register on trial:
 
 ## All plays to date (every rule set)
 
-**Record 252-229 (52%, likely range 44% to 60%), +2.60 units at 1 a bet.** No-vig closing-line value -2.77 points (give or take 0.28) on 494 bets.
+**Record 252-229 (1 pending) (52%, likely range 44% to 60%), +2.60 units at 1 a bet.** No-vig closing-line value -2.77 points (give or take 0.27) on 495 bets.
 
 | Grade | Record | Hit | Likely range | Chance said | Units at 1 a bet |
 | --- | --- | --- | --- | --- | --- |
 | A | 20-13 | 61% | 42% to 76% | 64% | +1.96 |
 | B | 83-65 | 56% | 46% to 66% | 59% | +7.45 |
-| C | 82-85 | 49% | 39% to 59% | 57% | -0.59 |
+| C | 82-85 (1 pending) | 49% | 39% to 59% | 57% | -0.59 |
 | ungraded | 67-66 | 50% | 35% to 66% |  | -6.22 |
 
 | Side and market | Record | Hit | Likely range | Units at 1 a bet |
@@ -313,5 +314,5 @@ Conditions of the decision register on trial:
 | Over solo | 11-16 | 41% | 24% to 61% | -5.25 |
 | Over assists | 6-6 | 50% | 24% to 76% | +0.81 |
 | Under combined | 53-48 | 52% | 41% to 64% | +1.74 |
-| Under solo | 155-127 | 55% | 46% to 64% | +12.68 |
+| Under solo | 155-127 (1 pending) | 55% | 46% to 64% | +12.68 |
 | Under assists | 11-13 | 46% | 26% to 67% | -3.17 |
