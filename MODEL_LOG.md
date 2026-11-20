@@ -563,7 +563,9 @@ and C9. What remains, and what the rebuild itself turned up:
    live test, and the record as bet before the engine is still 200-183.
    Live so far (week 10, closed 2026-11-17): the engine worse than the book by 0.0018 on 380 lines (solo -0.0060,
    combined +0.0002, assists +0.0003), picks 52-46 (+3.12 on 34.8 staked), the flagged solo Unders 16-6 and the
-   rest 36-40. No information yet on the engine; the flag held.
+   rest 36-40. No information yet on the engine; the flag held. Week 11's Thursday (2026-11-20): 9 C bets, 4-5;
+   since the engine -0.0027 (give or take 0.0017; t -1.6) on 406 lines, solo -0.0095; picks 56-51, +2.75 on 37.1
+   staked.
 2. **The model sits below the book, in both markets, every week.** Mean gap -0.19 (combined) and -0.21 (solo) in
    log-odds: the model gives the Over 45% where the book gives 49.6%. On solo the book was the one that was wrong in
    weeks 7 and 8 (Overs hit 33% and 39%) and right in week 9 (50%). On combined the model was wrong all three weeks
@@ -579,7 +581,8 @@ and C9. What remains, and what the rebuild itself turned up:
 3. **Grades order in the replay; the live weeks have to show it.** Under H1 the 21 replayed weeks give A 75%, B 66%,
    C 59%, in order in each of four stretches, at DraftKings' prices too (65-18, 117-61, 409-279). B and C were
    defined on those weeks. C on the 2026 weeks alone is 153-131 (54%, about +9% a bet at the logged prices): the
-   thinnest part of the board, and the first to become leans if weeks 10 to 13 do not hold it up.
+   thinnest part of the board, and the first to become leans if weeks 10 to 13 do not hold it up. Live since the
+   engine (through week 11's Thursday): A 7-4, B 9-2, C 40-45 (47%, 85 of the 100 at which H1 reads it).
 4. **The profit in the replay is a pocket.** (Four of those lineman wins were the mis-posted Sam Williams lines,
    now barred; under the rules of 2026-11-09, 10 pm, linemen are 13-2, linebackers 48-44, safeties 34-25, corners
    22-14.) Linemen 16-2 (+14.4 units of +17.7), the assists trial 17-11;
@@ -841,6 +844,95 @@ the record is the week evidence about the model.
 Post-mortems of weeks 7 and 8 are in the archive. From week 10 a post-mortem starts from the scoreboard (Track
 record, "Against the market") and the luck table, reads every record with its likely range, and changes nothing
 inside the freeze unless it finds a defect.
+
+### Week 11, opened Friday 2026-11-20 with Thursday's slate (standing post-mortem, 8:40 am MST; measures only, nothing changed)
+
+Grading had landed: `data/weekly_five.md` generated 2026-11-20 10:16 UTC, nine hours after the kickoff of Colts at
+Texans (2026-11-20 01:15 UTC). One game, one book with two-way lines on most players (DraftKings), 26 closing lines
+scored, 14 rows logged and **9 counted bets, all C**: no solo line flagged by the book's share was a pick, so no A,
+no B, no lock, no parlay. Checked against a scratch daily (results.json, backtest.json) and the official stats feed,
+which already carries the game: every figure below matches the weekly log. Monday's run adds Sunday; Tuesday's
+closes the week.
+
+1. **Scoreboard since week 10 (out of sample): 406 lines, book 0.6819, model alone 0.6984, engine 0.6846: the
+   engine is worse than the book by 0.0027, give or take 0.0017 (t -1.6).** Thursday's 26 lines alone: -0.0159.
+   By market since week 10: solo -0.0095 (give or take 0.0065; 132 lines), combined +0.0008 (0.0010; 134), assists
+   +0.0005 (0.0003; 140). Not distinguishable from nothing on a week and one game; it leans negative, all of it
+   solo. Background, in-sample: all weeks +0.0055 (give or take 0.0024; t +2.3) on 2,962 lines.
+2. **The record.** Thursday: **4-5 (44%), -1.49 units at 1 a bet, -0.37 on 2.25 staked.** Won: Jake Hansen solo
+   Under 3.5 (1), combined Under 7.5 (5; +105) and assists Under 4.5 (4); Bryce Boettcher assists Under 4.5 (3). Lost:
+   CJ Allen solo Under 4.5 (7), combined Under 9.5 (16) and assists Under 5.5 (9); Henry To'oTo'o solo Under 3.5 (4);
+   Will Anderson Jr. solo Under 1.5 (2; +136). By position LB 4-4, DL 0-1. Every bet an Under.
+   **Since the engine: 56-51 (52%, likely range 39% to 65%), +0.97 units at 1 a bet, +2.75 on 37.1 staked (+7.4%;
+   flat +0.9%); the win chance said 58%.**
+   - By grade: A 7-4 (64%, 33% to 86%), B 9-2 (82%, 49% to 95%), C 40-45 (47%, 33% to 61%; -6.05 at 1 a bet). A
+     and B overlap entirely; both sit above C in the point estimate and their ranges still overlap C's. The replays
+     gave 75%, 66%, 58%.
+   - By side and market: Under solo 27-23, Under combined 10-5, Under assists 6-9, Over solo 4-5, Over combined 3-3,
+     Over assists 6-6. By position: CB 13-3, LB 31-31, S 8-12, DL 4-5.
+   - Solo Unders on a flagged line 16-6 (none on Thursday); on an unflagged line 11-17 (Thursday 1-3). The book
+     flagged two of Thursday's nine solo lines (A.J. Haulcy 3.5 of 5.5, Calen Bullock 2.5 of 3.5); the engine passed
+     both (cautious edge -2%), and their Unders went 1-1 (Bullock 1, Haulcy 4).
+   - Locks 5-0 since the engine (every lock to date 15-4, +7.38); none on Thursday. Parlays 2-2, +0.42; none Thursday.
+   - **Sleepers, their own record:** Thursday 0-2, both combined Overs on the Texans: Bullock 3.5 (1) and Kamari
+     Lassiter 4.5 (0, on all 50 snaps; the official feed confirms 0, so not a grading fault). All since frozen
+     24-20, -1.67 units: A 9-3, B 5-10, C 10-7; solo Unders 12-8, combined Overs 12-12. R1: combined Overs 24 of 40
+     at 50%, under the 55% bar with 16 to go; solo Unders 20 of 40 at 60%; A sleepers 12 of 20 at 75%.
+   - **The assists trial, on its own:** Thursday 2-1; since the engine 12-15 (Unders 6-9, Overs 6-6), -3.33 at 1 a
+     bet.
+   - **Stakes by slate day** (no cap): Thursday 2.25 units on one game, returned -0.37. No slate day lost more than
+     15 units.
+   - One player, three bets again: CJ Allen's three Unders are three of the five losses (a player counted once:
+     Thursday 2-2), the same shape as Micah McFadden's three on week 10's Thursday.
+3. **Calibration since the engine** (107 bets). Win chance: said 48% / 52% / 58% / 63% / 67% / 71%, hit 26% / 62% /
+   67% / 48% / 53% / 67% (19 / 24 / 21 / 23 / 17 / 3); overall said 58%, hit 52%. The model's own chance: said 51%
+   / 58% / 62% / 67% / 74% / 83%, hit 29% / 57% / 65% / 52% / 60% / 50% (21 / 14 / 17 / 23 / 30 / 2); overall said
+   64%, hit 52%. Thursday: the win chance said 62% and the model 72%, hit 44%. Above 65% the model's own chance
+   keeps hitting 52% to 60% (open issue 24a).
+4. **Luck or skill** (luck table, week 11 so far): Unders 9 picks hit 44% on a board where 57% of 27 lines went
+   Under, lift -12, beat the close 50%: "we picked badly". The board, no model: the Over won 33% on combined (9
+   lines; the book's fair chance 48%), 33% on assists (9; 46%) and 56% on solo (9; 52%). So the combined and
+   assists Unders rode the market's level (both boards went Under by 13 to 15 points) and still only broke even
+   (3-2), and the solo Unders lost on a solo board that went Over (1-3). Nothing on Thursday is selection; no kind
+   of pick has lift, the close and the record agreeing. The close is not read until open issue 12 is settled (all
+   nine bets have a negative no-vig closing-line value while the table says half beat the close).
+5. **Conditions on trial** (weekly log): H1 A 11 of 30, 7-4 (64%). H1 B 11 of 40, 9-2. **H1 C 85 of 100, 40-45
+   (47%, 33% to 61%)**: below the 52.4% bar with 15 to go; it will most likely be read on Sunday. E4 the old A rule
+   12 of 30, 8-4. E6 Overs 27 of 40, 13-14. **H1 solo Unders off the flag 28 of 40, 11-17 (39%, 22% to 60%)**, below
+   52.4% with 12 to go. S3 107 picks, running (ladder +7.4% against flat +0.9%). E5 locks 5-0. E2 2 of 4 weeks,
+   margin -0.0027, twice its give or take 0.0034: running. None reached its count.
+6. **Candidates in the shadow, since week 10** (406 lines, two weeks): flat weight 0.5 +0.0008 (give or take 0.0005;
+   t +1.5); the combined gap centred on the week's mean -0.0014 (t -2.8); the solo level for lined players -0.0004
+   (t -4.4). The two negatives are worse than the engine; the flat weight leads, short of two standard errors. None
+   is adopted before 2026-12-08 (R6).
+7. **The misses** (five counted losses; official box score, snap counts from the stats feed, the model's numbers in
+   `data/picks.csv` and `data/lines_log.csv`): two within one tackle (To'oTo'o 4 on 3.5, Anderson 2 on 1.5), none by
+   two, three blown, all CJ Allen: 16 combined on 9.5, 7 solo on 4.5, 9 assists on 5.5, against a model of 7.1, 3.3
+   and 3.8 while the book's lines sat two to three tackles higher. What can be shown: he carried the new-role flag
+   (100% of the snaps in his last game against 60% on the season; two of his three games in the role), the share
+   model expected 85% and he played 66 of 66 (100%); the Colts' defence played 66 snaps against 64.5 expected. A
+   full share lifts his number to about 8.4 combined, still far short of 16, so most of the miss is the model's
+   number for a player new to the role, as with McFadden on week 10. Counted since the engine, picks on a new-role
+   player are 8-10; their Unders with the model a tackle or more below the line 3-8 (a cut drawn after looking, on
+   11 bets: a question for the review of 2026-12-08, not evidence). The two near misses: To'oTo'o played 50 of 50,
+   Anderson 38 of 50 (76%, expected 76%); the Texans' defence was on the field for 50 snaps against 66.2 expected.
+   Nothing else can be shown.
+8. **Internal validation** (scratch daily, 32,107 games, 663 projections for week 11, level for lined players
+   1.009): no flag. Final projection against the factor model by fold, deviance: 2024 1.4083 against 1.4412, 2025
+   1.3398 against 1.3920, 2026 1.3267 against 1.3884; overall -0.0463 (t -10.8), regulars -0.0150 (t -3.1).
+   Regulars' bias +0.020 overall, +0.153 in 2026. No factor "hurts"; none out of the model is a "candidate"
+   (nearest on regulars: role shift, t -1.6; bar -2). Tails 5.5% below the 5th percentile, 4.9% above the 95th.
+9. **Open issues 1 to 6:** (1) the edge on live weeks: -0.0027 (t -1.6) on 406 lines, the solo market carrying it;
+   nothing yet. (2) the model below the book: Thursday's combined and assists boards went Under by 13 to 15 points,
+   so the lean was not what lost; the 2026 regulars' bias is +0.15 a game. (3) grade order: A 7-4, B 9-2, C 40-45;
+   unchanged at the top, C slipping. (4) the linemen pocket: DL 4-5 since the engine (Anderson lost). (5) next man
+   up: no pick; 942 games, 12% low. (6) Overs: no Over pick on Thursday; 13-14, 27 of 40.
+10. **What changed:** nothing; frozen until 2026-12-08. No defect found (Lassiter's 0 checked against the official
+    feed). For the owner: the odds key ends on 2026-12-10 (open issue 7). What to watch on Sunday: H1 C (15 picks
+    from its read at 100, now 47%) and the solo Unders off the flag (12 from 40, now 39%) are both on course to be
+    met during week 11; the register says C picks then become leans and unflagged solo Unders stop being picks,
+    which is the owner's call to apply. Also the flagged solo Unders on a full board, and whether new-role players
+    again draw several Unders each.
 
 ### Week 10 closed, Tuesday 2026-11-17 (standing post-mortem, 8:25 am MST; measures only, nothing changed)
 
