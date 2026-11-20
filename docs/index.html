@@ -2379,6 +2379,11 @@ function ledgerExport() { return { v: 1, exported: new Date().toISOString(), wee
 // ids). About a sixth of the full form; restoring rebuilds the full bet. Files keep the full form.
 const SHORT_MK = ["player_tackles_assists", "player_solo_tackles", "player_assists"], SHORT_BK = ["DraftKings", "theScore Bet", "Bally Bet", "FanDuel"], SHORT_T0 = Date.UTC(2026, 0, 1) / 60000;
 const shortIdx = (arr, v) => { const i = arr.indexOf(v); return i >= 0 ? i : v; };
+// the projection a live pace starts from (projectedFinal's prior), so a reader of the link (the owner's IPTV player
+// and TV app) heads each bet where My board does; restoring a link ignores it, the site rebuilds its own
+const shortProj = (b) => { if (b.settled?.result) return null;
+  const wl = (DATA.week_lines || []).find((l) => l.player === b.player && l.market === b.market && l.proj != null);
+  const p = b.proj != null ? +b.proj : wl ? +wl.proj : null; return p != null && isFinite(p) ? Math.round(p * 10) / 10 : null; };
 function ledgerShort() {
   const w = {};
   for (const wk of allWeeks()) {
@@ -2388,7 +2393,8 @@ function ledgerShort() {
       const t = b.commence_time ? Math.round(new Date(b.commence_time).getTime() / 60000 - SHORT_T0) : null;
       const r = b.settled?.result ? (b.settled.source === "official" ? b.settled.result[0] : b.settled.result[0].toLowerCase()) : null;
       const row = [b.player, b.team || "", b.opp || "", b.group || "", shortIdx(SHORT_MK, b.market), (b.side || b.pick) === "Under" ? 1 : 0, +b.line, shortIdx(SHORT_BK, b.book),
-                   b.odds ?? null, b.stake ?? null, b.grade || null, b.lock == null ? null : Math.round(b.lock), t, b.jersey ?? null, r, b.settled?.actual ?? null, b.archived ? 1 : null, b.sg || null, b.placed ? shortIdx(SHORT_BK, b.placed) : null];
+                   b.odds ?? null, b.stake ?? null, b.grade || null, b.lock == null ? null : Math.round(b.lock), t, b.jersey ?? null, r, b.settled?.actual ?? null, b.archived ? 1 : null, b.sg || null, b.placed ? shortIdx(SHORT_BK, b.placed) : null,
+                   shortProj(b)];   // 19: the projection, for readers of the link (restoring ignores it)
       while (row.length && row[row.length - 1] == null) row.pop();     // trailing blanks cost nothing
       return row;
     });

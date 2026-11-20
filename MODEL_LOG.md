@@ -374,6 +374,7 @@ in-sample. The full write-up is Research round 11.
   least three of the four weeks. One at most is adopted at a time, and the rule it replaces then runs in the shadow
   against it. Four weeks make a t of 2 a weak bar (the 95% point at three degrees of freedom is 3.2), so an adopted
   candidate is provisional. Changing a number in `config.SHADOW` restarts that candidate's test.
+- **O-link. The transfer link carries each open bet's projection** (index 19 of the short form, rounded to a tenth; ignored on restore). Since 2026-11-19 (changelog), so the owner's IPTV player and TV app pace a bet where My board does. Revert: links too long to share.
 
 ## Rejected experiments register
 
@@ -1216,6 +1217,27 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 ## Changelog
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
+
+### 2026-11-19, 7:45 pm (the transfer link carries each open bet's projection, for the owner's IPTV player and TV app)
+
+The owner, during Thursday's game: the BETS ticker in his IPTV player said the day was heading for +$1.64 while My
+board said about +$22. The player had paced each bet the old straight-line way (Jake Hansen U7.5 with one tackle
+early in the first quarter "on pace for 9.9", a $10 loss), the very method the pace entry of 2026-11-08 replaced.
+The player and his TV app now use projectedFinal's formula, but its prior is the model's projection, which the
+short form of the transfer link leaves out ("nothing the site can rebuild"), so they fell back on the line, and
+near the line that still flips a bet (Hansen heads for 7.8 on the line, 7.5 on the projection).
+
+**What.** The short form gets a 20th field (index 19): an open bet's projection, rounded to a tenth (the bet's own
+`proj`, else this week's line projection, as projectedFinal finds it). Settled bets carry none. Restoring a link
+ignores the field: the site keeps rebuilding its own from the week's data, so nothing on My board changes. A link
+made before this has no field and readers fall back on the line, as before. Site only; no model, pricing or stake
+change.
+
+**Why.** Easier site (vision 1): a bet followed elsewhere reads the same as on My board.
+
+**Checked.** Smoke test and browser test pass, both widths. Older readers ignore extra fields.
+
+**Revert.** Drop the field if a link grows past what a QR code or a message can carry.
 
 ### 2026-11-16, 4:15 pm (a defect: "+ My board" on a sleeper added the other side of the line; both grade boxes shown)
 
