@@ -1,7 +1,7 @@
 # Locks and parlays: running tally
 
 The locks: the highest-confidence picks of each slate day (3 on a one-game day, 5 on a multi-game day), named before kickoff and tracked here. Target: 70% hits. Then the recommended parlay for each slate day.
-Generated 2026-11-22 10:16 UTC by the daily job. Do not edit by hand.
+Generated 2026-11-22 17:01 UTC by the daily job. Do not edit by hand.
 
 **Locks record: 15-4 (79%), +7.38 units, 0 pending.**
 
@@ -70,7 +70,7 @@ All plays by side: our hit rate against the share of every closing line on the b
 
 ## Parlays
 
-**Parlays record: 2-2, +0.42 units on 0.4 staked, 0 pending.**
+**Parlays record: 2-2, +0.42 units on 0.4 staked, 1 pending.**
 
 | Slate | Legs | Odds | Model chance | Stake | Result | Units |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -78,6 +78,7 @@ All plays by side: our hit rate against the share of every closing line on the b
 | 2026-11-01 (wk 8) | Jason Marshall Jr. Under 2.5 (Win); Christian Benford Under 3.5 (Win); Sam Williams Under 3.5 (Win) | +346 | 37% | 0.1u | Win | +0.35 |
 | 2026-11-08 (wk 9) | Sam Williams Under 8.5 (Win); Pat Surtain II Under 5.5 (Win); Sauce Gardner Under 4.5 (Loss) | +425 | 24% | 0.1u | Loss | -0.10 |
 | 2026-11-15 (wk 10) | Shemar James Under 6.5 (Win); Henry To'oTo'o Under 7.5 (Win) | +271 | 33% | 0.1u | Win | +0.27 |
+| 2026-11-22 (wk 11) | Shemar James Under 6.5 (Pending); Derrick Barnes Under 5.5 (Pending) | +260 | 33% | 0.1u | Pending | +0.00 |
 
 ## Against the market (every logged closing line)
 
@@ -254,35 +255,35 @@ Every closing line of the week: how often the Over won, against the chance the b
 
 The picks the current rules chose, one bet per player, market and side. The decision register's conditions are read on these alone.
 
-**Record 56-51 (47 pending) (52%, likely range 39% to 65%), +0.97 units at 1 a bet, +2.75 on 37.1 units at the stakes; win chance said 58%.**
+**Record 56-51 (56 pending) (52%, likely range 39% to 65%), +0.97 units at 1 a bet, +2.75 on 37.1 units at the stakes; win chance said 58%.**
 Locks: 5-0 (100%, likely range 55% to 100%).
 
 | Week | Record | Hit | Win chance said | Units at 1 a bet | Staked | Units at the stakes |
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026 wk 10 | 52-46 | 53% | 57% | +2.46 | 34.8 | +3.12 |
-| 2026 wk 11 | 4-5 (47 pending) | 44% | 62% | -1.49 | 2.2 | -0.37 |
+| 2026 wk 11 | 4-5 (56 pending) | 44% | 62% | -1.49 | 2.2 | -0.37 |
 
 | Grade | Record | Hit | Likely range | Win chance said | Units at 1 a bet |
 | --- | --- | --- | --- | --- | --- |
-| A | 7-4 (1 pending) | 64% | 33% to 86% | 65% | +1.38 |
-| B | 9-2 (6 pending) | 82% | 49% to 95% | 61% | +5.64 |
-| C | 40-45 (40 pending) | 47% | 33% to 61% | 56% | -6.05 |
+| A | 7-4 (2 pending) | 64% | 33% to 86% | 65% | +1.38 |
+| B | 9-2 (7 pending) | 82% | 49% to 95% | 61% | +5.64 |
+| C | 40-45 (47 pending) | 47% | 33% to 61% | 56% | -6.05 |
 
 | Side and market | Record | Hit | Likely range | Units at 1 a bet |
 | --- | --- | --- | --- | --- |
 | Over combined | 3-3 (1 pending) | 50% | 18% to 82% | -0.06 |
 | Over solo | 4-5 (6 pending) | 44% | 18% to 75% | -1.24 |
 | Over assists | 6-6 (7 pending) | 50% | 24% to 76% | +0.81 |
-| Under combined | 10-5 (4 pending) | 67% | 40% to 86% | +4.55 |
-| Under solo | 27-23 (20 pending) | 54% | 38% to 70% | +1.06 |
-| Under assists | 6-9 (9 pending) | 40% | 19% to 66% | -4.14 |
+| Under combined | 10-5 (7 pending) | 67% | 40% to 86% | +4.55 |
+| Under solo | 27-23 (25 pending) | 54% | 38% to 70% | +1.06 |
+| Under assists | 6-9 (10 pending) | 40% | 19% to 66% | -4.14 |
 
 | Position | Record | Hit | Likely range | Units at 1 a bet |
 | --- | --- | --- | --- | --- |
 | DL | 4-5 (3 pending) | 44% | 18% to 74% | -1.08 |
-| LB | 31-31 (19 pending) | 50% | 35% to 65% | -1.91 |
-| S | 8-12 (15 pending) | 40% | 20% to 65% | -3.71 |
-| CB | 13-3 (10 pending) | 81% | 53% to 94% | +7.67 |
+| LB | 31-31 (25 pending) | 50% | 35% to 65% | -1.91 |
+| S | 8-12 (16 pending) | 40% | 20% to 65% | -3.71 |
+| CB | 13-3 (12 pending) | 81% | 53% to 94% | +7.67 |
 
 Calibration of the win chance: 0% to 50%: said 48%, hit 26% of 19 (11% to 51%); 50% to 55%: said 52%, hit 62% of 24 (39% to 81%); 55% to 60%: said 58%, hit 67% of 21 (44% to 84%); 60% to 65%: said 63%, hit 48% of 23 (28% to 69%); 65% to 70%: said 67%, hit 53% of 17 (30% to 75%); 70% to 101%: said 71%, hit 67% of 3 (21% to 94%).
 
@@ -304,13 +305,13 @@ Conditions of the decision register on trial:
 
 ## All plays to date (every rule set)
 
-**Record 256-234 (47 pending) (52%, likely range 45% to 60%), +1.11 units at 1 a bet.** No-vig closing-line value -2.82 points (give or take 0.25) on 550 bets.
+**Record 256-234 (56 pending) (52%, likely range 45% to 60%), +1.11 units at 1 a bet.** No-vig closing-line value -2.77 points (give or take 0.24) on 559 bets.
 
 | Grade | Record | Hit | Likely range | Chance said | Units at 1 a bet |
 | --- | --- | --- | --- | --- | --- |
-| A | 20-13 (1 pending) | 61% | 42% to 76% | 64% | +1.96 |
-| B | 83-65 (6 pending) | 56% | 46% to 66% | 59% | +7.45 |
-| C | 86-90 (40 pending) | 49% | 39% to 58% | 57% | -2.08 |
+| A | 20-13 (2 pending) | 61% | 42% to 76% | 64% | +1.96 |
+| B | 83-65 (7 pending) | 56% | 46% to 66% | 59% | +7.45 |
+| C | 86-90 (47 pending) | 49% | 39% to 58% | 57% | -2.08 |
 | ungraded | 67-66 | 50% | 35% to 66% |  | -6.22 |
 
 | Side and market | Record | Hit | Likely range | Units at 1 a bet |
@@ -318,6 +319,6 @@ Conditions of the decision register on trial:
 | Over combined | 16-19 (1 pending) | 46% | 29% to 63% | -4.20 |
 | Over solo | 11-16 (6 pending) | 41% | 24% to 61% | -5.25 |
 | Over assists | 6-6 (7 pending) | 50% | 24% to 76% | +0.81 |
-| Under combined | 54-49 (4 pending) | 52% | 41% to 63% | +1.79 |
-| Under solo | 156-130 (20 pending) | 55% | 46% to 63% | +10.58 |
-| Under assists | 13-14 (9 pending) | 48% | 30% to 67% | -2.61 |
+| Under combined | 54-49 (7 pending) | 52% | 41% to 63% | +1.79 |
+| Under solo | 156-130 (25 pending) | 55% | 46% to 63% | +10.58 |
+| Under assists | 13-14 (10 pending) | 48% | 30% to 67% | -2.61 |
