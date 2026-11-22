@@ -767,3 +767,6 @@ season,week,player,market,side,line,book,actual,graded_by,settled_at
 2026,11,CJ Allen,player_assists,Under,6.5,DraftKings,9.0,live,20261120T041755Z
 2026,11,Bryce Boettcher,player_assists,Under,5.5,DraftKings,3.0,live,20261120T041755Z
 2026,11,CJ Allen,player_solo_tackles,Under,3.5,DraftKings,7.0,live,20261120T041755Z
+2026,11,Alohi Gilman,player_assists,Under,2.5,DraftKings,2.0,live,20261122T205233Z
+2026,11,Budda Baker,player_assists,Under,3.5,DraftKings,1.0,live,20261122T205233Z
+2026,11,Alohi Gilman,player_solo_tackles,Over,1.5,DraftKings,1.0,live,20261122T205233Z
