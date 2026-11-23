@@ -526,6 +526,10 @@ check(all(k in _html for k in ("if (!KEYS[id]) KEYS[id] = (async () =>", 'new De
       "the page opens on three small files, loads the rest behind them, works one key out per password entry, inflates gzipped files and never waits on the font sheet")
 check(all(k in _html for k in ("function bookPick", "function setPlaced", "const placedOf = ", '"By book: "', "function sleeperGradeOf", "function gradeBox", ".grade.sl, .grade.sl.A", "addButton({ ...b, side, pick: side, grade: isPick ? b.grade : null", 'class: "grades"', "sg: b.sleeper && b.sleeper === (b.side || b.pick)", 'k === "gu" || k === "sg"')),
       "My board: each bet's book can be chosen and the board read by book; a sleeper carries its sleeper grade in a purple box")
+_nhl = (ROOT / "docs" / "nhl.html").read_text() if (ROOT / "docs" / "nhl.html").exists() else ""
+check(all(k in _html for k in ('id="hub"', 'id="hub-nfl"', 'href="nhl.html"', 'sessionStorage.getItem("hub")')) and all(k in _nhl for k in ('const KEY = "nhl-bets-v1"', "sports/hockey/nhl", 'indexOf("hits")', 'href="index.html"', "#add="))
+      and not __import__("re").search(r"api-web\.nhle\.com", _nhl),
+      "the site opens on a home screen with NFL and NHL tiles; the NHL page tracks hit bets from ESPN's feed (NHL.com's API cannot be read by a browser)")
 check("if (projN || dayPre) {" in _html and "daySettled + projPL" in _html and "groups.post.push(c);" in _html and "set the result and the bet moves to Settled" in _html,
       "'Where today is heading' shows only while a bet of today's is open and counts today only; a settled custom bet joins the Settled group")
 check(all(k in _html for k in ("function playRows", "plays-jump", "plays-grp-", 'id: "plays-locks"', "plays-view", 'foldNote("How locks are chosen"')),

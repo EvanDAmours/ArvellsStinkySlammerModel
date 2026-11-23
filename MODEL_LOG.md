@@ -1423,6 +1423,39 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-23, 6 pm (a home screen with NFL and NHL tiles; an NHL hits bet tracker)
+
+The owner wants the model to branch into NHL hits; analytical data comes later. For now: a home screen with two
+tiles, and under NHL a way to track his hit bets (he bets them at Stake), followed live.
+
+**What.** `docs/index.html` opens on a home screen with an NFL tile (the tackle board, unchanged behind it) and an NHL
+tile. The NFL data keeps loading behind the tiles, so choosing NFL is no slower. Once NFL is chosen the screen stays
+away for that tab (a reload keeps the board); "← NFL / NHL" under the title brings it back; a transfer link opens the
+board directly. `docs/nhl.html` is a new page: add a hit bet (game from that day's schedule, player, Over/Under, line,
+odds, stake, book, Stake by default), Active and Settled lists, totals (active stakes and payout, settled record and
+profit), and each bet followed from ESPN's live NHL box score every minute while its game is on: hits so far, period
+and clock, time on ice, and where he is heading (his hits plus, for the time left, a rate that counts one game at the
+line as a prior, so one early hit does not project to six). Settled when the game is final: Win, Loss or Push on the
+box-score hits; Void when he is not in the box score (did not dress). A result can be set by hand, since the book
+settles on the official NHL count. Bets live in this browser (`nhl-bets-v1`); a link `nhl.html#add=...` adds bets,
+used to put the owner's five Stake bets of 2026-11-23 on his devices (the bets are in the link, not in the repo).
+
+**Why ESPN and not NHL.com.** NHL.com's API (api-web.nhle.com) answers without a CORS header, so a page cannot read
+it; ESPN's NHL scoreboard and summary do, and carry hits and time on ice per skater (checked on a final of
+2026-11-22). The five players of the night are named exactly as on ESPN's rosters.
+
+**Not done, on purpose.** No model, no lines, no sync across devices for NHL bets, no NHL record on the Track record
+tab. Nothing in the NFL model or the pipeline changed.
+
+**Checked.** Browser test, both widths: the home screen and its tiles, a reload keeping the board; the NHL tile
+opening the page; a bet added through the form and followed in a simulated second period (1 hit halfway through an
+Over 1.5: heading for 1.8, on track, $20 at -208 paying $29.62); bets added by a link settling on a final (4 hits over
+2.5 a win, 2 a loss, a player not in the box score void), the same link twice adding nothing, the settled record
+and profit by hand (1-1, -$10.57), a result by hand. Smoke test. The Test workflow now also runs on a change to
+`docs/nhl.html`. Not seen: a real game; tonight's are the first.
+
+**Revert.** Delete `docs/nhl.html` and the home screen block in `docs/index.html`; nothing else depends on them.
+
 ### 2026-11-19, 7:45 pm (the transfer link carries each open bet's projection, for the owner's IPTV player and TV app)
 
 The owner, during Thursday's game: the BETS ticker in his IPTV player said the day was heading for +$1.64 while My
@@ -2989,6 +3022,9 @@ Never tested; each with what would justify it. Anything tested and dropped is in
 - **A page and the file format it reads change in two pushes.** The pipeline writes the data files on its own
   schedule, so a page must read both the old and the new format before the writer changes, and a revert goes in
   the other order.
+- **NHL.com's API cannot be read from a browser.** api-web.nhle.com sends no CORS header; a page must use ESPN's NHL
+  feed (or a server). Alberta's fixed UTC-6 needs `Etc/GMT+6` on every page: Chromium's zone data still shows
+  America/Edmonton an hour behind (2026-11-23, the NHL page first showed 6:30 pm games at 5:30).
 - **A row of the board has one `side`, and it is the pricing engine's.** `bets.json` rows carry `side` and `pick`
   for the engine's side of the line and `sleeper` for the sleeper's, which can be the other one. Anything built from
   a sleeper (a button, a link, a key) must name the sleeper's side itself; "+ My board" on a sleeper added the

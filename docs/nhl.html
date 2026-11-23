@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NHL Hits Tracker</title>
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root {
+  --bg: #eef1f4; --panel: #ffffff; --ink: #13202e; --muted: #5b6b7b; --line: #d3dae1;
+  --good: #1f8a4c; --bad: #c0392b; --slow: #d9801c; --accent: #2f6db5;
+  --sans: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cond: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0e1621; --panel: #152130; --ink: #e6edf3; --muted: #93a4b5; --line: #26364a; --good: #4cc27e; --bad: #f07b72; --slow: #f0a24b; --accent: #6ea3e6; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 var(--sans); padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+.wrap { max-width: 980px; margin: 0 auto; padding: 20px 16px 48px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+header h1 { font: 700 2.1rem/1.05 var(--cond); margin: 0; }
+header a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.sub { color: var(--muted); font-size: 0.9rem; margin: 4px 0 14px; }
+.tabs { display: flex; gap: 6px; margin: 14px 0 12px; }
+.tabs button { font: 600 1rem var(--cond); padding: 6px 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.totals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; }
+.totals div { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; min-width: 0; }
+.totals b { display: block; font: 700 1.4rem/1.1 var(--cond); font-variant-numeric: tabular-nums; }
+.totals span { color: var(--muted); font-size: 0.8rem; }
+.pos { color: var(--good); } .neg { color: var(--bad); }
+.bet { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 14px; background: var(--panel); border: 1px solid var(--line); border-left: 6px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 0 0 8px; }
+.bet.good { border-left-color: var(--good); } .bet.bad { border-left-color: var(--bad); } .bet.slow { border-left-color: var(--slow); }
+.bet .who { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.bet .what { font: 600 1.1rem var(--cond); }
+.bet .game, .bet .money { color: var(--muted); font-size: 0.88rem; }
+.bet .now { grid-row: 1 / span 3; grid-column: 2; text-align: right; align-self: center; }
+.bet .now b { display: block; font: 700 2rem/1 var(--cond); font-variant-numeric: tabular-nums; }
+.bet .now span { color: var(--muted); font-size: 0.8rem; }
+.bet .status { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 0.9rem; margin-top: 4px; }
+.pill { display: inline-block; font: 700 0.85rem/1.4 var(--cond); padding: 1px 9px; border-radius: 999px; border: 1.5px solid var(--line); color: var(--muted); letter-spacing: 0.02em; }
+.pill.good { color: var(--good); border-color: var(--good); } .pill.bad { color: var(--bad); border-color: var(--bad); } .pill.slow { color: var(--slow); border-color: var(--slow); }
+.pill.won { background: var(--good); border-color: var(--good); color: #fff; } .pill.lost { background: var(--bad); border-color: var(--bad); color: #fff; }
+.bet select { font: inherit; font-size: 0.85rem; padding: 2px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); }
+.rm { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; font-size: 0.85rem; padding: 0; }
+.empty { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; color: var(--muted); }
+.warn { background: var(--panel); border-left: 4px solid var(--slow); padding: 8px 12px; border-radius: 6px; margin: 0 0 10px; font-size: 0.9rem; }
+details.add { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin: 0 0 14px; }
+details.add > summary { cursor: pointer; padding: 10px 14px; font: 700 1.05rem var(--cond); }
+.form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 12px; padding: 0 14px 14px; }
+.form label { display: grid; gap: 3px; font-size: 0.82rem; color: var(--muted); min-width: 0; }
+.form label.wide { grid-column: span 2; }
+.form input, .form select { font: inherit; font-size: 16px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; width: 100%; min-width: 0; }
+.form .go { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.form button { font: 700 1rem var(--cond); padding: 9px 18px; border-radius: 8px; border: 0; background: var(--good); color: #fff; cursor: pointer; }
+.msg { color: var(--muted); font-size: 0.88rem; }
+.foot { color: var(--muted); font-size: 0.82rem; margin-top: 18px; max-width: 70ch; }
+@media (max-width: 640px) {
+  header h1 { font-size: 1.7rem; }
+  .totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .form label.wide { grid-column: 1 / -1; }
+  .bet .now b { font-size: 1.6rem; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>NHL hits</h1>
+    <a href="index.html" id="home-link">← Home</a>
+  </header>
+  <div class="sub" id="sub">Your hit bets, tracked live from ESPN's box scores. Kept in this browser.</div>
+  <details class="add" id="add-box">
+    <summary>+ Add a hit bet</summary>
+    <div class="form">
+      <label>Day <select id="f-day"></select></label>
+      <label class="wide">Game <select id="f-game"><option value="">Loading games…</option></select></label>
+      <label>Book <input id="f-book" value="Stake" autocomplete="off"></label>
+      <label class="wide">Player <input id="f-player" placeholder="Victor Eklund" autocomplete="off" autocapitalize="words"></label>
+      <label>Side <select id="f-side"><option>Over</option><option>Under</option></select></label>
+      <label>Line <select id="f-line"><option>0.5</option><option selected>1.5</option><option>2.5</option><option>3.5</option><option>4.5</option><option>5.5</option></select></label>
+      <label>Odds <input id="f-odds" placeholder="-184" inputmode="text" autocomplete="off"></label>
+      <label>Stake $ <input id="f-stake" type="number" min="0" step="0.01" inputmode="decimal" placeholder="20"></label>
+      <div class="go"><button type="button" id="f-add">Add the bet</button><span class="msg" id="f-msg" role="status"></span></div>
+    </div>
+  </details>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" data-v="active" aria-selected="true">Active</button>
+    <button type="button" role="tab" data-v="settled" aria-selected="false">Settled</button>
+  </div>
+  <div id="totals" class="totals"></div>
+  <div id="list"></div>
+  <p class="foot">Hits come from ESPN's live box score, refreshed every minute while a game is on. The book settles on the official NHL count, which can differ by a hit; set the result by hand if it does. A player who does not dress is shown as void, as the books refund it. Bets are stored in this browser only.</p>
+</div>
+<script>
+// Edmonton time is a fixed UTC-6 (Alberta stopped changing clocks on 2026-11-01; a browser with stale zone data would show games an hour early).
+// ---- NHL hits: a bet tracker. Bets live in this browser (localStorage); hits come from ESPN's public NHL feed, which a
+// browser may read (NHL.com's own API sends no CORS header, so a page cannot call it).
+const KEY = "nhl-bets-v1", TZ = "Etc/GMT+6", ESPN = "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl";
+const $ = (s) => document.querySelector(s);
+function el(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) { if (v == null || v === false) continue; if (k === "class") e.className = v; else e.setAttribute(k, v === true ? "" : v); }
+  for (const k of kids.flat()) if (k != null && k !== false && k !== "") e.append(k.nodeType ? k : String(k));
+  return e;
+}
+const ymd = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+const hm = (iso) => new Date(iso).toLocaleTimeString("en-CA", { timeZone: TZ, hour: "numeric", minute: "2-digit" }).replace(" a.m.", " am").replace(" p.m.", " pm");
+const dayName = (s) => new Date(s + "T12:00:00").toLocaleDateString("en-CA", { weekday: "short", month: "short", day: "numeric" });
+const normName = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\b(jr|sr|ii|iii|iv)\b\.?/g, "").replace(/[^a-z]/g, "");
+const toDec = (o) => { o = Number(o); return !o || isNaN(o) ? null : o > 0 ? 1 + o / 100 : 1 + 100 / Math.abs(o); };
+const money = (x) => (x == null || isNaN(x) ? "" : (x < 0 ? "-$" : "$") + Math.abs(x).toFixed(2));
+const signed = (x) => (x > 0 ? "+" : "") + money(x);
+const odds = (o) => (o == null ? "" : o > 0 ? `+${o}` : String(o));
+function parseOdds(t) { t = String(t || "").trim().replace(/\s/g, ""); if (!t) return null; const n = Number(t); if (isNaN(n)) return null;
+  if (Math.abs(n) >= 100) return Math.round(n); if (n > 1) return n >= 2 ? Math.round((n - 1) * 100) : -Math.round(100 / (n - 1)); return null; }
+
+let BETS = [];
+function load() { try { BETS = JSON.parse(localStorage.getItem(KEY) || "[]"); if (!Array.isArray(BETS)) BETS = []; } catch (e) { BETS = []; } }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(BETS)); } catch (e) { /* storage off */ } }
+const LIVE = { games: {}, box: {}, at: null, error: null, timer: null };   // games: date -> [{id, start, state, ...}]; box: event id -> players
+
+// ---- the feed
+async function getJSON(url) { const r = await fetch(url, { cache: "no-store" }); if (!r.ok) throw new Error(`ESPN ${r.status}`); return r.json(); }
+async function scoreboard(day) {
+  const d = await getJSON(`${ESPN}/scoreboard?dates=${day.replace(/-/g, "")}`);
+  return (d.events || []).map((e) => { const c = e.competitions[0], st = c.status || {}, t = c.competitors || [];
+    const away = t.find((x) => x.homeAway === "away") || t[0], home = t.find((x) => x.homeAway === "home") || t[1];
+    return { id: String(e.id), start: e.date, state: st.type?.state, detail: st.type?.shortDetail || "", period: st.period || 0, clock: st.displayClock || "",
+             away: away?.team?.abbreviation, home: home?.team?.abbreviation, awayName: away?.team?.displayName, homeName: home?.team?.displayName,
+             score: `${away?.team?.abbreviation} ${away?.score ?? ""}-${home?.score ?? ""} ${home?.team?.abbreviation}` }; });
+}
+async function boxscore(id) {
+  const d = await getJSON(`${ESPN}/summary?event=${id}`), players = {};
+  for (const team of d.boxscore?.players || []) for (const g of team.statistics || []) {
+    const k = g.keys || [], hi = k.indexOf("hits"), ti = k.indexOf("timeOnIce"); if (hi < 0) continue;      // goalies carry no hits
+    for (const a of g.athletes || []) players[normName(a.athlete?.displayName)] = { hits: Number(a.stats?.[hi]) || 0, toi: ti >= 0 ? a.stats?.[ti] : "", team: team.team?.abbreviation, id: a.athlete?.id };
+  }
+  return { players, any: Object.keys(players).length > 0 };
+}
+async function refresh() {
+  const days = [...new Set(BETS.filter((b) => !b.settled && !b.result).map((b) => b.day))];
+  try {
+    for (const day of days) LIVE.games[day] = await scoreboard(day);
+    const need = new Set(BETS.filter((b) => !b.settled && !b.result).map((b) => b.event));
+    for (const day of days) for (const g of LIVE.games[day]) if (need.has(g.id) && g.state !== "pre") LIVE.box[g.id] = await boxscore(g.id);
+    LIVE.error = null;
+  } catch (e) { LIVE.error = e.message || String(e); }
+  LIVE.at = Date.now();
+  settle(); render();
+}
+function gameOf(b) { return (LIVE.games[b.day] || []).find((g) => g.id === b.event) || null; }
+function loop() {
+  clearTimeout(LIVE.timer);
+  const open = BETS.filter((b) => !b.settled && !b.result); if (!open.length) return;
+  refresh().finally(() => {
+    const live = open.some((b) => gameOf(b)?.state === "in"), soon = open.some((b) => { const g = gameOf(b); return g && g.state === "pre" && new Date(g.start) - Date.now() < 3 * 3600e3; });
+    LIVE.timer = setTimeout(loop, live ? 60e3 : soon ? 120e3 : 600e3);
+  });
+}
+
+// ---- a bet's state
+const elapsedMin = (g) => { if (!g || g.state === "pre") return 0; if (g.state === "post" || g.period > 3) return 60;
+  const [m, s] = String(g.clock || "20:00").split(":").map(Number); return Math.min(60, (g.period - 1) * 20 + (20 - ((m || 0) + (s || 0) / 60))); };
+function stateOf(b) {
+  const g = gameOf(b), bx = g ? LIVE.box[g.id] : null, p = bx?.players?.[normName(b.player)];
+  const hits = p ? p.hits : bx && bx.any ? 0 : null, under = b.side === "Under", line = Number(b.line);
+  const out = { g, hits, toi: p?.toi || "", found: !!p, pace: null, cls: "", pill: ["", "Not started"], status: "" };
+  if (b.result || b.settled) { const r = b.result || b.settled.result; out.hits = b.settled?.hits ?? hits;
+    out.pill = r === "Win" ? ["won", "WON"] : r === "Loss" ? ["lost", "LOST"] : ["", r]; out.cls = r === "Win" ? "good" : r === "Loss" ? "bad" : ""; out.status = b.result ? "settled by you" : "final"; return out; }
+  if (!g) { out.status = LIVE.error ? `Live feed unavailable (${LIVE.error})` : LIVE.at ? "Game not found on ESPN" : "Loading…"; return out; }
+  if (g.state === "pre") { out.status = `Puck drop ${hm(g.start)}`; return out; }
+  out.status = `${g.detail} · ${g.score}`;
+  if (hits == null) { out.status += " · no box score yet"; return out; }
+  const share = elapsedMin(g) / 60, rate = (hits + line) / (share + 1);           // one game of the line as the prior, so an early hit does not project to twelve
+  out.pace = g.state === "post" ? hits : hits + rate * (1 - share);
+  if (under ? hits > line : hits > line) { out.cls = under ? "bad" : "good"; out.pill = under ? ["bad", "Past the line"] : ["good", "Cleared"]; }
+  else { const ok = under ? out.pace < line : out.pace > line; out.cls = ok ? "good" : "slow"; out.pill = ok ? ["good", "On track"] : ["slow", "Behind"]; }
+  return out;
+}
+function settle() {
+  let changed = false;
+  for (const b of BETS) {
+    if (b.settled || b.result) continue;
+    const g = gameOf(b), bx = g ? LIVE.box[g.id] : null; if (!g || g.state !== "post" || !bx || !bx.any) continue;
+    const p = bx.players[normName(b.player)], line = Number(b.line);
+    b.settled = p ? { result: p.hits === line ? "Push" : (b.side === "Under" ? p.hits < line : p.hits > line) ? "Win" : "Loss", hits: p.hits, at: new Date().toISOString() }
+                  : { result: "Void", hits: null, at: new Date().toISOString(), why: "not in the box score: did not dress" };
+    changed = true;
+  }
+  if (changed) save();
+}
+function profit(b) { const r = b.result || b.settled?.result, dec = toDec(b.odds), st = Number(b.stake) || 0;
+  return r === "Win" ? (dec ? st * (dec - 1) : null) : r === "Loss" ? -st : r ? 0 : null; }
+
+// ---- the page
+let VIEW = "active";
+function render() {
+  const done = (b) => !!(b.result || b.settled), list = BETS.filter((b) => (VIEW === "settled" ? done(b) : !done(b)));
+  const tot = $("#totals"), box = $("#list"); tot.replaceChildren(); box.replaceChildren();
+  const open = BETS.filter((b) => !done(b)), closed = BETS.filter(done);
+  const risk = open.reduce((t, b) => t + (Number(b.stake) || 0), 0), toWin = open.reduce((t, b) => t + (toDec(b.odds) ? (Number(b.stake) || 0) * (toDec(b.odds) - 1) : 0), 0);
+  const w = closed.filter((b) => (b.result || b.settled.result) === "Win").length, l = closed.filter((b) => (b.result || b.settled.result) === "Loss").length;
+  const net = closed.reduce((t, b) => t + (profit(b) || 0), 0);
+  const tile = (big, label, cls) => el("div", {}, el("b", { class: cls || "" }, big), el("span", {}, label));
+  tot.append(tile(String(open.length), `active bet${open.length === 1 ? "" : "s"}`), tile(money(risk) || "$0.00", `staked · ${money(risk + toWin) || "$0.00"} payout`),
+             tile(`${w}-${l}`, "settled record"), tile(signed(net) || "$0.00", "settled profit", net > 0 ? "pos" : net < 0 ? "neg" : ""));
+  if (LIVE.error && open.length) box.append(el("div", { class: "warn" }, `ESPN's feed is not answering (${LIVE.error}). Hits will update when it is back; you can always set a result by hand.`));
+  if (!list.length) { box.append(el("div", { class: "empty" }, VIEW === "settled" ? "No settled bets yet." : "No active bets. Add one with “+ Add a hit bet” above.")); return; }
+  const order = (b) => { const g = gameOf(b); return `${b.day}|${g?.start || b.start || ""}|${b.player}`; };
+  for (const b of [...list].sort((x, y) => (VIEW === "settled" ? order(y).localeCompare(order(x)) : order(x).localeCompare(order(y))))) {
+    const s = stateOf(b), dec = toDec(b.odds), st = Number(b.stake) || 0, pr = profit(b);
+    const sel = el("select", { "aria-label": `Result of ${b.player}` }, ...[["", "Auto"], ["Win", "Won"], ["Loss", "Lost"], ["Push", "Push"], ["Void", "Void"]].map(([v, t]) => { const o = el("option", { value: v }, t); if ((b.result || "") === v) o.selected = true; return o; }));
+    sel.addEventListener("change", () => { if (sel.value) b.result = sel.value; else delete b.result; save(); render(); loop(); });
+    const rm = el("button", { type: "button", class: "rm" }, "Remove"); rm.onclick = () => { if (confirm(`Remove ${b.player} ${b.side} ${b.line} hits?`)) { BETS = BETS.filter((x) => x !== b); save(); render(); } };
+    box.append(el("div", { class: `bet ${s.cls}`.trim() },
+      el("div", { class: "who" }, b.player),
+      el("div", { class: "what" }, `${b.side} ${b.line} hits `, el("span", { class: "game" }, `${odds(b.odds)} at ${b.book || "—"}`)),
+      el("div", { class: "game" }, `${b.game || ""}${b.start ? ` · ${dayName(b.day)} ${hm(b.start)}` : ""}`),
+      el("div", { class: "now" }, el("b", {}, s.hits == null ? "–" : String(s.hits)), el("span", {}, s.pace != null && s.g?.state === "in" ? `hits · heading for ${s.pace.toFixed(1)}` : "hits")),
+      el("div", { class: "status" }, el("span", { class: `pill ${s.pill[0]}`.trim() }, s.pill[1]), el("span", {}, s.status + (s.toi && s.g?.state !== "pre" ? ` · ${s.toi} TOI` : "")),
+        el("span", { class: "money" }, pr != null ? el("b", { class: pr > 0 ? "pos" : pr < 0 ? "neg" : "" }, signed(pr)) : `${money(st)} to pay ${dec ? money(st * dec) : "?"}`),
+        sel, rm)));
+  }
+}
+
+// ---- adding a bet
+async function fillDays() {
+  const today = ymd(new Date()), tmw = ymd(new Date(Date.now() + 864e5)), d = $("#f-day");
+  d.replaceChildren(el("option", { value: today }, `Today (${dayName(today)})`), el("option", { value: tmw }, `Tomorrow (${dayName(tmw)})`));
+  await fillGames();
+}
+async function fillGames() {
+  const day = $("#f-day").value, g = $("#f-game"); g.replaceChildren(el("option", { value: "" }, "Loading games…"));
+  try { LIVE.games[day] = await scoreboard(day); } catch (e) { g.replaceChildren(el("option", { value: "" }, `Games unavailable (${e.message || e})`)); return; }
+  const gs = LIVE.games[day]; g.replaceChildren(...(gs.length ? gs.map((x) => el("option", { value: x.id }, `${x.away} @ ${x.home} · ${hm(x.start)}${x.state === "post" ? " (final)" : x.state === "in" ? " (live)" : ""}`)) : [el("option", { value: "" }, "No games that day")]));
+}
+function addBet() {
+  const msg = $("#f-msg"), day = $("#f-day").value, id = $("#f-game").value, g = (LIVE.games[day] || []).find((x) => x.id === id);
+  const player = $("#f-player").value.trim(), o = parseOdds($("#f-odds").value), stake = $("#f-stake").value === "" ? null : Math.max(0, Number($("#f-stake").value));
+  if (!g) { msg.textContent = "Pick the game."; return; }
+  if (!player) { msg.textContent = "Type the player's name."; $("#f-player").focus(); return; }
+  if (o == null) { msg.textContent = "Odds as -184 or +120 (or 1.54)."; $("#f-odds").focus(); return; }
+  BETS.push({ id: Date.now().toString(36), player, side: $("#f-side").value, line: Number($("#f-line").value), odds: o, stake, book: $("#f-book").value.trim() || "Stake",
+              day, event: g.id, game: `${g.away} @ ${g.home}`, start: g.start, added: new Date().toISOString() });
+  save(); msg.textContent = `Added ${player}.`; $("#f-player").value = ""; $("#f-odds").value = ""; VIEW = "active"; setTab(); render(); loop();
+}
+// a link that adds bets: #add=<base64url of [{player, side, line, odds, stake, book, day, event, game, start}]>
+function importFromHash() {
+  const m = location.hash.match(/^#add=(.+)$/); if (!m) return;
+  try {
+    const t = m[1].replace(/-/g, "+").replace(/_/g, "/"), list = JSON.parse(decodeURIComponent(escape(atob(t + "=".repeat((4 - t.length % 4) % 4)))));
+    const key = (b) => `${normName(b.player)}|${b.day}|${b.side}|${b.line}`, have = new Set(BETS.map(key));
+    const fresh = (Array.isArray(list) ? list : []).filter((b) => b && b.player && b.day && b.event && !have.has(key(b)));
+    if (fresh.length && confirm(`Add ${fresh.length} hit bet${fresh.length === 1 ? "" : "s"} to this device?`)) { for (const b of fresh) BETS.push({ ...b, id: Math.random().toString(36).slice(2, 10), added: new Date().toISOString() }); save(); }
+    else if (!fresh.length) alert("Those bets are already on this device.");
+  } catch (e) { alert("That link did not import (" + (e.message || e) + ")."); }
+  history.replaceState(null, "", location.pathname);
+}
+function setTab() { document.querySelectorAll(".tabs button").forEach((t) => t.setAttribute("aria-selected", String(t.dataset.v === VIEW))); }
+
+load(); importFromHash();
+document.querySelectorAll(".tabs button").forEach((t) => t.addEventListener("click", () => { VIEW = t.dataset.v; setTab(); render(); }));
+$("#f-day").addEventListener("change", fillGames);
+$("#f-add").addEventListener("click", addBet);
+$("#add-box").open = !BETS.length;
+render(); fillDays(); loop();
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") loop(); });
+window.addEventListener("hashchange", () => { if (location.hash.startsWith("#add=")) { importFromHash(); render(); loop(); } });   // a link opened while the page is already open
+</script>
+</body>
+</html>

@@ -83,7 +83,8 @@ def prepare(src):
     """A copy of the site with this repository's page and the real replay of the season (the smoke copy leaves it out)."""
     dst = Path(tempfile.mkdtemp()) / "docs"
     shutil.copytree(src, dst)
-    shutil.copy(os.environ.get("BROWSER_TEST_PAGE") or ROOT / "docs" / "index.html", dst / "index.html")   # the override lets a broken copy of the page prove the test fails on it
+    shutil.copy(os.environ.get("BROWSER_TEST_PAGE") or ROOT / "docs" / "index.html", dst / "index.html")
+    shutil.copy(os.environ.get("BROWSER_TEST_NHL") or ROOT / "docs" / "nhl.html", dst / "nhl.html")   # the override lets a broken copy of the page prove the test fails on it
     res = dst / "data" / "results.json"
     retro = ROOT / "data" / "retro_five.json"
     if res.exists() and retro.exists():
@@ -109,8 +110,14 @@ def run_width(browser, name, width):
     pg.on("pageerror", lambda e: errors.append(str(e)))
     pg.route("**/site.api.espn.com/**", lambda r: r.abort())          # the live feed is simulated below; no network in the test
     pg.goto(f"http://localhost:{PORT}/#record")              # a link to another tab: the page still opens on My board
-    pg.wait_for_function("typeof BOOT !== 'undefined' && BOOT.first", timeout=20000)
     at = f"at {name} width ({width}px)"
+    # the home screen: two tiles, NFL and NHL, over the board while it loads behind them
+    hub = pg.evaluate("(() => { const h = document.querySelector('#hub'); return { shown: !!h && !h.hidden, tiles: [...h.querySelectorAll('.hub-tile b')].map((b) => b.textContent), nhl: document.querySelector('#hub-nhl').getAttribute('href') }; })()")
+    check(hub["shown"] and hub["tiles"] == ["NFL", "NHL"] and hub["nhl"] == "nhl.html", f"a visit opens on the home screen with an NFL and an NHL tile {at} ({hub})")
+    r = pg.evaluate(PROBE, "#hub")
+    check(not r["overflow"] and not r["bad"] and not r["squeezed"], f"the home screen fits the screen {at} ({r['wide']} {r['squeezed']})")
+    pg.click("#hub-nfl")
+    pg.wait_for_function("typeof BOOT !== 'undefined' && BOOT.first", timeout=20000)
     first = pg.evaluate("({ tab: TAB, mine: !document.querySelector('#mine').hidden, others: [...document.querySelectorAll('.wrap > section, body > section, section')].filter((x) => x.id && TABS.includes(x.id) && !x.hidden).map((x) => x.id) })")
     check(first["tab"] == "mine" and first["mine"] and first["others"] == ["mine"], f"the page opens on My board {at} ({first})")
     pg.wait_for_function(READY, timeout=20000)
@@ -140,6 +147,7 @@ def run_width(browser, name, width):
     # ---- Plays: the jump bar, a pick opened from the one-line list, the full-card view, the slots
     pg.reload()
     pg.wait_for_function(READY, timeout=20000)
+    check(pg.evaluate("document.querySelector('#hub').hidden"), f"a reload keeps the board, not the home screen {at}")
     pg.click('nav button[data-tab="plays"]')
     pg.evaluate("(() => { try { localStorage.removeItem('plays-view'); } catch (e) {} PLAY_VIEW = null; renderPlays(); })()")
     jumps = pg.locator(".plays-jump button").count()
@@ -393,6 +401,7 @@ def run_sync(browser):
         pg.route("**/site.api.espn.com/**", lambda r: r.abort())
         pg.route("**/api.github.com/**", hub.handle)
         pg.goto(f"http://localhost:{PORT}/")
+        pg.click("#hub-nfl")
         pg.wait_for_function(READY, timeout=20000)
         return ctx, pg
 
@@ -533,6 +542,7 @@ def run_sealed(browser, docs):
         pg.route("**/site.api.espn.com/**", lambda r: r.abort())
         pg.add_init_script("window.__derived = 0; const __d = crypto.subtle.deriveKey.bind(crypto.subtle); crypto.subtle.deriveKey = (...a) => { window.__derived++; return __d(...a); };")
         pg.goto(f"http://localhost:{PORT + 1}/")
+        pg.click("#hub-nfl")                                     # the home screen sits above the gate
         pg.wait_for_selector("#gate-pw", timeout=20000)
         check(pg.evaluate("!BOOT.first && !document.querySelector('#loading').hidden"), "a sealed site asks for the password and shows it is opening, not a blank page")
         pg.fill("#gate-pw", "not-the-password")
@@ -556,6 +566,91 @@ def run_sealed(browser, docs):
         shutil.rmtree(site.parent, ignore_errors=True)
 
 
+def nhl_feed():
+    """ESPN's NHL scoreboard and box scores, in memory: one game on, one final, one to come. `state` is changed by the test."""
+    state = {"live": {"period": 2, "clock": "10:00", "state": "in"}, "hits": {"Victor Eklund": 1, "Emil Heineman": 0, "Adam Klapka": 4, "Jack McBain": 2}}
+    def team(ab, name, home, score):
+        return {"homeAway": "home" if home else "away", "score": str(score), "team": {"abbreviation": ab, "displayName": name}}
+    def event(i, start, away, home, st):
+        return {"id": i, "date": start, "competitions": [{"status": {"period": st["period"], "displayClock": st["clock"], "type": {"state": st["state"], "shortDetail": {"in": f"{st['clock']} - {st['period']}nd", "post": "Final", "pre": "7:30 PM"}[st["state"]]}},
+                "competitors": [team(away[0], away[1], False, 1), team(home[0], home[1], True, 2)]}]}
+    def handle(route):
+        u = route.request.url
+        if "/scoreboard" in u:
+            body = {"events": [event("901", "2026-11-24T00:30Z", ("TOR", "Toronto Maple Leafs"), ("NYI", "New York Islanders"), state["live"]),
+                               event("902", "2026-11-24T00:30Z", ("CGY", "Calgary Flames"), ("OTT", "Ottawa Senators"), {"period": 3, "clock": "0:00", "state": "post"}),
+                               event("903", "2026-11-24T03:00Z", ("MIN", "Minnesota Wild"), ("SJ", "San Jose Sharks"), {"period": 0, "clock": "20:00", "state": "pre"})]}
+        else:
+            ev = u.split("event=")[1].split("&")[0]
+            keys = ["blockedShots", "hits", "takeaways", "plusMinus", "timeOnIce"]
+            who = {"901": [("NYI", ["Victor Eklund", "Emil Heineman"]), ("TOR", ["Auston Matthews"])], "902": [("OTT", ["Adam Klapka"]), ("CGY", ["Jack McBain"])]}.get(ev, [])
+            body = {"boxscore": {"players": [{"team": {"abbreviation": t}, "statistics": [{"name": "forwards", "keys": keys, "athletes": [
+                {"athlete": {"displayName": n, "id": n[:3]}, "stats": ["0", str(state["hits"].get(n, 0)), "0", "0", "14:02"]} for n in names]},
+                {"name": "goalies", "keys": ["saves"], "athletes": [{"athlete": {"displayName": "A Goalie"}, "stats": ["20"]}]}]} for t, names in who]}}
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(body), headers={"access-control-allow-origin": "*"})
+    return state, handle
+
+
+def run_nhl(browser):
+    """The NHL hits page: reached from the home screen, a bet added through the form and followed live, bets added by a
+    link, settled when the game is final (a win, a loss, a void for a player not in the box score), and a result by hand."""
+    for name, width in WIDTHS:
+        at = f"at {name} width ({width}px)"
+        state, handle = nhl_feed()
+        ctx = browser.new_context(viewport={"width": width, "height": 900})
+        pg = ctx.new_page()
+        errors = []
+        pg.on("pageerror", lambda e: errors.append(str(e)))
+        pg.route("**/site.api.espn.com/apis/site/v2/sports/football/**", lambda r: r.abort())
+        pg.route("**/site.api.espn.com/apis/site/v2/sports/hockey/**", handle)
+        pg.add_init_script("Date.now = ((n) => () => n)(Date.parse('2026-11-24T01:10:00Z')); const __D = Date; window.Date = class extends __D { constructor(...a) { super(...(a.length ? a : [Date.now()])); } static now() { return __D.parse('2026-11-24T01:10:00Z'); } };")
+        pg.goto(f"http://localhost:{PORT}/")
+        pg.click("#hub-nhl")
+        pg.wait_for_selector("#f-game option[value='901']", state="attached", timeout=20000)
+        check(pg.url.endswith("/nhl.html") and pg.evaluate("document.querySelector('#home-link').getAttribute('href')") == "index.html", f"the NHL tile opens the hits page, which links home {at}")
+        # a bet through the form
+        pg.select_option("#f-game", "901")
+        pg.fill("#f-player", "Victor Eklund")
+        pg.select_option("#f-line", "1.5")
+        pg.fill("#f-odds", "-208")
+        pg.fill("#f-stake", "20")
+        pg.click("#f-add")
+        pg.wait_for_function("document.querySelectorAll('#list .bet').length === 1 && /hits/.test(document.querySelector('#list .bet .now').innerText) && document.querySelector('#list .bet .now b').textContent !== '–'", timeout=20000)
+        card = pg.evaluate("(() => { const c = document.querySelector('#list .bet'); return { cls: c.className, hits: c.querySelector('.now b').textContent, text: c.innerText.replace(/\\n/g, ' ') }; })()")
+        # one hit halfway through: heading for 1 + (1 + 1.5) / 1.5 x 0.5 = 1.83, over 1.5
+        check(card["hits"] == "1" and "On track" in card["text"] and "heading for 1.8" in card["text"] and "good" in card["cls"] and "$20.00 to pay $29.62" in card["text"],
+              f"a bet added through the form is followed live: hits so far, where he is heading, on track, the payout {at} ({card['text'][:160]})")
+        r = pg.evaluate(PROBE, "body")
+        check(not errors and not r["bad"] and not r["overflow"] and not r["squeezed"], f"the hits page with a live bet is clean {at} ({errors[:1]} {r['bad']} {r['wide']} {r['squeezed']})")
+        # three more by a link: two on the final game, one whose player is not in the box score
+        import base64
+        add = [dict(player="Adam Klapka", side="Over", line=2.5, odds=-212, stake=20, book="Stake", day="2026-11-23", event="902", game="CGY @ OTT", start="2026-11-24T00:30Z"),
+               dict(player="Jack McBain", side="Over", line=2.5, odds=-209, stake=20, book="Stake", day="2026-11-23", event="902", game="CGY @ OTT", start="2026-11-24T00:30Z"),
+               dict(player="Nobody Dressed", side="Over", line=1.5, odds=-150, stake=10, book="Stake", day="2026-11-23", event="902", game="CGY @ OTT", start="2026-11-24T00:30Z")]
+        link = base64.urlsafe_b64encode(json.dumps(add).encode()).decode().rstrip("=")
+        pg.on("dialog", lambda d: d.accept())
+        pg.goto(f"http://localhost:{PORT}/nhl.html#add={link}")
+        pg.wait_for_function("JSON.parse(localStorage.getItem('nhl-bets-v1') || '[]').filter((b) => b.settled).length === 3", timeout=20000)
+        got = pg.evaluate("JSON.parse(localStorage.getItem('nhl-bets-v1')).map((b) => [b.player, b.settled ? b.settled.result : null])")
+        check(sorted(got) == sorted([["Victor Eklund", None], ["Adam Klapka", "Win"], ["Jack McBain", "Loss"], ["Nobody Dressed", "Void"]]) and "#add=" not in pg.url,
+              f"bets added by a link settle when the game is final: 4 hits over 2.5 wins, 2 loses, a player not in the box score is void {at} ({got})")
+        pg.goto(f"http://localhost:{PORT}/nhl.html#add={link}")       # the same link again adds nothing
+        check(pg.evaluate("JSON.parse(localStorage.getItem('nhl-bets-v1')).length") == 4, f"opening the same link twice adds nothing {at}")
+        pg.click(".tabs button[data-v='settled']")
+        tot = pg.evaluate("document.querySelector('#totals').innerText.replace(/\\n/g, ' ')")
+        # Klapka won 20 at -212: +9.43; McBain lost 20: -20.00; void: 0
+        check("1-1" in tot and "-$10.57" in tot, f"the settled record and profit add up by hand {at} ({tot})")
+        r = pg.evaluate(PROBE, "body")
+        check(not errors and not r["bad"] and not r["overflow"], f"the settled list is clean {at} ({errors[:1]} {r['bad']} {r['wide']})")
+        # a result set by hand moves an active bet to Settled
+        pg.click(".tabs button[data-v='active']")
+        pg.select_option("#list .bet select", "Loss")
+        pg.wait_for_function("document.querySelectorAll('#list .bet').length === 0", timeout=5000)
+        tot = pg.evaluate("document.querySelector('#totals').innerText.replace(/\\n/g, ' ')")
+        check("1-2" in tot and "-$30.57" in tot, f"a result set by hand settles the bet {at} ({tot})")
+        ctx.close()
+
+
 def main():
     docs = prepare(site_dir())
     srv = subprocess.Popen([sys.executable, "-m", "http.server", "--directory", str(docs), str(PORT)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -567,6 +662,7 @@ def main():
                 run_width(browser, name, width)
             run_sync(browser)
             run_sealed(browser, docs)
+            run_nhl(browser)
             browser.close()
     finally:
         srv.terminate()
