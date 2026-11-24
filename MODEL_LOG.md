@@ -567,7 +567,9 @@ and C9. What remains, and what the rebuild itself turned up:
    since the engine -0.0027 (give or take 0.0017; t -1.6) on 406 lines, solo -0.0095; picks 56-51, +2.75 on 37.1
    staked. Week 11 through Sunday (2026-11-23): since the engine -0.0005 (give or take 0.0014; t -0.4) on 696
    lines, solo -0.0065, combined +0.0022, assists +0.0026; week 11 alone +0.0010, the first live week above the
-   book; picks 87-77, +4.35 on 54.8 staked.
+   book; picks 87-77, +4.35 on 54.8 staked. Week 11 closed (2026-11-24): since the engine +0.0000 (give or take
+   0.0019; t +0.0) on 718 lines, solo -0.0048, combined +0.0023, assists +0.0026; week 11 +0.0021; picks 91-77,
+   +10.13 at 1 a bet, +5.54 on 56.1 staked.
 2. **The model sits below the book, in both markets, every week.** Mean gap -0.19 (combined) and -0.21 (solo) in
    log-odds: the model gives the Over 45% where the book gives 49.6%. On solo the book was the one that was wrong in
    weeks 7 and 8 (Overs hit 33% and 39%) and right in week 9 (50%). On combined the model was wrong all three weeks
@@ -588,7 +590,8 @@ and C9. What remains, and what the rebuild itself turned up:
    Through week 11's Sunday: A 8-5, B 14-5, C 65-67. **Met on 2026-11-23:** H1 C at its 100th, 47-53 (C picks
    become leans); the solo Unders off the flag at their 40th, 17-23 (they stop being picks); R1 for the
    combined-Over sleepers at their 40th, 21-19 (52.5%, under 55%: that kind comes off); E6 at 40, Overs 18-22.
-   Not applied: the owner's decision (week 11 post-mortem, Sunday).
+   Not applied: the owner's decision (week 11 post-mortem, Sunday). Week 11 closed: A 8-5, B 15-5, C 68-67; the
+   H1 C count now reads 46-54 (issue 28: its first 100 are cut inside a tied kickoff; "fails" either way).
 4. **The profit in the replay is a pocket.** (Four of those lineman wins were the mis-posted Sam Williams lines,
    now barred; under the rules of 2026-11-09, 10 pm, linemen are 13-2, linebackers 48-44, safeties 34-25, corners
    22-14.) Linemen 16-2 (+14.4 units of +17.7), the assists trial 17-11;
@@ -691,6 +694,13 @@ and C9. What remains, and what the rebuild itself turned up:
     the logged stakes add up across boards: Sunday of week 10 31.3 units against 25 a day, Vikings at Packers 6.31
     against 5 a game. S3 is read on these stakes. Fix for the owner's session (the cap rule itself is frozen, the
     arithmetic is not): cap against the slate day's picks already logged, and say in S3 which stakes it is read on.
+28. **The first N of a condition are cut arbitrarily inside a tied kickoff** (found 2026-11-24, standing
+    post-mortem; a defect, not fixed: for the owner's session). `grade.engine_era`'s `watch` sorts by kickoff with no
+    tie-break (`sort_values("_t")`) before `head(of)`. H1 C's 100th pick falls inside Sunday 2026-11-22 18:00 UTC
+    (32 graded C picks at one kickoff, 17-15; 85 before it, 40-45), so the count can read 40 to 55 of 100 by row
+    order: 47-53 on 11-23, 46-54 on 11-24. The fair reading is about 48 and all 117 through that kickoff are 57-60:
+    "fails" stands. Fix: a stable sort with a tie-break (pulled_at, player), or count the whole kickoff that crosses
+    N; then say in H1 which.
 14. **Smaller.** The proportional no-vig split is off by about a point at very short and long prices. The solo
     share's own uncertainty is not in the solo spread. A same-game parlay's price is our estimate, not the book's.
     The regime-robust solo price (archive, 2026-11-08) has not been tried as the solo model. ESPN spells 9 of 528
@@ -851,7 +861,102 @@ Post-mortems of weeks 7 and 8 are in the archive. From week 10 a post-mortem sta
 record, "Against the market") and the luck table, reads every record with its likely range, and changes nothing
 inside the freeze unless it finds a defect.
 
-### Week 11, opened Friday 2026-11-20 with Thursday's slate, Sunday added Monday 2026-11-23 (standing post-mortem; measures only, nothing changed)
+### Week 11, opened Friday 2026-11-20 with Thursday's slate, Sunday added Monday 2026-11-23, closed Tuesday 2026-11-24 (standing post-mortem; measures only, nothing changed)
+
+**Monday's slate and the week closed (Tuesday 2026-11-24, 8:40 am MST). Monday 4-0. Week 11 39-31, +7.67 units at
+1 a bet, +2.41 on 21.2 staked. The scoreboard since week 10 is now level with the book (+0.0000, give or take
+0.0019). No new condition met; the three met on Sunday stand, not applied. One small defect found in how the H1 C
+condition picks its first 100 (point 5); the verdict does not change.** Grading had landed: `data/weekly_five.md`
+generated 2026-11-24 10:16 UTC, nine hours after the kickoff of Bengals at Commanders (2026-11-24 01:15 UTC). Checked
+against a scratch daily (results.json, backtest.json): every figure below matches the weekly log.
+
+1. **Scoreboard since week 10 (out of sample): 718 lines, book 0.6822, model alone 0.6910, engine 0.6821: the
+   engine is level with the book, +0.0000, give or take 0.0019 (t +0.0).** Week 11 closed (338 lines): +0.0021;
+   Monday's 22 lines moved it from +0.0010. By market since week 10: solo -0.0048 (give or take 0.0012; 237 lines),
+   combined +0.0023 (0.0022; 234), assists +0.0026 (0.0025; 247). Not distinguishable from nothing after two weeks,
+   and it could not be. Solo is still below the book by several times a give or take that two weeks cannot pin down;
+   combined and assists lean better. Background, in-sample: all weeks +0.0054 (give or take 0.0022; t +2.5) on
+   3,274 lines.
+2. **The record.** Monday: **4-0, +3.75 units at 1 a bet, +1.19 on 1.25 staked**, every bet a solo Under on one
+   game: Bryan Cook Under 3.5 (B, flagged at 64%; 2, +101), Demetrius Knight Jr. Under 4.5 (C; 3, -146), Barrett
+   Carter Under 3.5 (C; 3, +125), Sonny Styles Under 4.5 (C; 3, -125). LB 3-0, S 1-0. Three of the four were C picks
+   on unflagged lines, the two kinds whose conditions were met on Sunday: had those been applied, Monday would have
+   been Cook alone (+0.51 at his stake). No lock (no A), no parlay.
+   - **Week 11 closed: 39-31 (56%), +7.67 units at 1 a bet, +2.41 on 21.2 staked (+11.4%; flat +11.0%).** By
+     grade: A 1-1, B 6-3, C 32-27. By side and market: Under solo 19-15, Under combined 6-3, Under assists 8-4,
+     Over solo 2-4, Over combined 1-1, Over assists 3-4. By position: S 14-5, LB 20-15, CB 5-7, DL 0-4. Solo Unders
+     on a flagged line 7-4, on an unflagged line 12-11.
+   - **Since the engine: 91-77 (54%, likely range 42% to 66%), +10.13 units at 1 a bet, +5.54 on 56.1 staked
+     (+9.9%; flat +6.0%); the win chance said 57%.**
+   - By grade: A 8-5 (62%, 34% to 83%; +1.21 at 1 a bet), B 15-5 (75%, 51% to 90%; +8.14), C 68-67 (50%, 38% to
+     63%; +0.79). B above A in the point estimate, both above C; every range overlaps the others. The replays gave
+     75%, 66%, 58%.
+   - By side and market: Under combined 15-7 (+6.90), Under solo 45-35 (+6.92), Under assists 12-12, Over solo 6-9
+     (-3.18), Over combined 4-4, Over assists 9-10. By position: CB 18-10 (+5.82), S 22-17 (+4.92), LB 47-42
+     (+3.48), DL 4-8 (-4.08).
+   - Solo Unders on a flagged line 23-10 (70%); on an unflagged line 22-25 (47%). The flag still splits the two.
+   - Locks: none in week 11 (Sunday's two A picks were under the lock floor of 70, Monday had no A). Since the
+     engine 5-0; every lock to date 15-4, +7.38. Parlays: none Monday; week 11 0-1; to date 2-3, +0.32 on 0.5.
+   - **Sleepers, their own record:** Monday 1-1: Knight solo Under 4.5 (A) won with 3; Jordan Battle combined Over
+     5.5 (C) lost with 4. Week 11 13-16. All since frozen 37-34, -6.17 units: A 10-5, B 13-14, C 14-15; solo Unders
+     15-12, combined Overs 22-22. R1 stays met for the combined Overs (21-19 at their 40th); the A sleepers 10-5
+     (67%, under the 70% at which the A rule is reviewed, 15 of 20).
+   - **The assists trial, on its own:** no assists bet on Monday; week 11 11-8; since the engine 21-22, -0.15 at 1
+     a bet.
+   - **Stakes by slate day** (no cap): Thursday 2.25 units (-0.37), Sunday 17.75 (+1.60; largest game Titans at
+     Cowboys, 3.00, +1.32), Monday 1.25 on one game (+1.19). No slate day lost more than 15 units.
+3. **Calibration since the engine** (168 bets). Win chance: said 48% / 52% / 57% / 63% / 67% / 71%, hit 39% / 59%
+   / 63% / 58% / 52% / 40% (31 / 41 / 35 / 33 / 23 / 5); overall said 57%, hit 54%. The model's own chance: said
+   52% / 58% / 63% / 67% / 75% / 83%, hit 38% / 56% / 66% / 52% / 61% / 67% (37 / 27 / 29 / 31 / 41 / 3); overall
+   said 64%, hit 54%. Unchanged in shape: the win chance about three points high and flat above 60%; the model's
+   own chance about ten points high, most of it at 65% and above (open issue 24a).
+4. **Luck or skill** (luck table, week 11 closed). Unders 55 picks hit 60% where 56% of 349 lines went Under: lift
+   +4, beat the close 58%. Overs 15 picks hit 40% against 45%: lift -5. The board, no model: the Over won 44% on
+   combined (book's fair chance 49%), 44% on solo (49%), 45% on assists (51%). So five to six points of every
+   Under's week was the market's level; the lift over it was four points on 55 picks, inside a week's shock (about
+   6.5 points). Inside the flag the engine's solo Unders went 7-4 (64%) against the flagged board's 67% (Sunday's
+   reading): the flag did the work again. Kinds with positive lift on few picks: combined Unders (6-3) and assists
+   Unders (8-4), both on boards that ran Under by five to six points. No kind has lift, the close and the record
+   agreeing on enough picks to be evidence for the model. The close is not read until open issue 12 is settled.
+5. **Conditions on trial** (weekly log): H1 A 13 of 30, 8-5 (62%). H1 B 20 of 40, 15-5 (75%). **H1 C 100 of 100,
+   46-54 (46%, 33% to 60%): "fails"** (Sunday's log read 47-53). **H1 solo Unders off the flag 40 of 40, 17-23
+   (42%): "fails".** **E6 Overs 40 of 40, 18-22 (45%): "read it now".** E4 the old A rule 13 of 30, 9-4. S3 168
+   picks, running (ladder +9.9% against flat +6.0%). E5 locks 5-0. E2 2 of 4 weeks, margin +0.0000 (give or take
+   0.0038): running. R1 combined-Over sleepers met (point 2). Nothing new reached its count.
+   **A defect in the count (not fixed: for the owner's session).** `grade.engine_era`'s `watch` takes a condition's
+   first N picks by kickoff with an unstable sort (`sort_values("_t")`, no tie-break). The 100th C pick falls inside
+   Sunday 2026-11-22 18:00 UTC, where 32 graded C picks share one kickoff (17-15): 85 come before it (40-45), so which
+   15 of the 32 are "first" is arbitrary, and the count can read anywhere from 40 to 55 wins out of 100 depending on
+   row order. That is why it read 47-53 on Monday and 46-54 today with no C pick before Sunday changed. Shuffled
+   orders give 47, 47 and 50; the fair reading (every tied pick counted at its share) is about 48 of 100, and all 117
+   picks through that kickoff are 57-60 (49%): under 52.4% however it is read, so the verdict "fails" stands. The two
+   other conditions at their count are not affected (the 40th unflagged solo Under and the 40th Over sit at a
+   kickoff with no split tie). Fix: a stable sort with a tie-break, or count the whole kickoff that crosses N.
+6. **Candidates in the shadow, since week 10** (718 lines, two weeks): **the flat weight of 0.5, +0.0007 (give or
+   take 0.0002; t +3.4)**, better than the engine in both weeks; R6 also asks for three of four weeks and is decided
+   after 2026-12-08. The combined gap centred on the week's mean -0.0009 (t -3.6), worse. The solo level for lined
+   players -0.0000 (t -0.0). None adopted (R6).
+7. **The misses:** none on Monday. Of the four wins, Carter's 3 on 3.5 was within one tackle; the others won by
+   1.5 or more.
+8. **Internal validation** (scratch daily, 32,586 games, 819 projections for week 12, level for lined players
+   1.004): no flag. Final projection against the factor model by fold, deviance: 2024 1.4078 against 1.4412, 2025
+   1.3401 against 1.3920, 2026 1.3236 against 1.3834; overall -0.0463 (t -11.0), regulars -0.0155 (t -3.1).
+   Regulars' bias +0.019 overall, +0.133 in 2026. No factor "hurts"; none out of the model is a "candidate"
+   (nearest on regulars: role shift, t -1.8; bar -2). Next man up: 978 games, 12% low. Tails 5.5% below the 5th
+   percentile, 4.8% above the 95th.
+9. **Open issues 1 to 6:** (1) the edge on live weeks: +0.0000 (t +0.0) on 718 lines; week 11 +0.0021, solo still
+   the weak market. (2) the model below the book: every board went Under by five to six points against the book's
+   fair chance in week 11, so the lean paid again (weeks 10 and 11 alike); 2026 regulars' bias +0.13 a game. (3)
+   grade order: A 8-5, B 15-5, C 68-67; C's condition met (point 5). (4) the linemen pocket: DL 0-4 in week 11, 4-8
+   since the engine; it has not shown live. (5) next man up: no pick; 978 games, 12% low. (6) Overs: 6-9 in week
+   11, E6 at its count, 18-22.
+10. **What changed:** nothing; frozen until 2026-12-08, and no rule was applied. **For the owner:** (a) the three
+    conditions met on Sunday (H1 C to leans, unflagged solo Unders off the board, combined-Over sleepers off) and
+    E6 at its read are still yours to apply now or at 2026-12-08; Monday's 3-0 on the first two kinds changes none
+    of their counts. (b) The defect in point 5, for your session: a one-line fix in `grade.engine_era`. (c) The
+    odds key ends on 2026-12-10 (open issue 7); the December plan starts 2026-12-01. What to watch in week 12:
+    whether the solo margin closes toward the book, B against A as both near their counts (A 13 of 30, B 20 of 40),
+    and whether the boards again run Under the book's fair chance.
 
 **Sunday's slate (added Monday 2026-11-23, 8:55 am MST). Three conditions of the register have reached their
 count and are met: H1 C, H1 solo Unders off the flag, and R1 for the combined-Over sleepers. Applying them is the
