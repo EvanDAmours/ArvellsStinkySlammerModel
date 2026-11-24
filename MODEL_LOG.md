@@ -1423,6 +1423,14 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-24, morning (the home tiles get shield badges)
+
+The owner found "NFL" and "NHL" hard to tell apart at a glance (one letter differs). Each tile now carries a shield
+badge above its label: navy and red with a football for NFL, ice blue and charcoal with crossed sticks and a puck for
+NHL, and the tiles' top edges take the same colours. The badges are our own drawings, inline SVG: the leagues'
+shields are trademarks and the repo and site are public. Badges aligned to the top of each tile. Browser test: both
+badges drawn at 60 px or wider at both widths; the home screen fits a phone. Site only.
+
 ### 2026-11-23, 6 pm (a home screen with NFL and NHL tiles; an NHL hits bet tracker)
 
 The owner wants the model to branch into NHL hits; analytical data comes later. For now: a home screen with two

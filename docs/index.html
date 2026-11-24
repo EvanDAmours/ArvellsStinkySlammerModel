@@ -96,12 +96,14 @@ td.Win { color: #1f8a4c; font-weight: 600; } td.Loss { color: #c0392b; font-weig
 .hub-box h1 { font: 700 2.1rem/1.05 var(--cond); margin: 0; text-align: center; }
 .hub-box p { margin: 0; text-align: center; color: var(--muted); font-size: 0.92rem; }
 .hub-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.hub-tile { display: grid; gap: 4px; align-content: center; justify-items: center; text-align: center; min-height: 170px; padding: 18px 12px; border-radius: 14px;
+.hub-tile { display: grid; gap: 4px; align-content: start; justify-items: center; text-align: center; min-height: 170px; padding: 18px 12px; border-radius: 14px;
             border: 1px solid var(--line); border-top: 6px solid var(--flag); background: var(--panel); color: var(--ink); font: inherit; cursor: pointer; text-decoration: none; }
 .hub-tile.nhl { border-top-color: #2f6db5; }
-.hub-tile b { font: 700 2.4rem/1 var(--cond); letter-spacing: 0.02em; } .hub-tile span { font: 600 1.05rem var(--cond); } .hub-tile small { color: var(--muted); font-size: 0.82rem; line-height: 1.3; }
+.hub-tile b { font: 700 1.9rem/1 var(--cond); letter-spacing: 0.02em; }
+.hub-badge { width: 92px; height: 110px; display: block; margin-bottom: 4px; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.18)); }   /* our own badges, not the leagues' trademarked logos */
+.hub-tile.nfl { border-top-color: #c8102e; } .hub-tile.nhl { border-top-color: #46596d; } .hub-tile span { font: 600 1.05rem var(--cond); } .hub-tile small { color: var(--muted); font-size: 0.82rem; line-height: 1.3; }
 .hub-tile:hover, .hub-tile:focus-visible { border-color: var(--ink); }
-@media (max-width: 400px) { .hub-tile { min-height: 140px; } .hub-tile b { font-size: 2rem; } }
+@media (max-width: 400px) { .hub-tile { min-height: 140px; } .hub-tile b { font-size: 1.6rem; } .hub-badge { width: 76px; height: 91px; } }
 .home-link { font: 600 0.9rem var(--sans); color: var(--muted); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
 #gate { position: fixed; inset: 0; background: var(--bg, #f3f4f6); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; }
 #gate[hidden] { display: none; }
@@ -371,8 +373,8 @@ h2 { font: 700 1.4rem var(--cond); margin: 24px 0 6px; }
     <h1>Arvell's Stinky Slammer Model</h1>
     <p>Pick a board.</p>
     <div class="hub-tiles">
-      <button type="button" class="hub-tile nfl" id="hub-nfl"><b>NFL</b><span>Tackles</span><small>Picks, My board, track record</small></button>
-      <a class="hub-tile nhl" id="hub-nhl" href="nhl.html"><b>NHL</b><span>Hits</span><small>Track your hit bets live</small></a>
+      <button type="button" class="hub-tile nfl" id="hub-nfl"><svg class="hub-badge" viewBox="0 0 100 120" aria-hidden="true"><path d="M50 4 L93 17 V57 C93 87 74 105 50 116 C26 105 7 87 7 57 V17 Z" fill="#173a6e" stroke="#c8102e" stroke-width="5" stroke-linejoin="round"/><path d="M50 15 L83 25 V44 H17 V25 Z" fill="#c8102e"/><g transform="rotate(-32 50 70)"><ellipse cx="50" cy="70" rx="28" ry="16" fill="#8a4b1f" stroke="#fff" stroke-width="3"/><path d="M28 70 H72" stroke="#fff" stroke-width="2.5"/><path d="M40 64 V76 M45 64 V76 M50 64 V76 M55 64 V76 M60 64 V76" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></g></svg><b>NFL</b><span>Tackles</span><small>Picks, My board, track record</small></button>
+      <a class="hub-tile nhl" id="hub-nhl" href="nhl.html"><svg class="hub-badge" viewBox="0 0 100 120" aria-hidden="true"><path d="M50 4 L93 17 V57 C93 87 74 105 50 116 C26 105 7 87 7 57 V17 Z" fill="#dceefa" stroke="#1d2733" stroke-width="5" stroke-linejoin="round"/><g stroke="#1d2733" stroke-width="6" stroke-linecap="round"><path d="M30 30 L62 84"/><path d="M70 30 L38 84"/></g><path d="M58 84 H72" stroke="#1d2733" stroke-width="7" stroke-linecap="round"/><path d="M42 84 H28" stroke="#1d2733" stroke-width="7" stroke-linecap="round"/><ellipse cx="50" cy="98" rx="11" ry="5" fill="#1d2733"/><rect x="39" y="93" width="22" height="5" fill="#1d2733"/><ellipse cx="50" cy="93" rx="11" ry="5" fill="#46596d"/></svg><b>NHL</b><span>Hits</span><small>Track your hit bets live</small></a>
     </div>
   </div>
 </div>

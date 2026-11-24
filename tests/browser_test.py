@@ -112,8 +112,8 @@ def run_width(browser, name, width):
     pg.goto(f"http://localhost:{PORT}/#record")              # a link to another tab: the page still opens on My board
     at = f"at {name} width ({width}px)"
     # the home screen: two tiles, NFL and NHL, over the board while it loads behind them
-    hub = pg.evaluate("(() => { const h = document.querySelector('#hub'); return { shown: !!h && !h.hidden, tiles: [...h.querySelectorAll('.hub-tile b')].map((b) => b.textContent), nhl: document.querySelector('#hub-nhl').getAttribute('href') }; })()")
-    check(hub["shown"] and hub["tiles"] == ["NFL", "NHL"] and hub["nhl"] == "nhl.html", f"a visit opens on the home screen with an NFL and an NHL tile {at} ({hub})")
+    hub = pg.evaluate("(() => { const h = document.querySelector('#hub'); return { shown: !!h && !h.hidden, tiles: [...h.querySelectorAll('.hub-tile b')].map((b) => b.textContent), badges: [...h.querySelectorAll('.hub-tile svg.hub-badge')].map((g) => Math.round(g.getBoundingClientRect().width)), nhl: document.querySelector('#hub-nhl').getAttribute('href') }; })()")
+    check(hub["shown"] and hub["tiles"] == ["NFL", "NHL"] and hub["nhl"] == "nhl.html" and len(hub["badges"]) == 2 and min(hub["badges"]) >= 60, f"a visit opens on the home screen with an NFL and an NHL tile {at} ({hub})")
     r = pg.evaluate(PROBE, "#hub")
     check(not r["overflow"] and not r["bad"] and not r["squeezed"], f"the home screen fits the screen {at} ({r['wide']} {r['squeezed']})")
     pg.click("#hub-nfl")
