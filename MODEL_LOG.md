@@ -1528,6 +1528,31 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-24, 10:30 am (pulls for Thanksgiving week: a game on a Wednesday or a Friday gets its morning looks)
+
+**What.** Week 12 has a Wednesday game (Packers at Rams, 7 pm), three on Thanksgiving Thursday (noon, 3:30 pm,
+7:20 pm) and one on Friday (Broncos at Steelers, 2 pm), all Edmonton time. The fixed slots know Thursday, Saturday
+night, Sunday and Monday only (`run.PULL_SLOTS`), so the Wednesday game had a single pull an hour before kickoff and
+nothing looked at the Thanksgiving lines before Thursday 9 am. `run.slots_on(day, games)` now adds a 9 am and a 1 pm
+look (`GAME_DAY_LOOKS`, covering that day and the next) on any game day other than Thursday, Sunday and Monday,
+each kept only if it comes before the day's first pre-kickoff pull. Every caller (the ticker's plan, the schedule
+shown on the site, the next pull, the credit budget) passes the games.
+
+**The week's pulls, Edmonton time.** Wednesday 9 am and 1 pm (Wednesday's and Thursday's games), 6 pm (an hour
+before the Wednesday game). Thursday 9 am and 1 pm (Thursday's and Friday's games), 11 am, 2:30 pm and 6:20 pm (an
+hour before each kickoff). Friday 9 am (Friday's and Saturday's), 1 pm (an hour before kickoff). Then the usual
+Saturday 8 pm, Sunday 10 am and the Sunday and Monday pre-kickoff pulls. The same rule covers the Saturday and
+Christmas games later in the season.
+
+**Why.** The owner asked for proper pulls on the holiday days; the vision's "timelier updates". Cost: about 3
+credits a game a pull, some 40 credits for the week's added looks; 1,500-odd are left until the 2026-12-01 reset.
+
+**Evidence.** The schedule and the plan of each run printed for the week against `data/cache/games.json` (as
+above), the kickoffs checked against ESPN's scoreboard. Smoke test: a Wednesday and a Friday with games get their
+looks, covering that day and the next; a week later, with no game, none; Thursday's slots unchanged.
+
+**Revert.** Empty `GAME_DAY_LOOKS`.
+
 ### 2026-11-24, morning (the home tiles get shield badges)
 
 The owner found "NFL" and "NHL" hard to tell apart at a glance (one letter differs). Each tile now carries a shield
@@ -3135,6 +3160,9 @@ Never tested; each with what would justify it. Anything tested and dropped is in
 - **A page and the file format it reads change in two pushes.** The pipeline writes the data files on its own
   schedule, so a page must read both the old and the new format before the writer changes, and a revert goes in
   the other order.
+- **The pull slots follow the weekday, not the schedule.** A game on a day without fixed slots (a holiday Wednesday
+  or Friday, a late-season Saturday) gets only the pull an hour before it unless `run.slots_on` is given the games
+  (2026-11-24, Thanksgiving week).
 - **NHL.com's API cannot be read from a browser.** api-web.nhle.com sends no CORS header; a page must use ESPN's NHL
   feed (or a server). Alberta's fixed UTC-6 needs `Etc/GMT+6` on every page: Chromium's zone data still shows
   America/Edmonton an hour behind (2026-11-23, the NHL page first showed 6:30 pm games at 5:30).

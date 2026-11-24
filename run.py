@@ -60,10 +60,26 @@ PULL_SLOTS = {
 OPENER_SLOT = (10 * 60, "week")                   # Wednesday 10 am Edmonton
 
 
-def slots_on(day):
-    """The fixed slots of an Edmonton date: PULL_SLOTS for its weekday, plus the early look on a trial date."""
+# A game on a day without fixed slots of its own (a Wednesday or a Friday in Thanksgiving week, Saturdays and Christmas
+# late in the season) got only its pre-kickoff pull: Wednesday 2026-11-25 had one pull for its game, and nothing
+# looked at Thanksgiving's lines before Thursday morning. Such a day now gets the Monday treatment: a look at 9 am and
+# 1 pm Edmonton, covering that day and the next, each kept only if it comes before the day's first pre-kickoff pull.
+GAME_DAY_LOOKS = [(9 * 60, "thu_fri"), (13 * 60, "thu_fri")]
+OWN_SLOTS = {3, 6, 0}                             # Thursday, Sunday, Monday: their fixed slots already cover their games
+
+
+def slots_on(day, games=None):
+    """The fixed slots of an Edmonton date: PULL_SLOTS for its weekday, the early look on a trial date, and on a game
+    day of another weekday (with `games` given) the game-day looks before its first pre-kickoff pull."""
     extra = [OPENER_SLOT] if str(day) in getattr(C, "OPENER_DATES", ()) else []
-    return list(PULL_SLOTS.get(day.weekday(), [])) + extra
+    out = list(PULL_SLOTS.get(day.weekday(), [])) + extra
+    if games and day.weekday() not in OWN_SLOTS:
+        pre = kickoff_slots(games, day)
+        if pre:
+            first = min(m for m, _ in pre)
+            have = {m for m, _ in out}
+            out += [(m, what) for m, what in GAME_DAY_LOOKS if m < first and m not in have]
+    return sorted(out)
 
 
 INTL_WINDOWS_H = (12,)             # international games (early-morning kickoffs) also get a pull this many hours before kickoff; the hour-before pull comes from the schedule
@@ -139,7 +155,7 @@ def auto_plan(now=None, games=None, served=None):
     today = local.date()
     d = lambda n: str(today + dt.timedelta(days=n))
     due = []
-    for slot, what in slots_on(today):
+    for slot, what in slots_on(today, games):
         key = f"{today} {slot // 60:02d}:{slot % 60:02d}"
         if local.hour * 60 + local.minute >= slot and key not in served:
             days = {"week": [d(n) for n in range(1, 6)], "thu_fri": [d(0), d(1)], "sat": [d(1)], "sat_sun": [d(0), d(1)], "fri_weekend": [d(1), d(2)], "sun": [d(1)], "mon": [d(0)], "today": [d(0)]}[what]
@@ -173,7 +189,7 @@ def next_pull(now=None, games=None):
     local = now.astimezone(EDMONTON)
     for n in range(8):
         day = local.date() + dt.timedelta(days=n)
-        slots = [m for m, _ in slots_on(day)] + [m for m, _ in kickoff_slots(games, day)]
+        slots = [m for m, _ in slots_on(day, games)] + [m for m, _ in kickoff_slots(games, day)]
         for m in sorted(slots):
             t = dt.datetime.combine(day, dt.time(m // 60, m % 60), tzinfo=EDMONTON)
             if t > local:
@@ -223,7 +239,7 @@ def pull_schedule(now=None, games=None, days=7):
     out = []
     for n in range(days + 1):
         day = local.date() + dt.timedelta(days=n)
-        slots = [(m, f"{day} {m // 60:02d}:{m % 60:02d}", "fixed") for m, _ in slots_on(day)]
+        slots = [(m, f"{day} {m // 60:02d}:{m % 60:02d}", "fixed") for m, _ in slots_on(day, games)]
         slots += [(m, k, "prekick") for m, k in kickoff_slots(games, day)]
         for m, key, kind in sorted(slots):
             at = dt.datetime.combine(day, dt.time(max(m, 0) // 60, max(m, 0) % 60), tzinfo=EDMONTON).astimezone(dt.timezone.utc)
@@ -298,7 +314,7 @@ def scheduled_pulls(now, kickoffs, until):
         for m, key in kickoff_slots(games, day):
             at = at_of(m); seen.add(m)
             out.append((at, "prekick", on({day}, at), sum(1 for k in ks if at < k <= at + win), key))
-        for m, what in slots_on(day):
+        for m, what in slots_on(day, games):
             if m in seen:
                 continue                                  # the same minute as a pre-kickoff pull: one pull
             at = at_of(m)

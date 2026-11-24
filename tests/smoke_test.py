@@ -473,6 +473,17 @@ _op = R.auto_plan(now=dt.datetime.combine(_od, dt.time(10, 5), tzinfo=R.EDMONTON
 _no = R.auto_plan(now=dt.datetime.combine(_od + dt.timedelta(days=14), dt.time(10, 5), tzinfo=R.EDMONTON).astimezone(dt.timezone.utc), games=[], served=set())
 check(_op is not None and len(_op["days"]) == 5 and _op["days"][0] == str(_od + dt.timedelta(days=1)) and _no is None and R.OPENER_SLOT in R.slots_on(_od) and R.OPENER_SLOT not in R.slots_on(_od + dt.timedelta(days=14)),
       "the early look at the whole week is pulled on its trial Wednesdays and on no other")
+# a game on a day with no fixed slots of its own (Thanksgiving week's Wednesday and Friday) gets a 9 am and a 1 pm look
+# covering that day and the next, before its pre-kickoff pull; a day without a game gets none; Thursday is unchanged
+_hol = [dict(kickoff="2026-11-26T01:00:00+00:00"), dict(kickoff="2026-11-26T18:00:00+00:00"), dict(kickoff="2026-11-26T21:30:00+00:00"),
+        dict(kickoff="2026-11-27T01:20:00+00:00"), dict(kickoff="2026-11-27T20:00:00+00:00")]
+_wed, _thu, _fri = dt.date(2026, 11, 25), dt.date(2026, 11, 26), dt.date(2026, 11, 27)
+_at = lambda d_, h, m=5: dt.datetime.combine(d_, dt.time(h, m), tzinfo=R.EDMONTON).astimezone(dt.timezone.utc)
+_w9 = R.auto_plan(now=_at(_wed, 9), games=_hol, served=set()); _f9 = R.auto_plan(now=_at(_fri, 9), games=_hol, served=set())
+check([m for m, _ in R.slots_on(_wed, _hol)] == [540, 780] and [m for m, _ in R.slots_on(_fri, _hol)] == [540] and R.slots_on(_wed + dt.timedelta(days=7), _hol) == []
+      and R.slots_on(_thu, _hol) == R.slots_on(_thu) and _w9 and _w9["days"] == ["2026-11-25", "2026-11-26"] and _f9 and _f9["days"] == ["2026-11-27", "2026-11-28"]
+      and [s_["key"] for s_ in R.pull_schedule(now=_at(_wed, 8), games=_hol, days=0)] == ["2026-11-25 09:00", "2026-11-25 13:00", "2026-11-25 prekick-18:00"],
+      "a game on a Wednesday or a Friday gets a 9 am and a 1 pm look at that day and the next before its pre-kickoff pull; a day without a game gets none")
 _whys = " ".join(str(b.get("why", "")) for b in _ba)
 check("solo share:" in _whys and "that is what makes this a" in _whys and "hot:" not in _whys and "part-time:" not in _whys, "the card names the book's solo share where it applies and says it is what makes the pick an A or a B; the two flags that failed out of sample are gone")
 _ll = pd.read_csv(tmp / "data" / "lines_log.csv")
