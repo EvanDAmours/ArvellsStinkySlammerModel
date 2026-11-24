@@ -1546,7 +1546,7 @@ def price_lines(lines, P, segments=None, blend=None):
             ok_o = d_o is not None and (sl["min_ev"] is None or ev_o >= sl["min_ev"])
             ok_u = d_u is not None and (sl["min_ev"] is None or ev_u >= sl["min_ev"])
             med = float(np.median(log_raw)) if log_raw else float("nan")
-            if kind == "combined" and sl["comb_over"][0] <= g_ < sl["comb_over"][1] and ok_o:
+            if kind == "combined" and not sl.get("comb_over_off") and sl["comb_over"][0] <= g_ < sl["comb_over"][1] and ok_o:
                 sleeper = "Over"
             elif solo and g_ <= sl["solo_under"] and ok_u and med == med and med >= line + sl.get("solo_hist", -99):
                 sleeper = "Under"
@@ -1578,6 +1578,10 @@ def price_lines(lines, P, segments=None, blend=None):
         # the grade, once the sleeper is known: an A is a pick the sleeper rule also names on the same side
         hole_under = bool(hole and side == "Under")
         grade = engine_grade(edge_low, p_model_side, bool(block), r.market, sleeper_match=(sleeper == side), hole=hole_under) if tier == "pick" else None
+        # since 2026-11-24 a C pick is a lean (config.ENGINE["c_as_lean"]): shown with its numbers, logged in the line log, never staked
+        c_lean = tier == "pick" and grade == "C" and bool(e_.get("c_as_lean"))
+        if c_lean:
+            tier, pick, grade = "lean", "Pass", None
         by_hole = e_.get("a_rule") == "hole"
         not_a = tier == "pick" and grade != "A" and sleeper == side and (bool(block) or r.market not in C.A_GRADE_MARKETS) and (hole_under or not by_hole)   # an A but for the checklist or the market
         num = f"win chance {p_side:.0%} against {1 / dec:.0%} to break even at this price ({ev:+.0%}); at the cautious chance {p_low:.0%} ({edge_low:+.0%}). Model alone {p_model_side:.0%}, the book's fair price {fair_side:.0%}"
@@ -1596,6 +1600,9 @@ def price_lines(lines, P, segments=None, blend=None):
                    f"the model's Over picks on them went 8-19. The numbers, for the record: {num}")
         elif tier == "pass":
             why = f"No edge: {side} {line:g}, {num}"
+        elif c_lean:
+            why = (f"Lean, not a pick: {side} {line:g}, {num}. It passes the pricing test but would be a C, and since 2026-11-24 C picks are shown, not staked: "
+                   f"they went 46-54 over their first 100 (the break-even is 52.4%); only the solo Unders on a flagged line (A and B) are staked")
         elif tier == "lean":
             why = f"Lean, not a pick: {side} {line:g}, {num}. The edge is there only if the model's disagreement is worth half its size; a pick must survive a quarter"
         else:

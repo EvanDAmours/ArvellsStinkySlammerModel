@@ -123,24 +123,26 @@ does not describe his current role, or who may not play, can be a pick, never a 
 6. **Grades and the lock score** (since 2026-11-10, noon; decision H1). The grade follows the book's own solo
    share: its solo line divided by its combined line for the same player (the consensus lines). At 58% or more the
    line is flagged (`config.HOLES`). A: a solo Under pick on a flagged line that is also a sleeper (item 11), the
-   checklist clear. B: any other solo Under pick on a flagged line. C: every other pick. The size of the cautious
-   edge no longer sets a grade. The lock score is the model's own chance out of 100. Combined projections carry
+   checklist clear. B: any other solo Under pick on a flagged line. C: every other pick; since 2026-11-24 a C is
+   shown as a lean and not staked (`config.ENGINE["c_as_lean"]`), so only flagged solo Unders are staked. The size
+   of the cautious edge no longer sets a grade. The lock score is the model's own chance out of 100. Combined projections carry
    the level for players who get lines (actual over projected on the season's earlier lined games; decision R7).
 7. **The checklist** (never a lock, an A or a parlay leg): new role, next man up, reduced role, back from absence,
    new team, fewer than 3 games in his current role, questionable, snap counts missing for his last game, an Over.
 8. **Locks.** A picks only, highest model chance first, one per player, at most 3 on a one-game slate day and 5
    otherwise, at most two of a kind (side x market x position). A slate with no A has no lock.
 9. **Stakes** (`grade.size_stakes`, `config.STAKE`, mode "grade" since 2026-11-10; decision S3). The stake is the
-   grade's units: A 1, B 0.5, C 0.25, and nothing trims it. Until 2026-11-16 stakes were scaled down together to
+   grade's units: A 1, B 0.5 (C 0.25 until 2026-11-24, when C became a lean), and nothing trims it. Until 2026-11-16 stakes were scaled down together to
    stay within 5 units a game, 20 a kind (side x market) a slate day and 25 a slate day; the owner took the caps off
    (S3). The caps remain in the code, set to None, as do the quarter-Kelly stake and the divisor for like picks
    (mode "kelly").
-10. **Parlays.** One per slate day, 2 or 3 legs, combined tackles only (books refuse solo legs in a same-game
+10. **Parlays.** None since 2026-11-24: every combined pick would be a C, and C picks are leans. Until then: one per slate day, 2 or 3 legs, combined tackles only (books refuse solo legs in a same-game
     parlay). A leg must be a pick, lock-eligible, with a model chance of 60%+ (56% if too few), at most two of a
     kind. The chance is the product of the legs' win chances times the same-defence correlation ratio. When two
     legs share a game the price recorded is the product divided by that ratio, flagged as an estimate.
 11. **Sleepers** (frozen since 2026-11-09): solo Unders with the model 0.5+ under the line and his season median
-    within a tackle of it; combined Overs with the model 0.5 to 1.0 over. Graded A/B/C from the model's own chance,
+    within a tackle of it (combined Overs with the model 0.5 to 1.0 over were the second kind until 2026-11-24, when
+    R1 took them off: 21-19 over their first 40). Graded A/B/C from the model's own chance,
     a steady role and the game's volume; never the price. Own record, 1 unit each, never a lock. Each carries the
     engine's read of the same line at its price.
 12. **The backtest** (`pipeline/backtest.py`), every morning: the final projection scored out of sample (the
@@ -282,6 +284,12 @@ in-sample. The full write-up is Research round 11.
   stretch. The B and C definitions were drawn on those same 21 weeks: in-sample. Revert, read on weeks 10 to 13
   and on at 30 A, 40 B and 100 C picks ("Rules on trial"): A under 60% or not ahead of B and C, back to the sleeper
   rule (`a_rule="sleeper"`); B not ahead of C, B and C become one grade; C under 52.4%, C picks become leans.
+  **Applied 2026-11-24 (owner's go-ahead), for C:** C picks went 45-55 over their first 100 (the count fixed for ties,
+  issue 28; it read 46-54 and 47-53 before), and the solo Unders on an unflagged line, every one of them a C, 17-23 over their first 40. C picks are
+  shown as leans and not staked (`config.ENGINE["c_as_lean"]`); that takes both, and with them every combined pick
+  (combined Unders were 15-7, inside C's failing 100) and so the parlay. A and B stand; their reads at 30 and 40
+  continue. Revert: `c_as_lean=False`. Re-read the C leans at the 2026-12-08 review on the line log; a part of them
+  that clears 52.4% over 40 more (combined Unders first) can come back as its own grade.
 - **E4 (replaced by H1). Grades: B at a cautious edge of 2%+, A with a model chance of 70%+ and a clear checklist.** The closing
   lines: 13-6. Replay of weeks 7 to 9: A 10-6, B 20-21, C 73-58: the order is not there yet (ranges overlap).
   Built only from numbers that cannot improve with the book's agreement (rule 5 above). Provisional.
@@ -333,6 +341,8 @@ in-sample. The full write-up is Research round 11.
 **Sleepers, records, operations**
 - **R1. Sleeper rules frozen** as of 2026-11-09 (archive: changelog of 2026-11-08 and 2026-11-09). Each kind comes
   off if it hits under 55% over its next 40; the A rule is reviewed if A sleepers hit under 70% over their next 20.
+  **Applied 2026-11-24 (owner's go-ahead):** the combined-Over sleepers came off (`config.SLEEPER["comb_over_off"]`),
+  21-19 over their first 40. The solo-Under sleepers stay (15-12, running); the A sleepers 10-5 at 15 of 20.
 - **R2. One bet per player, market and side; late and phantom picks void; a bet settles once.**
 - **R3. The odds-credit budget:** the richest schedule the credits can pay for; the pull an hour before kickoff is
   the last thing to go. The Sunday 10 am look duplicates that pull since the clocks changed (the early games kick
@@ -694,7 +704,8 @@ and C9. What remains, and what the rebuild itself turned up:
     the logged stakes add up across boards: Sunday of week 10 31.3 units against 25 a day, Vikings at Packers 6.31
     against 5 a game. S3 is read on these stakes. Fix for the owner's session (the cap rule itself is frozen, the
     arithmetic is not): cap against the slate day's picks already logged, and say in S3 which stakes it is read on.
-28. **The first N of a condition are cut arbitrarily inside a tied kickoff** (found 2026-11-24, standing
+28. **Closed 2026-11-24: the first N of a condition are now the same picks on every run** (`watch` sorts by kickoff,
+    then player, market, side and line, stably). As found: **the first N of a condition are cut arbitrarily inside a tied kickoff** (found 2026-11-24, standing
     post-mortem; a defect, not fixed: for the owner's session). `grade.engine_era`'s `watch` sorts by kickoff with no
     tie-break (`sort_values("_t")`) before `head(of)`. H1 C's 100th pick falls inside Sunday 2026-11-22 18:00 UTC
     (32 graded C picks at one kickoff, 17-15; 85 before it, 40-45), so the count can read 40 to 55 of 100 by row
@@ -1527,6 +1538,46 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 ## Changelog
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
+
+### 2026-11-24, afternoon (three conditions met and applied: C picks become leans, unflagged solo Unders off, combined-Over sleepers off)
+
+**What.** At the owner's go-ahead, after the standing post-mortem reported them met. (1) H1 C: a pick that would be
+a C is shown as a lean and not staked (`config.ENGINE["c_as_lean"]`); its card says why. Only A and B picks, the
+solo Unders on a flagged line, are staked. (2) H1, solo Unders on an unflagged line: every one is a C, so (1) takes
+them. (3) R1: the combined-Over sleepers are no longer named (`config.SLEEPER["comb_over_off"]`); the solo-Under
+sleepers stay. Consequences: every combined pick is a C, so there is no parlay (they were built from combined
+picks); combined Unders, 15-7 since the engine, go with the C. Also fixed: open issue 28 (the first N of a
+condition were cut inside a tied kickoff in any order): `watch` sorts stably on kickoff, player, market, side and
+line; H1 C reads 45-55 over its first 100. A condition applied shows "applied 2026-11-24" in the weekly log.
+
+**Evidence, live (since the engine, 2026 weeks 10 and 11).** C picks 45-55 over their first 100 (45%, likely range
+32% to 59%; break-even 52.4%). Unflagged solo Unders 17-23 over their first 40. Combined-Over sleepers 21-19 over
+their first 40, under their 55% bar. A 8-5, B 15-5 (running).
+
+**Evidence, replayed under the new rules** (`tools/replay_five.py` weeks 4 to 9 of 2026, `tools/season_test.py` for
+2024, 2025 and 2026 weeks 4 to 9; `data/retro_five.json` and `data/replay_seasons.json` rewritten), against the
+rules before:
+
+| Season | Before: every pick, at its stakes | Now: A and B only |
+| --- | --- | --- |
+| 2024 (no rule was chosen on it) | 908 bets 537-371, +49.0 on 305.2 (+16.1%) | 279 bets 182-97 (65%), +31.5 on 148.0 (+21.3%), 12 of 15 weeks up |
+| 2025 | 1,134 bets 721-413, +105.3 on 426.2 (+24.7%) | 369 bets 253-116 (69%), +65.6 on 236.5 (+27.7%), 12 of 15 weeks up |
+| 2026 weeks 4 to 9 | 372 bets 216-156, +25.4 on 135.0 (+18.8%) | 96 bets 67-29 (70%), +18.5 on 70.0 (+26.4%), 5 of 6 weeks up |
+
+**What it costs, plainly.** The return per unit staked rises in every season; the profit falls by about a third,
+because in the replays the C picks made money: 2024 355-274 (+17.7 at their stakes), 2025 468-297 (+41.7), 2026
+153-131 (+6.5). Most of it was combined Unders (2024 254-190, 2025 124-69, 2026 22-16) and, in 2025, assists. Live,
+C has lost (45-55) while combined Unders inside it went 15-7. The rule was written before week 10 and its count is
+in, so it is applied as written; the replays are mostly in-sample for 2025 and 2026, and the market ran Under in both
+live weeks (the board, no model: the Over won five to six points less often than the book's fair chance).
+
+**Revert / next.** `c_as_lean=False` restores C; `comb_over_off=False` the combined-Over sleepers. At the 2026-12-08
+review, re-read the C leans on the line log by kind: a kind that clears 52.4% over 40 more (combined Unders first,
+the only one strong both live and in the 2024 replay) can come back as its own grade with its own condition.
+
+**Checked.** Smoke test (picks are A or B with a stake, leans unstaked, no parlay while combined picks are leans, no
+combined-Over sleeper). Browser test. A real daily in a scratch copy: clean; the conditions table reads H1 C 45-55
+"applied 2026-11-24", unflagged solo Unders 17-23 "applied 2026-11-24".
 
 ### 2026-11-24, 10:30 am (pulls for Thanksgiving week: a game on a Wednesday or a Friday gets its morning looks)
 

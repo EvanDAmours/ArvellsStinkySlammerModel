@@ -28,7 +28,9 @@ A_GRADE_MARKETS = LOCK_MARKETS
 # (`a_model`) or his defence expects fewer than 50 tackle opportunities (`a_opps`; carries + completions + sacks, league ~50): 20-2 in
 # weeks 7-9; B the other steady ones 18-6; C 6-1. Combined Over B: steady and a model chance of 57%+ (`b_model_over`) 17-6; C 27-16. No
 # combined A until its record earns one. Expect the A record to come down out of sample: the A conditions were chosen on these weeks.
-SLEEPER = dict(comb_over=(0.5, 1.0), solo_under=-0.5, solo_hist=-1.0, min_ev=None, a_model=0.70, a_opps=50.0, b_model_over=0.57,
+# 2026-11-24 (owner's go-ahead; R1 met): the combined-Over sleepers come off (`comb_over_off`): their first 40 went 21-19, under the
+# 55% bar. The solo-Under sleepers stay (15-12, running).
+SLEEPER = dict(comb_over=(0.5, 1.0), comb_over_off=True, solo_under=-0.5, solo_hist=-1.0, min_ev=None, a_model=0.70, a_opps=50.0, b_model_over=0.57,
                review_after=40, review_hit=0.55, review_a_after=20, review_a_hit=0.70)
 
 
@@ -201,7 +203,11 @@ ENGINE = dict(beta=0.5, beta_low=0.25,
               a_rule="hole",         # since 2026-11-10 the grade follows the book's own solo share (HOLES): A a solo Under pick on a flagged line that is also a
                                      # sleeper, checklist clear; B any other solo Under pick on a flagged line; C every other pick ("sleeper": the rule of 2026-11-09)
               hole_over_block=True,  # no solo Over pick on a flagged line: the engine's went 8-19 on 21 replayed weeks, losing in each of four stretches
-              misfit_model=0.93)     # a line only one book posts, on which the model's own chance is this or more: the line does not fit this player (a mis-posted line or a wrong match), no pick              # how alike two picks of one kind on one slate are: the weekly shock (6.5 points of hit rate on solo Unders) as a correlation
+              misfit_model=0.93,
+              # 2026-11-24 (owner's go-ahead; decision H1's conditions met at their counts): a C pick is shown as a lean and not
+              # staked (C picks 46-54 over their first 100, under the 52.4% break-even; solo Unders on an unflagged line, every one a
+              # C, 17-23 over their first 40). Only the A and B picks, the solo Unders on a flagged line, are staked. False restores C.
+              c_as_lean=True)     # a line only one book posts, on which the model's own chance is this or more: the line does not fit this player (a mis-posted line or a wrong match), no pick              # how alike two picks of one kind on one slate are: the weekly shock (6.5 points of hit rate on solo Unders) as a correlation
 FROZEN_UNTIL = "2026-12-08"          # evidence rule: no bar, weight or cap in ENGINE, STAKE, FACTORS or GBM changes before this date (four graded weeks)
                                      # unless a defect is found; candidates are tested in the shadow on data/lines_log.csv and reported, not adopted
 CLAIM_SHRINK = 0.6                   # legacy: only to read the claimed chance of picks logged before the engine (through week 9) that carry none

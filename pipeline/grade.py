@@ -674,13 +674,16 @@ def engine_era(Pc):
                 out.append(dict(bucket=f"{lo_:.0%} to {hi_:.0%}", bets=int(len(part)), said=float(num(part, col).mean()), hit=w / len(part), hit_lo=lo, hit_hi=hi))
         return out
 
-    def watch(rule, name, what, part, of=None, bar=None, after_week=None):
+    def watch(rule, name, what, part, of=None, bar=None, after_week=None, applied=None):
         """A condition of the decision register: how far along it is and where it stands. `running` until `of` decided picks,
         or, for a condition read after a week (`after_week`), until that week has no pick left pending."""
         waiting = after_week is not None and not (len(part) and int(part.week.max()) >= int(after_week) and not (part[part.week <= int(after_week)].result == "Pending").any())
         part = part[part.result.isin(["Win", "Loss"])]
         if of and "commence_time" in part.columns:
-            part = part.assign(_t=pd.to_datetime(part.commence_time, utc=True, errors="coerce")).sort_values("_t").head(of)
+            # by kickoff, ties broken on the bet itself, so the first `of` are the same picks on every run (open issue 28: an unstable
+            # sort read the 100th C pick inside a 32-pick kickoff in any order)
+            keys = ["_t"] + [c_ for c_ in ("player", "market", "side", "line") if c_ in part.columns]
+            part = part.assign(_t=pd.to_datetime(part.commence_time, utc=True, errors="coerce")).sort_values(keys, kind="mergesort").head(of)
         r = rec(part)
         n = r["wins"] + r["losses"]
         if (of and n < of) or r["hit"] is None or waiting:
@@ -691,6 +694,8 @@ def engine_era(Pc):
             state = "holds" if r["hit"] >= bar else "fails"
         else:                                      # a standing target: only when the likely range is clear of it
             state = "holds" if r["hit_lo"] >= bar else "fails" if r["hit_hi"] < bar else "running"
+        if applied and state == "fails":
+            state = f"applied {applied}"
         return dict(rule=rule, name=name, what=what, n=n, of=of, unit="picks", bar=bar, wins=r["wins"], losses=r["losses"], hit=r["hit"], hit_lo=r["hit_lo"], hit_hi=r["hit_hi"],
                     claimed=r["claimed"], model_said=r["model_said"], state=state, note=None)
 
@@ -717,10 +722,12 @@ def engine_era(Pc):
     out["watches"] = [
         watch("H1", "A picks", f"A solo Under pick on a line the book set at {C.HOLES['book_share']:.0%} or more of its own combined line, also a sleeper, the checklist clear. Replayed on 21 weeks of two seasons: 106-35. Read at 30 graded: it stays only if these hit 60% or better and beat the B and C picks.", E[grade == "A"], of=30, bar=0.60),
         watch("H1", "B picks", "Every other solo Under pick on such a line. Replayed: 210-106. Read at 40: these must beat the C picks, or B and C become one grade.", E[grade == "B"], of=40, bar=0.58),
-        watch("H1", "C picks", "Every other pick. Replayed: 621-428 (59%; 55% on the 2026 weeks). Read at 100: under 52.4%, the break-even at the usual price, C picks are shown as leans and not staked.", E[grade == "C"], of=100, bar=0.524),
+        watch("H1", "C picks", "Every other pick. Replayed: 621-428 (59%; 55% on the 2026 weeks). Read at 100: under 52.4%, the break-even at the usual price, C picks are shown as leans and not staked.", E[grade == "C"], of=100, bar=0.524,
+              applied="2026-11-24" if C.ENGINE.get("c_as_lean") else None),
         watch("E4", "The A rules it replaced", f"Picks that are also a sleeper on the same side with a clear checklist (the A until 2026-11-10), whatever their grade now.", E[old_sleeper_a], of=30),
         watch("E6", "Over picks", "Re-read at 40. The candidate is to show Overs as leans only.", E[side == "Over"], of=40),
-        watch("H1", "Solo Under picks on an unflagged line", "The other half of the hole: 207-165 replayed, 48-54 on the 2026 weeks. Read at 40: under 52.4%, they stop being picks.", E[solo_under & ~flagged], of=40, bar=0.524),
+        watch("H1", "Solo Under picks on an unflagged line", "The other half of the hole: 207-165 replayed, 48-54 on the 2026 weeks. Read at 40: under 52.4%, they stop being picks.", E[solo_under & ~flagged], of=40, bar=0.524,
+              applied="2026-11-24" if C.ENGINE.get("c_as_lean") else None),
         watch("S3", "Stakes by grade", "A 1 unit, B 0.5, C 0.25. Read after week 13: the units won at these stakes against the same picks at one size.", E[grade.isin(["A", "B", "C"])],
               after_week=C.ENGINE_LIVE.get("read_after_week")),
         watch("E5", "Locks", "The target is 70% over the season.", E[five], bar=0.70),

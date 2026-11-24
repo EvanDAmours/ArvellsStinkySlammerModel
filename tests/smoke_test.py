@@ -159,8 +159,10 @@ check(all("next man up" in str(b.get("lock_block")) for b in priced if b.get("si
 check(not any(b.get("five") and b.get("side") == "Over" for b in priced) and all("Over side" in str(b.get("lock_block")) for b in priced if b.get("side") == "Over"), "no Over is a lock while Overs are ineligible")
 _E = C.ENGINE
 _guard = lambda b: b["side"] == "Under" and "next man up" in str(b.get("lock_block"))       # his Under is never a pick when he is expected under 60% of the snaps
-check(all((b["edge_low"] >= _E["pick_edge_low"] - 1e-9) == (b["tier"] == "pick") or b.get("status") or b["n_prev"] < C.MIN_GAMES_FOR_PICK or _guard(b) for b in priced)
-      and all(b["ev"] >= _E["lean_edge"] - 1e-9 and b["edge_low"] < _E["pick_edge_low"] for b in priced if b["tier"] == "lean")
+_c_lean = lambda b: _E.get("c_as_lean") and b["tier"] == "lean" and "would be a C" in str(b.get("why"))     # a C pick shown as a lean since 2026-11-24
+check(all((b["edge_low"] >= _E["pick_edge_low"] - 1e-9) == (b["tier"] == "pick") or b.get("status") or b["n_prev"] < C.MIN_GAMES_FOR_PICK or _guard(b) or _c_lean(b) for b in priced)
+      and all((b["ev"] >= _E["lean_edge"] - 1e-9 and b["edge_low"] < _E["pick_edge_low"]) or _c_lean(b) for b in priced if b["tier"] == "lean")
+      and (not _E.get("c_as_lean") or (all(b.get("grade") in ("A", "B") and b.get("stake") for b in priced if b["tier"] == "pick") and all(b.get("stake") is None for b in priced if b["tier"] == "lean")))
       and all(b["pick"] in ("Over", "Under") for b in priced if b["tier"] == "pick") and all(b["pick"] == "Pass" for b in priced if b["tier"] != "pick"),
       f"a pick breaks even at the cautious chance; a lean has an edge only at the win chance and is not a pick ({sum(b['tier'] == 'pick' for b in priced)} picks, {sum(b['tier'] == 'lean' for b in priced)} leans)")
 # a board where nothing can be priced (one-sided prices only, a player the model does not carry) still yields every column
@@ -195,8 +197,12 @@ check(len(five) <= 5 and five.player.nunique() == len(five) and _better.empty an
       f"locks: only A-grade picks (the model's own chance {C.LOCK_MIN_SCORE:.0f}+), highest first, one per player, at most {C.LOCKS_PER_SEGMENT} of a kind, none when no pick is strong ({len(five)}; kinds {dict(_segs.value_counts())})")
 check(sum(1 for b in bets if b.get("five")) == len(five), "locks marked on the board")
 parlays = pd.read_csv(tmp / "data/parlays.csv") if (tmp / "data/parlays.csv").exists() else pd.DataFrame()
-check(len(parlays) >= 2 and parlays.parlay_id.nunique() >= 1 and parlays.groupby("parlay_id").size().between(2, 4).all(), f"recommended parlay built ({parlays.parlay_id.nunique() if len(parlays) else 0} parlay, {len(parlays)} legs)")
-check(len(parlays) and parlays.player.nunique() == len(parlays) and parlays.units.between(0.1, 1.0).all(), "parlay legs are distinct players with a stake between 0.1 and 1 unit")
+# a parlay is built from combined-tackle picks, and since 2026-11-24 every combined pick would be a C and is a lean: no parlay
+_no_comb_picks = C.ENGINE.get("c_as_lean")
+check((len(parlays) == 0 and not any(b.get("tier") == "pick" and b.get("market") == "player_tackles_assists" for b in priced)) if _no_comb_picks else
+      (len(parlays) >= 2 and parlays.parlay_id.nunique() >= 1 and parlays.groupby("parlay_id").size().between(2, 4).all()),
+      f"recommended parlay built from combined picks, and none while combined picks are leans ({parlays.parlay_id.nunique() if len(parlays) else 0} parlay, {len(parlays)} legs)")
+check(_no_comb_picks or (len(parlays) and parlays.player.nunique() == len(parlays) and parlays.units.between(0.1, 1.0).all()), "parlay legs are distinct players with a stake between 0.1 and 1 unit")
 # the grade since 2026-11-10: it follows the book's own solo share (config.HOLES). A solo Under pick on a flagged line is a B, an A
 # when it is also a sleeper with a clear checklist; every other pick is a C; a solo Over on a flagged line is no pick at all
 _hole = lambda b: "the book's solo line is" in str(b.get("why", "")) and C.market_kind(b["market"]) == "solo"
@@ -248,11 +254,11 @@ check(all(str(b.get("logic", "")).startswith("How the model built") for b in pri
       f"every priced line shows how the model built its number; the card's factor row lists the 3%+ movers ({sum(1 for b in priced if b.get('logic_chips'))} with movers)")
 _sl = [b for b in priced if b.get("sleeper")]
 _lo, _hi = C.SLEEPER["comb_over"]
-check(all((b["sleeper"] == "Over" and C.market_kind(b["market"]) == "combined" and _lo <= b["proj_model"] - b["line"] < _hi) or
+check(all((b["sleeper"] == "Over" and not C.SLEEPER.get("comb_over_off") and C.market_kind(b["market"]) == "combined" and _lo <= b["proj_model"] - b["line"] < _hi) or
           (b["sleeper"] == "Under" and C.market_kind(b["market"]) == "solo" and b["proj_model"] - b["line"] <= C.SLEEPER["solo_under"]
            and b.get("sleeper_med") is not None and b["sleeper_med"] >= b["line"] + C.SLEEPER["solo_hist"] - 1e-9) for b in _sl)
       and all(b.get("sleeper_ev") is not None and (C.SLEEPER["min_ev"] is None or b["sleeper_ev"] >= C.SLEEPER["min_ev"] - 1e-9) for b in _sl),
-      f"sleepers follow the rule: combined Overs {_lo} to {_hi} over the line, solo Unders 0.5+ under it with his median within a tackle ({len(_sl)} on the board)")
+      f"sleepers follow the rule: solo Unders 0.5+ under the line with his median within a tackle, combined Overs {_lo} to {_hi} over it only while that kind is on (off since 2026-11-24) ({len(_sl)} on the board)")
 check(all(b.get("sleeper_grade") in ("A", "B", "C") and 0 < (b.get("sleeper_p") or 0) < 1 and f"Grade {b['sleeper_grade']}" in str(b.get("sleeper_note")) for b in _sl)
       and not any(b["sleeper"] == "Over" and b.get("sleeper_grade") == "A" for b in _sl)
       and all(b.get("sleeper_grade") == "C" or ("steady role" in str(b.get("sleeper_note"))) for b in _sl)
@@ -270,7 +276,8 @@ if len(_slc):
     _slc.to_csv(G.SLEEPERS, index=False)
 pj = json.loads((tmp / "docs/data/parlays.json").read_text())
 check(all(l["market"] == "player_tackles_assists" for q in pj for l in q["legs"]), "parlay legs are combined-tackle lines only")
-check(len(pj) >= 1 and pj[0]["n_legs"] == len(pj[0]["legs"]) and sum(1 for b in bets if b.get("parlay")) == len(parlays), "parlay written for the site and marked on the board")
+check((len(pj) == 0 and not any(b.get("parlay") for b in bets)) if _no_comb_picks else (len(pj) >= 1 and pj[0]["n_legs"] == len(pj[0]["legs"]) and sum(1 for b in bets if b.get("parlay")) == len(parlays)),
+      "parlay written for the site and marked on the board (none while combined picks are leans)")
 _wl = json.loads((tmp / "docs/data/lines_week.json").read_text())
 check(len(_wl) >= len(bets) and all({"player", "market", "line", "book", "commence_time"} <= set(r) for r in _wl), f"every line pulled this week written for My board ({len(_wl)} lines)")
 check(all(q.get("finished") is False for q in pj) and json.loads((tmp / "docs/data/meta.json").read_text()).get("next_pull"), "open parlays flagged as not finished and the next pull time published")
