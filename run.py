@@ -616,11 +616,13 @@ def cmd_live_grade(force=False):
     parlays, psum = G.grade_parlays(Hg[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)   # H: zero-tackle games too, so a leg can settle
     summary["parlays"] = psum
     sleepers, summary["sleepers"] = G.grade_sleepers(Hg[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
+    leans, summary["leans"] = G.grade_leans(Hg[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
     summary["scoreboard"] = scoreboard(Hg)
     G.write_five_log(graded, summary, Path("data/weekly_five.md"), parlays)
     retro = Path("data/retro_five.json")
     _json(SITE / "results.json", dict(summary=summary, picks=records(graded), parlays=records(parlays) if parlays is not None and len(parlays) else [],
-                                      sleepers=records(sleepers) if len(sleepers) else [], retro=json.loads(retro.read_text()) if retro.exists() else None, replays=replay_seasons()))
+                                      sleepers=records(sleepers) if len(sleepers) else [], leans=records(leans) if len(leans) else [],
+                                      retro=json.loads(retro.read_text()) if retro.exists() else None, replays=replay_seasons()))
     LIVE_DONE.write_text(json.dumps(sorted(done | set(events))))
     print(f"live grade: {summary['live_graded']} pick(s) settled live; {summary.get('pending', 0)} still pending", flush=True)
 
@@ -759,9 +761,11 @@ def cmd_daily(auto=False):
         # it, so a grade seen on the site is the grade the record keeps (2026-11-05: an A shown all morning was never logged)
         G.log_picks(bets, C.SEASON, week, _stamp)
         G.log_sleepers(bets, C.SEASON, week, _stamp)
+        G.log_leans(bets, C.SEASON, week, _stamp)
     sleepers, summary["sleepers"] = G.grade_sleepers(Hg[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
+    leans, summary["leans"] = G.grade_leans(Hg[["season", "week", "team", "name_key", "player_id", "group", "comb", "solo_t"]], live=live)
     bets = mark_five(bets, C.SEASON, week)
-    write_site(P, bets, bt, graded, summary, week, status, lines_pulled=None if lines.empty else str(lines.pulled_at.max()), parlays=parlays, sleepers=sleepers)
+    write_site(P, bets, bt, graded, summary, week, status, lines_pulled=None if lines.empty else str(lines.pulled_at.max()), parlays=parlays, sleepers=sleepers, leans=leans)
     write_week_lines(P, C.SEASON, week)
     write_parlays(C.SEASON, week)
     print(f"daily: week {week}, {len(P)} projections, {len(bets)} priced lines, backtest on {bt.get('games', 0)} games")
@@ -908,6 +912,7 @@ def cmd_odds(hours=None, auto=False):
     LL.log_model_numbers(bets, C.SEASON, week, stamp)
     n_new = G.log_picks(bets, C.SEASON, week, stamp)
     G.log_sleepers(bets, C.SEASON, week, stamp)
+    G.log_leans(bets, C.SEASON, week, stamp)
     G.build_parlays(bets, C.SEASON, week, stamp)
     bets = mark_five(bets, C.SEASON, week)
     write_parlays(C.SEASON, week)
@@ -1018,7 +1023,7 @@ def write_parlays(season, week):
     _json(SITE / "parlays.json", out)
 
 
-def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays=None, sleepers=None):
+def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays=None, sleepers=None, leans=None):
     now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes")
     games = json.load(open(CACHE / "games.json")) if (CACHE / "games.json").exists() else []
     meta = dict(generated_at=now, season=C.SEASON, week=week, lines_pulled=lines_pulled, next_pull=next_pull(games=games), pull_schedule=pull_schedule(games=games), **status,
@@ -1057,6 +1062,7 @@ def write_site(P, bets, bt, graded, summary, week, status, lines_pulled, parlays
         meta["retro_assists"] = json.loads(retro_ast.read_text())
     _json(SITE / "results.json", dict(summary=summary, picks=records(graded), parlays=records(parlays) if parlays is not None and len(parlays) else [],
                                       sleepers=records(sleepers) if sleepers is not None and len(sleepers) else [],
+                                      leans=records(leans) if leans is not None and len(leans) else [],
                                       retro=json.loads(retro.read_text()) if retro.exists() else None, replays=replay_seasons()))
 
 

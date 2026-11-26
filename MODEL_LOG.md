@@ -1539,6 +1539,31 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-25, 10 pm (Track record: every pick of a week, game by game; the C leans are logged and graded)
+
+**What.** The owner could not see what the model had backed on Wednesday's game beyond what he bet. The Track record
+tab now opens with "Every pick, game by game": for a chosen week (this week by default), each game in kickoff order
+with every line the model backed: the staked picks (A and B; C before 2026-11-24), the C picks shown as leans since
+2026-11-24, and the sleepers, one row per player, market and side (a pick that is also a sleeper carries both
+badges), with price and book, when it was first logged, the box-score number, the result, the units, and a tick
+when it is on his board. A pick logged at one pull stays even if the line moved and it stopped being a pick later
+(Josh Wallace, an A at Under 3.5 at 9 am, a lean at 2.5 by kickoff). Totals for the week: picks at their stakes, C
+leans and sleepers at 1 unit each.
+
+The C leans were not kept anywhere a page could read (the line log keeps the engine's last read of each line, with no
+game). `grade.log_leans` now records them at every pull like the sleepers (`data/leans.csv`: following the board
+until kickoff, then frozen), `grade.grade_leans` settles them on the box score at 1 unit, with a record by kind
+(side x market) for the 2026-12-08 review, and `results.json` carries them (`leans`, `summary.leans`). This week's
+leans so far were rebuilt once from the line log (C lean: tier "lean" with a cautious edge at or above the pick bar)
+and the game from the schedule; 26 rows.
+
+**Checked.** Smoke test (leans logged once per player, market and side; one graded on a box score at 1 unit; the
+results file carries them). Browser test, both widths (the section opens the tab, has rows and games and the C
+leans, the week can be changed, it fits a phone). A real daily in a scratch copy with this week's data. Site and
+record only; no pick, grade or stake changed.
+
+**Revert.** Drop the section and the `log_leans` calls; `data/leans.csv` is read by nothing else.
+
 ### 2026-11-24, afternoon (three conditions met and applied: C picks become leans, unflagged solo Unders off, combined-Over sleepers off)
 
 **What.** At the owner's go-ahead, after the standing post-mortem reported them met. (1) H1 C: a pick that would be

@@ -1177,6 +1177,98 @@ def log_sleepers(bets, season, week, pulled_at):
     return int((pd.to_datetime(s.commence_time, utc=True, errors="coerce") > now).sum())
 
 
+# ---------------------------------------------------------------- C leans (since 2026-11-24, config.ENGINE["c_as_lean"])
+# A pick that would be a C is shown as a lean and not staked. Each one is still logged here, like a sleeper (one row per
+# player, market and side, following the board until kickoff, then frozen) and graded, so the owner sees every line the
+# model would have backed and the 2026-12-08 review can read them by kind.
+LEANS = Path("data/leans.csv")
+LEAN_COLS = SLEEPER_KEY + ["player_id", "team", "opp", "group", "line", "book", "odds", "proj_model", "p_claim", "p_model", "edge_low", "ev",
+                           "event_id", "commence_time", "first_seen", "pulled_at"]
+
+
+def _c_leans(bets):
+    if bets is None or len(bets) == 0 or "tier" not in bets.columns or "why" not in bets.columns:
+        return bets.iloc[0:0] if bets is not None else pd.DataFrame()
+    return bets[(bets.tier == "lean") & bets.why.astype(str).str.contains("would be a C", regex=False)].copy()
+
+
+def log_leans(bets, season, week, pulled_at):
+    """Record this pull's C leans, as log_sleepers records sleepers: until its game starts a lean follows the board
+    (latest line and price; dropped if it is no longer a C lean while the game is listed); once the game starts it is
+    frozen and graded. Returns the open count."""
+    if bets is None or len(bets) == 0:
+        return 0
+    b = _c_leans(bets)
+    now = O._utcnow()
+    old = pd.read_csv(LEANS) if LEANS.exists() else pd.DataFrame(columns=LEAN_COLS)
+    seen = old.drop_duplicates(SLEEPER_KEY).set_index(SLEEPER_KEY).first_seen if len(old) else pd.Series(dtype=object)
+    if len(old):
+        start_old = pd.to_datetime(old.commence_time, utc=True, errors="coerce")
+        board_events = set(bets.event_id.dropna().astype(str)) if "event_id" in bets.columns else set()
+        stale = (old.season == season) & (old.week == week) & (start_old > now) & old.event_id.astype(str).isin(board_events)
+        old = old[~stale]
+    if len(b):
+        b["odds"] = np.where(b.side == "Over", b.over_odds, b.under_odds)
+        b = b[pd.notna(b.odds)]
+        b["_lk"] = np.where(b.side == "Over", -b.line, b.line)          # the best line first, then the best price
+        b = b.sort_values(["_lk", "odds"], ascending=False).drop_duplicates(["player", "market", "side"])
+        b = b[pd.to_datetime(b.commence_time, utc=True, errors="coerce") > now]
+        b = b.assign(season=season, week=week, pulled_at=pulled_at, first_seen=pulled_at)
+        new = b[[c for c in LEAN_COLS if c in b.columns]].copy()
+        new["first_seen"] = [seen.get(tuple(k), pulled_at) for k in new[SLEEPER_KEY].itertuples(index=False)] if len(seen) else pulled_at
+        if len(old):
+            started = old[(old.season == season) & (old.week == week)].set_index(SLEEPER_KEY).index
+            new = new[[tuple(k) not in started for k in new[SLEEPER_KEY].itertuples(index=False)]]
+        old = pd.concat([old, new], ignore_index=True)
+    LEANS.parent.mkdir(parents=True, exist_ok=True)
+    old[[c for c in LEAN_COLS if c in old.columns]].to_csv(LEANS, index=False)
+    s = old[(old.season == season) & (old.week == week)]
+    return int((pd.to_datetime(s.commence_time, utc=True, errors="coerce") > now).sum())
+
+
+def grade_leans(pw_comb, live=None):
+    """The C leans graded on the box score, at 1 unit each at the logged price: rows, and a record in all, by kind
+    (side x market) and by week."""
+    if not LEANS.exists():
+        return pd.DataFrame(), {}
+    L = pd.read_csv(LEANS)
+    if L.empty:
+        return L, {}
+    pw = _with_ast(pw_comb)
+    if live is not None and len(live):
+        have = set(zip(pw.season, pw.week, pw.name_key))
+        extra = _with_ast(live)[[k not in have for k in zip(live.season, live.week, live.name_key)]]
+        pw = pd.concat([pw, extra[[c for c in extra.columns if c in pw.columns]]], ignore_index=True)
+    L["name_key"] = L.player.map(norm_name)
+    st = pw.groupby(["season", "week", "name_key"]).agg(comb=("comb", "sum"), solo=("solo_t", "sum"), ast=("ast_t", "sum")).reset_index()
+    L = L.merge(st, on=["season", "week", "name_key"], how="left")
+    if "player_id" in pw.columns and "player_id" in L.columns and L.player_id.notna().any():
+        sid = pw[pw.player_id.notna()].assign(player_id=lambda d: d.player_id.astype(str)).groupby(["season", "week", "player_id"]).agg(
+            comb_id=("comb", "sum"), solo_id=("solo_t", "sum"), ast_id=("ast_t", "sum")).reset_index()
+        L["player_id"] = L.player_id.where(L.player_id.notna(), None).astype(object).map(lambda v: None if v is None else str(v).split(".")[0])
+        L = L.merge(sid, on=["season", "week", "player_id"], how="left")
+        for c in ("comb", "solo", "ast"):
+            L[c] = L[f"{c}_id"].where(L[f"{c}_id"].notna(), L[c])
+        L = L.drop(columns=["comb_id", "solo_id", "ast_id"])
+    L["actual"] = _actual_for(L)
+    done = L.actual.notna()
+    win = np.where(L.side == "Over", L.actual > L.line, L.actual < L.line)
+    L["result"] = np.where(~done, "Pending", np.where(L.actual == L.line, "Push", np.where(win, "Win", "Loss")))
+    dec = L.odds.map(lambda a: american_to_decimal(a) if pd.notna(a) else np.nan)
+    L["units"] = np.where(L.result == "Win", dec - 1, np.where(L.result == "Loss", -1.0, 0.0))
+    L["kind"] = L.side.astype(str) + " " + L.market.map(C.market_kind).astype(str)
+
+    def rec(d):
+        g = d[d.result.isin(["Win", "Loss"])]
+        w = int((g.result == "Win").sum())
+        lo, hi = hit_interval(w, int(len(g) - w), _weeks_of(g))
+        return dict(bets=int(len(d)), wins=w, losses=int(len(g) - w), pushes=int((d.result == "Push").sum()), pending=int((d.result == "Pending").sum()),
+                    units=float(d.units.sum()), hit=float(w / len(g)) if len(g) else None, hit_lo=lo, hit_hi=hi)
+    summary = dict(all=rec(L), by_kind={k: rec(d) for k, d in L.groupby("kind")},
+                   by_week=[dict(season=int(s), week=int(w), **rec(d)) for (s, w), d in L.groupby(["season", "week"])])
+    return L.drop(columns=["name_key"]), summary
+
+
 def grade_sleepers(pw_comb, live=None):
     """Sleeper rows with result and units at the logged price, and a record by kind (combined Overs, solo Unders),
     by week and in all."""

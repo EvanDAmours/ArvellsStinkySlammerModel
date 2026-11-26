@@ -291,6 +291,8 @@ details.parlay-box > summary { cursor: pointer; } details.parlay-box > summary s
 .stat-panel .tile > b { display: block; font: 700 1.45rem/1.1 var(--cond); font-variant-numeric: tabular-nums; } .stat-panel .tile.wide > b { font-size: 2.1rem; } .stat-panel .tile > b b { font: inherit; }
 .stat-panel .tile > span { display: block; color: var(--muted); font-size: 0.82rem; line-height: 1.3; }
 .stat-panel .tile > b.pos { color: #1f8a4c; } .stat-panel .tile > b.neg { color: #c0392b; }
+.week-t td:first-child { width: 1%; white-space: nowrap; } .week-t td:nth-child(2) { white-space: normal; } .week-t td:nth-child(2) small { display: block; }
+.week-t td:nth-child(4), .week-t td:nth-child(6) { width: 1%; white-space: nowrap; }
 .mine-panels { gap: 10px; }
 .mine-panels > .stat-panel { padding: 8px 14px 10px; }
 .mine-panels > details > summary { list-style: none; display: block; pointer-events: none; padding-bottom: 6px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
@@ -1524,8 +1526,9 @@ function renderRecord() {
 
   const lw = s.era?.since?.week ?? s.scoreboard?.live_week ?? 10;
   box.append(recCards(r, s, lw));
-  const jumps = [["rec-whatif", "What would it have paid?"], ["rec-trial", "Rules on trial"], ["rec-market", "Against the market"], ["rec-more", "Locks, parlays, sleepers and more"], ["rec-picks", "Every pick"], ["rec-history", "Then and now"]];
+  const jumps = [["rec-week", "This week"], ["rec-whatif", "What would it have paid?"], ["rec-trial", "Rules on trial"], ["rec-market", "Against the market"], ["rec-more", "Locks, parlays, sleepers and more"], ["rec-picks", "Every pick"], ["rec-history", "Then and now"]];
   box.append(el("nav", { class: "jump", "aria-label": "Track record sections" }, ...jumps.map(([id, label]) => { const a = el("a", { href: `#${id}` }, label); a.onclick = (e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); }; return a; })));
+  const wk = weekSection(r); if (wk) box.append(wk);
   const wi = whatIfSection(r, s, lw); if (wi) box.append(wi);
   if (parts.trial) box.append(parts.trial);
   if (parts.market) box.append(parts.market);
@@ -1545,6 +1548,73 @@ function renderRecord() {
   const hist = historySection(r, s, lw); if (hist) box.append(hist);
 
   renderRecPicks();
+}
+
+// ---------------------------------------------------------------- Track record: this week, every pick
+// Every line the model backed in a week, game by game: the staked picks (A and B; C before 2026-11-24), the C leans it
+// showed but did not stake, and the sleepers, each with its result and whether it is on your board. A pick logged at
+// one pull stays here even if the line moved and it stopped being a pick at a later one (owner, 2026-11-26).
+let WEEK_SEL = null;
+function weekSection(r) {
+  const season = DATA.meta?.season, cur = DATA.meta?.week;
+  const mk = (x) => `${normName(x.player)}|${x.market}|${x.side}`;
+  const picks = (r.picks || []).filter((p) => p.counted !== false);     // each bet once, as in the record
+  const all = [...picks.map((x) => ({ x, t: "pick" })), ...(r.leans || []).map((x) => ({ x, t: "lean" })), ...(r.sleepers || []).map((x) => ({ x, t: "sleeper" }))]
+    .filter(({ x }) => x.season === season);
+  const weeks = [...new Set(all.map(({ x }) => x.week))].sort((a, b) => b - a);
+  if (!weeks.length) return null;
+  const wk = weeks.includes(WEEK_SEL) ? WEEK_SEL : weeks.includes(cur) ? cur : weeks[0];
+  // one row per player, market and side: a pick that is also a sleeper carries both badges
+  const rows = new Map();
+  for (const { x, t } of all.filter(({ x }) => x.week === wk)) {
+    const k = mk(x), r0 = rows.get(k) || { x, kinds: {} };
+    if (t === "pick" || (t === "lean" && !r0.kinds.pick) || !r0.x) r0.x = t === "sleeper" && (r0.kinds.pick || r0.kinds.lean) ? r0.x : x;
+    r0.kinds[t] = x; rows.set(k, r0);
+  }
+  const mineKeys = new Set(weekList(weekKeyOf(season, wk)).filter((b) => !b.custom).map(mk));
+  const games = new Map();
+  for (const row of rows.values()) {
+    const x = row.x, gk = `${x.commence_time || ""}|${[x.team, x.opp].filter(Boolean).sort().join("-")}`;
+    if (!games.has(gk)) games.set(gk, []); games.get(gk).push(row);
+  }
+  const GR = { A: 0, B: 1, C: 2 };
+  const rank = (row) => (row.kinds.pick ? GR[row.kinds.pick.grade] ?? 2 : row.kinds.lean ? 3 : 4);
+  const res = (x) => x.result || "Pending";
+  const unitsOf = (row) => { const p = row.kinds.pick, l = row.kinds.lean, sl = row.kinds.sleeper;
+    if (p) return p.units == null || !["Win", "Loss", "Push"].includes(p.result) ? null : p.units * (p.stake != null ? +p.stake : (DATA.meta?.grading?.units || {})[p.grade] ?? 0);
+    const y = l || sl; return y && ["Win", "Loss", "Push"].includes(y.result) ? y.units : null; };
+  const tally = (list) => { let w = 0, l = 0, u = 0; for (const x of list) { if (x.result === "Win") w++; else if (x.result === "Loss") l++; u += x.u || 0; } return { w, l, u }; };
+  const rs = [...rows.values()];
+  const tp = tally(rs.filter((x) => x.kinds.pick).map((x) => ({ result: res(x.kinds.pick), u: unitsOf(x) || 0 })));
+  const tl = tally(rs.filter((x) => x.kinds.lean && !x.kinds.pick).map((x) => ({ result: res(x.kinds.lean), u: x.kinds.lean.units || 0 })));
+  const ts = tally(rs.filter((x) => x.kinds.sleeper).map((x) => ({ result: res(x.kinds.sleeper), u: x.kinds.sleeper.units || 0 })));
+  const yours = rs.filter((x) => mineKeys.has(mk(x.x))).length;
+  const sel = el("select", { "aria-label": "Week" }, ...weeks.map((w) => { const o = el("option", { value: String(w) }, `Week ${w}${w === cur ? " (this week)" : ""}`); if (w === wk) o.selected = true; return o; }));
+  sel.addEventListener("change", () => { WEEK_SEL = +sel.value; const old = document.querySelector("#rec-week"), n = weekSection(DATA.results); if (old && n) old.replaceWith(n); });
+  const line = (label, t, unitLabel) => el("span", {}, `${label} `, wl(t.w, t.l), t.w + t.l ? [" · ", units(t.u, 2), unitLabel] : "");
+  const sec = section("Every pick, game by game", "Every line the model backed this week: the staked picks, the C picks it showed as leans and did not stake (since 2026-11-24), and the sleepers, with how each ended and whether it is on your board. A pick logged at one pull stays here even if the line moved later.",
+    el("div", { class: "controls" }, el("label", {}, "Week ", sel)),
+    el("div", { class: "chips" }, line("Picks", tp, "u at the stakes"), line("C leans", tl, "u at 1 each"), line("Sleepers", ts, "u at 1 each"), el("span", {}, `On your board: ${yours} of ${rs.length}`)));
+  sec.id = "rec-week";
+  const order = [...games.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  for (const [gk, list] of order) {
+    const x0 = list[0].x, k = x0.commence_time ? when(x0.commence_time) : "";
+    sec.append(el("div", { class: "game-h" }, el("b", {}, [x0.team, x0.opp].filter(Boolean).join(" vs ")), k ? el("span", {}, ` · ${k}`) : ""));
+    const t = table([[""], ["Pick"], ["Had", "n"], ["Result"], ["Units", "n"], ["Yours"]], list.sort((a, b) => rank(a) - rank(b) || String(a.x.player).localeCompare(String(b.x.player))).map((row) => {
+      const x = row.x, p = row.kinds.pick, l = row.kinds.lean, sl = row.kinds.sleeper, y = p || l || sl;
+      const badges = el("span", { class: "grades" },
+        p ? el("span", { class: `grade ${p.grade || "C"}`, title: p.five ? "A lock" : `Grade ${p.grade}: staked` }, p.grade || "?") : null,
+        !p && l ? el("span", { class: "grade C", title: "A C pick shown as a lean: not staked" }, "C") : null,
+        sl ? el("span", { class: `grade sl ${sl.sleeper_grade || "C"}`, title: `Sleeper grade ${sl.sleeper_grade}` }, sl.sleeper_grade || "?") : null);
+      const what = el("span", {}, `${x.player} `, el("b", { class: x.side === "Under" ? "under" : "over" }, `${x.side === "Under" ? "U" : "O"} ${num(x.line)}`), ` ${({ solo: "solo", assists: "assists" })[kindOf(x.market)] || "tackles"}`,
+        el("small", { class: "muted" }, `${odds(y.odds)} ${y.book || ""} · ${p ? (p.five ? "lock" : "staked") : l ? "lean, not staked" : "sleeper only"}${y.pulled_at || y.first_seen ? ` · logged ${when(y.first_seen || y.pulled_at)}` : ""}`));
+      const u = unitsOf(row);
+      return [badges, what, y.actual == null ? "" : num(y.actual, 0), res(y), u == null ? "" : units(u, 2), mineKeys.has(mk(x)) ? "✓" : ""];
+    }));
+    t.classList.add("week-t");
+    sec.append(el("div", { class: "scroll" }, ph(t, "3 5")));
+  }
+  return sec;
 }
 
 // ---------------------------------------------------------------- Track record: pick explorer

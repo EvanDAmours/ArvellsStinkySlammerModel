@@ -16,7 +16,7 @@ def _ignore_live_data(d, names):
     rel = os.path.relpath(d, ROOT)
     skip = {".git", "__pycache__"}
     if rel == "data":
-        skip |= {"cache", "picks.csv", "parlays.csv", "retro_five.json", "weekly_five.md", "lines_log.csv", "retro_assists.json", "sleepers.csv", "settled.csv"}
+        skip |= {"cache", "picks.csv", "parlays.csv", "retro_five.json", "weekly_five.md", "lines_log.csv", "retro_assists.json", "sleepers.csv", "leans.csv", "settled.csv"}
     if rel == os.path.join("data", "odds"):
         skip |= {n for n in names if n.isdigit()}
     if rel == os.path.join("docs", "data"):
@@ -274,6 +274,19 @@ if len(_slc):
     check(list(_gs.result) == ["Win"] and _ss["all"]["wins"] == 1 and abs(_ss["all"]["units"] - 1.0) < 1e-9 and "by_grade" in _ss, f"a sleeper grades on the box score, with a record by grade ({list(_gs.result)})")
     check({"sleeper_grade", "sleeper_p", "sleeper_note"} <= set(_slc.columns) and _slc.sleeper_grade.isin(["A", "B", "C"]).all(), "logged sleepers keep their grade, chance and summary")
     _slc.to_csv(G.SLEEPERS, index=False)
+# the C leans (since 2026-11-24): logged once per player, market and side like the sleepers, graded on the box score
+_cl = [b for b in priced if b.get("tier") == "lean" and "would be a C" in str(b.get("why"))]
+_lnc = pd.read_csv(tmp / "data/leans.csv") if (tmp / "data/leans.csv").exists() else pd.DataFrame()
+check((len(_lnc) > 0) == (len(_cl) > 0) and (len(_lnc) == 0 or _lnc.duplicated(["season", "week", "player", "market", "side"]).sum() == 0),
+      f"C leans logged once per player, market and side ({len(_lnc)} rows; {len(_cl)} lean rows on the board)")
+if len(_lnc):
+    _rowl = pw[(pw.season == 2026) & (pw.week == 6)].sort_values("comb", ascending=False).iloc[0]
+    pd.DataFrame([dict(season=2026, week=6, player=_rowl.player, market="player_tackles_assists", side="Under", line=float(_rowl.comb) + 0.5, odds=100,
+                       book="DraftKings", commence_time="2026-10-18T17:00:00Z")]).to_csv(G.LEANS, index=False)
+    _gl, _sl2 = G.grade_leans(pw)
+    check(list(_gl.result) == ["Win"] and _sl2["all"]["wins"] == 1 and abs(_sl2["all"]["units"] - 1.0) < 1e-9 and "Under combined" in _sl2["by_kind"],
+          f"a C lean grades on the box score at 1 unit, with a record by kind ({list(_gl.result)})")
+    _lnc.to_csv(G.LEANS, index=False)
 pj = json.loads((tmp / "docs/data/parlays.json").read_text())
 check(all(l["market"] == "player_tackles_assists" for q in pj for l in q["legs"]), "parlay legs are combined-tackle lines only")
 check((len(pj) == 0 and not any(b.get("parlay") for b in bets)) if _no_comb_picks else (len(pj) >= 1 and pj[0]["n_legs"] == len(pj[0]["legs"]) and sum(1 for b in bets if b.get("parlay")) == len(parlays)),
@@ -526,7 +539,7 @@ check(all(k in _html for k in ("rec-trial", "Rules on trial", "Candidates in the
 # the Track record tab: what was bet beside what the new model would have picked, the list of every pick behind a dropdown, the seasons replayed
 _rs = R.replay_seasons() or {}
 _res = json.loads((tmp / "docs" / "data" / "results.json").read_text())
-check(all(k in _html for k in ("rec-history", "function historySection", "rec-picks-list", "function recCards", "function foldOf")) and "replays" in _res
+check(all(k in _html for k in ("rec-history", "function historySection", "rec-picks-list", "function recCards", "function foldOf")) and "replays" in _res and "leans" in _res
       and all({"season", "plays", "by_grade", "by_week"} <= set(e) and e["plays"]["wins"] + e["plays"]["losses"] == sum(g["wins"] + g["losses"] for g in e["by_grade"]) for e in _rs.get("seasons", [])),
       f"the Track record tab carries the then-and-now section, keeps the pick list behind a dropdown and gets the replayed seasons ({[e['season'] for e in _rs.get('seasons', [])]})")
 check(all(k in _html for k in ("function customForm", "function addCustom", "function parseOdds", "mine-custom-add", 'if (b.custom) return null;', 'if (r[0] === "~")', "const tracked = ()")),
@@ -548,6 +561,8 @@ _nhl = (ROOT / "docs" / "nhl.html").read_text() if (ROOT / "docs" / "nhl.html").
 check(all(k in _html for k in ('id="hub"', 'id="hub-nfl"', 'href="nhl.html"', 'sessionStorage.getItem("hub")')) and all(k in _nhl for k in ('const KEY = "nhl-bets-v1"', "sports/hockey/nhl", 'indexOf("hits")', 'href="index.html"', "#add="))
       and not __import__("re").search(r"api-web\.nhle\.com", _nhl),
       "the site opens on a home screen with NFL and NHL tiles; the NHL page tracks hit bets from ESPN's feed (NHL.com's API cannot be read by a browser)")
+check(all(k in _html for k in ("function weekSection", 'sec.id = "rec-week"', '["rec-week", "This week"]', "lean, not staked", "On your board: ")),
+      "Track record lists every pick of a week game by game: the staked picks, the C leans, the sleepers, with results and which are on the owner's board")
 check("if (projN || dayPre) {" in _html and "daySettled + projPL" in _html and "groups.post.push(c);" in _html and "set the result and the bet moves to Settled" in _html,
       "'Where today is heading' shows only while a bet of today's is open and counts today only; a settled custom bet joins the Settled group")
 check(all(k in _html for k in ("function playRows", "plays-jump", "plays-grp-", 'id: "plays-locks"', "plays-view", 'foldNote("How locks are chosen"')),
