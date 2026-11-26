@@ -259,7 +259,7 @@ table.plays-compact > tbody > tr:not(.mine-expand) .over { color: var(--over); f
 table.plays-compact > tbody > tr:not(.mine-expand) > td small { font-size: 0.78rem; }
 table.plays-compact > tbody > tr:not(.mine-expand) button.add { font: 600 0.75rem var(--cond); padding: 2px 8px; margin-left: 4px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); cursor: pointer; }
 table.plays-compact > tbody > tr:not(.mine-expand) button.add.on { background: #1f8a4c; color: #fff; border-color: #1f8a4c; }
-.plays-jump button.reset { font: 600 0.85rem var(--cond); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; cursor: pointer; color: var(--ink); }
+.week-bar button.reset, .plays-jump button.reset { font: 600 0.85rem var(--cond); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; cursor: pointer; color: var(--ink); }
 .plays-jump { gap: 6px; flex-wrap: wrap; display: flex; }
 @media (max-width: 640px) { table.plays-compact > tbody > tr:not(.mine-expand) .star { display: none; } table.plays-compact > tbody > tr.is-lock { box-shadow: inset 4px 0 #1f8a4c; } }
 table.plays-compact > tbody > tr.is-lock > td:first-child { box-shadow: inset 4px 0 #1f8a4c; }
@@ -293,6 +293,12 @@ details.parlay-box > summary { cursor: pointer; } details.parlay-box > summary s
 .stat-panel .tile > b.pos { color: #1f8a4c; } .stat-panel .tile > b.neg { color: #c0392b; }
 .week-t td:first-child { width: 1%; white-space: nowrap; } .week-t td:nth-child(2) { white-space: normal; } .week-t td:nth-child(2) small { display: block; }
 .week-t td:nth-child(4), .week-t td:nth-child(6) { width: 1%; white-space: nowrap; }
+.plays-filters { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin: 0 0 10px; }
+.plays-filters > summary { cursor: pointer; padding: 8px 14px; font: 700 1rem var(--cond); }
+.plays-filters > .controls { margin: 0; padding: 0 14px 12px; border: 0; background: none; }
+.week-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; margin: 0 0 10px; }
+.week-bar .wk-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; } .week-bar .wk-label { font: 700 0.85rem/1 var(--cond); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.week-bar .wk-main > b { font: 700 1.6rem/1 var(--cond); } .week-bar .wk-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: 0.9rem; } .week-bar .wk-chip .grade { margin-right: 2px; }
 .mine-panels { gap: 10px; }
 .mine-panels > .stat-panel { padding: 8px 14px 10px; }
 .mine-panels > details > summary { list-style: none; display: block; pointer-events: none; padding-bottom: 6px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
@@ -410,6 +416,7 @@ document.getElementById("hub-nfl").addEventListener("click", () => { document.ge
 
   <section id="plays" hidden>
     <div id="plays-top"></div>
+    <details class="plays-filters" id="plays-filters"><summary>Filters <span class="muted" id="plays-filter-n"></span></summary>
     <div class="controls toolbar" id="plays-controls">
       <label>Position <select id="pos"><option value="">All</option><option value="LB">Linebackers</option><option value="S">Safeties</option><option value="CB">Corners</option><option value="DL">Defensive line</option></select></label>
       <label>Side <select id="side"><option value="">Both</option><option value="Under">Unders</option><option value="Over">Overs</option></select></label>
@@ -420,6 +427,7 @@ document.getElementById("hub-nfl").addEventListener("click", () => { document.ge
       <label><input type="checkbox" id="picks-only" checked> Picks only</label>
       <label><input type="checkbox" id="best-only" checked> Best price per line</label>
     </div>
+    </details>
     <div id="plays-list"></div>
   </section>
 
@@ -488,38 +496,21 @@ const odds = (a) => (a == null ? "" : (a > 0 ? "+" : "") + Math.round(a));
 const wl = (w, l, p) => el("b", {}, el("span", { class: "w" }, String(w ?? 0)), "-", el("span", { class: "l" }, String(l ?? 0)), p ? `-${p}` : "");
 const units = (u, d = 1) => (u == null ? el("b", {}) : el("b", { class: u >= 0 ? "pos" : "neg" }, (u >= 0 ? "+" : "") + Number(u).toFixed(d)));
 const cell = (v) => (v === "Win" || v === "Loss" ? el("td", { class: v }, v) : v === "Void" ? el("td", { title: "He did not play: the bet is void and counts for nothing" }, "Void") : null);
-function recordsBar(s) {
-  // Locks and plays records side by side, plus the replayed record under the current rules
-  const r = DATA.results || {}, f = (s || {}).five || {}, bar = el("div", { class: "records" });
-  const hit = f.hit == null ? "" : ` (${pct(f.hit)})`;
-  bar.append(el("div", { class: "rec", title: rangeOf(f) ? `Likely range of the true hit rate: ${rangeOf(f)}` : "" }, wl(f.wins, f.losses, f.pushes), el("span", { class: "label" }, `Locks${hit}${f.pending ? `, ${f.pending} pending` : ""}`)));
-  bar.append(el("div", { class: "rec" }, wl(s?.wins, s?.losses, s?.pushes), el("span", { class: "label" }, `All plays${s?.pending ? `, ${s.pending} pending` : ""}${s?.live_graded ? ` (${s.live_graded} settled from the live box score; official stats confirm overnight)` : ""}`)));
-  const bg = Object.fromEntries(((s || {}).by_grade || []).map((g) => [g.grade, g]));
-  for (const gr of ["A", "B", "C"]) {
-    const g = bg[gr] || {};
-    bar.append(el("div", { class: "rec", title: rangeOf(g) ? `Likely range of the true hit rate: ${rangeOf(g)}` : "" }, el("span", { class: `grade ${gr}`, title: "Grade" }, gr), wl(g.wins, g.losses, g.pushes),
-      el("span", { class: "label" }, `${gr} grade${g.hit == null ? "" : ` (${pct(g.hit)})`}${g.pending ? `, ${g.pending} pending` : ""}`)));
-  }
-  for (const sd of ((s || {}).by_side || [])) {
-    bar.append(el("div", { class: "rec" }, el("span", { class: sd.key === "Under" ? "under" : "over", style: "font-weight:700;margin-right:6px" }, sd.key + "s"), wl(sd.wins, sd.losses, sd.pushes),
-      el("span", { class: "label" }, `${sd.hit == null ? "" : pct(sd.hit)}${sd.units == null ? "" : `, ${sd.units >= 0 ? "+" : ""}${sd.units.toFixed(1)}u`}${sd.pending ? `, ${sd.pending} pending` : ""}`)));
-  }
-  const pr = (s || {}).parlays || {};
-  bar.append(el("div", { class: "rec" }, wl(pr.wins, pr.losses), el("span", { class: "label" }, `Parlays${pr.units == null ? "" : `, ${pr.units >= 0 ? "+" : ""}${pr.units.toFixed(1)}u`}${pr.pending ? `, ${pr.pending} pending` : ""}`)));
-  const sl = ((s || {}).sleepers || {}).all;
-  if (sl && sl.bets) bar.append(el("div", { class: "rec" }, wl(sl.wins, sl.losses, sl.pushes), el("span", { class: "label" }, `Sleepers${sl.hit == null ? "" : ` (${pct(sl.hit)})`}${sl.units == null ? "" : `, ${sl.units >= 0 ? "+" : ""}${sl.units.toFixed(1)}u`}${sl.pending ? `, ${sl.pending} pending` : ""}`)));
-  const rw = (r.retro && r.retro.weeks) || [];
-  if (rw.length) {
-    const tot = rw.reduce((a, w) => ({ w: a.w + w.five.wins, l: a.l + w.five.losses, pw: a.pw + w.plays.wins, pl: a.pl + w.plays.losses, pend: a.pend + w.five.pending,
-      qw: a.qw + ((w.parlays || []).filter((q) => q.result === "Win").length), ql: a.ql + ((w.parlays || []).filter((q) => q.result === "Loss").length) }), { w: 0, l: 0, pw: 0, pl: 0, pend: 0, qw: 0, ql: 0 });
-    const weeks = rw.map((w) => `wk ${w.week}`).join(", ");
-    const rg = {};
-    for (const w of rw) for (const g of (w.by_grade || [])) { rg[g.grade] = rg[g.grade] || { w: 0, l: 0 }; rg[g.grade].w += g.wins; rg[g.grade].l += g.losses; }
-    const byGrade = ["A", "B", "C"].filter((k) => rg[k]).flatMap((k, i) => [i ? ", " : " (", `${k} `, wl(rg[k].w, rg[k].l)]);
-    bar.append(el("div", { class: "sub" }, "Replayed under the current rules (", weeks, ", using only what was known before each kickoff): locks ",
-      wl(tot.w, tot.l), tot.pend ? ` (${tot.pend} pending)` : "", ", all plays ", wl(tot.pw, tot.pl), ...byGrade, byGrade.length ? ")" : "", ", parlays ", wl(tot.qw, tot.ql), "."));
-  }
-  return bar;
+// the top of the Plays tab: this week's running record, picks graded so far (each bet once), by grade and the locks
+function weekBar() {
+  const r = DATA.results || {}, wk = DATA.meta?.week, season = DATA.meta?.season;
+  const ps = (r.picks || []).filter((p) => p.counted !== false && p.week === wk && (p.season == null || p.season === season) && p.result !== "Void");
+  if (!ps.length) return null;
+  const stakeOf = (p) => (p.stake != null ? +p.stake : (DATA.meta?.grading?.units || {})[p.grade] ?? 0);
+  const t = (xs) => { const g = xs.filter((p) => ["Win", "Loss", "Push"].includes(p.result));
+    return { w: g.filter((p) => p.result === "Win").length, l: g.filter((p) => p.result === "Loss").length, u: g.reduce((a, p) => a + (p.units || 0) * stakeOf(p), 0), pend: xs.filter((p) => p.result === "Pending").length }; };
+  const all = t(ps), a = t(ps.filter((p) => p.grade === "A")), b = t(ps.filter((p) => p.grade === "B")), lk = t(ps.filter((p) => p.five));
+  const chip = (label, x, cls) => el("span", { class: "wk-chip" }, cls ? el("span", { class: `grade ${cls}` }, label) : el("span", { class: "muted" }, label), " ", wl(x.w, x.l));
+  return el("div", { class: "week-bar" },
+    el("div", { class: "wk-main" }, el("span", { class: "wk-label" }, `Week ${wk}`), wl(all.w, all.l), all.w + all.l ? units(all.u, 2) : "", all.w + all.l ? el("span", { class: "muted" }, "u at the stakes") : "",
+      all.pend ? el("span", { class: "muted" }, `· ${all.pend} pending`) : ""),
+    el("div", { class: "wk-chips" }, chip("A", a, "A"), chip("B", b, "B"), lk.w + lk.l + lk.pend ? chip("Locks", lk) : "",
+      (() => { const go = el("button", { type: "button", class: "reset" }, "Season record →"); go.onclick = () => show("record"); return go; })()));
 }
 const OUT_STATUSES = new Set(["out", "doubtful", "ir", "injured reserve", "pup", "suspended"]);
 const MARKET = { player_tackles_assists: "Tackles + assists", player_solo_tackles: "Solo tackles", player_assists: "Assists" };
@@ -700,32 +691,6 @@ function renderMeta() {
   if (upd > 30) $("#warnings").append(el("div", { class: "warn" }, `The model has not been updated since ${when(m.generated_at)} (${Math.round(upd)} hours). The daily job runs at 4:15 am and again at 6:40 am; if both missed, run "Daily model update" from the Actions tab.`));
 }
 
-// every A-grade pick still to kick off, at DraftKings, in one slip: the owner's one-click parlay of the A board
-function aGradeSlip(all) {
-  const now = Date.now();
-  const isPick = (b) => b.pick === "Over" || b.pick === "Under";
-  const aPicks = all.filter((b) => isPick(b) && b.grade === "A" && (!betKick(b) || betKick(b).getTime() > now));
-  const seen = new Set(), legs = [];
-  for (const a of aPicks.sort((x, y) => (y.lock ?? 0) - (x.lock ?? 0))) {
-    const k = `${a.player}|${a.market}`; if (seen.has(k)) continue;
-    // the same selection at DraftKings (its price, its slip id), whichever book has the best price
-    const dk = all.find((b) => b.book === "DraftKings" && b.player === a.player && b.market === a.market && +b.line === +a.line && (b.side || b.pick) === (a.side || a.pick));
-    const href = dk && sideLink(dk, dk.side || dk.pick);
-    if (!dk || !href || !DK_RE.test(href)) continue;
-    seen.add(k); legs.push({ ...dk, href, side: dk.side || dk.pick, p: dk.p_claim ?? (dk.side === "Under" ? 1 - dk.model_over : dk.model_over) });
-  }
-  if (legs.length < 2) return null;
-  const slip = tailLink(legs.map((l) => l.href)); if (!slip) return null;
-  const dec = legs.reduce((t, l) => t * (decimalOf(l.side === "Under" ? l.under_odds : l.over_odds) || 1), 1);
-  const amer = dec >= 2 ? `+${Math.round((dec - 1) * 100)}` : `-${Math.round(100 / (dec - 1))}`;
-  const chance = legs.reduce((t, l) => t * (l.p || 0.5), 1);
-  const games = new Set(legs.map((l) => l.event_id)).size;
-  const wrap = el("div", { class: "parlay-box" }, el("h3", {}, `Every A pick at DraftKings · ${legs.length} legs · ${amer}`));
-  wrap.append(el("p", { class: "note" }, `${legs.map((l) => `${l.player}${l.jersey != null ? ` #${l.jersey}` : ""} ${l.side} ${num(l.line)} ${(MARKET[l.market] || "").toLowerCase()} (${odds(l.side === "Under" ? l.under_odds : l.over_odds)})`).join(" · ")}.`));
-  wrap.append(el("div", { class: "tail" }, el("a", { class: "bet-link", href: slip.href, target: "_blank", rel: "noopener noreferrer" }, `Open all ${legs.length} at DraftKings in one slip ↗`)));
-  wrap.append(el("p", { class: "note" }, `The model's chance that every leg hits: ${pct(chance)} (the win chances multiplied; ${games} game${games === 1 ? "" : "s"}). A parlay of picks the model likes is still mostly a long shot: each A is a good bet on its own, and the slip opens as a parlay, so split it into singles there if you would rather. DraftKings may refuse two solo-tackle legs from one game in a parlay; drop one of them on the slip if it does. Re-built at every line pull until kickoff.`));
-  return wrap;
-}
 
 // sleepers: the model's own number disagrees with the line by a margin that held in every live week (config.SLEEPER).
 // Tracked on their own record, never a lock; most of the combined ones never clear the pick bars.
@@ -745,9 +710,8 @@ function sleeperBox(all) {
   const rec = (r) => (r && (r.wins + r.losses) ? `${r.wins}-${r.losses}${r.pushes ? "-" + r.pushes : ""} (${pct(r.hit)}), ${r.units >= 0 ? "+" : ""}${num(r.units, 1)}u` : "no graded games yet");
   const counts = ["A", "B", "C"].map((g) => [g, rows.filter((b) => b.sleeper_grade === g).length]).filter(([, n]) => n);
   const wrap = el("details", { class: "parlay-box sleepers", open: rows.length ? "" : null },
-    el("summary", {}, el("strong", {}, `Sleepers · ${rows.length} open`), counts.length ? ` (${counts.map(([g, n]) => `${n} ${g}`).join(", ")})` : "", sum && sum.all && sum.all.bets ? ` · record ${rec(sum.all)}` : ""));
-  const byG = sum && sum.by_grade ? ["A", "B", "C"].filter((g) => sum.by_grade[g]).map((g) => el("span", { class: "gchip" }, el("span", { class: `grade sl ${g}` }, g), rec(sum.by_grade[g]))) : [];
-  if (byG.length) wrap.append(el("div", { class: "grade-chips note" }, "Record by grade: ", ...byG));
+    el("summary", {}, el("strong", {}, `Sleepers · ${rows.length} open`), counts.length ? ` (${counts.map(([g, n]) => `${n} ${g}`).join(", ")})` : ""));     // their record is on the Track record tab
+  // the sleepers' record by grade is on the Track record tab; this box keeps this week's settled ones only
   wrap.append(el("p", { class: "note" }, "A second, simpler test kept on its own record: lines where the model's own number disagrees with the book's line by a margin that held in every week tracked (solo tackles with the model half a tackle or more under the line and his own season within a tackle of it; until 2026-11-24 also combined tackles with the model half a tackle to a tackle over, taken off when their first 40 went 21-19). The sleeper grade comes from the model's own evidence and never looks at the price, so a sleeper can be a likely hit at a price that is not worth betting: each one says what the pricing engine makes of it at its price. The rules are frozen so the record can judge them. Never a lock; tracked at 1 unit each. In weeks 7 to 9 at the close: A 21-3, B 35-12, C 33-17 (chosen on those same weeks, so expect less)."));
   wrap.append(sleeperMath());
   // this week's settled sleepers, graded: what each grade actually did
@@ -808,11 +772,14 @@ function sleeperMath() {
 function renderPlays() {
   const top = $("#plays-top"), box = $("#plays-list"); top.replaceChildren(); box.replaceChildren();
   const all = (DATA.bets || []).filter((b) => b.market !== ASSIST);
-  top.append(recordsBar(DATA.results?.summary));
-  const aSlip = aGradeSlip(all); if (aSlip) top.append(aSlip);
+  const wb = weekBar(); if (wb) top.append(wb);      // this week's running record; the season's lives on the Track record tab
   top.append(legend());
   const haveLines = all.length > 0;
-  $("#plays-controls").hidden = !haveLines;
+  $("#plays-controls").hidden = !haveLines; $("#plays-filters").hidden = !haveLines;
+  { // the filters fold away on a phone (open on a computer); the summary says how many are set
+    const f = $("#plays-filters"), n = ["#pos", "#side", "#book", "#market", "#slate"].filter((q) => $(q).value).length + ($("#sort").value !== "grade") + (!$("#picks-only").checked) + (!$("#best-only").checked);
+    $("#plays-filter-n").textContent = n ? `· ${n} set` : "";
+    if (!f.dataset.init) { f.dataset.init = "1"; f.open = !(typeof matchMedia === "function" && matchMedia("(max-width: 640px)").matches); } }
   if (!haveLines) { box.append(el("div", { class: "empty" }, "No tackle lines yet this week. Books usually post them Thursday to Saturday; the odds job pulls them automatically and this list fills in.")); return; }
   const picksOnly = $("#picks-only").checked, market = $("#market").value, bookF = $("#book").value, best = $("#best-only").checked && !bookF, slate = $("#slate").value, pos = $("#pos").value, sideF = $("#side").value, sortBy = $("#sort").value;
   // the book list follows what is on the board (DraftKings, theScore Bet, Bally Bet, whoever posts), kept in place across re-renders
@@ -827,10 +794,11 @@ function renderPlays() {
   if (unfiltered) {
     if (five.length) {
       const f = DATA.results?.summary?.five, g = DATA.meta?.grading?.locks || { single: 3, multi: 5 };
-      const tally = f && f.bets ? ` · season ${f.wins}-${f.losses}${f.pushes ? "-" + f.pushes : ""}${f.hit == null ? "" : ` (${pct(f.hit)})`}` : "";
+      const tally = "";       // the locks' record is on the Track record tab
       const days = [...new Set(five.map((b) => slateName(slateDate(b))))].join(", ");
       const fb = el("div", { class: "five-box", id: "plays-locks" }, el("h3", {}, `Locks${days ? ` · ${days}` : ""}${tally}`), foldNote("How locks are chosen", ENGINE().a_rule === "hole" ? `A picks only, the model's own chance at ${DATA.meta?.grading?.lock_min ?? 70}% or better: a solo Under on a line the book has set at ${pct(HOLE())} or more of its own combined line for him, that is also a sleeper, with a clear checklist. The highest model chances first, at most ${g.single} on a one-game day and ${g.multi} on a multi-game day, at most two of a kind. A thin board gets no lock rather than its best pick. Re-chosen at every line pull until kickoff. Open "Why this is a lock" on each.` : `A picks only: the model's own chance at ${DATA.meta?.grading?.lock_min ?? 70}% or better, a price that still pays with the model's view cut to a quarter (a cautious edge of 2% or more), and a clear checklist. The highest model chances first, at most ${g.single} on a one-game day and ${g.multi} on a multi-game day, at most two of a kind. A thin board gets no lock rather than its best pick. Re-chosen at every line pull until kickoff. Open "Why this is a lock" on each.`));
-      five.sort((a, b) => (b.lock ?? 0) - (a.lock ?? 0)).forEach((b) => fb.append(card(b, true)));
+      const fs = five.sort((a, b) => (b.lock ?? 0) - (a.lock ?? 0));
+      if (PLAY_VIEW !== "cards") fb.append(playRows(fs)); else fs.forEach((b) => fb.append(card(b, true)));
       box.append(fb);
     } else if (all.some((b) => b.pick === "Over" || b.pick === "Under")) {
       const lm = DATA.meta?.grading?.lock_min ?? 70;
@@ -841,10 +809,7 @@ function renderPlays() {
     const open = (DATA.parlays || []).filter((q) => !over(q));
     for (const [i, q] of open.entries()) { const pb = parlayBox(q); if (!i) pb.id = "plays-parlay"; box.append(pb); }
     const sl = sleeperBox(all); if (sl) { sl.id = "plays-sleepers"; if (!PLAY_OPEN.has("plays-sleepers")) sl.open = false; else sl.open = PLAY_OPEN.get("plays-sleepers"); sl.addEventListener("toggle", () => PLAY_OPEN.set("plays-sleepers", sl.open)); box.append(sl); }
-    if (!open.length && all.length) {
-      const m = DATA.meta || {}, nxt = m.next_pull ? when(m.next_pull) : "";
-      box.append(el("details", { class: "parlay-box", id: "plays-parlay" }, el("summary", {}, el("strong", {}, "Parlay"), " · none open yet"), el("p", { class: "note" }, `No open parlay yet. ${all.length} line${all.length === 1 ? "" : "s"} on the board${all.length < 40 ? " (the books post most Sunday tackle lines Saturday evening and Sunday morning)" : ""}; a parlay needs two combined-tackle legs on one slate day that are picks in their own right, lock-eligible, with the model's own chance at ${pct(DATA.meta?.grading?.parlay?.fallback ?? 0.56)} or better (solo-tackle legs are not allowed in a same-game parlay), chosen at every line pull until that day's first kickoff. A slate without two such legs gets no parlay rather than a thin one.${nxt ? ` Next pull ${nxt}.` : ""}`)));
-    }
+    // no "none open yet" box: parlays are built from combined picks, and since 2026-11-24 every combined pick is a C lean
   }
   const anyPick = all.some((b) => b.pick === "Over" || b.pick === "Under"), showAll = picksOnly && !anyPick;   // nothing clears the bar: show every live line with the model's read rather than an empty board
   let rows = all.filter((b) => (!picksOnly || showAll || b.pick === "Over" || b.pick === "Under") && (!market || b.market === market) && (!bookF || b.book === bookF) && (!best || b.best_price !== false) && (!slate || slateOf(betKick(b)) === slate) && (!pos || b.group === pos) && (!sideF || (b.side || b.pick) === sideF));
@@ -853,7 +818,7 @@ function renderPlays() {
   rows.sort((x, y) => { const a = key(x), c = key(y); return typeof a === "string" ? a.localeCompare(c) : a - c; });
   const nPicks = all.filter((b) => b.pick === "Over" || b.pick === "Under").length;
   const nLeans = all.filter((b) => b.tier === "lean").length;
-  box.append(el("div", { class: "count" }, `${rows.length} shown of ${nPicks} picks${nLeans ? ` and ${nLeans} leans` : ""} on ${all.length} priced lines` + (unfiltered ? "" : " (filtered)") + `. Sorted by ${$("#sort").selectedOptions[0].textContent.toLowerCase()}.`));
+  box.append(el("div", { class: "count" }, `${nPicks} pick${nPicks === 1 ? "" : "s"}${nLeans ? ` · ${nLeans} leans` : ""} · ${all.length} lines${unfiltered ? "" : ` · ${rows.length} shown (filtered)`}`));
   if (showAll) box.append(el("div", { class: "count" }, "No line is a pick yet, so every live line is shown with both opinions on it: the model's and the book's."));
   if (!rows.length) { box.append(el("div", { class: "empty" }, picksOnly ? "No line matches these filters." : "Nothing matches these filters.")); return; }
   // the list: grouped by grade when sorted by grade, one line per pick (a tap opens the full card) unless full cards are chosen
@@ -918,7 +883,7 @@ function legend() {
   const st = g.stake || { kelly_fraction: 0.25, bankroll: 100, min: 0.1, max: 3, game_cap: 4, kind_cap: 10, slate_cap: 15 }, cl = g.clv || { decent: 0.52, good: 0.56, great: 0.6 }, cp = g.clv_pct || { good: 0.01, excellent: 0.03, elite: 0.05 };
   const row = (grade, cut, what) => el("tr", {}, el("td", {}, el("span", { class: `grade ${grade}` }, grade)), el("td", {}, cut), el("td", {}, what));
   return el("details", { class: "legend" },
-    el("summary", {}, "How to read this board: the win chance, the cautious edge, grades, stakes, what can be a lock"),
+    el("summary", {}, "How to read this board"),
     el("h4", {}, "One chance per line, from two opinions"),
     el("p", {}, `The book's opinion is its price: both sides of the line with the book's margin taken out give its fair chance. The model's opinion is its own projection and how spread out his tackle counts run: the model's own chance. The win chance starts at the book's fair chance and moves ${pct(e.beta)} of the way to the model's (measured in odds). When the two agree, the win chance is the fair chance and every price loses its margin, so nothing becomes a pick because the book agrees with it. Only the model's disagreement makes an edge, and it is counted at half its size because that is what it has been worth: on the closing lines of the 2025 season and the first nine weeks of 2026, the chance built this way out-predicted the book's own price in 23 of 25 weeks.`),
     el("p", {}, `The win chance moves the book's fair chance toward the model's: ${WEIGHTS()} (on 25 weeks of closing lines the model's disagreement has been worth more on solo lines than on combined). The cautious chance counts the disagreement at half of that. A line is a pick only if the bet still breaks even there: its cautious edge (cautious chance x what the price pays, minus 1) is zero or better. A lean has an edge at the win chance but not at the cautious one; it is shown and logged, never staked. Everything else is no pick.`),

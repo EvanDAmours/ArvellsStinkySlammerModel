@@ -1539,6 +1539,20 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-26, morning (the Plays tab tidied: this week's record on top, no A-pick parlay, locks one line each)
+
+The owner found the Plays tab cluttered. Changes, site only: (1) the season records strip (locks, every play, grades,
+sides, parlays, sleepers, the replay line) is replaced by this week's running record of the picks (A and B, each bet
+once, units at the stakes, pending) with a button to the Track record tab, where the season's record lives; the
+Sleepers bar and box drop their season record too. (2) The "Every A pick at DraftKings" parlay box is gone (the slip
+can be built on DraftKings itself), and so is the "Parlay · none open yet" box (no parlay is built while combined
+picks are leans). (3) The locks are one line each, like the grade groups below (a tap opens the card; "Show full
+cards" brings the cards back). (4) The filters fold into a "Filters" bar, closed on a phone and open on a computer,
+with a count of those set. (5) "How to read this board" is the legend's whole title; the pick count is one short
+line. Also: the deliberate break "a stale grade on My board" pointed at a line changed on 2026-11-16; it is pointed
+at the current one and caught again. Smoke and browser tests pass. Revert: restore the two removed functions
+(`recordsBar`, `aGradeSlip`) from git.
+
 ### 2026-11-25, 10 pm (Track record: every pick of a week, game by game; the C leans are logged and graded)
 
 **What.** The owner could not see what the model had backed on Wednesday's game beyond what he bet. The Track record

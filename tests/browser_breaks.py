@@ -21,7 +21,7 @@ M_ALL = {
  "an opened pick squeezed into the grade column": [("table.plays-compact > tbody > tr.mine-expand > td, table.plays-compact > tbody > tr.mine-expand > td:first-child { width: auto; white-space: normal; box-shadow: none; }", ""), ("table.plays-compact > tbody > tr > td:first-child { width: 48px; }", "table.plays-compact td:first-child { width: 48px; }")],
  "the season record stacked in small type": [(".stat-panel .tile > span { display: block;", ".stat-panel .tile span { display: block;")],
  "noon games filed under Afternoon": [('h < 14 ? "early" : h < 18 ? "late"', 'h < 12 ? "early" : h < 17 ? "late"')],
- "a stale grade on My board": [("if ((x.grade || null) !== (b.grade ?? null) || (x.lock ?? null) !== (b.lock ?? null))", "if (false)")],
+ "a stale grade on My board": [("if (x && ((x.grade || null) !== (b.grade ?? null) || (x.lock ?? null) !== (b.lock ?? null)))", "if (false)")],
  "the why table mangled inside an opened pick": [("  table.mine-compact > tbody > tr { display: grid;", "  table.mine-compact tr { display: grid;"), ("  table.mine-compact > tbody > tr > td { border: 0; padding: 0; white-space: nowrap; }", "  table.mine-compact td { border: 0; padding: 0; white-space: nowrap; display: block; }"),
    ("  .play .why-box table, .play .why-box tbody { display: block; } .play .why-box thead { display: none; }", ""), ("  .play .why-box tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--line); }", ""),
    ("  .play .why-box tbody td { padding: 0; border: 0; color: var(--ink); } .play .why-box tbody td:nth-child(3) { grid-column: 1 / -1; color: var(--muted); font-size: 0.82rem; }", "")],

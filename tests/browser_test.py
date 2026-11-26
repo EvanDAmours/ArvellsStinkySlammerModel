@@ -150,6 +150,8 @@ def run_width(browser, name, width):
     check(pg.evaluate("document.querySelector('#hub').hidden"), f"a reload keeps the board, not the home screen {at}")
     pg.click('nav button[data-tab="plays"]')
     pg.evaluate("(() => { try { localStorage.removeItem('plays-view'); } catch (e) {} PLAY_VIEW = null; renderPlays(); })()")
+    top = pg.evaluate("(() => { const t = document.querySelector('#plays-top'); return { week: !!t.querySelector('.week-bar'), text: t.innerText.replace(/\\n/g, ' ').slice(0, 160), aSlip: /Every A pick at/.test(document.querySelector('#plays').innerText), filters: document.querySelector('#plays-filters').open }; })()")
+    check(not top["aSlip"] and (top["week"] or "Week" not in top["text"]) and top["filters"] == (width > 640), f"Plays shows this week's record, no A-pick parlay, and folds its filters on a phone only {at} ({top})")
     jumps = pg.locator(".plays-jump button").count()
     rows = pg.locator("table.plays-compact tbody tr").count()
     check(jumps >= 3 and rows >= 3, f"Plays shows a jump bar and one line a pick {at} ({jumps} buttons, {rows} lines)")

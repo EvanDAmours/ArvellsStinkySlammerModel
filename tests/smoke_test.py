@@ -561,6 +561,8 @@ _nhl = (ROOT / "docs" / "nhl.html").read_text() if (ROOT / "docs" / "nhl.html").
 check(all(k in _html for k in ('id="hub"', 'id="hub-nfl"', 'href="nhl.html"', 'sessionStorage.getItem("hub")')) and all(k in _nhl for k in ('const KEY = "nhl-bets-v1"', "sports/hockey/nhl", 'indexOf("hits")', 'href="index.html"', "#add="))
       and not __import__("re").search(r"api-web\.nhle\.com", _nhl),
       "the site opens on a home screen with NFL and NHL tiles; the NHL page tracks hit bets from ESPN's feed (NHL.com's API cannot be read by a browser)")
+check(all(k in _html for k in ("function weekBar", "const wb = weekBar();", 'id="plays-filters"', "if (PLAY_VIEW !== \"cards\") fb.append(playRows(fs))")) and not any(k in _html for k in ("function aGradeSlip", "function recordsBar", "Every A pick at DraftKings", " · none open yet")),
+      "Plays opens with this week's running record (the season's is on Track record), no A-pick parlay or empty parlay box, locks one line each, filters folded on a phone")
 check(all(k in _html for k in ("function weekSection", 'sec.id = "rec-week"', '["rec-week", "This week"]', "lean, not staked", "On your board: ")),
       "Track record lists every pick of a week game by game: the staked picks, the C leans, the sleepers, with results and which are on the owner's board")
 check("if (projN || dayPre) {" in _html and "daySettled + projPL" in _html and "groups.post.push(c);" in _html and "set the result and the bet moves to Settled" in _html,
