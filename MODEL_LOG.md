@@ -1539,6 +1539,12 @@ and the McDuffie solo row). Week 7 logged no claims and cannot be checked.
 
 Newest first. Entries through 2026-11-09 (evening) are in MODEL_LOG_ARCHIVE.md.
 
+### 2026-11-26, afternoon (Track record: "Every pick, game by game" folds into a dropdown)
+
+At the owner's request, to cut scrolling: the section is one line until opened (the week, its counts of picks, C
+leans and sleepers, and the picks' record), remembers being open, and the "This week" jump opens it. Changing the
+week keeps it open. Site only; smoke and browser tests pass.
+
 ### 2026-11-26, morning (the Plays tab tidied: this week's record on top, no A-pick parlay, locks one line each)
 
 The owner found the Plays tab cluttered. Changes, site only: (1) the season records strip (locks, every play, grades,

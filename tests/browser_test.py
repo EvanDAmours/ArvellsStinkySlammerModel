@@ -192,13 +192,13 @@ def run_width(browser, name, width):
     hist = pg.evaluate("(() => { const h = document.querySelector('#rec-history'); return h ? { heads: [...h.querySelectorAll('table th')].map((t) => t.textContent).slice(0, 12), pay: document.querySelector('#then-now-pay')?.innerText || '' } : null; })()")
     check(bool(hist) and "A only" in hist["heads"] and "$" in hist["pay"], f"'Then and now' shows what A alone, A and B, and every pick paid {at}")
     # every pick of a week, game by game: picks, C leans and sleepers, each with a result, and the week can be changed
-    wk = pg.evaluate("""(() => { const s = document.querySelector('#rec-week'); if (!s) return null; const sel = s.querySelector('select');
+    wk = pg.evaluate("""(() => { const s = document.querySelector('#rec-week'); if (!s) return null; const folded = s.tagName === 'DETAILS' && !s.open; s.open = true; const sel = s.querySelector('select');
         const out = { rows: s.querySelectorAll('table.week-t tbody tr').length, games: s.querySelectorAll('.game-h').length, lean: /lean, not staked/.test(s.innerText), weeks: sel ? sel.options.length : 0,
-                      first: s.parentElement.querySelector('section.section') === s || [...s.parentElement.children].indexOf(s) < [...s.parentElement.children].indexOf(document.querySelector('#rec-whatif')) };
-        if (sel && sel.options.length > 1) { sel.value = sel.options[1].value; sel.dispatchEvent(new Event('change')); out.after = document.querySelector('#rec-week select').value === sel.options[1].value; }
+                      folded, first: s.parentElement.querySelector('section.section') === s || [...s.parentElement.children].indexOf(s) < [...s.parentElement.children].indexOf(document.querySelector('#rec-whatif')) };
+        if (sel && sel.options.length > 1) { sel.value = sel.options[1].value; sel.dispatchEvent(new Event('change')); out.after = document.querySelector('#rec-week select').value === sel.options[1].value && document.querySelector('#rec-week').open; }
         return out; })()""")
-    check(bool(wk) and wk["rows"] > 0 and wk["games"] > 0 and wk["lean"] and wk["first"] and (wk["weeks"] < 2 or wk.get("after")),
-          f"Track record opens with every pick of the week, game by game, C leans included, and the week can be changed {at} ({wk})")
+    check(bool(wk) and wk["folded"] and wk["rows"] > 0 and wk["games"] > 0 and wk["lean"] and wk["first"] and (wk["weeks"] < 2 or wk.get("after")),
+          f"Track record has every pick of the week, game by game, folded until opened, C leans included, and the week can be changed {at} ({wk})")
     probe("#rec-week", "the week's picks, game by game")
     pg.evaluate("document.querySelectorAll('#record details').forEach((d) => { d.open = true; })")
     pg.wait_for_timeout(300)

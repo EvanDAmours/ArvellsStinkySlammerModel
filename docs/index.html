@@ -1492,8 +1492,8 @@ function renderRecord() {
   const lw = s.era?.since?.week ?? s.scoreboard?.live_week ?? 10;
   box.append(recCards(r, s, lw));
   const jumps = [["rec-week", "This week"], ["rec-whatif", "What would it have paid?"], ["rec-trial", "Rules on trial"], ["rec-market", "Against the market"], ["rec-more", "Locks, parlays, sleepers and more"], ["rec-picks", "Every pick"], ["rec-history", "Then and now"]];
-  box.append(el("nav", { class: "jump", "aria-label": "Track record sections" }, ...jumps.map(([id, label]) => { const a = el("a", { href: `#${id}` }, label); a.onclick = (e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); }; return a; })));
-  const wk = weekSection(r); if (wk) box.append(wk);
+  box.append(el("nav", { class: "jump", "aria-label": "Track record sections" }, ...jumps.map(([id, label]) => { const a = el("a", { href: `#${id}` }, label); a.onclick = (e) => { e.preventDefault(); const d_ = document.getElementById(id); if (d_ && d_.tagName === "DETAILS") d_.open = true; d_?.scrollIntoView({ behavior: "smooth" }); }; return a; })));
+  const wk = weekFold(r); if (wk) box.append(wk);
   const wi = whatIfSection(r, s, lw); if (wi) box.append(wi);
   if (parts.trial) box.append(parts.trial);
   if (parts.market) box.append(parts.market);
@@ -1520,6 +1520,8 @@ function renderRecord() {
 // showed but did not stake, and the sleepers, each with its result and whether it is on your board. A pick logged at
 // one pull stays here even if the line moved and it stopped being a pick at a later one (owner, 2026-11-26).
 let WEEK_SEL = null;
+// folded to one line (the week, its counts and the picks' record) until opened; it remembers being open
+function weekFold(r) { const sec = weekSection(r); return sec ? foldOf(sec, sec._stat) : null; }
 function weekSection(r) {
   const season = DATA.meta?.season, cur = DATA.meta?.week;
   const mk = (x) => `${normName(x.player)}|${x.market}|${x.side}`;
@@ -1555,12 +1557,14 @@ function weekSection(r) {
   const ts = tally(rs.filter((x) => x.kinds.sleeper).map((x) => ({ result: res(x.kinds.sleeper), u: x.kinds.sleeper.units || 0 })));
   const yours = rs.filter((x) => mineKeys.has(mk(x.x))).length;
   const sel = el("select", { "aria-label": "Week" }, ...weeks.map((w) => { const o = el("option", { value: String(w) }, `Week ${w}${w === cur ? " (this week)" : ""}`); if (w === wk) o.selected = true; return o; }));
-  sel.addEventListener("change", () => { WEEK_SEL = +sel.value; const old = document.querySelector("#rec-week"), n = weekSection(DATA.results); if (old && n) old.replaceWith(n); });
+  sel.addEventListener("change", () => { WEEK_SEL = +sel.value; const old = document.querySelector("#rec-week"), n = weekSection(DATA.results); if (old && n) old.replaceWith(weekFold(DATA.results)); });
   const line = (label, t, unitLabel) => el("span", {}, `${label} `, wl(t.w, t.l), t.w + t.l ? [" · ", units(t.u, 2), unitLabel] : "");
   const sec = section("Every pick, game by game", "Every line the model backed this week: the staked picks, the C picks it showed as leans and did not stake (since 2026-11-24), and the sleepers, with how each ended and whether it is on your board. A pick logged at one pull stays here even if the line moved later.",
     el("div", { class: "controls" }, el("label", {}, "Week ", sel)),
     el("div", { class: "chips" }, line("Picks", tp, "u at the stakes"), line("C leans", tl, "u at 1 each"), line("Sleepers", ts, "u at 1 each"), el("span", {}, `On your board: ${yours} of ${rs.length}`)));
   sec.id = "rec-week";
+  sec._stat = [`Week ${wk} · ${rs.filter((x) => x.kinds.pick).length} picks, ${rs.filter((x) => x.kinds.lean && !x.kinds.pick).length} leans, ${rs.filter((x) => x.kinds.sleeper).length} sleepers`,
+               tp.w + tp.l ? " · picks " : "", tp.w + tp.l ? wl(tp.w, tp.l) : ""];
   const order = [...games.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   for (const [gk, list] of order) {
     const x0 = list[0].x, k = x0.commence_time ? when(x0.commence_time) : "";
