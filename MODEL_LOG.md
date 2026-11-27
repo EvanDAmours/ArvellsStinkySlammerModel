@@ -342,7 +342,7 @@ in-sample. The full write-up is Research round 11.
 - **R1. Sleeper rules frozen** as of 2026-11-09 (archive: changelog of 2026-11-08 and 2026-11-09). Each kind comes
   off if it hits under 55% over its next 40; the A rule is reviewed if A sleepers hit under 70% over their next 20.
   **Applied 2026-11-24 (owner's go-ahead):** the combined-Over sleepers came off (`config.SLEEPER["comb_over_off"]`),
-  21-19 over their first 40. The solo-Under sleepers stay (15-12, running); the A sleepers 10-5 at 15 of 20.
+  21-19 over their first 40. The solo-Under sleepers stay (15-12, running; 21-15 at 36 of 40 on 2026-11-27). **Met 2026-11-27: the A sleepers 13-7 (65%) over their first 20, under 70%: the A rule is due for review** (owner's decision; week 12 post-mortem, point 5).
 - **R2. One bet per player, market and side; late and phantom picks void; a bet settles once.**
 - **R3. The odds-credit budget:** the richest schedule the credits can pay for; the pull an hour before kickoff is
   the last thing to go. The Sunday 10 am look duplicates that pull since the clocks changed (the early games kick
@@ -579,7 +579,9 @@ and C9. What remains, and what the rebuild itself turned up:
    lines, solo -0.0065, combined +0.0022, assists +0.0026; week 11 alone +0.0010, the first live week above the
    book; picks 87-77, +4.35 on 54.8 staked. Week 11 closed (2026-11-24): since the engine +0.0000 (give or take
    0.0019; t +0.0) on 718 lines, solo -0.0048, combined +0.0023, assists +0.0026; week 11 +0.0021; picks 91-77,
-   +10.13 at 1 a bet, +5.54 on 56.1 staked.
+   +10.13 at 1 a bet, +5.54 on 56.1 staked. Week 12's Wednesday and Thursday (2026-11-27; A and B staked only):
+   since the engine -0.0004 (give or take 0.0015; t -0.3) on 832 lines, solo -0.0083, combined +0.0015, assists
+   +0.0052; week 12 so far -0.0034; picks 6-6 on the slates, 97-83 to date, +8.00 at 1 a bet, +4.64 on 65.1 staked.
 2. **The model sits below the book, in both markets, every week.** Mean gap -0.19 (combined) and -0.21 (solo) in
    log-odds: the model gives the Over 45% where the book gives 49.6%. On solo the book was the one that was wrong in
    weeks 7 and 8 (Overs hit 33% and 39%) and right in week 9 (50%). On combined the model was wrong all three weeks
@@ -602,6 +604,8 @@ and C9. What remains, and what the rebuild itself turned up:
    combined-Over sleepers at their 40th, 21-19 (52.5%, under 55%: that kind comes off); E6 at 40, Overs 18-22.
    Not applied: the owner's decision (week 11 post-mortem, Sunday). Week 11 closed: A 8-5, B 15-5, C 68-67; the
    H1 C count now reads 46-54 (issue 28: its first 100 are cut inside a tied kickoff; "fails" either way).
+   Applied 2026-11-24 (C to leans). Week 12's Wednesday and Thursday: A 4-2, B 2-4; to date A 12-7 (19 of 30), B
+   17-9 (26 of 40), level, ranges overlapping. The C leans 15-14 on the slates (combined Unders 3-2).
 4. **The profit in the replay is a pocket.** (Four of those lineman wins were the mis-posted Sam Williams lines,
    now barred; under the rules of 2026-11-09, 10 pm, linemen are 13-2, linebackers 48-44, safeties 34-25, corners
    22-14.) Linemen 16-2 (+14.4 units of +17.7), the assists trial 17-11;
@@ -871,6 +875,111 @@ the record is the week evidence about the model.
 Post-mortems of weeks 7 and 8 are in the archive. From week 10 a post-mortem starts from the scoreboard (Track
 record, "Against the market") and the luck table, reads every record with its likely range, and changes nothing
 inside the freeze unless it finds a defect.
+
+### Week 12, opened Friday 2026-11-27 with Wednesday's and Thursday's slates (standing post-mortem; measures only, nothing changed)
+
+**Wednesday's and Thursday's slates (written Friday 2026-11-27, 8:30 am MST). The first slates under the rules of
+2026-11-24 (only A and B staked): 6-6, -2.14 units at 1 a bet, -0.90 on 9.0 staked. A 4-2, B 2-4. The scoreboard
+since week 10 is level with the book (-0.0004, give or take 0.0015). One condition the register wrote down has
+reached its count and is met: R1's A sleepers, 13-7 (65%) over their first 20, under 70% (point 5). Not applied.**
+Grading had landed: `data/weekly_five.md` generated 2026-11-27 10:16 UTC, nine hours after the last Thanksgiving
+kickoff (Chiefs at Bills, 01:20 UTC). Four games: Packers at Rams (Wednesday), Bears at Lions, Eagles at Cowboys,
+Chiefs at Bills (Thursday). 17 rows logged, 12 counted bets, every one a solo Under on a flagged line; no void.
+Friday's game (Broncos at Steelers) is added on Monday. Checked against a scratch daily (results.json,
+backtest.json): every figure below matches the weekly log.
+
+1. **Scoreboard since week 10 (out of sample): 832 lines, book 0.6810, model alone 0.6905, engine 0.6814: the
+   engine is worse than the book by 0.0004, give or take 0.0015 (t -0.3).** Week 12 so far (114 lines): -0.0034.
+   By market since week 10: solo -0.0083 (give or take 0.0045; 274 lines), combined +0.0015 (0.0019; 271), assists
+   +0.0052 (0.0039; 287). Not distinguishable from nothing after two weeks and four games. Solo is the weak market
+   again, nearly two give-or-takes below the book; assists and combined lean better. Background, in-sample: all
+   weeks +0.0051 (give or take 0.0021; t +2.4) on 3,388 lines.
+2. **The record.** Wednesday **2-1** (+0.53 at 1 a bet, +0.55 on 2.0 staked): Josh Wallace Under 3.5 (A; 2),
+   Brandon Cisse Under 2.5 (B; 1, -104) won; Evan Williams Under 4.5 (B; 8, +109) lost. Thursday **4-5** (-2.66 at
+   1 a bet, -1.45 on 7.0 staked): won George Karlaftis Under 2.5 (A, lock; 0), Jihaad Campbell Under 4.5 (A; 3),
+   Derrick Barnes Under 3.5 (A; 3), T.J. Edwards Under 3.5 (B; 3); lost Joey Porter Jr. Under 2.5 (A, lock; 5),
+   Jaylon Johnson Under 3.5 (A; 4), Jeremiah Trotter Jr. Under 6.5 (B; 7), Quinyon Mitchell Under 2.5 (B; 3, +134),
+   Cole Bishop Under 3.5 (B; 5).
+   - **Week 12 so far: 6-6 (50%), -2.14 units at 1 a bet, -0.90 on 9.0 staked (-10%).** The win chance said 63%,
+     the model's own 68%. By grade A 4-2 (+0.33 at 1 a bet), B 2-4. By position: LB 3-1, CB 2-3, S 0-2, DL 1-0.
+   - **Since the engine: 97-83 (54%, likely range 43% to 64%), +8.00 units at 1 a bet, +4.64 on 65.1 staked
+     (+7.1%; flat +4.4%); the win chance said 58%.**
+   - By grade: A 12-7 (63%, 40% to 82%; +1.54 at 1 a bet), B 17-9 (65%, 45% to 81%; +5.66), C 68-67 (closed at
+     2026-11-24; +0.79). A and B are level and their ranges overlap entirely; the replays of three seasons gave 75%
+     and 66%.
+   - By side and market: Under solo 51-41 (+4.78), Under combined 15-7, Under assists 12-12, Over solo 6-9, Over
+     combined 4-4, Over assists 9-10 (the last five closed with C). By position: LB 50-43, CB 20-13, S 22-19, DL
+     5-8 (-3.55).
+   - Solo Unders on a flagged line 29-16 (64%) since the engine; this slate 6-6.
+   - **Locks:** 1-1 (Karlaftis won, Porter lost); since the engine 6-1; every lock to date 16-5, +6.91. Porter was
+     an A and a lock with the share model expecting 68% of the snaps (point 7). No parlay (none is built since
+     2026-11-24).
+   - **Sleepers, their own record:** 6-3 (+0.56), all solo Unders (the combined Overs are off). All since frozen
+     43-37, -5.61: solo Unders 21-15 (58%, 36 of R1's 40), combined Overs 22-22 (closed).
+   - **The assists trial:** no assists bet (every assists pick would be a C, so a lean); since the engine 21-22.
+   - **Stakes by slate day** (no cap): Wednesday 2.0 units on one game, +0.55. Thursday 7.0 units, -1.45; largest
+     game Eagles at Cowboys, 3.0 units on four bets, -1.33. No slate day lost more than 15 units.
+   - **The C leans, 1 unit each (`data/leans.csv`, graded in results.json): 15-14, -0.57.** Combined Unders 3-2
+     (+0.46), assists Unders 6-2 (+3.51), solo Unders 5-7 (-2.63), solo Overs 1-2 (-0.90), assists Over 0-1. The
+     review's clause (a kind that clears 52.4% over 40 more, combined Unders first) has 5 of 40 combined Unders.
+     The line log has no "why" column and keeps only each line's last read (27 C-lean rows this week against 29
+     logged), so `data/leans.csv` is the record of the leans, as the changelog of 2026-11-25 says.
+3. **Calibration since the engine** (180 bets). Win chance: said 48% / 52% / 57% / 63% / 67% / 72%, hit 38% / 57% /
+   62% / 58% / 52% / 57% (32 / 42 / 37 / 33 / 29 / 7); overall said 58%, hit 54%. The model's own chance: said 52% /
+   58% / 63% / 67% / 75% / 83%, hit 37% / 53% / 66% / 53% / 60% / 67% (38 / 30 / 29 / 32 / 48 / 3); overall said
+   64%, hit 54%. The same shape: the win chance about four points high and flat above 60%, the model's own chance
+   about ten points high, most of it at 65% and above (open issue 24a). This slate: said 63% and 68%, hit 50%.
+4. **Luck or skill** (luck table, week 12 so far). Unders 12 picks hit 50% where 61% of 119 lines went Under: lift
+   -11, beat the close 67%: "we picked badly". The board, no model: the Over won 40% on combined (book's fair chance
+   48%), 28% on assists (48%) and 51% on solo (48%). So the combined and assists boards ran far Under, eight and
+   twenty points, and the solo board, where every staked pick was, ran slightly Over. The flag itself: flagged solo
+   lines (book share 58%+, from the line log and the box scores) went Under 8 of 16 (50%) against 64% and 68% in
+   weeks 10 and 11; unflagged ones 13 of 24 (54%). The picks hit exactly the flagged board's rate: this slate was
+   the flag not working on a board of 16 lines, not selection inside it. The leans that won were the kinds riding
+   the market's level (assists and combined Unders). No kind of pick has lift, the close and the record agreeing;
+   the close is not read until open issue 12 is settled.
+5. **Conditions on trial** (weekly log): H1 A 19 of 30, 12-7 (63%): running. H1 B 26 of 40, 17-9 (65%): running.
+   H1 C 100 of 100, 45-55: applied 2026-11-24. H1 solo Unders off the flag 40 of 40, 17-23: applied 2026-11-24. E4
+   the old A rule 16 of 30, 11-5. **E6 Overs 40 of 40, 18-22: "read it now", not applied as a rule; since
+   2026-11-24 every Over that could be a pick is a C and so a lean, which is the candidate in effect.** S3 180
+   picks, running (ladder +7.1% against flat +4.4%). E5 locks 6-1. E2 3 of 4 weeks, margin -0.0004 (give or take
+   0.0031): running. R1 (counted here from results.json by kickoff; the weekly log does not count it): combined
+   Overs applied 2026-11-24; solo-Under sleepers 21-15 at 36 of 40 (they fail at 40 only if all four left lose).
+   **Met: R1's A sleepers, 13-7 (65%) over their first 20 since the freeze** (10-5 before this week, then Byron
+   Young, Barnes and Shemar James won, Porter and Quinnen Williams lost; the 20th falls at the end of the 21:30 UTC
+   kickoff, so no tie decides it). The register: "the A rule is reviewed if A sleepers hit under 70% over their
+   next 20". The A rule is the sleeper's own grade (model's chance, steady role, the game's volume); a pick's A
+   needs only a sleeper of any grade, so neither the picks nor the stakes depend on it. A review is the owner's
+   decision, now or at 2026-12-08.
+6. **Candidates in the shadow, since week 10** (832 lines, three weeks): **the flat weight of 0.5, +0.0008 (give or
+   take 0.0003; t +3.1)**; R6 also asks for three of four weeks, decided after 2026-12-08. The combined gap centred
+   on the week's mean -0.0010 (t -3.9), worse. The solo level for lined players -0.0002 (t -0.5). None adopted.
+7. **The misses** (six losses; ESPN box scores, the stats feed's snap counts, the model's numbers in
+   `data/picks.csv` and `data/cache/projections.csv`): three within one tackle (Johnson 4 on 3.5, Trotter 7 on 6.5,
+   Mitchell 3 on 2.5), one by two (Bishop 5 on 3.5: 100% of 53 snaps against 88% expected, the Bills' defence 12
+   snaps under its 65 expected), two blown. Evan Williams, 8 solo on 4.5 (model 4.4 at the pick, a B at a model
+   chance of 56%): 100% of the snaps as expected (98%), and the Packers' defence played 78 snaps against 70
+   expected: part of it, about half a tackle, not 3.5. Joey Porter Jr., 5 on 2.5 (model 1.7): 87% of the snaps
+   against the share model's 68%, on a Cowboys' defence of about 60 snaps against 64 expected: a snap cause, shown,
+   worth about half a tackle at his rate; no role flag. Trotter carried the new-role flag (a B; the checklist bars
+   only A, locks and parlays). Mitchell was a B Under at +134 with the model's own number (2.8) above the line: the
+   flag and the price made it a pick. Nothing else can be shown.
+8. **Internal validation** (scratch daily, 32,718 games, 820 projections for week 12, level for lined players
+   1.004): no flag. Final projection against the factor model by fold, deviance: 2024 1.4080 against 1.4419, 2025
+   1.3410 against 1.3923, 2026 1.3179 against 1.3790; overall -0.0466 (t -11.0), regulars -0.0143 (t -2.9).
+   Regulars' bias +0.011 overall, +0.131 in 2026. No factor "hurts"; none out of the model is a "candidate"
+   (nearest on regulars: role shift, t -1.8; bar -2). Next man up: 985 games, 12% low. Tails 5.5% below the 5th
+   percentile, 4.4% above the 95th.
+9. **Open issues 1 to 6:** (1) the edge on live weeks: -0.0004 (t -0.3) on 832 lines; week 12 so far -0.0034, solo
+   again. (2) the model below the book: the combined and assists boards ran Under by 8 and 20 points, the solo
+   board did not; the 2026 regulars' bias is +0.13 a game. (3) grade order: A 12-7, B 17-9, level. (4) the linemen
+   pocket: DL 1-0 (Karlaftis), 5-8 since the engine. (5) next man up: no pick; 985 games, 12% low. (6) Overs: none
+   staked (every Over is a lean); the Over leans 1-3.
+10. **What changed:** nothing; frozen until 2026-12-08. **For the owner:** (a) R1's A-sleeper review is due (point
+    5); (b) the odds key ends on 2026-12-10 and the plan resets on 2026-12-01 (open issue 7); (c) E6 is still
+    "read it now" in the weekly log; c_as_lean already holds the Overs as leans. No defect found. What to watch on
+    Friday and Sunday: whether the flagged solo board recovers on a full slate (this slate's 16 lines went 50%),
+    the solo-Under sleepers' last four of 40, and A and B as they near 30 and 40.
 
 ### Week 11, opened Friday 2026-11-20 with Thursday's slate, Sunday added Monday 2026-11-23, closed Tuesday 2026-11-24 (standing post-mortem; measures only, nothing changed)
 
